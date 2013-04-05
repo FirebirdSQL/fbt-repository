@@ -58,16 +58,15 @@ try:
   c = con_detail.cursor()
   c.execute("INSERT INTO DETAIL_TABLE (ID, FKEY) VALUES (1,1)")
 except Exception, e:
-  print e[1]
+  print (e[1])
 
 try:
   c = db_conn.cursor()
   c.execute("update master_table set UF=10 WHERE ID=1")
 except Exception, e:
-  print e[0]""",
+  print (e[0])""",
  'expected_stdout': """Error while executing SQL statement:
 - SQLCODE: -530
-- violation of FOREIGN KEY constraint ""
 - violation of FOREIGN KEY constraint "FK_DETAIL_TABLE" on table "DETAIL_TABLE"
 - Foreign key references are present for the record
 """,

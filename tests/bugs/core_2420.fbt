@@ -39,7 +39,7 @@ begin
   into :cod, :num, :name, :summa
   do exit;
 end""")
-print 'Execution OK'
+print ('Execution OK')
 
 ''',
  'expected_stdout': """Execution OK

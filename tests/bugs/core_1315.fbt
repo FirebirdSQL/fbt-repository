@@ -4,6 +4,7 @@
 'tracker_id': 'CORE-1315',
 'title': 'Data type unknown',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.1',
@@ -13,11 +14,11 @@
 try:
   statement = cur.prep('select coalesce(?,1) from RDB$DATABASE')
 except Exception,e:
-  print 'Failed!',e
+  print ('Failed!',e)
 else:
   cur.execute(statement,[2])
   printData(cur)
-  print
+  print()
   cur.execute(statement,[None])
   printData(cur)
 """,

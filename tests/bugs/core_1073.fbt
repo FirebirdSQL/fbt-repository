@@ -4,6 +4,7 @@
 'tracker_id': 'CORE-1073',
 'title': 'SINGULAR buggy when nulls present',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.1',
@@ -16,8 +17,8 @@ commit;
   cur.execute(statement)
   r = cur.fetchone()
   if (exp and (r is None)) or (not exp and (r is not None)):
-    print 'Test FAILED in step ',step,', expectation ',exp
-    print 'Statement:',statement
+    print ('Test FAILED in step ',step,', expectation ',exp)
+    print ('Statement:',statement)
 
 c = db_conn.cursor()
 p_singular = 'select 1 from rdb$database where singular(select * from t where a = 1)'

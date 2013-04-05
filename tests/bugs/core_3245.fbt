@@ -10,8 +10,10 @@
  'firebird_version': '2.1.5',
  'platform': 'All',
  'page_size': '4096',
- 'test_type': 'ISQL',
- 'test_script': """ with q (s) as (
+ 'test_type': 'Python',
+ 'test_script': '''cur = db_conn.cursor()
+cmd = """
+ with q (s) as (
     select cast(cast('abc' as char(32767)) as blob sub_type text)
              || cast('def' as char(32767))
              || cast('ghi' as char(32767))
@@ -26,26 +28,14 @@
   select char_length(s), right(s, 3),
               char_length(sub_for), right(sub_for, 3),
               char_length(sub_nofor), right(sub_nofor, 3)
-  from q cross join r;""",
- 'expected_stdout': """Database:  localhost:C:\fbtestnew\tmp\bugs.core_3245.fdb, User: SYSDBA
-SQL> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON>
- CHAR_LENGTH             RIGHT  CHAR_LENGTH             RIGHT  CHAR_LENGTH             RIGHT
-============ ================= ============ ================= ============ =================
-       98304              0:3c        90305              0:25        90305               0:c
-==============================================================================
-RIGHT:
-jkl
-==============================================================================
-==============================================================================
-RIGHT:
-jkl
-==============================================================================
-==============================================================================
-RIGHT:
-jkl
-==============================================================================
-
-SQL>"""
+  from q cross join r;"""
+cur.execute(cmd)
+printData(cur)
+''',
+ 'expected_stdout': """CHAR_LENGTH RIGHT CHAR_LENGTH RIGHT CHAR_LENGTH RIGHT
+----------- ----- ----------- ----- ----------- -----
+98304       jkl   90305       jkl   90305       jkl
+"""
 }
 ]
 }

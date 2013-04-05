@@ -1,9 +1,10 @@
 {
-'id': 'bugs.core_929',
+'id': 'bugs.core_0929',
 'qmid': 'bugs.core_929',
 'tracker_id': 'CORE-929',
 'title': 'Bug in DSQL parameter',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.1',
@@ -23,8 +24,8 @@ COMMIT;
 try:
   c.prep('SELECT * FROM TEST WHERE MYDATE + CAST(? AS INTEGER) >= ?')
 except Exception,e:
-  print 'Test FAILED'
-  print e
+  print ('Test FAILED')
+  print (e)
 
 """
 }

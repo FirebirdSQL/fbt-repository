@@ -4,6 +4,7 @@
 'tracker_id': 'CORE-1112',
 'title': 'Crash when dealing with a string literal longer than 32K',
 'description': 'This test may crash the server',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.1',
@@ -21,7 +22,7 @@ try:
 except:
   pass
 c.execute("select 'a' from rdb$database")
-print c.fetchall()""",
+print (c.fetchall())""",
  'expected_stdout': """[('a',)]
 """
 }

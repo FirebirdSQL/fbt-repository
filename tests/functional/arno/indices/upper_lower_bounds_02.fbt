@@ -1,10 +1,11 @@
 {
-'id': 'functional.arno.indexes.upper_lower_bounds_02',
+'id': 'functional.arno.indices.upper_lower_bounds_02',
 'qmid': 'functional.arno.indexes.upper_lower_bounds_02',
 'tracker_id': '',
 'title': 'upper and lower bounds',
 'description': '''"Less or equal than" should be prefered above "less than" and "greater or equal than" above "greater than".
 ''',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.0',
@@ -67,8 +68,8 @@ COMMIT;
         self.addIndexed(tabid, reads)
   #--
   def show(self):
-    print 'sequential : ',self.sequential
-    print 'indexed    : ',self.indexed
+    print ('sequential : ',self.sequential)
+    print ('indexed    : ',self.indexed)
 
 cursor=db_conn.cursor()
 
