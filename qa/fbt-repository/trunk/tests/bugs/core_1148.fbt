@@ -13,23 +13,22 @@
  'test_script': """from fdb import services
 con = services.connect(host='localhost', user=user_name.encode(), password=user_password.encode())
 try:
-   con.getLog()
-   print 'sucess'
+   con.get_log()
+   print ('sucess')
 except Exception, e:
-   print e[0]
+   print (e[0])
 con = services.connect(host='localhost', user='TEST', password='test')
 try:
-   con.getLog()
-   print 'sucess'
+   con.get_log()
+   print ('sucess')
 except Exception, e:
-   print e[0]
+   print (e[0])
 
 
 """,
  'expected_stdout': """sucess
 Unable to perform the requested Service API action:
 - SQLCODE: -901
-- Unsuccessful execution caused by system error that does not preclude successful execution of subsequent statements
 - Unable to perform operation.  You must be either SYSDBA or owner of the database
 """,
  'resources': ['test_user']

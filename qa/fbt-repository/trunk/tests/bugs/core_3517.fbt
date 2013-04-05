@@ -13,13 +13,12 @@
  'test_type': 'ISQL',
  'test_script': """select LPAD('abc', '0', 3) FROM RDB$DATABASE;
 """,
- 'expected_stdout': """Database:  localhost:C:\fbtestnew\tmp\bugs.core_3517.fdb, User: SYSDBA
-SQL>
+ 'expected_stdout': """
 LPAD
-===============================================================================
+======
 
 
-SQL>"""
+"""
 }
 ]
 }

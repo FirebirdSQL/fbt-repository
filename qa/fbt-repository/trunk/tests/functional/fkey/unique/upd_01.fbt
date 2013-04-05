@@ -57,8 +57,7 @@ try:
   c.execute("UPDATE DETAIL_TABLE SET ID=2 WHERE ID=1")
   con_detail.commit()
 except Exception, e:
-  #for msg in e: print msg
-  print e[0]"""
+  print (e[0])"""
 }
 ]
 }

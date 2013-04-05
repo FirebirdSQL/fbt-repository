@@ -38,12 +38,11 @@ commit;
  'test_script': """try:
   con = kdb.connect(dsn=dsn.encode(),user=user_name.encode(),password=user_password.encode(),role='TEST')
 except Exception,e:
-  for msg in e: print msg
+  for msg in e: print (msg)
 
 """,
  'expected_stdout': """Error while connecting to database:
 - SQLCODE: -836
-- exception
 - exception 1
 - CONNECTERROR
 - Exception in ON CONNECT trigger

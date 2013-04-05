@@ -4,6 +4,7 @@
 'tracker_id': 'CORE-1175',
 'title': 'Error "Data type unknown" when any UDF argument is a built-in function containing a DSQL parameter reference',
 'description': 'This test uses UDF from ib_udf',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.1',
@@ -18,10 +19,10 @@ commit;
  'test_script': """c = db_conn.cursor()
 try:
     c.prep('select * from RDB$DATABASE where RDB$CHARACTER_SET_NAME = rtrim(trim(?))')
-    print 'Test PASSED!'
+    print ('Test PASSED!')
 except Exception,e:
-    print 'Test FAILED!'
-    print e
+    print ('Test FAILED!')
+    print (e)
 
 """,
  'expected_stdout': """Test PASSED!

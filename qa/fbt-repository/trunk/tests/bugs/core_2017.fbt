@@ -51,7 +51,7 @@ db_conn.commit()
 c2.execute("select MON$STATEMENT_ID,MON$STAT_ID,MON$SQL_TEXT from mon$statements where mon$sql_text starts with '%s'" % sql)
 #printData(c)
 row = c2.fetchone()
-#print row
+#print (row)
 c2.execute("select MON$PAGE_READS,MON$PAGE_WRITES,MON$PAGE_FETCHES,MON$PAGE_MARKS from mon$io_stats where mon$stat_id = %i" % row[1])
 printData(c2)
 
@@ -106,7 +106,7 @@ db_conn.commit()
 c2.execute("select MON$STATEMENT_ID,MON$STAT_ID,MON$SQL_TEXT from mon$statements where mon$sql_text starts with '%s'" % sql)
 #printData(c)
 row = c2.fetchone()
-#print row
+#print (row)
 c2.execute("select MON$PAGE_READS,MON$PAGE_WRITES,MON$PAGE_FETCHES,MON$PAGE_MARKS from mon$io_stats where mon$stat_id = %i" % row[1])
 printData(c2)
 

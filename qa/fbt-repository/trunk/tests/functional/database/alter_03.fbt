@@ -17,10 +17,10 @@ try:
   cursor.execute("ALTER DATABASE ADD FILE '$(DATABASE_LOCATION)TEST.G00' STARTING 20000")
   db_conn.commit()
 except kdb.ProgrammingError, (errno,errmsg):
-  print errno, errmsg
+  print (errno, errmsg)
 except:
-  print "Unexpected exception",sys.exc_info()[0]
-  print "Arguments",sys.exc_info()[1]
+  print ("Unexpected exception",sys.exc_info()[0])
+  print ("Arguments",sys.exc_info()[1])
 """,
  'expected_stdout': '-607 isc_dsql_execute: unsuccessful metadata update. Cannot add file with the same name as the database or added files.'
 },
@@ -36,13 +36,12 @@ try:
   cursor.execute("ALTER DATABASE ADD FILE '$(DATABASE_LOCATION)TEST.G00' STARTING 20000")
   db_conn.commit()
 except kdb.DatabaseError, e:
-  print e[0]
+  print (e[0])
 except:
-  print "Unexpected exception",sys.exc_info()[0]
-  print "Arguments",sys.exc_info()[1]""",
+  print ("Unexpected exception",sys.exc_info()[0])
+  print ("Arguments",sys.exc_info()[1])""",
  'expected_stdout': """Error while executing SQL statement:
 - SQLCODE: -607
-- This operation is not defined for system tables.
 - unsuccessful metadata update
 - Cannot add file with the same name as the database or added files
 """
@@ -58,10 +57,10 @@ try:
   cursor.execute("ALTER DATABASE ADD FILE '$(DATABASE_LOCATION)TEST.G00' STARTING 20000")
   db_conn.commit()
 except kdb.ProgrammingError, (errno,errmsg):
-  print errno, errmsg
+  print (errno, errmsg)
 except:
-  print "Unexpected exception",sys.exc_info()[0]
-  print "Arguments",sys.exc_info()[1]
+  print ("Unexpected exception",sys.exc_info()[0])
+  print ("Arguments",sys.exc_info()[1])
 """,
  'expected_stdout': """-607 isc_dsql_execute:
   unsuccessful metadata update

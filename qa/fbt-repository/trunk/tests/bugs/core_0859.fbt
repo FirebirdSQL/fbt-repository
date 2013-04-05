@@ -18,28 +18,28 @@ try:
 except:
   pass
 else:
-  print 'Test Failed in case 1'
+  print ('Test Failed in case 1')
 
 try:
   c.prep('select * from t order by a')
 except:
   pass
 else:
-  print 'Test Failed in case 2'
+  print ('Test Failed in case 2')
 
 try:
   c.prep('select b, count(*) from t group by b')
 except:
   pass
 else:
-  print 'Test Failed in case 3'
+  print ('Test Failed in case 3')
 
 try:
   c.prep('select a, count(*) from t group by a')
 except:
   pass
 else:
-  print 'Test Failed in case 4'
+  print ('Test Failed in case 4')
 
 
 """

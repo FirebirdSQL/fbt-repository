@@ -26,41 +26,41 @@ Returns the ASCII code of the first character of the specified string.
  'test_script': """c = db_conn.cursor()
 try:
   c.execute("select ascii_val( 'A' ) from rdb$database")
-  print c.fetchall()
+  print (c.fetchall())
 except Exception,e:
-  print "Test Failed for ascii_val( 'A' )"
-  print e
+  print ("Test Failed for ascii_val( 'A' )")
+  print (e)
 else:
   pass
 try:
   c.execute("select ascii_val( 'Ã' ) from rdb$database")
-  print c.fetchall()
+  print (c.fetchall())
 except:
   pass
 else:
-  print "Test Failed for ascii_val( 'Ã' )"
+  print ("Test Failed for ascii_val( 'Ã' )")
 try:
   c.execute("select ascii_val(cast('A' as BLOB)) from rdb$database")
-  print c.fetchall()
+  print (c.fetchall())
 except Exception,e:
-  print "Test Failed for ascii_val(CAST('A' AS BLOB))"
-  print e
+  print ("Test Failed for ascii_val(CAST('A' AS BLOB))")
+  print (e)
 else:
   pass
 try:
   c.execute("select ascii_val(NULL) from rdb$database")
-  print c.fetchall()
+  print (c.fetchall())
 except Exception,e:
-  print "Test Failed for ascii_val(NULL)"
-  print e
+  print ("Test Failed for ascii_val(NULL)")
+  print (e)
 else:
   pass
 try:
   c.execute("select ascii_val('') from rdb$database")
-  print c.fetchall()
+  print (c.fetchall())
 except Exception,e:
-  print "Test Failed for ascii_val('')"
-  print e
+  print ("Test Failed for ascii_val('')")
+  print (e)
 else:
   pass
 """,

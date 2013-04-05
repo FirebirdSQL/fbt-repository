@@ -13,7 +13,7 @@
  'test_script': """cur1 = db_conn.cursor()
 db_conn.begin()
 cur1.execute('select * from rdb$database')
-print 'Operation performed before shutdown'
+print ('Operation performed before shutdown')
 db_conn.commit()
 
 runProgram('gfix',[dsn,'-user',user_name,'-pas',user_password,'-shut','full','-force','0'])
@@ -22,9 +22,9 @@ try:
   db_conn.begin()
   cur1.execute('select * from rdb$database')
   db_conn.commit()
-  print 'BUG! Operation allowed after shutdown!'
+  print ('BUG! Operation allowed after shutdown!')
 except Exception, e:
-  print "Ok, we've got error.", e[0]
+  print ("Ok, we've got error.", e[0])
 
 # This is necessary to remove the database
 #db_conn.close()
@@ -36,8 +36,7 @@ runProgram('gfix',[dsn,'-user',user_name,'-pas',user_password,'-online'])
  'expected_stdout': """Operation performed before shutdown
 Ok, we've got error. Error while starting transaction:
 - SQLCODE: -902
-- Unsuccessful execution caused by a system error that precludes successful execution of subsequent statements
-- database C:\JOB\QA\FBTEST\TMP\BUGS.CORE_1249.FDB shutdown
+- database /home/job/python/envs/pyfirebird/fbtest/tmp/bugs.core_1249.fdb shutdown
 """,
  'substitutions': [('^.*shutdown','shutdown')]
 }

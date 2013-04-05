@@ -16,24 +16,24 @@ try:
   c.execute("with q(s) as (select cast('abcdefghijklmno' as blob sub_type 1 character set utf8) from rdb$database) select overlay (s placing cast('0123456789' as blob sub_type 1 character set utf8) from 5) from q")
   c.fetchall()
 except Exception,e:
-  print "Test non multi-bytes Failed"
-  print e
+  print ("Test non multi-bytes Failed")
+  print (e)
 else:
   pass
 try:
   c.execute("with q(s) as (select cast('abcdefghijklmno' as blob sub_type 1 character set utf8) from rdb$database) select overlay (s placing cast(_iso8859_1 'áé' as blob sub_type 1 character set utf8) from 5) from q")
   c.fetchall()
 except Exception,e:
-  print "Test utf8 Failed"
-  print e
+  print ("Test utf8 Failed")
+  print (e)
 else:
   pass
 try:
   c.execute("with q(s) as (select cast('abcdefghijklmno' as blob sub_type 1 character set utf8) from rdb$database) select overlay (s placing cast(_iso8859_1 'áé' as blob sub_type 1 character set iso8859_1) from 5) from q")
   c.fetchall()
 except Exception,e:
-  print "Test iso8859_1 Failed"
-  print e
+  print ("Test iso8859_1 Failed")
+  print (e)
 else:
   pass
 """
