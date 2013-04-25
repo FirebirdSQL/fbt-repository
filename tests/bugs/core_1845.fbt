@@ -1,0 +1,64 @@
+{
+'id': 'bugs.core_1845',
+'qmid': None,
+'tracker_id': 'CORE-1845',
+'title': 'Some standard calls show server installation directory to regular users',
+'description': '',
+'min_versions': '',
+'versions': [
+{
+ 'firebird_version': '2.1.1',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'Python',
+ 'test_script': """def printException(e):
+    for x in e.args:
+        print (x)
+
+# check with SYSDBA
+
+svc = kdb.services.connect(password=user_password)
+svc.get_home_directory()
+svc.get_message_file_directory()
+svc.get_lock_file_directory()
+
+# check with regular user
+
+svc = kdb.services.connect(user='TEST',password='test')
+
+
+try:
+    svc.get_home_directory()
+except Exception as e:
+    printException(e)
+
+try:
+    svc.get_message_file_directory()
+except Exception as e:
+    printException(e)
+
+try:
+    svc.get_lock_file_directory()
+except Exception as e:
+    printException(e)
+""",
+ 'expected_stdout': """Services/isc_service_query:
+- SQLCODE: -551
+- Service isc_info_svc_get_env requires SYSDBA permissions.  Reattach to the Service Manager using the SYSDBA account.
+-551
+335544790
+Services/isc_service_query:
+- SQLCODE: -551
+- Service isc_info_svc_get_env requires SYSDBA permissions.  Reattach to the Service Manager using the SYSDBA account.
+-551
+335544790
+Services/isc_service_query:
+- SQLCODE: -551
+- Service isc_info_svc_get_env requires SYSDBA permissions.  Reattach to the Service Manager using the SYSDBA account.
+-551
+335544790
+""",
+ 'resources': ['test_user']
+}
+]
+}
