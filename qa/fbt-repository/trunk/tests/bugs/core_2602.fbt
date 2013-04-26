@@ -1,0 +1,36 @@
+{
+'id': 'bugs.core_2602',
+'qmid': None,
+'tracker_id': 'CORE-2602',
+'title': 'Attachments using NONE charset may cause reads from MON$ tables to fail',
+'description': 'When an attachment using NONE charset uses non-ASCII characters that go to MON$ tables, selects from MON$ tables (in other attachments) fail.',
+'min_versions': '2.5',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'test_type': 'Python',
+ 'test_script': """ #
+c = db_conn.cursor()
+con2 = kdb.connect(dsn=dsn,user=user_name,password=user_password,charset='utf8')
+c2 = con2.cursor()
+
+c.execute("select '123áé456' from rdb$database")
+c2.execute("SELECT MON$SQL_TEXT FROM MON$STATEMENTS")
+#print(c2.fetchall())
+printData(c2)
+
+con2.close()
+
+""",
+ 'expected_stdout': """MON$SQL_TEXT
+------------
+SELECT MON$SQL_TEXT FROM MON$STATEMENTS
+select '123áé456' from rdb$database
+"""
+}
+]
+}
