@@ -4,10 +4,10 @@
 'tracker_id': 'CORE-2966',
 'title': 'Wrong results or unexpected errors while sorting a large data set',
 'description': '',
-'min_versions': '2.5.0',
+'min_versions': '2.1.6;2.5.0',
 'versions': [
 {
- 'firebird_version': '2.5.0',
+ 'firebird_version': '2.1.6',
  'platform': 'All',
  'connection_character_set': 'UTF8',
  'page_size': '4096',
