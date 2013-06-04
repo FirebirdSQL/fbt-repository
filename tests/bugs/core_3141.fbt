@@ -1,0 +1,68 @@
+{
+'id': 'bugs.core_3141',
+'qmid': None,
+'tracker_id': 'CORE-3141',
+'title': "The last column in a view is returning as a null value even when it's not",
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5.1',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """create table testvalues (id integer,
+                         datum date,
+                         sfield varchar (10),
+                         num1 numeric (10,2),
+                         num2 numeric (10,2),
+                         primary key (id)
+                        );
+commit;
+
+insert into testvalues values (1, 'now', 'A', 10, 0);
+insert into testvalues values (2, 'now', 'B', 0, 10);
+insert into testvalues values (3, 'now', 'A', 20, 0);
+insert into testvalues values (4, 'now', 'B', 0, 20);
+
+create view test_values
+as
+
+select
+    t.datum,
+    iif ((select sum(num1-num2) from testvalues where sfield = 'A' and datum <= t.datum) is null, 0, (select sum(num1-num2) from testvalues where sfield = 'A' and datum <= t.datum)) A,
+    iif ((select sum(num1-num2) from testvalues where sfield = 'A' and datum <= t.datum) is null, 0, (select sum(num1-num2) from testvalues where sfield = 'B' and datum <= t.datum)) B,
+    iif ((select sum(num1-num2) from testvalues where sfield = 'A' and datum <= t.datum) is null, 0, (select sum(num1-num2) from testvalues where sfield = 'A' and datum <= t.datum)) A1,
+    iif ((select sum(num1-num2) from testvalues where sfield = 'A' and datum <= t.datum) is null, 0, (select sum(num1-num2) from testvalues where sfield = 'B' and datum <= t.datum)) B1
+from testvalues t
+group by t.datum;
+
+create view test_values2
+as
+select
+    t.datum,
+    0 as A,
+    0 as B,
+    0 as A1,
+    10 as B1
+from testvalues t
+group by t.datum;
+
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': """select t.* from test_values t;
+select t.* from test_values2 t;""",
+ 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_testsbt-repository	mpugs.core_3141.fdb, User: SYSDBA
+SQL>
+      DATUM                     A                     B                    A1                    B1
+=========== ===================== ===================== ===================== =====================
+2013-06-04                  30.00                -30.00                 30.00                -30.00
+
+SQL>
+      DATUM            A            B           A1           B1
+=========== ============ ============ ============ ============
+2013-06-04             0            0            0           10
+
+SQL>"""
+}
+]
+}
