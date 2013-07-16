@@ -269,6 +269,7 @@ commit;
    inner join test as t253 on t253.i = test.i
    inner join test as t254 on t254.i = test.i
    inner join test as t255 on t255.i = test.i
+   inner join test as t256 on t256.i = test.i
    ;
 """,
  'expected_stderr': """Statement failed, SQLCODE = -104
@@ -540,6 +541,7 @@ commit;
    inner join test as t253 on t253.i = test.i
    inner join test as t254 on t254.i = test.i
    inner join test as t255 on t255.i = test.i
+   inner join test as t256 on t256.i = test.i
    ;
 """,
  'expected_stderr': """Statement failed, SQLSTATE = 54001
@@ -811,6 +813,7 @@ commit;
    inner join test as t253 on t253.i = test.i
    inner join test as t254 on t254.i = test.i
    inner join test as t255 on t255.i = test.i
+   inner join test as t256 on t256.i = test.i
    ;
 """,
  'expected_stderr': """Statement failed, SQLCODE = -104
