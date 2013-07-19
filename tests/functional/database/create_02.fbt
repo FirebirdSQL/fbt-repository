@@ -1,9 +1,10 @@
 {
-'id': 'functional.database.create.02',
+'id': 'functional.database.create_02',
 'qmid': 'functional.database.create.create_database_03',
 'tracker_id': '',
 'title': 'CREATE DATABASE - non sysdba user',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -126,6 +127,28 @@ Default Character set: NONE
 """,
  'resources': ['test_user'],
  'substitutions': [('^Forced Writes are.*','')]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'user_name': 'test',
+ 'user_password': 'test',
+ 'test_type': 'ISQL',
+ 'test_script': 'SHOW DATABASE;',
+ 'expected_stdout': """        Owner: TEST
+PAGE_SIZE 4096
+Number of DB pages allocated = 228
+Sweep interval = 20000
+Forced Writes are ON
+Transaction - oldest = 1
+Transaction - oldest active = 2
+Transaction - oldest snapshot = 2
+Transaction - Next = 5
+ODS = 12.0
+Default Character set: NONE
+""",
+ 'resources': ['test_user'],
+ 'substitutions': [('^Forced Writes are.*',''),('^Number of DB pages.*',''),('^Transaction.*','')]
 }
 ]
 }

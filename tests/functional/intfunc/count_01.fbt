@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.count.01',
+'id': 'functional.intfunc.count_01',
 'qmid': 'functional.intfunc.count.count_01',
 'tracker_id': '',
 'title': 'COUNT - empty',
@@ -9,6 +9,7 @@ Dependencies:
 CREATE DATABASE
 CREATE TABLE
 Basic SELECT""",
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -20,6 +21,18 @@ Basic SELECT""",
 ============
 
            0
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 'CREATE TABLE test( id INTEGER);',
+ 'test_type': 'ISQL',
+ 'test_script': 'SELECT COUNT(*) FROM test;',
+ 'expected_stdout': """                COUNT
+=====================
+                    0
+
 """
 }
 ]

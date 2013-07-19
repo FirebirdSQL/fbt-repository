@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.count.02',
+'id': 'functional.intfunc.count_02',
 'qmid': 'functional.intfunc.count.count_02',
 'tracker_id': '',
 'title': 'COUNT',
@@ -11,6 +11,7 @@ CREATE TABLE
 INSERT
 Basic SELECT
 """,
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -32,6 +33,28 @@ INSERT INTO test VALUES(1);
 ============ ============ ============
 
            9            6            2
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': """CREATE TABLE test( id INTEGER);
+INSERT INTO test VALUES(0);
+INSERT INTO test VALUES(0);
+INSERT INTO test VALUES(null);
+INSERT INTO test VALUES(null);
+INSERT INTO test VALUES(null);
+INSERT INTO test VALUES(1);
+INSERT INTO test VALUES(1);
+INSERT INTO test VALUES(1);
+INSERT INTO test VALUES(1);
+""",
+ 'test_type': 'ISQL',
+ 'test_script': 'SELECT COUNT(*), COUNT(ID), COUNT(DISTINCT ID) FROM test;',
+ 'expected_stdout': """                COUNT                 COUNT                 COUNT
+===================== ===================== =====================
+                    9                     6                     2
+
 """
 }
 ]

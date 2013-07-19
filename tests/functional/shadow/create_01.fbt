@@ -138,6 +138,28 @@ ODS = 11.2
 Default Character set: NONE
 """,
  'substitutions': [('^.*TEST.SHD','TEST.SHD'),('^Forced Writes are.*',''),('^Transaction -.*',''),('^Number of DB pages allocated.*','')]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """CREATE SHADOW 1 '$(DATABASE_LOCATION)TEST.SHD';
+SHOW DATABASE;""",
+ 'expected_stdout': """Database: localhost:/home/job/qa/fbtest/tmp/functional.shadow.create_01.fdb
+        Owner: SYSDBA
+ Shadow 1: "/home/job/qa/fbtest/tmp/TEST.SHD" auto
+PAGE_SIZE 4096
+Number of DB pages allocated = 164
+Sweep interval = 20000
+Forced Writes are ON
+Transaction - oldest = 1
+Transaction - oldest active = 2
+Transaction - oldest snapshot = 2
+Transaction - Next = 5
+ODS = 12.0
+Default Character set: NONE
+""",
+ 'substitutions': [('^.*TEST.SHD','TEST.SHD'),('^Forced Writes are.*',''),('^Transaction -.*',''),('^Number of DB pages allocated.*','')]
 }
 ]
 }

@@ -1,5 +1,5 @@
 {
-'id': 'functional.trigger.alter.13',
+'id': 'functional.trigger.table.alter_13',
 'qmid': 'functional.trigger.alter.alter_trigger_13',
 'tracker_id': '',
 'title': 'ALTER TRIGGER - AS',
@@ -11,6 +11,7 @@ CREATE DATABASE
 CREATE TABLE
 CREATE TRIGGER
 """,
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -92,6 +93,35 @@ Dynamic SQL Error
 -Column unknown
 -NEW.TEXT
 -At line 3, column 7"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': """CREATE TABLE test( id INTEGER NOT NULL CONSTRAINT unq UNIQUE,
+                   text VARCHAR(32));
+SET TERM ^;
+CREATE TRIGGER tg FOR test BEFORE DELETE POSITION 1
+AS
+BEGIN
+END ^
+SET TERM ;^
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': """SET TERM ^;
+ALTER TRIGGER tg AS
+BEGIN
+  new.text='altered trigger';
+END ^
+SET TERM ;^""",
+ 'expected_stderr': """Statement failed, SQLSTATE = 42S22
+unsuccessful metadata update
+-ALTER TRIGGER TG failed
+-Dynamic SQL Error
+-SQL error code = -206
+-Column unknown
+-NEW.TEXT
+
+"""
 }
 ]
 }

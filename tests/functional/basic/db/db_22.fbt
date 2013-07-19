@@ -1,15 +1,56 @@
 {
-'id': 'functional.basic.db.22',
+'id': 'functional.basic.db.db_22',
 'qmid': 'functional.basic.db.db_22',
 'tracker_id': '',
 'title': 'Empty DB - RDB$RELATION_CONSTRAINTS',
 'description': 'Check for correct content of RDB$RELATION_CONSTRAINTS in empty database.',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 'select * from RDB$RELATION_CONSTRAINTS;'
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 'select * from RDB$RELATION_CONSTRAINTS;',
+ 'expected_stdout': """
+RDB$CONSTRAINT_NAME                                                                           RDB$CONSTRAINT_TYPE RDB$RELATION_NAME                                                                             RDB$DEFERRABLE RDB$INITIALLY_DEFERRED RDB$INDEX_NAME
+=============================================================================== =================== =============================================================================== ============== ====================== ===============================================================================
+RDB$INDEX_0                                                                                   UNIQUE              RDB$RELATIONS                                                                                 NO             NO                     RDB$INDEX_0
+RDB$INDEX_2                                                                                   UNIQUE              RDB$FIELDS                                                                                    NO             NO                     RDB$INDEX_2
+RDB$INDEX_5                                                                                   UNIQUE              RDB$INDICES                                                                                   NO             NO                     RDB$INDEX_5
+RDB$INDEX_7                                                                                   UNIQUE              RDB$SECURITY_CLASSES                                                                          NO             NO                     RDB$INDEX_7
+RDB$INDEX_8                                                                                   UNIQUE              RDB$TRIGGERS                                                                                  NO             NO                     RDB$INDEX_8
+RDB$INDEX_9                                                                                   UNIQUE              RDB$FUNCTIONS                                                                                 NO             NO                     RDB$INDEX_9
+RDB$INDEX_11                                                                                  UNIQUE              RDB$GENERATORS                                                                                NO             NO                     RDB$INDEX_11
+RDB$INDEX_12                                                                                  UNIQUE              RDB$RELATION_CONSTRAINTS                                                                      NO             NO                     RDB$INDEX_12
+RDB$INDEX_13                                                                                  UNIQUE              RDB$REF_CONSTRAINTS                                                                           NO             NO                     RDB$INDEX_13
+RDB$INDEX_15                                                                                  UNIQUE              RDB$RELATION_FIELDS                                                                           NO             NO                     RDB$INDEX_15
+RDB$INDEX_17                                                                                  UNIQUE              RDB$FILTERS                                                                                   NO             NO                     RDB$INDEX_17
+RDB$INDEX_18                                                                                  UNIQUE              RDB$PROCEDURE_PARAMETERS                                                                      NO             NO                     RDB$INDEX_18
+RDB$INDEX_19                                                                                  UNIQUE              RDB$CHARACTER_SETS                                                                            NO             NO                     RDB$INDEX_19
+RDB$INDEX_20                                                                                  UNIQUE              RDB$COLLATIONS                                                                                NO             NO                     RDB$INDEX_20
+RDB$INDEX_21                                                                                  UNIQUE              RDB$PROCEDURES                                                                                NO             NO                     RDB$INDEX_21
+RDB$INDEX_22                                                                                  UNIQUE              RDB$PROCEDURES                                                                                NO             NO                     RDB$INDEX_22
+RDB$INDEX_23                                                                                  UNIQUE              RDB$EXCEPTIONS                                                                                NO             NO                     RDB$INDEX_23
+RDB$INDEX_24                                                                                  UNIQUE              RDB$EXCEPTIONS                                                                                NO             NO                     RDB$INDEX_24
+RDB$INDEX_25                                                                                  UNIQUE              RDB$CHARACTER_SETS                                                                            NO             NO                     RDB$INDEX_25
+RDB$INDEX_26                                                                                  UNIQUE              RDB$COLLATIONS                                                                                NO             NO                     RDB$INDEX_26
+
+RDB$CONSTRAINT_NAME                                                                           RDB$CONSTRAINT_TYPE RDB$RELATION_NAME                                                                             RDB$DEFERRABLE RDB$INITIALLY_DEFERRED RDB$INDEX_NAME
+=============================================================================== =================== =============================================================================== ============== ====================== ===============================================================================
+RDB$INDEX_32                                                                                  UNIQUE              RDB$TRANSACTIONS                                                                              NO             NO                     RDB$INDEX_32
+RDB$INDEX_39                                                                                  UNIQUE              RDB$ROLES                                                                                     NO             NO                     RDB$INDEX_39
+RDB$INDEX_44                                                                                  UNIQUE              RDB$BACKUP_HISTORY                                                                            NO             NO                     RDB$INDEX_44
+RDB$INDEX_45                                                                                  UNIQUE              RDB$FILTERS                                                                                   NO             NO                     RDB$INDEX_45
+RDB$INDEX_46                                                                                  UNIQUE              RDB$GENERATORS                                                                                NO             NO                     RDB$INDEX_46
+RDB$INDEX_47                                                                                  UNIQUE              RDB$PACKAGES                                                                                  NO             NO                     RDB$INDEX_47
+
+"""
 }
 ]
 }
