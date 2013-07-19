@@ -180,6 +180,2909 @@ RDB$ACL:
 ==============================================================================
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """set blob 3;
+select * from RDB$SECURITY_CLASSES;""",
+ 'expected_stdout': """
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$1                                                                                                       9:0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$2                                                                                                       9:1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$3                                                                                                       9:2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$4                                                                                                       9:3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$5                                                                                                       9:4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$6                                                                                                       9:5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$7                                                                                                       9:6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$8                                                                                                       9:7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$9                                                                                                       9:8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$10                                                                                                      9:9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$11                                                                                                      9:a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$12                                                                                                      9:b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$13                                                                                                      9:c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$14                                                                                                      9:d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$15                                                                                                      9:e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$16                                                                                                      9:f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$17                                                                                                     9:10            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$18                                                                                                     9:11            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$19                                                                                                     9:12            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$20                                                                                                     9:13            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$21                                                                                                     9:14            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$22                                                                                                     9:15            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$23                                                                                                     9:16            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$24                                                                                                     9:17            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$25                                                                                                     9:18            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$26                                                                                                     9:19            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$27                                                                                                     9:1a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$28                                                                                                     9:1b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$29                                                                                                     9:1c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$30                                                                                                     9:1d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$31                                                                                                     9:1e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$32                                                                                                     9:1f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$33                                                                                                     9:20            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$34                                                                                                     9:21            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$35                                                                                                     9:22            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$36                                                                                                     9:23            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$37                                                                                                     9:24            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$38                                                                                                     9:25            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$39                                                                                                     9:26            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$40                                                                                                     9:27            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$41                                                                                                     9:28            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$42                                                                                                     9:29            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$43                                                                                                     9:2a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$44                                                                                                     9:2b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$45                                                                                                     9:2c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$46                                                                                                     9:2d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$47                                                                                                     9:2e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$48                                                                                                     9:2f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$49                                                                                                     9:30            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$50                                                                                                     9:31            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$51                                                                                                     9:32            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$52                                                                                                     9:33            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$53                                                                                                     9:34            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$54                                                                                                     9:35            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$55                                                                                                     9:36            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$56                                                                                                     9:37            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$57                                                                                                     9:38            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$58                                                                                                     9:39            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$59                                                                                                     9:3a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$60                                                                                                     9:3b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$61                                                                                                     9:3c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$62                                                                                                     9:3d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$63                                                                                                     9:3e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$64                                                                                                     9:3f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$65                                                                                                     9:40            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$66                                                                                                     9:41            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$67                                                                                                     9:42            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$68                                                                                                    9:2cd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$69                                                                                                    9:2ce            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$70                                                                                                    9:2cf            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$71                                                                                                    9:2d0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$72                                                                                                    9:2d1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$73                                                                                                    9:2d2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$74                                                                                                    9:2d3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$75                                                                                                    9:2d4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$76                                                                                                    9:2d5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$77                                                                                                    9:2d6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$78                                                                                                    9:2d7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$79                                                                                                    9:2d8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$80                                                                                                    9:2d9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$81                                                                                                    9:2da            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$82                                                                                                    9:2db            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$83                                                                                                    9:2dc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$84                                                                                                    9:2dd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$85                                                                                                    9:2de            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$86                                                                                                    9:2df            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$87                                                                                                    9:2e0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$88                                                                                                    9:2e1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$89                                                                                                    9:2e2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$90                                                                                                    9:2e3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$91                                                                                                    9:2e4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$92                                                                                                    9:2e5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$93                                                                                                    9:2e6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$94                                                                                                    9:2e7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$95                                                                                                    9:2e8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$96                                                                                                    9:2e9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$97                                                                                                    9:2ea            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$98                                                                                                    9:2eb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$99                                                                                                    9:2ec            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$100                                                                                                   9:2ed            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$101                                                                                                   9:2ee            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$102                                                                                                   9:2ef            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$103                                                                                                   9:2f0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$104                                                                                                   9:2f1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$105                                                                                                   9:2f2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$106                                                                                                   9:2f3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$107                                                                                                   9:2f4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$108                                                                                                   9:2f5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$109                                                                                                   9:2f6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$110                                                                                                   9:2f7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$111                                                                                                   9:2f8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$112                                                                                                   9:2f9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$113                                                                                                   9:2fa            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$114                                                                                                   9:2fb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$115                                                                                                   9:2fc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$116                                                                                                   9:2fd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$117                                                                                                   9:2fe            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$118                                                                                                   9:2ff            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$119                                                                                                   9:300            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$120                                                                                                   9:301            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$121                                                                                                   9:302            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$122                                                                                                   9:303            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$123                                                                                                   9:304            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$124                                                                                                   9:305            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$125                                                                                                   9:306            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$126                                                                                                   9:307            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$127                                                                                                   9:308            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$128                                                                                                   9:309            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$129                                                                                                   9:30a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$130                                                                                                   9:30b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$131                                                                                                   9:30c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$132                                                                                                   9:30d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$133                                                                                                   9:30e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$134                                                                                                   9:30f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$135                                                                                                   9:310            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$136                                                                                                   9:311            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$137                                                                                                   9:312            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$138                                                                                                   9:313            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$139                                                                                                   9:314            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$140                                                                                                   9:4ab            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$141                                                                                                   9:4ac            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$142                                                                                                   9:4ad            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$143                                                                                                   9:4ae            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$144                                                                                                   9:4af            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$145                                                                                                   9:4b0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$146                                                                                                   9:4b1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$147                                                                                                   9:4b2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$148                                                                                                   9:4b3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$149                                                                                                   9:4b4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$150                                                                                                   9:4b5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$151                                                                                                   9:4b6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$152                                                                                                   9:4b7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$153                                                                                                   9:4b8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$154                                                                                                   9:4b9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$155                                                                                                   9:4ba            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$156                                                                                                   9:4bb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$157                                                                                                   9:4bc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$158                                                                                                   9:4bd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$159                                                                                                   9:4be            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$160                                                                                                   9:4bf            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$161                                                                                                   9:4c0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$162                                                                                                   9:4c1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$163                                                                                                   9:4c2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$164                                                                                                   9:4c3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$165                                                                                                   9:4c4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$166                                                                                                   9:4c5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$167                                                                                                   9:4c6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$168                                                                                                   9:4c7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$169                                                                                                   9:4c8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$170                                                                                                   9:4c9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$171                                                                                                   9:4ca            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$172                                                                                                   9:4cb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$173                                                                                                   9:4cc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$174                                                                                                   9:4cd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$175                                                                                                   9:4ce            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$176                                                                                                   9:4cf            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$177                                                                                                   9:4d0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$178                                                                                                   9:4d1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$179                                                                                                   9:4d2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$180                                                                                                   9:4d3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$181                                                                                                   9:4d4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$182                                                                                                   9:4d5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$183                                                                                                   9:4d6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$184                                                                                                   9:4d7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$185                                                                                                   9:4d8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$186                                                                                                   9:4d9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$187                                                                                                   9:4da            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$188                                                                                                   9:4db            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$189                                                                                                   9:4dc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$190                                                                                                   9:4dd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$191                                                                                                   9:4de            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$192                                                                                                   9:4df            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$193                                                                                                   9:4e0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$194                                                                                                   9:4e1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$195                                                                                                   9:4e2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$196                                                                                                   9:4e3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$197                                                                                                   9:4e4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$198                                                                                                   9:4e5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$199                                                                                                   9:4e6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$200                                                                                                   9:4e7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$201                                                                                                   9:4e8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$202                                                                                                   9:4e9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$203                                                                                                   9:4ea            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$204                                                                                                   9:4eb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$205                                                                                                   9:4ec            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$206                                                                                                   9:4ed            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$207                                                                                                   9:4ee            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$208                                                                                                   9:4ef            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$209                                                                                                   9:4f0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$210                                                                                                   9:4f1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$211                                                                                                   9:4f2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$212                                                                                                   9:689            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$213                                                                                                   9:68a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$214                                                                                                   9:68b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$215                                                                                                   9:68c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$216                                                                                                   9:68d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$217                                                                                                   9:68e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$218                                                                                                   9:68f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$219                                                                                                   9:690            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$220                                                                                                   9:691            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$221                                                                                                   9:692            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$222                                                                                                   9:693            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$223                                                                                                   9:694            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$224                                                                                                   9:695            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$225                                                                                                   9:696            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$226                                                                                                   9:697            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$227                                                                                                   9:698            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$228                                                                                                   9:699            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$229                                                                                                   9:69a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$230                                                                                                   9:69b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$231                                                                                                   9:69c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$232                                                                                                   9:69d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$233                                                                                                   9:69e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$234                                                                                                   9:69f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$235                                                                                                   9:6a0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$236                                                                                                   9:6a1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$237                                                                                                   9:6a2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$238                                                                                                   9:6a3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$239                                                                                                   9:6a4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$240                                                                                                   9:6a5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$241                                                                                                   9:6a6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$242                                                                                                   9:6a7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$243                                                                                                   9:6a8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$244                                                                                                   9:6a9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$245                                                                                                   9:6aa            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$246                                                                                                   9:6ab            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$247                                                                                                   9:6ac            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$248                                                                                                   9:6ad            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$249                                                                                                   9:6ae            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$250                                                                                                   9:6af            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$251                                                                                                   9:6b0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$252                                                                                                   9:6b1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$253                                                                                                   9:6b2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$254                                                                                                   9:6b3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$255                                                                                                   9:6b4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$256                                                                                                   9:6b5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$257                                                                                                   9:6b6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$258                                                                                                   9:6b7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$259                                                                                                   9:6b8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$260                                                                                                   9:6b9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$261                                                                                                   9:6ba            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$262                                                                                                   9:6bb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$263                                                                                                   9:6bc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$264                                                                                                   9:6bd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$265                                                                                                   9:6be            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$266                                                                                                   9:6bf            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$267                                                                                                   9:6c0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$268                                                                                                   9:6c1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$269                                                                                                   9:6c2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$270                                                                                                   9:6c3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$271                                                                                                   9:6c4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$272                                                                                                   9:6c5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$273                                                                                                   9:6c6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$274                                                                                                   9:6c7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$275                                                                                                   9:6c8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$276                                                                                                   9:6c9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$277                                                                                                   9:6ca            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$278                                                                                                   9:6cb            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$279                                                                                                   9:6cc            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$280                                                                                                   9:6cd            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$281                                                                                                   9:6ce            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$282                                                                                                   9:6cf            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$283                                                                                                   9:6d0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$284                                                                                                   9:867            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$285                                                                                                   9:868            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$286                                                                                                   9:869            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$287                                                                                                   9:86a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$288                                                                                                   9:86b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$289                                                                                                   9:86c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$290                                                                                                   9:86d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$291                                                                                                   9:86e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$292                                                                                                   9:86f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$293                                                                                                   9:870            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$294                                                                                                   9:871            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$295                                                                                                   9:872            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$296                                                                                                   9:873            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$297                                                                                                   9:874            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$298                                                                                                   9:875            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$299                                                                                                   9:876            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$300                                                                                                   9:877            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$301                                                                                                   9:878            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$302                                                                                                   9:879            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$303                                                                                                   9:87a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$304                                                                                                   9:87b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$305                                                                                                   9:87c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$306                                                                                                   9:87d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$307                                                                                                   9:87e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$308                                                                                                   9:87f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$309                                                                                                   9:880            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$310                                                                                                   9:881            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$311                                                                                                   9:882            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$312                                                                                                   9:883            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$313                                                                                                   9:884            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$314                                                                                                   9:885            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$315                                                                                                   9:886            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$316                                                                                                   9:887            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$317                                                                                                   9:888            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$318                                                                                                   9:889            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$319                                                                                                   9:88a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$320                                                                                                   9:88b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$321                                                                                                   9:88c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$322                                                                                                   9:88d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$323                                                                                                   9:88e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$324                                                                                                   9:88f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$325                                                                                                   9:890            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$326                                                                                                   9:891            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$327                                                                                                   9:892            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$328                                                                                                   9:893            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$329                                                                                                   9:894            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$330                                                                                                   9:895            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$331                                                                                                   9:896            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$332                                                                                                   9:897            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$333                                                                                                   9:898            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$334                                                                                                   9:899            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$335                                                                                                   9:89a            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$336                                                                                                   9:89b            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$337                                                                                                   9:89c            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$338                                                                                                   9:89d            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$339                                                                                                   9:89e            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$340                                                                                                   9:89f            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+
+RDB$SECURITY_CLASS                                                                                      RDB$ACL   RDB$DESCRIPTION
+=============================================================================== ================= =================
+SQL$341                                                                                                   9:8a0            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$342                                                                                                   9:8a1            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$343                                                                                                   9:8a2            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$344                                                                                                   9:8a3            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$345                                                                                                   9:8a4            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$346                                                                                                   9:8a5            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$347                                                                                                   9:8a6            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$348                                                                                                   9:8a7            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$349                                                                                                   9:8a8            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, usage)
+        		all users: (*.*), privileges: (usage)
+
+==============================================================================
+SQL$350                                                                                                   9:8a9            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+        		all users: (*.*), privileges: (select)
+
+==============================================================================
+SQL$DEFAULT1                                                                                              9:8aa            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+        		all users: (*.*), privileges: (select)
+
+==============================================================================
+SQL$351                                                                                                   9:8ab            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+        		all users: (*.*), privileges: (select)
+
+==============================================================================
+SQL$DEFAULT2                                                                                              9:8ac            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+        		all users: (*.*), privileges: (select)
+
+==============================================================================
+SQL$352                                                                                                   9:8ad            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+        		all users: (*.*), privileges: (select)
+
+==============================================================================
+SQL$DEFAULT3                                                                                              9:8ae            <null>
+==============================================================================
+RDB$ACL:
+        	ACL version 1
+        		person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+        		all users: (*.*), privileges: (select)
+
+==============================================================================
+
+"""
 }
 ]
 }

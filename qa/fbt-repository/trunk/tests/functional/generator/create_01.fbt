@@ -1,5 +1,5 @@
 {
-'id': 'functional.generator.create.01',
+'id': 'functional.generator.create_01',
 'qmid': 'functional.generator.create.create_generator_01',
 'tracker_id': '',
 'title': 'CREATE GENERATOR',
@@ -8,6 +8,7 @@
 Dependencies:
 CREATE DATABASE
 Basic SELECT""",
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -33,6 +34,20 @@ SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME='TEST';""",
 RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION
 =============================================================================== ================ =============== =================
 TEST                                                                                                        10               0            <null>
+
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """CREATE GENERATOR test;
+COMMIT;
+SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME='TEST';""",
+ 'expected_stdout': """
+RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION RDB$SECURITY_CLASS                                                                            RDB$OWNER_NAME                                                                                    RDB$INITIAL_VALUE
+=============================================================================== ================ =============== ================= =============================================================================== =============================================================================== =====================
+TEST                                                                                                        12               0            <null> SQL$353                                                                                       SYSDBA                                                                                                            0
 
 """
 }

@@ -1,9 +1,10 @@
 {
-'id': 'functional.basic.db.13',
+'id': 'functional.basic.db.db_13',
 'qmid': 'functional.basic.db.db_13',
 'tracker_id': '',
 'title': 'Empty DB - RDB$GENERATORS',
 'description': 'Check for correct content of RDB$GENERATORS in empty database;',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -68,6 +69,64 @@ RDB$BACKUP_HISTORY                                                              
 ==============================================================================
 RDB$DESCRIPTION:
 Nbackup technology
+==============================================================================
+
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 'select * from RDB$GENERATORS;',
+ 'expected_stdout': """
+RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION RDB$SECURITY_CLASS                                                                            RDB$OWNER_NAME                                                                                    RDB$INITIAL_VALUE
+=============================================================================== ================ =============== ================= =============================================================================== =============================================================================== =====================
+RDB$SECURITY_CLASS                                                                                           1               1            <null> SQL$138                                                                                       SYSDBA                                                                                                            0
+SQL$DEFAULT                                                                                                  2               1            <null> SQL$139                                                                                       SYSDBA                                                                                                            0
+RDB$PROCEDURES                                                                                               3               1             14:ef SQL$140                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Procedure ID
+==============================================================================
+RDB$EXCEPTIONS                                                                                               4               1             14:f0 SQL$141                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Exception ID
+==============================================================================
+RDB$CONSTRAINT_NAME                                                                                          5               1             14:f1 SQL$142                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Implicit constraint name
+==============================================================================
+RDB$FIELD_NAME                                                                                               6               1             14:f2 SQL$143                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Implicit domain name
+==============================================================================
+RDB$INDEX_NAME                                                                                               7               1             14:f3 SQL$144                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Implicit index name
+==============================================================================
+RDB$TRIGGER_NAME                                                                                             8               1             14:f4 SQL$145                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Implicit trigger name
+==============================================================================
+RDB$BACKUP_HISTORY                                                                                           9               1             14:f5 SQL$146                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Nbackup technology
+==============================================================================
+RDB$FUNCTIONS                                                                                               10               1             14:f6 SQL$147                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Function ID
+==============================================================================
+RDB$GENERATOR_NAME                                                                                          11               1             14:f7 SQL$148                                                                                       SYSDBA                                                                                                            0
+==============================================================================
+RDB$DESCRIPTION:
+Implicit generator name
 ==============================================================================
 
 """

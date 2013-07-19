@@ -1,5 +1,5 @@
 {
-'id': 'functional.role.create.02',
+'id': 'functional.role.create_02',
 'qmid': 'functional.role.create.create_role_02',
 'tracker_id': '',
 'title': 'CREATE ROLE - try create role with same name',
@@ -8,6 +8,7 @@
 Dependencies:
 CREATE DATABASE
 """,
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -33,6 +34,20 @@ commit;""",
 
 unsuccessful metadata update
 -SQL role TEST already exists
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': """CREATE ROLE test;
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': 'CREATE ROLE test;',
+ 'expected_stderr': """Statement failed, SQLSTATE = 42000
+unsuccessful metadata update
+-CREATE ROLE TEST failed
+-SQL role TEST already exists
+
 """
 }
 ]

@@ -1,5 +1,5 @@
 {
-'id': 'functional.view.create.04',
+'id': 'functional.view.create_04',
 'qmid': 'functional.view.create.create_view_04',
 'tracker_id': '',
 'title': 'CREATE VIEW - bad number of columns',
@@ -9,6 +9,7 @@ Dependencies:
 CREATE DATABASE
 CREATE TABLE
 """,
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -36,6 +37,22 @@ SHOW VIEW test;""",
  'expected_stderr': """Statement failed, SQLSTATE = 07002
 
 Dynamic SQL Error
+-SQL error code = -607
+-Invalid command
+-number of columns does not match select list
+There is no view TEST in this database
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 'CREATE TABLE tb(id INT);',
+ 'test_type': 'ISQL',
+ 'test_script': """CREATE VIEW test (id) AS SELECT id,5 FROM tb;
+SHOW VIEW test;""",
+ 'expected_stderr': """Statement failed, SQLSTATE = 07002
+unsuccessful metadata update
+-CREATE VIEW TEST failed
 -SQL error code = -607
 -Invalid command
 -number of columns does not match select list

@@ -4,6 +4,7 @@
 'tracker_id': '',
 'title': 'Derived table 7 outer reference',
 'description': 'Outer reference inside derived table to other relations in from clause is not allowed.',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.0',

@@ -1,9 +1,10 @@
 {
-'id': 'functional.basic.db.12',
+'id': 'functional.basic.db.db_12',
 'qmid': 'functional.basic.db.db_12',
 'tracker_id': '',
 'title': 'Empty DB - RDB$FUNCTIONS',
 'description': 'Check for correct content of RDB$FUNCTIONS in empty database.',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -36,6 +37,12 @@ RDB$GET_CONTEXT                                                                 
 RDB$SET_CONTEXT                                                                                          <null> <null>                                                                                                   <null> system_module                                                                                                                                                                                                                                                   set_context                                       0               1
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 'select * from RDB$FUNCTIONS;'
 }
 ]
 }

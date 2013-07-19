@@ -1,5 +1,5 @@
 {
-'id': 'functional.domain.drop.03',
+'id': 'functional.domain.drop_03',
 'qmid': 'functional.domain.drop.drop_domain_03',
 'tracker_id': '',
 'title': "DROP DOMAIN - that doesn't exists",
@@ -8,6 +8,7 @@ Note:Bad error message (should be like "Domain TEST not exists")
 
 Dependencies:
 CREATE DATABASE""",
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -37,6 +38,18 @@ unsuccessful metadata update
  'expected_stderr': """Statement failed, SQLSTATE = 42000
 unsuccessful metadata update
 -Domain not found
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 'DROP DOMAIN test;',
+ 'expected_stderr': """Statement failed, SQLSTATE = 42000
+unsuccessful metadata update
+-DROP DOMAIN TEST failed
+-Domain not found
+
 """
 }
 ]

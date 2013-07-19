@@ -1,5 +1,5 @@
 {
-'id': 'functional.exception.drop.03',
+'id': 'functional.exception.drop_03',
 'qmid': 'functional.exception.drop.drop_exception_03',
 'tracker_id': '',
 'title': "DROP EXCEPTION - that doesn't exists",
@@ -7,6 +7,7 @@
 
 Dependencies:
 CREATE DATABASE""",
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -31,6 +32,20 @@ SHOW EXCEPTION test;""",
 unsuccessful metadata update
 -Exception not found
 There is no exception TEST in this database"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """DROP EXCEPTION test;
+SHOW EXCEPTION test;""",
+ 'expected_stderr': """Statement failed, SQLSTATE = 42000
+unsuccessful metadata update
+-DROP EXCEPTION TEST failed
+-Exception not found
+There is no exception TEST in this database
+
+"""
 }
 ]
 }

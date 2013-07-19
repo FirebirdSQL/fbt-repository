@@ -4,6 +4,7 @@
 'tracker_id': '',
 'title': 'ALTER DOMAIN - SET DEFAULT',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '1.0',
@@ -80,6 +81,27 @@ SELECT RDB$FIELD_NAME, RDB$DEFAULT_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='
 RDB$FIELD_NAME                                                                                RDB$DEFAULT_SOURCE
 =============================================================================== ==================
 TEST                                                                                                      2:1f6
+==============================================================================
+RDB$DEFAULT_SOURCE:
+DEFAULT 'test string'
+==============================================================================
+
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': """CREATE DOMAIN test VARCHAR(63);
+""",
+ 'test_type': 'ISQL',
+ 'test_script': """ALTER DOMAIN test SET DEFAULT 'test string';
+COMMIT;
+SELECT RDB$FIELD_NAME, RDB$DEFAULT_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
+""",
+ 'expected_stdout': """
+RDB$FIELD_NAME                                                                                RDB$DEFAULT_SOURCE
+=============================================================================== ==================
+TEST                                                                                                      2:4ab
 ==============================================================================
 RDB$DEFAULT_SOURCE:
 DEFAULT 'test string'
