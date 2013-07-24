@@ -20,13 +20,34 @@ from
 group by
     'Current time is ' || cast(a.t as varchar(15));
 """,
- 'expected_stdout': """Database:  localhost:C:\fbtestnew\tmp\bugs.core_3807.fdb, User: SYSDBA
+ 'expected_stdout': """Database:  localhost:C:btestnew	mpugs.core_3807.fdb, User: SYSDBA
 SQL> CON> CON> CON> CON> CON>
 CONCATENATION
 ===============================================================================
 Current time is 16:06:03.0000
 
 SQL>"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """select
+    'Current time is ' || cast(a.t as varchar(15))
+from
+    (select '16:06:03.0000' t from rdb$database) a
+group by
+    'Current time is ' || cast(a.t as varchar(15));
+""",
+ 'expected_stdout': """
+CONCATENATION
+===============================
+Current time is 16:06:03.0000
+
+"""
 }
 ]
 }

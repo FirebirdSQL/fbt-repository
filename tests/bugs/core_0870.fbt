@@ -3,8 +3,8 @@
 'qmid': 'bugs.core_870',
 'tracker_id': 'CORE-870',
 'title': 'Engine crashes while trying to backup a logically corrupt db',
-'description': '',
-'min_versions': None,
+'description': "This test works only for fb 2.1-2.5 and was converted to dummy one for 3.0 as it needs specificaly corrupted database. We don't have such database with ODS 12 required by fb 3.0+",
+'min_versions': '',
 'versions': [
 {
  'firebird_version': '2.1',
@@ -28,6 +28,13 @@ gbak finished...
 Delete backup file...
 Backup file deleted.
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': ''
 }
 ]
 }

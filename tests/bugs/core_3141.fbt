@@ -19,10 +19,10 @@
                         );
 commit;
 
-insert into testvalues values (1, 'now', 'A', 10, 0);
-insert into testvalues values (2, 'now', 'B', 0, 10);
-insert into testvalues values (3, 'now', 'A', 20, 0);
-insert into testvalues values (4, 'now', 'B', 0, 20);
+insert into testvalues values (1, '2013-06-04', 'A', 10, 0);
+insert into testvalues values (2, '2013-06-04', 'B', 0, 10);
+insert into testvalues values (3, '2013-06-04', 'A', 20, 0);
+insert into testvalues values (4, '2013-06-04', 'B', 0, 20);
 
 create view test_values
 as

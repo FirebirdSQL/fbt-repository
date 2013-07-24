@@ -27,6 +27,28 @@ LOWER
 aӵёϊσɠi
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """SELECT LOWER('İA') FROM RDB$DATABASE;
+SELECT LOWER('AӴЁΪΣƓİ') FROM RDB$DATABASE;
+""",
+ 'expected_stdout': """
+LOWER
+======
+ia
+
+
+LOWER
+=======
+aӵёϊσɠi
+
+"""
 }
 ]
 }

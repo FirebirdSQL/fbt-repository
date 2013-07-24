@@ -4,6 +4,7 @@
 'tracker_id': 'CORE-1019',
 'title': 'Make information available regading ODS Version and Dialect via SQL',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.5.0',
@@ -28,6 +29,19 @@ MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
 MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
 ============= ============= ===============
            11             1               3
+
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """SELECT MON$ODS_MAJOR, MON$ODS_MINOR, MON$SQL_DIALECT FROM MON$DATABASE;
+""",
+ 'expected_stdout': """
+MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
+============= ============= ===============
+           12             0               3
 
 """
 }
