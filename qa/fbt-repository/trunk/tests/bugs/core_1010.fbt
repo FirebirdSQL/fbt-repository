@@ -122,6 +122,45 @@ unsuccessful metadata update
 -RDB$TEST
 -Test
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """CREATE EXCEPTION RDB$TEST 'Test';
+
+commit;
+
+set term ^ ;
+
+CREATE OR ALTER TRIGGER RDB$PROCEDURES_BIU FOR RDB$PROCEDURES
+ACTIVE AFTER UPDATE OR DELETE POSITION 0
+as
+begin
+    EXCEPTION RDB$TEST;
+end^
+
+commit^
+
+create or alter procedure proctest
+ returns (result integer)
+as
+begin
+  result = 0;
+  suspend;
+end^
+
+set term ; ^
+
+commit;
+""",
+ 'expected_stderr': """Statement failed, SQLSTATE = HY000
+unsuccessful metadata update
+-CREATE OR ALTER PROCEDURE PROCTEST failed
+-exception 1
+-RDB$TEST
+-Test
+"""
 }
 ]
 }

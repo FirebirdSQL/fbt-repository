@@ -35,6 +35,36 @@ group by 1, 2;
       4 4                29
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """select
+  rdb$field_position as a,
+  case rdb$field_position when 0 then '0'
+                          when 1 then '1'
+                          when 2 then '2'
+                          when 3 then '3'
+                          when 4 then '4' end as b,
+  count(*) as cnt
+from rdb$relation_fields
+where rdb$field_position < 5
+group by 1, 2;
+""",
+ 'expected_stdout': """
+      A B                        CNT
+======= ====== =====================
+      0 0                         44
+      1 1                         44
+      2 2                         43
+      3 3                         40
+      4 4                         33
+
+"""
 }
 ]
 }

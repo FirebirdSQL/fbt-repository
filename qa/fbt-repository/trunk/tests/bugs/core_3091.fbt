@@ -42,7 +42,7 @@ select 'power( 3.0, 2 )', power( 3.0, 2 ) from RDB$DATABASE
 union all
 select 'power( 3.0, -2 )', power( 3.0, -2 ) from RDB$DATABASE
 ;""",
- 'expected_stdout': """Database:  localhost:C:\fbtest2\tmp\bugs.core_3091.fdb, User: SYSDBA
+ 'expected_stdout': """Database:  localhost:C:btest2	mpugs.core_3091.fdb, User: SYSDBA
 SQL> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON>
 
 ============================================================================ =======================
@@ -63,6 +63,63 @@ power( 3.0, 2 )                                                                 
 power( 3.0, -2 )                                                                  0.1111111111111111
 
 SQL>"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """select 'power( 3, 2 )', power( 3, 2 ) from RDB$DATABASE
+union all
+select 'power( -3, 2 )', power( -3, 2 ) from RDB$DATABASE
+union all
+select 'power( 3, -2 )', power( 3, -2 ) from RDB$DATABASE
+union all
+select 'power( -3, -2 )', power( -3, -2 ) from RDB$DATABASE
+union all
+select 'power( 3, 2.0 )', power( 3, 2.0 ) from RDB$DATABASE
+union all
+select 'power( 3, -2.0 )', power( 3, -2.0 ) from RDB$DATABASE
+union all
+select 'power( -3, 2.0 )', power( -3, 2.0 ) from RDB$DATABASE
+union all
+select 'power( -3, -2.0 )', power( -3, -2.0 ) from RDB$DATABASE
+union all
+select 'power( -3.0, 2 )', power( -3.0, 2 ) from RDB$DATABASE
+union all
+select 'power( -3.0, 2.0 )', power( -3.0, 2.0 ) from RDB$DATABASE
+union all
+select 'power( -3.0, -2.0 )', power( -3.0, -2.0 ) from RDB$DATABASE
+union all
+select 'power( 3.0, -2.0 )', power( 3.0, -2.0 ) from RDB$DATABASE
+union all
+select 'power( 3.0, 2.0 )', power( 3.0, 2.0 ) from RDB$DATABASE
+union all
+select 'power( 3.0, 2 )', power( 3.0, 2 ) from RDB$DATABASE
+union all
+select 'power( 3.0, -2 )', power( 3.0, -2 ) from RDB$DATABASE
+;""",
+ 'expected_stdout': """
+
+=================== =======================
+power( 3, 2 )             9.000000000000000
+power( -3, 2 )            9.000000000000000
+power( 3, -2 )           0.1111111111111111
+power( -3, -2 )          0.1111111111111111
+power( 3, 2.0 )           9.000000000000000
+power( 3, -2.0 )         0.1111111111111111
+power( -3, 2.0 )          9.000000000000000
+power( -3, -2.0 )        0.1111111111111111
+power( -3.0, 2 )          9.000000000000000
+power( -3.0, 2.0 )        9.000000000000000
+power( -3.0, -2.0 )      0.1111111111111111
+power( 3.0, -2.0 )       0.1111111111111111
+power( 3.0, 2.0 )         9.000000000000000
+power( 3.0, 2 )           9.000000000000000
+power( 3.0, -2 )         0.1111111111111111
+
+"""
 }
 ]
 }

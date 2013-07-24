@@ -4,6 +4,7 @@
 'tracker_id': 'CORE-1885',
 'title': 'CREATE COLLATION connection lost under Posix',
 'description': 'CREATE COLLATION connection lost under Posix when using LOCALE option',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.5.0',
@@ -24,6 +25,18 @@ unsuccessful metadata update
 """,
  'expected_stderr': """Statement failed, SQLCODE = -607
 unsuccessful metadata update
+-Invalid collation attributes
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+""",
+ 'expected_stderr': """Statement failed, SQLSTATE = HY000
+unsuccessful metadata update
+-CREATE COLLATION UNICODE_ENUS_CI failed
 -Invalid collation attributes
 """
 }

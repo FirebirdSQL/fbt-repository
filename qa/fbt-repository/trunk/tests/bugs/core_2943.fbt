@@ -34,6 +34,35 @@ NAME                                                                            
 RDB$PAGES                                                                                                                    NONE
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """with recursive
+    tree (NAME) as (
+      select r.rdb$relation_name from rdb$relations r
+      union all
+      select r2.rdb$relation_name || tree.NAME from rdb$relations r2, tree
+      where 1 = 0
+    ),
+    tree_2 as (
+        select c.rdb$character_set_name from rdb$character_sets c
+        union all
+        select c2.rdb$character_set_name from rdb$character_sets c2, tree_2
+        where 1 = 0
+    )
+select * from tree, tree_2 where NAME='RDB$PAGES' and RDB$CHARACTER_SET_NAME='NONE';
+
+""",
+ 'expected_stdout': """
+NAME                            RDB$CHARACTER_SET_NAME
+=============================== ===============================
+RDB$PAGES                       NONE
+
+"""
 }
 ]
 }

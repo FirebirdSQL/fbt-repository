@@ -45,6 +45,46 @@ C
 1
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
+ 'page_size': '4096',
+ 'init_script': """create table z (c varchar(10));
+
+insert into z values (1);
+insert into z values (1);
+insert into z values (2);
+insert into z values (3);
+
+commit;
+""",
+ 'test_type': 'ISQL',
+ 'test_script': """select *
+from (
+  select (select case when R.RDB$Relation_ID = 0 then 0 else 1 end from RDB$Database) TypeID
+  from RDB$Relations R
+  where R.RDB$Relation_ID < 2
+);
+
+select c from z where (select z.c || '' from rdb$database) = '1';
+
+""",
+ 'expected_stdout': """
+      TYPEID
+============
+           0
+           1
+
+
+C
+==========
+1
+1
+
+"""
 }
 ]
 }

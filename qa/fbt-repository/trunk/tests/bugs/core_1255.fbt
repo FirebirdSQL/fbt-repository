@@ -10,6 +10,7 @@ SELECT ((EXTRACT(YEAR FROM CAST('2007-01-01' AS DATE)) || _UTF8'')) col FROM rdb
 Produces the error
 Statement failed, SQLCODE = -802
 arithmetic exception, numeric overflow, or string truncation""",
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.1',
@@ -19,6 +20,18 @@ arithmetic exception, numeric overflow, or string truncation""",
 """,
  'expected_stdout': """COL
 ========================
+2007
+
+"""
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """SELECT ((EXTRACT(YEAR FROM CAST('2007-01-01' AS DATE)) || _UTF8'')) col FROM rdb$database GROUP BY 1;
+""",
+ 'expected_stdout': """COL
+======
 2007
 
 """

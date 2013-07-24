@@ -10,7 +10,8 @@
  'firebird_version': '2.0.2',
  'platform': 'All',
  'test_type': 'Python',
- 'test_script': """cur1 = db_conn.cursor()
+ 'test_script': """svc = kdb.services.connect(password=user_password)
+cur1 = db_conn.cursor()
 db_conn.begin()
 cur1.execute('select * from rdb$database')
 print ('Operation performed before shutdown')
@@ -26,6 +27,7 @@ try:
 except Exception, e:
   print ("Ok, we've got error.", e[0])
 
+#svc.bring_online(dsn)
 # This is necessary to remove the database
 #db_conn.close()
 runProgram('gfix',[dsn,'-user',user_name,'-pas',user_password,'-online'])
