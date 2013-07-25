@@ -22,6 +22,23 @@ SET SQL DIALECT 3;
 
 """,
  'substitutions': [("CREATE DATABASE '.*' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE","CREATE DATABASE '' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE")]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'Python',
+ 'test_script': """#
+runProgram('isql',['-x',dsn,'-user',user_name,'-pass',user_password])
+""",
+ 'expected_stdout': """
+SET SQL DIALECT 3;
+
+/* CREATE DATABASE 'XXX' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE; */
+
+
+""",
+ 'substitutions': [("CREATE DATABASE '.*' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE","CREATE DATABASE '' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE")]
 }
 ]
 }

@@ -3,7 +3,7 @@
 'qmid': 'bugs.core_959-21',
 'tracker_id': 'CORE-959',
 'title': 'GSTAT does not work using the localhost connection string',
-'description': "",
+'description': '',
 'min_versions': None,
 'versions': [
 {
@@ -169,6 +169,41 @@ Analyzing database pages ...
 
     Variable header data:
 	*END*
+
+Database file sequence:
+
+Analyzing database pages ...
+""",
+ 'substitutions': [('^Database ".*',''),('Page size.*',''),('ODS version.*',''),('Oldest.*',''),('Next.*',''),('Bumped.*',''),('Creation date.*',''),('Attributes.*',''),('File .*',''),('Implementation.*',''),('Generation.*','')]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': "runProgram('gstat',['-a','-user',user_name,'-pa',user_password,dsn])",
+ 'expected_stdout': """Database header page information:
+	Flags			0
+	Generation		3
+	System Change Number	0
+	Page size		4096
+	ODS version		12.0
+	Oldest transaction	1
+	Oldest active		0
+	Oldest snapshot		0
+	Next transaction	1
+	Sequence number		0
+	Next attachment ID	3
+	Implementation		HW=Intel/i386 little-endian OS=Windows CC=MSVC
+	Shadow count		0
+	Page buffers		0
+	Next header page	0
+	Database dialect	3
+	Creation date		Jul 25, 2013 12:46:06
+	Attributes		force write
+
+    Variable header data:
+	*END*
+
 
 Database file sequence:
 
