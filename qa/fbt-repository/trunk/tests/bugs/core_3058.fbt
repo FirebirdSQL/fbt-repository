@@ -1,0 +1,41 @@
+{
+'id': 'bugs.core_3058',
+'qmid': None,
+'tracker_id': 'CORE-3058',
+'title': 'New generators are created with wrong value when more than 32K generators was previously created',
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5.1',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """set term !;
+execute block
+as
+  declare n integer = 0;
+  declare x integer;
+begin
+  while (n < 33000)
+  do
+  begin
+    in autonomous transaction do
+       execute statement 'create sequence s' || n;
+    in autonomous transaction do
+       execute statement 'select gen_id(s' || n || ', 1000) from rdb$database' into x;
+    in autonomous transaction do
+       execute statement 'drop sequence s' || n;
+
+    n = n + 1;
+  end
+end!
+set term ;!""",
+ 'test_type': 'ISQL',
+ 'test_script': """create sequence s1;
+show sequence;""",
+ 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_tests\fbt-repository\tmp\bugs.core_3058.fdb, User: SYSDBA
+SQL> SQL> Generator S1, current value is 0
+SQL>"""
+}
+]
+}
