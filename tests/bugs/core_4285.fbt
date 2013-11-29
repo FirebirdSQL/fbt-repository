@@ -1,0 +1,86 @@
+{
+'id': 'bugs.core_4285',
+'qmid': None,
+'tracker_id': 'CORE-4285',
+'title': 'Choose the best matching index for navigation',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """create table test (col1 int, col2 int, col3 int);
+create index itestcol1 on test (col1);
+create index itestcol12 on test (col1, col2);
+create index itestcol21 on test (col2, col1);
+create index itestcol123 on test (col1, col2, col3);
+create index itestcol132 on test (col1, col3, col2);
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': """set planonly;
+select * from RDB$COLLATIONS where RDB$COLLATION_ID = 0 order by RDB$CHARACTER_SET_ID;
+-- expected: PLAN (RDB$COLLATIONS ORDER RDB$INDEX_26)
+
+select 1 from test order by col1;
+-- expected: PLAN (TEST ORDER ITESTCOL1)
+
+select 1 from test where col1 = 0 order by col1;
+-- expected: PLAN (TEST ORDER ITESTCOL1)
+
+select 1 from test order by col1, col2;
+-- expected: PLAN (TEST ORDER ITESTCOL12)
+
+select 1 from test where col1 = 0 order by col1, col2;
+-- expected: PLAN (TEST ORDER ITESTCOL12)
+
+select 1 from test where col1 = 0 and col2 = 0 order by col1, col2;
+-- expected: PLAN (TEST ORDER ITESTCOL12)
+
+select 1 from test order by col1, col2, col3;
+-- expected: PLAN (TEST ORDER ITESTCOL123)
+
+select 1 from test where col1 = 0 order by col1, col2, col3;
+-- expected: PLAN (TEST ORDER ITESTCOL123)
+
+select 1 from test where col1 = 0 and col2 = 0 order by col1, col2, col3;
+-- expected: PLAN (TEST ORDER ITESTCOL123)
+
+select 1 from test where col1 = 0 and col3 = 0 order by col1;
+-- expected: PLAN (TEST ORDER ITESTCOL132)
+
+select 1 from test where col1 = 0 and col3 = 0 order by col1, col2, col3;
+-- expected: PLAN (TEST ORDER ITESTCOL123)
+
+select 1 from test where col1 = 0 and col3 = 0 order by col1, col3;
+-- expected: PLAN (TEST ORDER ITESTCOL132)
+""",
+ 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_tests\fbt-repository\tmp\bugs.core_4285.fdb, User: SYSDBA
+SQL> SQL> CON> CON> CON>
+PLAN (RDB$COLLATIONS ORDER RDB$INDEX_26)
+SQL>
+PLAN (TEST ORDER ITESTCOL1)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL1)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL12)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL12)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL12)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL123)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL123)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL123)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL132)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL123)
+SQL> SQL> SQL>
+PLAN (TEST ORDER ITESTCOL132)
+SQL> SQL>"""
+}
+]
+}
