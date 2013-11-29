@@ -76,7 +76,7 @@ end !!
 select * from sp_test !!
 rollback !!
 """,
- 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_tests\fbt-repository\tmp\bugs.core_3029.fdb, User: SYSDBA
+ 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_testsbt-repository	mpugs.core_3029.fdb, User: SYSDBA
 SQL> SQL> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON> CON>
           ID          DID          DEP          PID
 ============ ============ ============ ============
@@ -93,7 +93,8 @@ Statement failed, SQLSTATE = 23000
 attempt to store duplicate value (visible to active transactions) in unique index "IX_TEST_ROW1"
 -At procedure 'SP_TEST' line: 15, col: 5
 -At procedure 'SP_TEST' line: 20, col: 12
-"""
+""",
+ 'substitutions': [('line:*','')]
 }
 ]
 }
