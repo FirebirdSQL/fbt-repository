@@ -94,7 +94,7 @@ attempt to store duplicate value (visible to active transactions) in unique inde
 -At procedure 'SP_TEST' line: 15, col: 5
 -At procedure 'SP_TEST' line: 20, col: 12
 """,
- 'substitutions': [('line:*','')]
+ 'substitutions': [('line.*',''),('col.*','')]
 }
 ]
 }
