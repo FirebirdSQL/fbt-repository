@@ -1,0 +1,26 @@
+{
+'id': 'bugs.core_4198',
+'qmid': None,
+'tracker_id': 'CORE-4198',
+'title': ' Incorrect "token unknown" error when the SQL string ends with a hex number literal',
+'description': '',
+'min_versions': '2.5.3',
+'versions': [
+{
+ 'firebird_version': '2.5.3',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """select 1 from rdb$database where 1 = 0x1 ;
+select 1 from rdb$database where 1 = 0x1;
+""",
+ 'expected_stdout': """    CONSTANT
+============
+           1
+    CONSTANT
+============
+           1
+"""
+}
+]
+}
