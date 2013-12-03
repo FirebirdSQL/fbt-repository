@@ -1,0 +1,52 @@
+{
+'id': 'bugs.core_4233',
+'qmid': None,
+'tracker_id': 'CORE-4233',
+'title': 'In PSQL modules with declared cursors engine could assign value to the wrong variable',
+'description': '',
+'min_versions': '2.5.3',
+'versions': [
+{
+ 'firebird_version': '2.5.3',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """set term !!;
+CREATE OR ALTER PROCEDURE HIDDEN_VARS
+  RETURNS (OUT_A INT, OUT_B1 INT, OUT_B2 INT)
+AS
+DECLARE A INT;
+DECLARE C CURSOR FOR
+  (SELECT COALESCE( (SELECT COUNT(*) FROM RDB$RELATIONS), -1) FROM RDB$DATABASE);
+DECLARE B INT = 0;
+BEGIN
+  OUT_B1 = B;
+
+  OPEN C;
+  FETCH C INTO :A;
+  CLOSE C;
+
+  OUT_A = A;
+  OUT_B2 = B;
+  B = B + 1;
+  SUSPEND;
+END !!
+set term ; !!
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': """SELECT OUT_B1, OUT_B2 FROM HIDDEN_VARS;
+SELECT OUT_B1, OUT_B2 FROM HIDDEN_VARS;
+SELECT OUT_B1, OUT_B2 FROM HIDDEN_VARS;
+""",
+ 'expected_stdout': """      OUT_B1       OUT_B2
+============ ============
+           0            0
+      OUT_B1       OUT_B2
+============ ============
+           0            0
+      OUT_B1       OUT_B2
+============ ============
+           0            0
+"""
+}
+]
+}
