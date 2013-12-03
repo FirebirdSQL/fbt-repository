@@ -1,0 +1,23 @@
+{
+'id': 'bugs.core_4093',
+'qmid': None,
+'tracker_id': 'CORE-4093',
+'title': 'Server crashes while converting an overscaled numeric to a string',
+'description': '',
+'min_versions': '2.1.6',
+'versions': [
+{
+ 'firebird_version': '2.1.6',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': """SET HEADING OFF;
+select cast(cast(0 as numeric(18, 15)) * cast(0 as numeric(18, 15)) * cast(0 as numeric(18, 15)) as varchar (41)) from rdb$database;""",
+ 'expected_stderr': """Statement failed, SQLSTATE = 22018
+
+conversion error from string "0.000000000000000000000000000000000000000000000"
+
+"""
+}
+]
+}
