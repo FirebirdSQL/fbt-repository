@@ -15,11 +15,10 @@ commit;""",
  'test_type': 'ISQL',
  'test_script': """insert into tw select rpad('',32600, gen_uuid()),rpad('',32600, gen_uuid()) from rdb$database;
 commit;
+set heading off;
 SELECT count(*) from tw;
 """,
- 'expected_stdout': """       COUNT
-============
-           1
+ 'expected_stdout': """1
 """
 }
 ]
