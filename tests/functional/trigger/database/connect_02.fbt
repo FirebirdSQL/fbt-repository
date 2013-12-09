@@ -49,7 +49,8 @@ except Exception,e:
 - At trigger 'ONCONNECT' line: 5, col: 29
 -836
 335544517
-"""
+""",
+ 'substitutions': [('line:.*','')]
 }
 ]
 }
