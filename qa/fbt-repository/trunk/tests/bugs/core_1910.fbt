@@ -28,7 +28,8 @@ Dynamic SQL Error
 -Column unknown
 -A
 -At line 7, column 15
-"""
+""",
+ 'substitutions': [('column.*','')]
 }
 ]
 }

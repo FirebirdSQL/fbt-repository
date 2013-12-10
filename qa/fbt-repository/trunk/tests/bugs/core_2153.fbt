@@ -13,13 +13,13 @@
  'test_type': 'ISQL',
  'test_script': """set count on ;
 
-select * from rdb$database
+select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
 where rdb$character_set_name similar to '%(av|ie){2,}%' ;
 
-select * from rdb$database
+select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
 where rdb$character_set_name similar to '%((av)|(ie)){2,}%' ;
 
-select * from rdb$database
+select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
 where rdb$character_set_name similar to '%(av)|{2,}%' ;
 """,
  'expected_stdout': """Records affected: 0
