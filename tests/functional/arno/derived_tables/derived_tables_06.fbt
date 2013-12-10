@@ -82,7 +82,8 @@ Dynamic SQL Error
 -T10.ID
 -At line 5, column 53
 
-"""
+""",
+ 'substitutions': [('column.*','')]
 }
 ]
 }

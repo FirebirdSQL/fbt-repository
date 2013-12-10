@@ -50,6 +50,29 @@ GSEC> ambiguous switch specified
 error in switch specifications
 GSEC>""",
  'substitutions': [('GSEC> Invalid switch specified*','GSEC> invalid switch specified'),('GSEC> invalid switch specified*','GSEC> invalid switch specified'),('error in switch specifications*',''),('in interactive mode*','')]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': '''commands = """add BADPARAM -pa PWD
+add BADPARAM -pas PWD
+add BADPARAM -password PWD
+add BADPARAM -user USR
+add BADPARAM -database DB
+add BADPARAM -trusted
+quit
+"""
+runProgram('gsec',['-user',user_name,'-pas',user_password],commands)''',
+ 'expected_stderr': """GSEC> invalid switch specified in interactive mode
+GSEC> invalid switch specified in interactive mode
+GSEC> invalid switch specified in interactive mode
+GSEC> invalid switch specified in interactive mode
+GSEC> invalid switch specified in interactive mode
+GSEC> invalid switch specified
+error in switch specifications
+GSEC>""",
+ 'substitutions': [('GSEC> Invalid switch specified*','GSEC> invalid switch specified'),('GSEC> invalid switch specified*','GSEC> invalid switch specified'),('error in switch specifications*',''),('in interactive mode*','')]
 }
 ]
 }
