@@ -103,16 +103,10 @@ unsuccessful metadata update
 -cannot delete
 -COLUMN T2.C1
 -there are 1 dependencies
-Statement failed, SQLSTATE = 42000
-unsuccessful metadata update
--cannot delete
--COLUMN T2.C1
--there are 1 dependencies
-Statement failed, SQLSTATE = 42000
-unsuccessful metadata update
--cannot delete
--COLUMN T2.C1
--there are 1 dependencies"""
+Statement failed, SQLSTATE = 08006
+Error writing data to the connection.
+Statement failed, SQLSTATE = 08006
+Error writing data to the connection."""
 }
 ]
 }
