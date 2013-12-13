@@ -30,7 +30,7 @@ unsuccessful metadata update
 },
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'test_type': 'ISQL',
  'test_script': """CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
 """,
