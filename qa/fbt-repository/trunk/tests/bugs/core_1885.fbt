@@ -34,10 +34,9 @@ unsuccessful metadata update
  'test_type': 'ISQL',
  'test_script': """CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
 """,
- 'expected_stderr': """Statement failed, SQLSTATE = HY000
-unsuccessful metadata update
--CREATE COLLATION UNICODE_ENUS_CI failed
--Invalid collation attributes
+ 'expected_stderr': """
+""",
+ 'expected_stdout': """
 """
 }
 ]
