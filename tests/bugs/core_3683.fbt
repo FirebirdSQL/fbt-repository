@@ -1,0 +1,107 @@
+{
+'id': 'bugs.core_3683',
+'qmid': None,
+'tracker_id': 'CORE-3683',
+'title': 'Wrong results if the recursive query contains an embedded GROUP BY clause',
+'description': '',
+'min_versions': '2.5.2',
+'versions': [
+{
+ 'firebird_version': '2.5.2',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """recreate table rdeps(parent varchar(32),child varchar(32), parent_type int, child_type int, f01 int);
+commit;
+
+insert into rdeps values( 'MOSCOW', 'TULA', 0, 5, 21);
+insert into rdeps values( 'MOSCOW', 'TULA', 0, 5, 22);
+
+insert into rdeps values( 'TULA', 'OREL', 5, 5, 51);
+insert into rdeps values( 'TULA', 'OREL', 5, 5, 52);
+
+insert into rdeps values( 'TULA', 'LIPETSK', 5, 2, 71);
+insert into rdeps values( 'TULA', 'LIPETSK', 5, 2, 72);
+
+insert into rdeps values( 'TULA', 'RYAZAN', 5, 5, 61);
+insert into rdeps values( 'TULA', 'RYAZAN', 5, 5, 62);
+
+insert into rdeps values( 'OREL', 'KURSK', 5, 5, 81);
+insert into rdeps values( 'OREL', 'KURSK', 5, 5, 82);
+
+insert into rdeps values( 'LIPETSK','VORONEZH', 5, 2, 71);
+insert into rdeps values( 'LIPETSK','VORONEZH', 5, 2, 72);
+
+insert into rdeps values( 'RYAZAN','MUROM', 5, 5, 61);
+insert into rdeps values( 'RYAZAN','MUROM', 5, 5, 62);
+
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': """with recursive
+rd as(
+  select
+     d.parent parent
+    ,d.child
+  from rdeps d
+  group by d.parent,d.child -- <<< we need this grouping to eliminate duplicates
+)
+,cr as(
+  select 0 step,parent,child,cast(parent as varchar(32000))||'->'||child routes
+  from rd
+  where rd.parent='MOSCOW'
+
+  UNION ALL
+
+  select x.step+1,rd.parent,rd.child,x.routes||'->'||rd.child
+  from cr x
+  join rd on x.child=rd.parent
+)
+select step,routes from cr order by step,routes;
+commit;
+create index rdeps_unq on rdeps(parent, child, f01);
+commit;
+with recursive
+rd as(
+  select
+     d.parent parent
+    ,d.child
+  from rdeps d
+  group by d.parent,d.child -- <<< we need this grouping to eliminate duplicates
+)
+,cr as(
+  select 0 step,parent,child,cast(parent as varchar(32000))||'->'||child routes
+  from rd
+  where rd.parent='MOSCOW'
+
+  UNION ALL
+
+  select x.step+1,rd.parent,rd.child,x.routes||'->'||rd.child
+  from cr x
+  join rd on x.child=rd.parent
+)
+select step,routes from cr order by step,routes;
+""",
+ 'expected_stdout': """SQL>
+        STEP ROUTES
+============ ===============================================================================
+           0 MOSCOW->TULA
+           1 MOSCOW->TULA->LIPETSK
+           1 MOSCOW->TULA->OREL
+           1 MOSCOW->TULA->RYAZAN
+           2 MOSCOW->TULA->LIPETSK->VORONEZH
+           2 MOSCOW->TULA->OREL->KURSK
+           2 MOSCOW->TULA->RYAZAN->MUROM
+
+SQL>
+        STEP ROUTES
+============ ===============================================================================
+           0 MOSCOW->TULA
+           1 MOSCOW->TULA->LIPETSK
+           1 MOSCOW->TULA->OREL
+           1 MOSCOW->TULA->RYAZAN
+           2 MOSCOW->TULA->LIPETSK->VORONEZH
+           2 MOSCOW->TULA->OREL->KURSK
+           2 MOSCOW->TULA->RYAZAN->MUROM
+"""
+}
+]
+}
