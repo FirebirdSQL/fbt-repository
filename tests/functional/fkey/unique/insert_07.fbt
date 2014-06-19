@@ -62,6 +62,7 @@ except Exception, e:
 - lock conflict on no wait transaction
 - violation of FOREIGN KEY constraint "FK_DETAIL_TABLE" on table "DETAIL_TABLE"
 - Foreign key reference target does not exist
+- Problematic key value is ("FKEY" = 1)
 """
 }
 ]

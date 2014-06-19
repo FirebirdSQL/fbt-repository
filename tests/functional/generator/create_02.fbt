@@ -53,6 +53,21 @@ unsuccessful metadata update
 -Sequence TEST already exists
 
 """
+},
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'init_script': """CREATE GENERATOR test;
+commit;
+""",
+ 'test_type': 'ISQL',
+ 'test_script': 'CREATE GENERATOR test;',
+ 'expected_stderr': """Statement failed, SQLCODE = -607
+unsuccessful metadata update
+-DEFINE GENERATOR failed
+-attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_11"
+-Problematic key value is ("RDB$GENERATOR_NAME" = 'TEST')
+"""
 }
 ]
 }
