@@ -51,6 +51,20 @@ unsuccessful metadata update
 -Exception TEST already exists
 
 """
+},
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'init_script': """CREATE EXCEPTION test 'A1';
+commit;""",
+ 'test_type': 'ISQL',
+ 'test_script': "CREATE EXCEPTION test 'message to show';",
+ 'expected_stderr': """Statement failed, SQLCODE = -607
+unsuccessful metadata update
+-DEFINE EXCEPTION failed
+-attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_23"
+-Problematic key value is ("RDB$EXCEPTION_NAME" = 'TEST')
+"""
 }
 ]
 }

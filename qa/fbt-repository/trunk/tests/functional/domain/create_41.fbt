@@ -44,6 +44,19 @@ unsuccessful metadata update
 -violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_2" on table "RDB$FIELDS"
 
 """
+},
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'init_script': 'CREATE DOMAIN test AS INTEGER;',
+ 'test_type': 'ISQL',
+ 'test_script': 'CREATE DOMAIN test AS VARCHAR(32);',
+ 'expected_stderr': """Statement failed, SQLCODE = -607
+unsuccessful metadata update
+-STORE RDB$FIELDS failed
+-attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_2"
+-Problematic key value is ("RDB$FIELD_NAME" = 'TEST')
+"""
 }
 ]
 }

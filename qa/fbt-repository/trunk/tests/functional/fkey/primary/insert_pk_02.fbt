@@ -58,10 +58,10 @@ except Exception, e:
   print (e[0])""",
  'expected_stdout': """Error while executing SQL statement:
 - SQLCODE: -901
-- Unsuccessful execution caused by system error that does not preclude successful execution of subsequent statements
 - lock conflict on no wait transaction
 - violation of FOREIGN KEY constraint "FK_DETAIL_TABLE" on table "DETAIL_TABLE"
 - Foreign key reference target does not exist
+- Problematic key value is ("FKEY" = 1)
 """
 },
 {

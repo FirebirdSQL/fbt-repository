@@ -1,9 +1,10 @@
 {
-'id': 'bugs.core_104',
+'id': 'bugs.core_0104',
 'qmid': 'bugs.core_104-250',
 'tracker_id': 'CORE-104',
 'title': 'Dropping and recreating a table in the same txn disables PK',
 'description': '',
+'min_versions': None,
 'versions': [
 {
  'firebird_version': '2.5.0',
@@ -49,6 +50,7 @@ commit;
 """,
  'expected_stderr': """Statement failed, SQLCODE = -803
 violation of PRIMARY or UNIQUE KEY constraint "INTEG_4" on table "TEST"
+-Problematic key value is ("ACOLUMN" = 1)
 """
 }
 ]

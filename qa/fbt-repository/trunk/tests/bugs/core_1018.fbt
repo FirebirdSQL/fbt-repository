@@ -148,6 +148,20 @@ RDB$GET_CONTEXT
 3.0.0
 
 """
+},
+{
+ 'firebird_version': '2.1.6',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """select rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database;
+""",
+ 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_tests\fbt-repository\tmp\bugs.core_1018.fdb, User: SYSDBA
+SQL>
+RDB$GET_CONTEXT
+===============================================================================
+2.1.6
+
+SQL>"""
 }
 ]
 }
