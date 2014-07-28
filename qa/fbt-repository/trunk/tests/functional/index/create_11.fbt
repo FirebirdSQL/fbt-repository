@@ -71,6 +71,26 @@ COMMIT;
 attempt to store duplicate value (visible to active transactions) in unique index "TEST"
 -Problematic key value is ("A" = 0)
 """
+},
+{
+ 'firebird_version': '2.5.3',
+ 'platform': 'All',
+ 'init_script': """CREATE TABLE t( a INTEGER);
+commit;
+INSERT INTO t VALUES(0);
+INSERT INTO t VALUES(0);
+INSERT INTO t VALUES(1);
+INSERT INTO t VALUES(2);
+INSERT INTO t VALUES(3);
+INSERT INTO t VALUES(4);
+COMMIT;
+""",
+ 'test_type': 'ISQL',
+ 'test_script': 'CREATE UNIQUE INDEX test ON t(a);',
+ 'expected_stderr': """Statement failed, SQLSTATE = 23000
+attempt to store duplicate value (visible to active transactions) in unique index "TEST"
+-Problematic key value is ("A" = 0)
+"""
 }
 ]
 }

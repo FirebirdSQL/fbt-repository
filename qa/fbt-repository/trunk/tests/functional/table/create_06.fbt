@@ -58,7 +58,7 @@ unsuccessful metadata update
 unsuccessful metadata update
 -CREATE TABLE TEST failed
 -violation of PRIMARY or UNIQUE KEY constraint "RDB$INDEX_15" on table "RDB$RELATION_FIELDS"
-
+-Problematic key value is ("RDB$FIELD_NAME" = 'C1', "RDB$RELATION_NAME" = 'TEST')
 """
 },
 {
@@ -72,6 +72,23 @@ unsuccessful metadata update
 
 """,
  'expected_stderr': """Statement failed, SQLCODE = -607
+unsuccessful metadata update
+-STORE RDB$RELATION_FIELDS failed
+-attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_15"
+-Problematic key value is ("RDB$FIELD_NAME" = 'C1', "RDB$RELATION_NAME" = 'TEST')
+"""
+},
+{
+ 'firebird_version': '2.5.3',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': """CREATE TABLE test(
+ c1 SMALLINT,
+ c1 INTEGER
+);
+
+""",
+ 'expected_stderr': """Statement failed, SQLSTATE = 42000
 unsuccessful metadata update
 -STORE RDB$RELATION_FIELDS failed
 -attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_15"
