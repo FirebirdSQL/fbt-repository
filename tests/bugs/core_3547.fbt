@@ -8,7 +8,7 @@
 'versions': [
 {
  'firebird_version': '2.5.1',
- 'platform': 'All',
+ 'platform': 'Windows',
  'page_size': '4096',
  'init_script': """create table t1 (col double precision primary key);
 commit;
@@ -77,6 +77,80 @@ SQL>""",
 violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "T1"
 
 -Problematic key value is ("COL" = 0.0000000000000000)
+
+"""
+},
+{
+ 'firebird_version': '2.5.1',
+ 'platform': 'Linux:MacOS:Solaris:FreeBSD:HP-UX',
+ 'page_size': '4096',
+ 'init_script': """create table t1 (col double precision primary key);
+commit;
+create table t2 (col float);
+commit;
+""",
+ 'test_type': 'ISQL',
+ 'test_script': """select count(*) "1" from rdb$relations where rdb$relation_id = 0;
+select count(*) "1" from rdb$relations where rdb$relation_id = 0e0;
+select count(*) "1" from rdb$relations where rdb$relation_id = (1e0 - 1e0);
+select count(*) "1" from rdb$relations where rdb$relation_id = -0e0;
+select count(*) "1" from rdb$relations where rdb$relation_id = -(1e0 - 1e0);
+select count(*) "1" from rdb$database where 0e0 = -0e0;
+insert into t2 (col) values (0e0);
+insert into t2 (col) values (-0e0);
+commit;
+select count(distinct col) from t2;
+insert into t1 (col) values (0e0);
+commit;
+insert into t1 (col) values (-0e0);
+commit;
+select col, count(*) from t1 group by col;""",
+ 'expected_stdout': """SQL>
+           1
+============
+           1
+
+SQL>
+           1
+============
+           1
+
+SQL>
+           1
+============
+           1
+
+SQL>
+           1
+============
+           1
+
+SQL>
+           1
+============
+           1
+
+SQL>
+           1
+============
+           1
+
+SQL>
+       COUNT
+============
+           1
+
+SQL>
+                    COL        COUNT
+======================= ============
+     0.0000000000000000            1
+
+SQL>""",
+ 'expected_stderr': """Statement failed, SQLSTATE = 23000
+
+violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "T1"
+
+-Problematic key value is ("COL" = 0.00000000000000000)
 
 """
 }
