@@ -117,7 +117,7 @@ printData(c2)
 """
 },
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5.3',
  'platform': 'All',
  'page_size': '4096',
  'init_script': """create table T (C integer);
@@ -162,13 +162,13 @@ c2.execute("select MON$STATEMENT_ID,MON$STAT_ID,MON$SQL_TEXT from mon$statements
 #printData(c)
 row = c2.fetchone()
 #print (row)
-c2.execute("select MON$PAGE_READS,MON$PAGE_WRITES,MON$PAGE_FETCHES,MON$PAGE_MARKS from mon$io_stats where mon$stat_id = %i" % row[1])
+c2.execute("select 'OK' AS OK from mon$io_stats where MON$PAGE_READS>1200 and MON$PAGE_FETCHES>202400 and mon$stat_id = %i" % row[1])
 printData(c2)
 
 """,
- 'expected_stdout': """MON$PAGE_READS       MON$PAGE_WRITES      MON$PAGE_FETCHES     MON$PAGE_MARKS
--------------------- -------------------- -------------------- --------------------
-1235                 0                    202472               0
+ 'expected_stdout': """OK
+--
+OK
 """
 }
 ]
