@@ -1,0 +1,53 @@
+{
+'id': 'bugs.core_4452',
+'qmid': None,
+'tracker_id': 'CORE-4452',
+'title': 'Can`t create two collations with different names if autoddl OFF in FB 2.5.3',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+show collation;
+set autoddl off;
+commit;
+create collation name_coll for utf8 from unicode CASE INSENSITIVE;
+create collation nums_coll for utf8 from unicode CASE INSENSITIVE 'NUMERIC-SORT=1';
+commit;
+show collation;
+drop collation name_coll;
+drop collation nums_coll;
+commit;
+create collation name_coll for utf8 from unicode CASE INSENSITIVE;
+create collation nums_coll for utf8 from unicode CASE INSENSITIVE 'NUMERIC-SORT=1';
+commit;
+show collation;
+drop collation name_coll;
+drop collation nums_coll;
+commit;
+show collation;
+  """,
+ 'expected_stdout':
+  """
+NAME_COLL, CHARACTER SET UTF8, FROM EXTERNAL ('UNICODE'), PAD SPACE, CASE INSENSITIVE, 'COLL-VERSION=58.0.6.50'
+NUMS_COLL, CHARACTER SET UTF8, FROM EXTERNAL ('UNICODE'), PAD SPACE, CASE INSENSITIVE, 'COLL-VERSION=58.0.6.50;NUMERIC-SORT=1'
+
+NAME_COLL, CHARACTER SET UTF8, FROM EXTERNAL ('UNICODE'), PAD SPACE, CASE INSENSITIVE, 'COLL-VERSION=58.0.6.50'
+NUMS_COLL, CHARACTER SET UTF8, FROM EXTERNAL ('UNICODE'), PAD SPACE, CASE INSENSITIVE, 'COLL-VERSION=58.0.6.50;NUMERIC-SORT=1'
+  """,
+ 'expected_stderr':
+  """
+There are no user-defined collations in this database
+There are no user-defined collations in this database
+  """
+}
+]
+}

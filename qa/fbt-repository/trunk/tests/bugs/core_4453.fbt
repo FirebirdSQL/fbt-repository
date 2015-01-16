@@ -1,0 +1,36 @@
+{
+'id': 'bugs.core_4498',
+'qmid': None,
+'tracker_id': 'CORE-4498',
+'title': 'Regression: NOT NULL constraint, declared in domain, does not work',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  create domain dm_01 varchar(20) not null;
+  commit;
+  create table t_01(s dm_01, x int);
+  commit;
+  """,
+ 'test_script':
+  """
+  insert into t_01(x) values(100);
+  select * from t_01 where s is null;
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+  Statement failed, SQLSTATE = 23000
+  validation error for column "T_01"."S", value "*** null ***"
+  """
+}
+]
+}
