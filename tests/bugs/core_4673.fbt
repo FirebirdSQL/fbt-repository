@@ -1,0 +1,38 @@
+{
+'id': 'bugs.core_4673',
+'qmid': None,
+'tracker_id': 'CORE-4673',
+'title': 'Computed index based on a computed column stores NULL for all its keys',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script':
+ """
+  recreate table tc(id int primary key, x int, y int, z computed by (x+y));
+  commit;
+  insert into tc values( 1, 101, 201 );
+  commit;
+  create index tc_lz on tc computed by( lpad(''||z, 10, 0) );
+  commit;
+  """,
+ 'test_script': 
+  """
+set list on;
+select count(*) cnt from tc where lpad(''||z, 10, 0) between '0000000302' and '0000000302'
+union all
+select count(*) from tc where '' || lpad(''||z, 10, 0) between '0000000302' and '0000000302';
+  """,
+ 'expected_stdout': 
+  """
+  CNT                             1
+
+  CNT                             1  
+  """
+}
+]
+}
