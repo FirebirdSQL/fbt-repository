@@ -1,0 +1,81 @@
+{
+'id': 'bugs.core_4403',
+'qmid': None,
+'tracker_id': 'CORE-4403',
+'title': 'Allow referencing cursors as record variables in PSQL',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+    recreate table t1(id int primary key, x int, y int);
+    recreate table t2(id int primary key, x int, y int);
+    recreate table t3(id int primary key, x int, y int);
+    commit;
+    insert into t1 values(1, 10, 11);
+    commit;
+    insert into t2 values(2, 10, 22);
+    commit;
+    insert into t3 values(3, 10, 33);
+    commit;
+  """,
+ 'test_script': 
+  """
+    set list on;
+    set term ^;
+    execute block returns(
+       t1_id int, t1_x int, t1_y int
+      ,t2_id int, t2_x int, t2_y int
+      ,t3_id int, t3_x int, t3_y int
+    ) as
+    begin
+      for
+        select id, x, y from t1 as cursor c1
+      do begin
+        for select id, x, y from t2 where x = :c1.x as cursor c2 do
+        begin
+          for select id, x, y from t3 where x = :c1.x as cursor c3 do
+          begin
+    
+            t1_id = c1.id;
+            t1_x  = c1.x;
+            t1_y  = c1.y;
+    
+            t2_id = c2.id;
+            t2_x  = c2.x;
+            t2_y  = c2.y;
+    
+            t3_id = c3.id;
+            t3_x  = c3.x;
+            t3_y  = c3.y;
+    
+            suspend;
+          end
+        end
+      end
+    end 
+    ^
+    set term ;^
+    commit;
+    set  list off;
+  """,
+ 'expected_stdout': 
+  """
+T1_ID                           1
+T1_X                            10
+T1_Y                            11
+T2_ID                           2
+T2_X                            10
+T2_Y                            22
+T3_ID                           3
+T3_X                            10
+T3_Y                            33  
+  """
+}
+]
+}
