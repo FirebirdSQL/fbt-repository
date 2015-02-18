@@ -66,15 +66,15 @@
   """,
  'expected_stdout': 
   """
-T1_ID                           1
-T1_X                            10
-T1_Y                            11
-T2_ID                           2
-T2_X                            10
-T2_Y                            22
-T3_ID                           3
-T3_X                            10
-T3_Y                            33  
+   T1_ID                           1
+   T1_X                            10
+   T1_Y                            11
+   T2_ID                           2
+   T2_X                            10
+   T2_Y                            22
+   T3_ID                           3
+   T3_X                            10
+   T3_Y                            33  
   """
 }
 ]
