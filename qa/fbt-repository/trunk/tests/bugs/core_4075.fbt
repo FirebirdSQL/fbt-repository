@@ -1,0 +1,34 @@
+{
+'id': 'bugs.core_4075',
+'qmid': None,
+'tracker_id': 'CORE-4075',
+'title': 'Server bugchecks or crashes on exception in calculated index',
+'description': '',
+'min_versions': '2.5.4',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+    recreate table TEST (BIT smallint);
+    create index IDX_TEST_BIT on TEST computed by (bin_shl(1, TEST.BIT-1));
+  """,
+ 'test_script':
+  """
+    insert into test values (0); 
+    -- Trace:
+    -- 335544606 : expression evaluation not supported
+    -- 335544967 : Argument for BIN_SHL must be zero or positive
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    expression evaluation not supported
+    -Argument for BIN_SHL must be zero or positive
+  """
+}
+]
+}
