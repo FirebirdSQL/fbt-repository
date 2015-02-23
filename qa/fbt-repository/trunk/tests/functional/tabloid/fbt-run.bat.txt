@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion enableextensions
 cls
 @rem File name: C:\firebird\QA\fbt-repo\fbt-run.bat 
 @rem It is recommended to put this file in the 'top-level' folder - "QA\fbt-repo".
@@ -12,6 +13,17 @@ cls
 cd >tmp.tmp.tmp
 set /p curdir= < tmp.tmp.tmp
 del tmp.tmp.tmp
+
+set cdprefix=
+set find_what=%~dp0
+set repl_with=
+for /f "tokens=* delims=\" %%a in ("%curdir%") do (
+  echo %%a
+  set string=%%a
+  set cdprefix=!string:%find_what%=%repl_with%!
+  set cdprefix=!cdprefix:tests\=%repl_with%!
+  set cdprefix=!cdprefix:\=.!
+)
 
 set fbt_name=%~n1
 set fb25home=C:\MIX\firebird\fb25\bin
@@ -30,14 +42,31 @@ echo %date%, %time%, running test: %fbt_name%>fbt-run.30.log
 echo ------------------------------------------------------->>fbt-run.30.log
 %fb30home%\fbsvcmgr localhost/%fb30port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30.log 2>&1
 echo.
-echo Running for 2.5 . . .
-fbt_run -b %fb25home% bugs.%fbt_name% -o localhost/%fb25port% 1>>fbt-run.25.log 2>fbt-run.25.err
-echo Running for 3.0 . . .
-fbt_run -b %fb30home% bugs.%fbt_name% -o localhost/%fb30port% 1>>fbt-run.30.log 2>fbt-run.30.err
+set fbt_run=fbt_run -b %fb25home% %cdprefix%.%fbt_name% -o localhost/%fb25port%
+echo Command: %fbt_run%>>fbt-run.25.log
+echo Running for 2.5: %fbt_run%
+cmd /c %fbt_run% 1>>fbt-run.25.log 2>fbt-run.25.err
+
+set fbt_run=fbt_run -b %fb30home% %cdprefix%.%fbt_name% -o localhost/%fb30port%
+echo Command: %fbt_run%>>fbt-run.30.log
+echo Running for 3.0: %fbt_run%
+cmd /c %fbt_run% 1>>fbt-run.30.log 2>fbt-run.30.err
 
 set overall=0
 set e25size=0
 set e30size=0
+
+:chkn25
+findstr /B /I "Nothing to run" fbt-run.25.log 1>nul 2>&1
+if errorlevel 1 goto chkn30
+set overall=1
+goto showlog
+
+:chkn30
+findstr /B /I "Nothing to run" fbt-run.30.log 1>nul 2>&1
+if errorlevel 1 goto chk_25
+set overall=1
+goto showlog
 
 :chk_25
 findstr /B /I "FAIL ERROR" fbt-run.25.log 1>nul 2>&1
@@ -61,6 +90,8 @@ if .%e25size%.==.. set e25size=0
 if %e25size% gtr 0 (
   set overall=1
 )
+
+:showlog
 
 echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Log25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 type fbt-run.25.log
