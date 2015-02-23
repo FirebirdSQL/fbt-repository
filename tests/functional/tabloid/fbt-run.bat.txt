@@ -2,7 +2,7 @@
 cls
 @rem File name: C:\firebird\QA\fbt-repo\fbt-run.bat 
 @rem It is recommended to put this file in the 'top-level' folder - "QA\fbt-repo".
-@rem Running sample: C:\firebird\QA\fbt-repo\fbt-run.bat core_NNNN.fbt 
+@rem Running sample: C:\MIX\firebird\QA\fbt-repo\fbt-run.bat core_NNNN.fbt 
 @rem Also it is convenient to 'bind' this batch to files with pattern *.fbt
 @rem from sub-folder fbt-repo\tests\ (FAR: F10 / Commands / File associations)
 @rem I that case one may always to sit in the folder with .fbt files
@@ -22,11 +22,12 @@ set fb30port=3333
 @echo off
 cd %~dp0
 
-echo Running test: %fbt_name%>fbt-run.25.log
-echo ------------------------>>fbt-run.25.log
-copy fbt-run.25.log fbt-run.30.log >nul
-
+echo %date%, %time%, running test: %fbt_name%>fbt-run.25.log
+echo ------------------------------------------------------->>fbt-run.25.log
 %fb25home%\fbsvcmgr localhost/%fb25port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.25.log 2>&1
+
+echo %date%, %time%, running test: %fbt_name%>fbt-run.30.log
+echo ------------------------------------------------------->>fbt-run.30.log
 %fb30home%\fbsvcmgr localhost/%fb30port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30.log 2>&1
 echo.
 echo Running for 2.5 . . .
