@@ -1,0 +1,103 @@
+@echo off
+cls
+@rem File name: C:\firebird\QA\fbt-repo\fbt-run.bat 
+@rem It is recommended to put this file in the 'top-level' folder - "QA\fbt-repo".
+@rem Running sample: C:\firebird\QA\fbt-repo\fbt-run.bat core_NNNN.fbt 
+@rem Also it is convenient to 'bind' this batch to files with pattern *.fbt
+@rem from sub-folder fbt-repo\tests\ (FAR: F10 / Commands / File associations)
+@rem I that case one may always to sit in the folder with .fbt files
+@rem (e.g. fbt-repo\tests\bugs\) and run all necessary tests only by pressing
+@rem ENTER key on selected .fbt
+
+cd >tmp.tmp.tmp
+set /p curdir= < tmp.tmp.tmp
+del tmp.tmp.tmp
+
+set fbt_name=%~n1
+set fb25home=C:\MIX\firebird\fb25\bin
+set fb30home=C:\MIX\firebird\fb30
+set fb25port=3050
+set fb30port=3333
+
+@echo off
+cd %~dp0
+
+echo Running test: %fbt_name%>fbt-run.25.log
+echo ------------------------>>fbt-run.25.log
+copy fbt-run.25.log fbt-run.30.log >nul
+
+%fb25home%\fbsvcmgr localhost/%fb25port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.25.log 2>&1
+%fb30home%\fbsvcmgr localhost/%fb30port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30.log 2>&1
+echo.
+echo Running for 2.5 . . .
+fbt_run -b %fb25home% bugs.%fbt_name% -o localhost/%fb25port% 1>>fbt-run.25.log 2>fbt-run.25.err
+echo Running for 3.0 . . .
+fbt_run -b %fb30home% bugs.%fbt_name% -o localhost/%fb30port% 1>>fbt-run.30.log 2>fbt-run.30.err
+
+set overall=0
+set e25size=0
+set e30size=0
+
+:chk_25
+findstr /B /I "FAIL ERROR" fbt-run.25.log 1>nul 2>&1
+if errorlevel 1 goto chk_30
+set overall=1
+
+:chk_30
+findstr /B /I "FAIL ERROR" fbt-run.30.log 1>nul 2>&1
+if errorlevel 1 goto chk_err
+set overall=1
+
+:chk_err
+for /f "usebackq" %%A in ('fbt-run.30.err') do set e30size=%%~zA
+if .%e30size%.==.. set e30size=0
+if %e30size% gtr 0 (
+  set overall=1
+)
+
+for /f "usebackq" %%A in ('fbt-run.25.err') do set e25size=%%~zA
+if .%e25size%.==.. set e25size=0
+if %e25size% gtr 0 (
+  set overall=1
+)
+
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Log25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+type fbt-run.25.log
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Log25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Log30: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+type fbt-run.30.log
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Log30: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+
+if .%overall%.==.0. (
+  echo.
+  echo ###  A L L    O K  ###
+  del fbt-run.30.err
+  del fbt-run.25.err
+  del fbt-run.25.log
+  del fbt-run.30.log
+) else (
+  if .%e25size%. gtr .0. (
+    echo.
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Err25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    type fbt-run.25.err
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Err25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  ) else (
+    del fbt-run.25.err
+  )
+  echo.
+
+  if .%e30size%. gtr .0. (
+    echo.
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Err30: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    type fbt-run.30.err
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| Err30: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  ) else (
+    del fbt-run.30.err
+  )
+  echo.
+  echo ###   A C H T U N G  ###  T E S T    F A I L E D  ###
+  echo.
+
+)
+cd /d %curdir%
