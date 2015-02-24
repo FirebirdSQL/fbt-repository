@@ -3,7 +3,7 @@
 'qmid': None,
 'tracker_id': 'CORE-3834',
 'title': 'Usage of a NATURAL JOIN with a derived table crashes the server',
-'description': '',
+'description': '***TODO*** correct code after! Both 2.5.4 and 3.0 must produce error "Ambiguous field name ..."',
 'min_versions': '2.5.2',
 'versions': [
 {
@@ -18,32 +18,15 @@
  'test_script':
   """
     set planonly;
-    set term ^;
-    execute block as
-      declare a int;
-      declare o_rev type of column tilemaps.revision;
-      declare o_msg type of column logs.msg;
-    begin
-      for
-        select distinct revision, coalesce(msg, '') as logmsg
-        from (
-          select revision, stageid from tilemaps
-          union select revision, stageid from entitymaps
-          union select revision, stageid from logs
-        ) as revisions
-        natural join logs
-        where stageid = :a
-        order by revision desc
-      into o_rev, o_msg do begin end
-    end 
-    ^
-    set term ;^
+    select r.revision 
+    from ( select r.revision, r.stageid from tilemaps r ) r 
+    natural join logs g 
+    where stageid = ? -- WI-V2.5.1.26351 had crash here due to non-qualified field reference; checked 24-feb-2015
+    ;
   """,
  'expected_stdout': 
   """
-    PLAN SORT (SORT (MERGE (SORT (LOGS NATURAL), SORT ((REVISIONS TILEMAPS NATURAL)
-    PLAN (REVISIONS ENTITYMAPS NATURAL)
-    PLAN (REVISIONS LOGS NATURAL)))))
+    PLAN MERGE (SORT (G NATURAL), SORT (R R NATURAL))
   """,
  'expected_stderr': 
   """
@@ -61,30 +44,15 @@
  'test_script':
   """
     set planonly;
-    set term ^;
-    execute block as
-      declare a int;
-      declare o_rev type of column tilemaps.revision;
-      declare o_msg type of column logs.msg;
-    begin
-      for
-        select distinct revision, coalesce(msg, '') as logmsg
-        from (
-          select revision, stageid from tilemaps
-          union select revision, stageid from entitymaps
-          union select revision, stageid from logs
-        ) as revisions
-        natural join logs
-        where stageid = :a
-        order by revision desc
-      into o_rev, o_msg do begin end
-    end 
-    ^
-    set term ;^
+    select r.revision 
+    from ( select r.revision, r.stageid from tilemaps r ) r 
+    natural join logs g 
+    where stageid = ?
+    ;
   """,
  'expected_stdout': 
   """
-    PLAN SORT (SORT (HASH (LOGS NATURAL, SORT (REVISIONS TILEMAPS NATURAL, REVISIONS ENTITYMAPS NATURAL, REVISIONS LOGS NATURAL))))
+    PLAN HASH (G NATURAL, R R NATURAL)
   """,
  'expected_stderr': 
   """
