@@ -1,0 +1,94 @@
+{
+'id': 'bugs.core_3834',
+'qmid': None,
+'tracker_id': 'CORE-3834',
+'title': 'Usage of a NATURAL JOIN with a derived table crashes the server',
+'description': '',
+'min_versions': '2.5.2',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'core3834.fbk',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set planonly;
+    set term ^;
+    execute block as
+      declare a int;
+      declare o_rev type of column tilemaps.revision;
+      declare o_msg type of column logs.msg;
+    begin
+      for
+        select distinct revision, coalesce(msg, '') as logmsg
+        from (
+          select revision, stageid from tilemaps
+          union select revision, stageid from entitymaps
+          union select revision, stageid from logs
+        ) as revisions
+        natural join logs
+        where stageid = :a
+        order by revision desc
+      into o_rev, o_msg do begin end
+    end 
+    ^
+    set term ;^
+  """,
+ 'expected_stdout': 
+  """
+    PLAN SORT (SORT (MERGE (SORT (LOGS NATURAL), SORT ((REVISIONS TILEMAPS NATURAL)
+    PLAN (REVISIONS ENTITYMAPS NATURAL)
+    PLAN (REVISIONS LOGS NATURAL)))))
+  """,
+ 'expected_stderr': 
+  """
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'core3834.fbk',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set planonly;
+    set term ^;
+    execute block as
+      declare a int;
+      declare o_rev type of column tilemaps.revision;
+      declare o_msg type of column logs.msg;
+    begin
+      for
+        select distinct revision, coalesce(msg, '') as logmsg
+        from (
+          select revision, stageid from tilemaps
+          union select revision, stageid from entitymaps
+          union select revision, stageid from logs
+        ) as revisions
+        natural join logs
+        where stageid = :a
+        order by revision desc
+      into o_rev, o_msg do begin end
+    end 
+    ^
+    set term ;^
+  """,
+ 'expected_stdout': 
+  """
+    PLAN SORT (SORT (HASH (LOGS NATURAL, SORT (REVISIONS TILEMAPS NATURAL, REVISIONS ENTITYMAPS NATURAL, REVISIONS LOGS NATURAL))))
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
