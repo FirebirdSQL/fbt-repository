@@ -1,0 +1,39 @@
+{
+'id': 'bugs.core_3557',
+'qmid': None,
+'tracker_id': 'CORE-3557',
+'title': 'AV in engine when preparing query against dropping table',
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'core3557.fbk',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    -- Confirmed for 2.5.0 only: server crashes on running the following EB. 26.02.2015
+    -- All subsequent releases should produce no stdout & stderr.
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop table t';
+      in autonomous transaction do
+        execute statement ('insert into t values (1)');
+    end
+    ^ 
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
