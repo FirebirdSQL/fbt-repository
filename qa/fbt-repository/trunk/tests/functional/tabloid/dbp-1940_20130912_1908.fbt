@@ -1,5 +1,5 @@
 {
-'id': 'functional.tabloid.dbp-1940_20130831_2039',
+'id': 'functional.tabloid.dbp-1940_20130912_1908',
 'qmid': None,
 'tracker_id': '',
 'title': '',
@@ -18,36 +18,33 @@
  'test_script':
   """
     set list on;
-    with recursive
-    n as (
-      select 0 n from rdb$database union all select s.n+1 from n s where s.n<29
-    )
-    ,b1 as (
-        select min(mt) st 
-        from (
-            select yyy.*, bbb.*, 
-            sum(bv)over(partition by yyy.id) sv,
-            max(tm)over(partition by yyy.id) mt
-            from yyy join bbb on vi = yyy.id
-             ) z
-        where sv = 255
-    )
-    ,b2 as (
-        select dateadd(n.n second to b1.st) f01
-        from b1, n
-    )
-    select f01
-        ,(select count(distinct id)
-         from (
-            select yyy.*, bbb.*, 
-            sum(bv)over(partition by yyy.id) sv
-            from yyy join bbb on vi = yyy.id
-            where tm <= f01
-          ) x
-          where sv >= 255/3 and sv < 2*255/3
-        ) f02
-    from b2
-    ;
+    with
+    bx as( select tm,sum(bv)over(partition by vi order by tm)s from bbb)
+    select distinct d f01, count( iif(v >= 85 and v <= 170 , 1, null))over(partition by d) f02
+    from
+    (
+        select d,i,sum(v)v
+        from
+        (
+            select vi i,bv v
+                ,dateadd(s.ns second to
+                            (   select min(tm)
+                                from bx a
+                                where s = 255
+                            )
+                       ) d
+            from bbb
+            left join (select row_number()over(order by vi)-1 ns from bbb)s on s.ns<=29
+            where tm <= 
+            (
+                select dateadd( s.ns second to min(tm) )m
+                from bx a
+                where s = 255
+            )
+        )a
+        group by d,i
+    )a
+    order by 1,2;
   """,
  'expected_stdout': 
   """
