@@ -3,7 +3,7 @@
 'qmid': 'functional.arno.optimizer.opt_inner_join_05',
 'tracker_id': '',
 'title': 'INNER JOIN join order LIKE and STARTING WITH',
-'description': """STARTING WITH should also be used for determing join order.
+'description': """LIKE and STARTING WITH should also be used for determing join order.
 """,
 'versions': [
 {
@@ -271,7 +271,6 @@ INSERT INTO COUNTRIES(COUNTRYID, COUNTRYNAME, ISO3166_1_A2) VALUES (237, 'YUGOSL
 INSERT INTO COUNTRIES(COUNTRYID, COUNTRYNAME, ISO3166_1_A2) VALUES (238, 'ZAMBIA', 'ZM');
 INSERT INTO COUNTRIES(COUNTRYID, COUNTRYNAME, ISO3166_1_A2) VALUES (239, 'ZIMBABWE', 'ZW');
 
-
 /*
   RELATIONS
   ---------
@@ -304,7 +303,7 @@ FROM
   RELATIONS r
   JOIN COUNTRIES c ON (c.COUNTRYID = r.COUNTRYID)
 WHERE
-  c.CountryName STARTING WITH 'N'
+  c.CountryName LIKE 'N%'
 ORDER BY
   r.RelationName DESC;
 """,
