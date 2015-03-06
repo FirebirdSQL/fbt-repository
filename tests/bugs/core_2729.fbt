@@ -13,32 +13,52 @@
  'connection_character_set': 'UTF8',
  'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """SET TERM !!;
-execute block
-  returns (o_att_id int, o_user varchar(32))
-as
-begin
-  o_att_id = CURRENT_CONNECTION;
-  o_user = CURRENT_USER;
-  suspend;
-execute statement 'select CURRENT_CONNECTION, CURRENT_USER from rdb$database'
-    into :o_att_id, :o_user;
-  suspend;
-execute statement 'select CURRENT_CONNECTION, CURRENT_USER from rdb$database'
-    as user 'test' password 'test'
-    into :o_att_id, :o_user;
-  suspend;
-end
-!!
-""",
- 'expected_stdout': """
-    O_ATT_ID O_USER
-============ ===============================================================================
-           2 SYSDBA
-           2 SYSDBA
-           3 TEST
+ 'test_script': 
+  """
+    -- Updated code: made STDOUT insensible to the IDs of attaches
+    set list on;
+    set term ^;
+    execute block returns (
+        user_on_start varchar(32),
+        user_on_extds varchar(32),
+        same_attach char(1)
+    ) as
+        declare v_att_ini int;
+        declare v_att_eds int;
+    begin
+    
+        user_on_start = current_user;
+        v_att_ini = current_connection;
+        
+        execute statement 'select current_user, current_connection from rdb$database'
+        into  :user_on_extds, :v_att_eds;
+        
+     
+        same_attach = iif( v_att_ini = v_att_eds, 'Y', 'N');
+        suspend;
+        
+        execute statement 'select current_user, current_connection from rdb$database'
+        as user 'test' password 'test'
+        into :user_on_extds, :v_att_eds;
+        
+        same_attach = iif( v_att_ini = v_att_eds, 'Y', 'N');
+        suspend;
+    
+    end
+    ^
+    set term ;^
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    USER_ON_START                   SYSDBA
+    USER_ON_EXTDS                   SYSDBA
+    SAME_ATTACH                     Y
 
-""",
+    USER_ON_START                   SYSDBA
+    USER_ON_EXTDS                   TEST
+    SAME_ATTACH                     N
+  """,
  'resources': ['test_user']
 }
 ]
