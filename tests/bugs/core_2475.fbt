@@ -25,15 +25,9 @@ ext_filename = '%sEXT1.TBL' % context[db_path_property]
 c1 = db_conn.cursor()
 c1.execute("insert into EXT1 (PK) values (1)")
 
-# session B
-con2 = kdb.connect(dsn=dsn,user=user_name,password=user_password)
-c2 = con2.cursor()
-c2.execute('select * from EXT1')
-printData(c2)
-
 db_conn.commit()
 
-# check 2
+# session B
 con2 = kdb.connect(dsn=dsn,user=user_name,password=user_password)
 c2 = con2.cursor()
 c2.execute('select * from EXT1')
@@ -50,10 +44,8 @@ except:
  'expected_stdout': """PK
 -----------
 1
-PK
------------
-1
 """
 }
 ]
 }
+
