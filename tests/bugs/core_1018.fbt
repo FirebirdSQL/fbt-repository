@@ -10,10 +10,10 @@
  'firebird_version': '2.1',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """select substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) from rdb$database;
+ 'test_script': """select substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) as version from rdb$database;
 """,
  'expected_stdout': """
-RDB$GET_CONTEXT
+VERSION
 ===============================================================================
 2.1
 
@@ -23,10 +23,10 @@ RDB$GET_CONTEXT
  'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """select case when rdb$get_context('SYSTEM', 'ENGINE_VERSION') similar to '[0-9].[0-9].[0-9]' then substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) else null end from rdb$database;
+ 'test_script': """select case when rdb$get_context('SYSTEM', 'ENGINE_VERSION') similar to '[0-9].[0-9].[0-9]' then substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) else null end as version from rdb$database;
 """,
  'expected_stdout': """
-RDB$GET_CONTEXT
+VERSION
 ===============================================================================
 2.5
 
@@ -36,10 +36,10 @@ RDB$GET_CONTEXT
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """select case when rdb$get_context('SYSTEM', 'ENGINE_VERSION') similar to '[0-9].[0-9].[0-9]' then substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) else null end from rdb$database;
+ 'test_script': """select case when rdb$get_context('SYSTEM', 'ENGINE_VERSION') similar to '[0-9].[0-9].[0-9]' then substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) else null end as version from rdb$database;
 """,
  'expected_stdout': """
-RDB$GET_CONTEXT
+VERSION
 ===============================================================================
 3.0
 
