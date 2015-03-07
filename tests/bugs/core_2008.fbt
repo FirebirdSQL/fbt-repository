@@ -8,23 +8,24 @@
 {
  'firebird_version': '2.1.2',
  'platform': 'All',
- 'init_script': """SET TERM !!;
-CREATE OR ALTER PROCEDURE TEST_PROCEDURE(
-  ID INTEGER NOT NULL)
-AS
-BEGIN
-END
-!!
-SET TERM ;!!""",
+ 'init_script':
+  """
+    create or alter procedure test_procedure(id int not null) as begin end;
+    commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """SELECT RDB$PARAMETER_NAME, RDB$NULL_FLAG  FROM RDB$PROCEDURE_PARAMETERS WHERE RDB$PROCEDURE_NAME='TEST_PROCEDURE';
-""",
- 'expected_stdout': """
-RDB$PARAMETER_NAME                                                                            RDB$NULL_FLAG
-=============================================================================== =============
-ID                                                                                                        1
-
-"""
+ 'test_script':
+  """
+    set list on;
+    select rdb$parameter_name p_name, rdb$null_flag n_flag
+    from rdb$procedure_parameters
+    where rdb$procedure_name=upper('test_procedure');
+  """,
+ 'expected_stdout':
+  """
+    P_NAME                          ID
+    N_FLAG                          1
+  """
 }
 ]
 }
