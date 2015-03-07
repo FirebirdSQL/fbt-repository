@@ -9,35 +9,42 @@
 {
  'firebird_version': '2.0.2',
  'platform': 'All',
- 'init_script': """set term ^;
-
-create procedure p
-  returns (col int)
-as
-begin
-  col = 1;
-  suspend;
-end^
-
-set term ;^
-
-commit;""",
  'test_type': 'ISQL',
- 'test_script': """create view v
-as
-  select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
-  where 1 in ( select col from p );
-
-commit;
-
-select * from v;
-""",
- 'expected_stdout': """
-  RDB$DESCRIPTION RDB$RELATION_ID RDB$SECURITY_CLASS                                                                            RDB$CHARACTER_SET_NAME
-================= =============== =============================================================================== ===============================================================================
-           <null>             129 <null>                                                                                        NONE
-
-"""
+ 'init_script':
+  """
+    set term ^;
+    create or alter procedure p
+      returns (col int)
+    as
+    begin
+      col = 1;
+      suspend;
+    end^
+    set term ;^
+    commit;
+    
+    create or alter view v
+    as
+      select
+          rdb$description v_descr,
+          rdb$relation_id v_rel_id,
+          rdb$character_set_name v_cset_name
+      from rdb$database
+      where 1 in ( select col from p );
+    commit;
+  """,
+ 'test_script':
+  """
+    set list on;
+    select v_descr, sign(v_rel_id) as v_rel_id, v_cset_name
+    from v;
+  """,
+ 'expected_stdout':
+  """
+    V_DESCR                         <null>
+    V_REL_ID                        1
+    V_CSET_NAME                     NONE                                                                                         
+  """
 }
 ]
 }
