@@ -8,37 +8,42 @@
 {
  'firebird_version': '2.1',
  'platform': 'All',
- 'init_script': """CREATE TABLE C (
-    ID INTEGER,
-    NAME VARCHAR(100)
-);
-
-
-CREATE TABLE T (
-    ID INTEGER,
-    OWNERCODE INTEGER,
-    CODE INTEGER
-);
-
-COMMIT;
-""",
+ 'init_script':
+  """
+    recreate table c (
+      id integer,
+      name varchar(100)
+    );
+    recreate table t (
+      id integer,
+      ownercode integer,
+      code integer
+    );
+    commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """WITH RECURSIVE X (ID, OWNERCODE, CODE, OWNCLASS, CLASS) AS
-(
-  SELECT T.ID, OWNERCODE, CODE, C2.NAME AS OWNCLASS, C1.NAME AS CLASS
-    FROM T INNER JOIN C C1 ON C1.ID = CODE
-           LEFT JOIN C C2 ON C2.ID = OWNERCODE
-    WHERE OWNERCODE = 0
-
-  UNION ALL
-
-  SELECT T.ID, OWNERCODE, CODE, C2.NAME AS OWNCLASS, C1.NAME AS CLASS
-    FROM T INNER JOIN C C1 ON C1.ID = CODE
-           LEFT JOIN C C2 ON C2.ID = OWNERCODE
-           INNER JOIN X ON T.OWNERCODE = X.CODE
-)
-SELECT * FROM X ;
-"""
+ 'test_script':
+  """
+    -- Updated code to recent FB version: add prefixes to every field from the query
+    with recursive x as
+    (
+      select --1 as step,
+             t.id, t.ownercode, t.code, c2.name as ownclass, c1.name as class
+        from t inner join c c1 on c1.id = t.code
+               left join c c2 on c2.id = t.ownercode
+        where ownercode = 0
+    
+      union all
+    
+      select --x.step+1
+             t.id, t.ownercode, x.code, c2.name as ownclass, c1.name as class
+        from t inner join c c1 on c1.id = t.code
+               left join c c2 on c2.id = t.ownercode
+               inner join x on t.ownercode = x.code
+    )
+    select * from x
+    ;
+  """
 }
 ]
 }
