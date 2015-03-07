@@ -28,6 +28,36 @@ COMMIT WORK;
 
 UPDATE TEST SET COL = NULL WHERE ID = 1;
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+    recreate table test (
+        id integer not null,
+        col varchar(20) not null
+    );
+    insert into test (id, col) values (1, 'data');
+    commit;
+  """,
+ 'test_script':
+  """
+    update rdb$relation_fields
+      set rdb$null_flag = null
+      where (rdb$field_name = upper('col')) and (rdb$relation_name = upper('test'));
+    commit;
+
+    update test set col = null where id = 1;
+  """,
+  'expected_stderr':
+   """
+    Statement failed, SQLSTATE = 42000
+    UPDATE operation is not allowed for system table RDB$RELATION_FIELDS
+    Statement failed, SQLSTATE = 23000
+    validation error for column "TEST"."COL", value "*** null ***"
+   """
 }
 ]
 }
