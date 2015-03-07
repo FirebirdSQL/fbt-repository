@@ -10,32 +10,66 @@
  'firebird_version': '2.5.1',
  'platform': 'All',
  'page_size': '4096',
- 'init_script': """set term !;
-execute block
-as
-  declare n integer = 0;
-  declare x integer;
-begin
-  while (n < 33000)
-  do
-  begin
-    in autonomous transaction do
-       execute statement 'create sequence s' || n;
-    in autonomous transaction do
-       execute statement 'select gen_id(s' || n || ', 1000) from rdb$database' into x;
-    in autonomous transaction do
-       execute statement 'drop sequence s' || n;
-
-    n = n + 1;
-  end
-end!
-set term ;!""",
  'test_type': 'ISQL',
- 'test_script': """create sequence s1;
-show sequence;""",
- 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_tests\fbt-repository\tmp\bugs.core_3058.fdb, User: SYSDBA
-SQL> SQL> Generator S1, current value is 0
-SQL>"""
+ 'init_script':
+  """
+    set term ^;
+    execute block
+    as
+        declare n int = 1;
+        declare x int;
+        declare k int;
+        declare c int;
+    begin
+        while (n < 33000) do
+        begin
+          k = 1000000 + cast(rand() * 1000000 as int);
+
+          -- ::: NB ::: As of Firebird 3.0 we need to make EVERY operation (creation, select gen_id, dropping)
+          -- in AUTONOMOUS transaction because physically appearance of generator in database will be on COMMIT only.
+          -- It is not so in 2.5, but I left code common for both FB versions. Zotov.
+          in autonomous transaction do
+            execute statement 'create sequence s' || n;
+    
+          in autonomous transaction do
+            execute statement 'select gen_id(s' || n || ', ' || k || ') from rdb$database' into x;
+    
+          in autonomous transaction do
+            execute statement 'drop sequence s' || n;
+    
+          n = n + 1;
+        end
+    end
+    ^
+    set term ;^
+    rollback;
+  """,
+ 'test_script':
+  """
+    -- Updated code: remove dependency on: 1) version FB and 2) output of 'show sequence' command.
+    -- Also we check here that NO sequences exists at this point and after we create and drop sequence 's1'
+    set list on;
+    select iif( exists(select * from rdb$generators g where coalesce(g.rdb$system_flag,0) = 0), 'some_gen_exists!', 'none_gen_remains' ) as msg_1
+    from rdb$database;
+    create sequence s1;
+    commit;
+    select gen_id(s1,0) as current_val_of_s1 from rdb$database;
+    commit;
+    drop sequence s1;
+    commit;
+    select iif( exists(select * from rdb$generators g where coalesce(g.rdb$system_flag,0) = 0), 'some_gen_exists!', 'none_gen_remains' ) as msg_2
+    from rdb$database;
+    set list off;
+  """,
+ 'expected_stdout':
+  """
+    MSG_1                           none_gen_remains
+    CURRENT_VAL_OF_S1               0
+    MSG_2                           none_gen_remains
+  """,
+ 'expected_stderr':
+  """
+  """
 }
 ]
 }
