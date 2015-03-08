@@ -11,13 +11,18 @@
  'database': 'Restore',
  'backup_file': 'core1009.fbk',
  'test_type': 'ISQL',
- 'test_script': "select rdb$field_name, rdb$base_field from rdb$relation_fields where rdb$relation_name = 'TEST_VIEW';",
- 'expected_stdout': """RDB$FIELD_NAME                                                                                RDB$BASE_FIELD
-=============================================================================== ===============================================================================
-ID                                                                                            ID
-EXPR                                                                                          <null>
-
-"""
+ 'test_script':
+  """
+  set list on;
+  select rdb$field_name, rdb$base_field from rdb$relation_fields where rdb$relation_name = 'TEST_VIEW';
+  """,
+ 'expected_stdout':
+  """
+    RDB$FIELD_NAME                  ID
+    RDB$BASE_FIELD                  ID
+    RDB$FIELD_NAME                  EXPR
+    RDB$BASE_FIELD                  <null>
+  """
 }
 ]
 }
