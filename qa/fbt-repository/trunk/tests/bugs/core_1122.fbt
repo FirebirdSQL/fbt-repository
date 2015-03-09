@@ -9,182 +9,95 @@
 {
  'firebird_version': '2.1',
  'platform': 'All',
- 'init_script': """CREATE TABLE TB_MENUS
-   (RECORD_ID INTEGER,
-    PARENT_ID INTEGER,
-    ORDER_ITEM INTEGER NOT NULL,
-    MENU_NAME VARCHAR(120),
-    APP_NAME VARCHAR(80),
-    MENU_ICON BLOB SUB_TYPE 0 SEGMENT SIZE 80
-);
-
-commit;
-
-
-INSERT INTO TB_MENUS VALUES (0, NULL, 1, 'M1', NULL, NULL);
-INSERT INTO TB_MENUS VALUES (1, 0, 1, 'M1 - Sub1', 'APP1.EXE', NULL);
-INSERT INTO TB_MENUS VALUES (2, 0, 1, 'M1 - Sub2', 'APP2.EXE', NULL);
-
-commit;
-""",
+ 'init_script':
+  """
+    recreate table tb_menus(
+        record_id integer,
+        parent_id integer,
+        order_item integer not null,
+        menu_name varchar(120),
+        app_name varchar(80),
+        menu_icon blob sub_type 0 segment size 80
+    );
+    commit;
+    
+    insert into tb_menus values (0, null, 1, 'm1', null, null);
+    insert into tb_menus values (1, 0, 1, 'm1 - sub1', 'app1.exe', null);
+    insert into tb_menus values (2, 0, 1, 'm1 - sub2', 'app2.exe', null);
+    commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """/* Test case 1 */
+ 'test_script':
+  """
+    set list on;
+    -------------------- 1st query ------------------
+    with recursive
+    menus_list as (
+        select
+            parent_id,
+            record_id,
+            order_item,
+            menu_name,
+            app_name,
+            menu_icon,
+            cast('' as varchar(255)) ident
+        from tb_menus
+        where parent_id is null
+    
+        UNION ALL
+    
+        select
+            m.parent_id,
+            m.record_id,
+            m.order_item,
+            m.menu_name,
+            m.app_name,
+            m.menu_icon, -- ::: NB ::: this field was not qualified ==> parsing error in 3.0 (but not in 2.5.4 or 2.1.7)
+            h.ident || ' ' as ident
+        from tb_menus m
+        join menus_list h on m.parent_id = h.record_id
+    )
+    select
+        parent_id,
+        record_id,
+        order_item,
+        (ident || menu_name) "menu name",
+        app_name,
+        menu_icon
+    from menus_list;
+    -------------------- 2nd query ------------------
+    select menu_icon from tb_menus
+    UNION ALL
+    select menu_icon from tb_menus;
+  """,
+ 'expected_stdout':
+  """
+    PARENT_ID                       <null>
+    RECORD_ID                       0
+    ORDER_ITEM                      1
+    menu name                       m1
+    APP_NAME                        <null>
+    MENU_ICON                       <null>
+    PARENT_ID                       0
+    RECORD_ID                       1
+    ORDER_ITEM                      1
+    menu name                        m1 - sub1
+    APP_NAME                        app1.exe
+    MENU_ICON                       <null>
+    PARENT_ID                       0
+    RECORD_ID                       2
+    ORDER_ITEM                      1
+    menu name                        m1 - sub2
+    APP_NAME                        app2.exe
+    MENU_ICON                       <null>
 
-WITH RECURSIVE
-  MENUS_LIST AS (
-    SELECT
-      PARENT_ID,
-      RECORD_ID,
-      ORDER_ITEM,
-      MENU_NAME,
-      APP_NAME,
-      MENU_ICON,
-      CAST('' AS VARCHAR(255)) IDENT
-    FROM
-      TB_MENUS
-    WHERE
-      (PARENT_ID IS NULL)
-
-UNION ALL
-
-SELECT
-      M.PARENT_ID,
-      M.RECORD_ID,
-      M.ORDER_ITEM,
-      M.MENU_NAME,
-      M.APP_NAME,
-      MENU_ICON,
-      H.IDENT || ' ' IDENT
-    FROM
-      TB_MENUS M INNER JOIN MENUS_LIST H
-      ON (M.PARENT_ID = H.RECORD_ID)
-  )
-SELECT
-  PARENT_ID,
-  RECORD_ID,
-  ORDER_ITEM,
-  (IDENT || MENU_NAME) "Menu Name",
-  APP_NAME,
-  MENU_ICON
-FROM
-  MENUS_LIST;
-
-/* Test case 2 */
-
-SELECT MENU_ICON
-  FROM TB_MENUS
-
-UNION ALL
-
-SELECT MENU_ICON
-  FROM TB_MENUS;
-""",
- 'expected_stdout': """PARENT_ID    RECORD_ID   ORDER_ITEM Menu Name                                                                                                                                                                                                                                                                                                                                                                                APP_NAME                                                                                 MENU_ICON
-============ ============ ============ =============================================================================== =============================================================================== =================
-      <null>            0            1 M1                                                                                                                                                                                                                                                                                                                                                                                       <null>                                                                                      <null>
-           0            1            1  M1 - Sub1                                                                                                                                                                                                                                                                                                                                                                               APP1.EXE                                                                                    <null>
-           0            2            1  M1 - Sub2                                                                                                                                                                                                                                                                                                                                                                               APP2.EXE                                                                                    <null>
-
-MENU_ICON
-=================
-           <null>
-           <null>
-           <null>
-           <null>
-           <null>
-           <null>
-
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'init_script': """CREATE TABLE TB_MENUS
-   (RECORD_ID INTEGER,
-    PARENT_ID INTEGER,
-    ORDER_ITEM INTEGER NOT NULL,
-    MENU_NAME VARCHAR(120),
-    APP_NAME VARCHAR(80),
-    MENU_ICON BLOB SUB_TYPE 0 SEGMENT SIZE 80
-);
-
-commit;
-
-
-INSERT INTO TB_MENUS VALUES (0, NULL, 1, 'M1', NULL, NULL);
-INSERT INTO TB_MENUS VALUES (1, 0, 1, 'M1 - Sub1', 'APP1.EXE', NULL);
-INSERT INTO TB_MENUS VALUES (2, 0, 1, 'M1 - Sub2', 'APP2.EXE', NULL);
-
-commit;
-""",
- 'test_type': 'ISQL',
- 'test_script': """/* Test case 1 */
-
-WITH RECURSIVE
-  MENUS_LIST AS (
-    SELECT
-      PARENT_ID,
-      RECORD_ID,
-      ORDER_ITEM,
-      MENU_NAME,
-      APP_NAME,
-      MENU_ICON,
-      CAST('' AS VARCHAR(255)) IDENT
-    FROM
-      TB_MENUS
-    WHERE
-      (PARENT_ID IS NULL)
-
-UNION ALL
-
-SELECT
-      M.PARENT_ID,
-      M.RECORD_ID,
-      M.ORDER_ITEM,
-      M.MENU_NAME,
-      M.APP_NAME,
-      MENU_ICON,
-      H.IDENT || ' ' IDENT
-    FROM
-      TB_MENUS M INNER JOIN MENUS_LIST H
-      ON (M.PARENT_ID = H.RECORD_ID)
-  )
-SELECT
-  PARENT_ID,
-  RECORD_ID,
-  ORDER_ITEM,
-  (IDENT || MENU_NAME) "Menu Name",
-  APP_NAME,
-  MENU_ICON
-FROM
-  MENUS_LIST;
-
-/* Test case 2 */
-
-SELECT MENU_ICON
-  FROM TB_MENUS
-
-UNION ALL
-
-SELECT MENU_ICON
-  FROM TB_MENUS;
-""",
- 'expected_stdout': """   PARENT_ID    RECORD_ID   ORDER_ITEM Menu Name                                                                                                                                                                                                                                                                                                                                                                               APP_NAME                                                                                 MENU_ICON
-============ ============ ============ =============================================================================== =============================================================================== =================
-      <null>            0            1 M1                                                                                                                                                                                                                                                                                                                                                                                      <null>                                                                                      <null>
-           0            1            1  M1 - Sub1                                                                                                                                                                                                                                                                                                                                                                              APP1.EXE                                                                                    <null>
-           0            2            1  M1 - Sub2                                                                                                                                                                                                                                                                                                                                                                              APP2.EXE                                                                                    <null>
-
-        MENU_ICON
-=================
-           <null>
-           <null>
-           <null>
-           <null>
-           <null>
-           <null>
-
-"""
+    MENU_ICON                       <null>
+    MENU_ICON                       <null>
+    MENU_ICON                       <null>
+    MENU_ICON                       <null>
+    MENU_ICON                       <null>
+    MENU_ICON                       <null>
+  """
 }
 ]
 }
