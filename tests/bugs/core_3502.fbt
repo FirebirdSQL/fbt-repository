@@ -10,35 +10,40 @@
  'firebird_version': '2.5.1',
  'platform': 'All',
  'page_size': '4096',
- 'init_script': """create view v (id) as
-select rdb$relation_id from rdb$database;
-commit;
-set term !!;
-create procedure p as
-  declare id int;
-begin
-  for select 1 from v into :id do begin end
-end!!
-set term ;!!
-commit;
-""",
  'test_type': 'ISQL',
- 'test_script': """execute procedure p;
-commit;
-drop view v;
-commit;
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-
-unsuccessful metadata update
-
--cannot delete
-
--TABLE V
-
--there are 1 dependencies
-
-"""
+ 'init_script':
+  """
+    set autoddl on;
+    commit;
+    create or alter procedure p as begin end;
+    commit;
+    
+    create or alter view v (id) as select rdb$relation_id from rdb$database;
+    commit;
+    
+    set term ^;
+    create or alter procedure p as
+      declare id int;
+    begin
+      select id from v rows 1 into id;
+    end^
+    set term ;^
+    commit;
+  """,
+ 'test_script':
+  """
+    execute procedure p;
+    commit;
+    drop view v;
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -cannot delete
+    -COLUMN V.ID
+    -there are 1 dependencies
+  """
 }
 ]
 }
