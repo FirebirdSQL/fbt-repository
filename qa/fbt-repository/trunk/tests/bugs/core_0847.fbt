@@ -9,135 +9,177 @@
 {
  'firebird_version': '2.1',
  'platform': 'All',
- 'init_script': """create table t (
-  f1 varchar(10),
-  f2 varchar(10),
-  cf computed by (f1 || ' - ' || f2)
-);
-
-insert into t (f1,f2) values ('0123456789','abcdefghij');
-commit;
-""",
  'test_type': 'ISQL',
- 'test_script': """set blob off;
+ 'init_script': 
+  """
+    recreate table t (
+      f1 varchar(10),
+      f2 varchar(10),
+      cf computed by (f1 || ' - ' || f2)
+    );
+    
+    insert into t (f1,f2) values ('0123456789','abcdefghij');
+    commit;
+  """,
+ 'test_script': 
+  """
+    set blob off;
+    set list on;
+    
+    select f1,f2,cf as cf_before_altering from t;
+    
+    select b.rdb$field_name field_name, cast(a.rdb$computed_source as varchar(80)) computed_source_before_altering
+    from rdb$fields a 
+    join rdb$relation_fields b  on a.rdb$field_name = b.rdb$field_source
+    where b.rdb$field_name = upper('CF');
+    
+    alter table t alter cf type varchar(30);
+    commit;
 
-select * from t;
-
-select a.* from rdb$fields a join rdb$relation_fields b on
-  a.rdb$field_name = b.rdb$field_source
-  where b.rdb$field_name = 'CF';
-
-alter table t alter cf type varchar(30);
-commit;
-
-select * from t;
-
-select a.* from rdb$fields a join rdb$relation_fields b on
-  a.rdb$field_name = b.rdb$field_source
-  where b.rdb$field_name = 'CF';
-
-""",
- 'expected_stdout': """F1         F2         CF
-========== ========== =======================
-0123456789 abcdefghij 0123456789 - abcdefghij
-
-RDB$FIELD_NAME                                                                                RDB$QUERY_NAME                                                                                RDB$VALIDATION_BLR RDB$VALIDATION_SOURCE  RDB$COMPUTED_BLR RDB$COMPUTED_SOURCE RDB$DEFAULT_VALUE RDB$DEFAULT_SOURCE RDB$FIELD_LENGTH RDB$FIELD_SCALE RDB$FIELD_TYPE RDB$FIELD_SUB_TYPE RDB$MISSING_VALUE RDB$MISSING_SOURCE   RDB$DESCRIPTION RDB$SYSTEM_FLAG  RDB$QUERY_HEADER RDB$SEGMENT_LENGTH RDB$EDIT_STRING                                                                                                               RDB$EXTERNAL_LENGTH RDB$EXTERNAL_SCALE RDB$EXTERNAL_TYPE RDB$DIMENSIONS RDB$NULL_FLAG RDB$CHARACTER_LENGTH RDB$COLLATION_ID RDB$CHARACTER_SET_ID RDB$FIELD_PRECISION
-=============================================================================== =============================================================================== ================== ===================== ================= =================== ================= ================== ================ =============== ============== ================== ================= ================== ================= =============== ================= ================== =============================================================================== =================== ================== ================= ============== ============= ==================== ================ ==================== ===================
-RDB$3                                                                                         <null>                                                                                                    <null>                <null>             2:1f4             2:1f3            <null>             <null>               23               0             37                  0            <null>             <null>            <null>               0            <null>             <null> <null>                                                                                                                                     <null>             <null>            <null>         <null>        <null>                    0           <null>                    0              <null>
-
-F1         F2         CF
-========== ========== ==============================
-0123456789 abcdefghij <null>
-
-RDB$FIELD_NAME                                                                                RDB$QUERY_NAME                                                                                RDB$VALIDATION_BLR RDB$VALIDATION_SOURCE  RDB$COMPUTED_BLR RDB$COMPUTED_SOURCE RDB$DEFAULT_VALUE RDB$DEFAULT_SOURCE RDB$FIELD_LENGTH RDB$FIELD_SCALE RDB$FIELD_TYPE RDB$FIELD_SUB_TYPE RDB$MISSING_VALUE RDB$MISSING_SOURCE   RDB$DESCRIPTION RDB$SYSTEM_FLAG  RDB$QUERY_HEADER RDB$SEGMENT_LENGTH RDB$EDIT_STRING                                                                                                               RDB$EXTERNAL_LENGTH RDB$EXTERNAL_SCALE RDB$EXTERNAL_TYPE RDB$DIMENSIONS RDB$NULL_FLAG RDB$CHARACTER_LENGTH RDB$COLLATION_ID RDB$CHARACTER_SET_ID RDB$FIELD_PRECISION
-=============================================================================== =============================================================================== ================== ===================== ================= =================== ================= ================== ================ =============== ============== ================== ================= ================== ================= =============== ================= ================== =============================================================================== =================== ================== ================= ============== ============= ==================== ================ ==================== ===================
-RDB$3                                                                                         <null>                                                                                                    <null>                <null>            <null>              <null>            <null>             <null>               30               0             37                  0            <null>             <null>            <null>               0            <null>             <null> <null>                                                                                                                                     <null>             <null>            <null>         <null>        <null>                   30                0                    0              <null>
-
-"""
+    select f1,f2,cf as cf_after_altering from t;
+    
+    select b.rdb$field_name field_name, cast(a.rdb$computed_source as varchar(80)) computed_source_after_altering
+    from rdb$fields a 
+    join rdb$relation_fields b  on a.rdb$field_name = b.rdb$field_source
+    where b.rdb$field_name = upper('CF');
+  """,
+ 'expected_stdout': 
+  """
+    F1                              0123456789
+    F2                              abcdefghij
+    CF_BEFORE_ALTERING              0123456789 - abcdefghij
+    
+    FIELD_NAME                      CF                                                                                           
+    COMPUTED_SOURCE_BEFORE_ALTERING (f1 || ' - ' || f2)
+    
+    F1                              0123456789
+    F2                              abcdefghij
+    CF_AFTER_ALTERING               <null>
+    
+    FIELD_NAME                      CF                                                                                           
+    COMPUTED_SOURCE_AFTER_ALTERING  <null>
+  """
 },
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'init_script': """create table t (
-  f1 varchar(10),
-  f2 varchar(10),
-  cf computed by (f1 || ' - ' || f2)
-);
-
-insert into t (f1,f2) values ('0123456789','abcdefghij');
-commit;
-""",
  'test_type': 'ISQL',
- 'test_script': """set blob off;
+ 'init_script': 
+  """
+    recreate table t (
+      f1 varchar(10),
+      f2 varchar(10),
+      cf computed by (f1 || ' - ' || f2)
+    );
+    
+    insert into t (f1,f2) values ('0123456789','abcdefghij');
+    commit;
+  """,
+ 'test_script': 
+  """
+    set blob off;
+    set list on;
+    
+    select f1,f2,cf as cf_before_altering from t;
+    
+    select b.rdb$field_name field_name, cast(a.rdb$computed_source as varchar(80)) computed_source_before_altering
+    from rdb$fields a 
+    join rdb$relation_fields b  on a.rdb$field_name = b.rdb$field_source
+    where b.rdb$field_name = upper('CF');
+    
+    alter table t alter cf type varchar(30);
+    commit;
 
-select * from t;
-
-select a.* from rdb$fields a join rdb$relation_fields b on
-  a.rdb$field_name = b.rdb$field_source
-  where b.rdb$field_name = 'CF';
-
-alter table t alter cf type varchar(30);
-commit;
-""",
- 'expected_stdout': """
-F1         F2         CF
-========== ========== =======================
-0123456789 abcdefghij 0123456789 - abcdefghij
-
-
-RDB$FIELD_NAME                                                                                RDB$QUERY_NAME                                                                                RDB$VALIDATION_BLR RDB$VALIDATION_SOURCE  RDB$COMPUTED_BLR RDB$COMPUTED_SOURCE RDB$DEFAULT_VALUE RDB$DEFAULT_SOURCE RDB$FIELD_LENGTH RDB$FIELD_SCALE RDB$FIELD_TYPE RDB$FIELD_SUB_TYPE RDB$MISSING_VALUE RDB$MISSING_SOURCE   RDB$DESCRIPTION RDB$SYSTEM_FLAG  RDB$QUERY_HEADER RDB$SEGMENT_LENGTH RDB$EDIT_STRING                                                                                                                 RDB$EXTERNAL_LENGTH RDB$EXTERNAL_SCALE RDB$EXTERNAL_TYPE RDB$DIMENSIONS RDB$NULL_FLAG RDB$CHARACTER_LENGTH RDB$COLLATION_ID RDB$CHARACTER_SET_ID RDB$FIELD_PRECISION
-=============================================================================== =============================================================================== ================== ===================== ================= =================== ================= ================== ================ =============== ============== ================== ================= ================== ================= =============== ================= ================== =============================================================================== =================== ================== ================= ============== ============= ==================== ================ ==================== ===================
-RDB$3                                                                                         <null>                                                                                                    <null>                <null>             2:1f8             2:1f7            <null>             <null>               23               0             37                  0            <null>             <null>            <null>               0            <null>             <null> <null>                                                                                                                                       <null>             <null>            <null>         <null>        <null>                    0           <null>                    0              <null>
-
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-
-unsuccessful metadata update
-
--Cannot add or remove COMPUTED from column CF
-
-"""
+    select f1,f2,cf as cf_after_altering from t;
+    
+    select b.rdb$field_name field_name, cast(a.rdb$computed_source as varchar(80)) computed_source_after_altering
+    from rdb$fields a 
+    join rdb$relation_fields b  on a.rdb$field_name = b.rdb$field_source
+    where b.rdb$field_name = upper('CF');
+  """,
+ 'expected_stdout': 
+  """
+    F1                              0123456789
+    F2                              abcdefghij
+    CF_BEFORE_ALTERING              0123456789 - abcdefghij
+    
+    FIELD_NAME                      CF                                                                                           
+    COMPUTED_SOURCE_BEFORE_ALTERING (f1 || ' - ' || f2)
+    
+    F1                              0123456789
+    F2                              abcdefghij
+    CF_AFTER_ALTERING               0123456789 - abcdefghij
+    
+    FIELD_NAME                      CF                                                                                           
+    COMPUTED_SOURCE_AFTER_ALTERING  (f1 || ' - ' || f2)
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -Cannot add or remove COMPUTED from column CF
+  """
 },
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'init_script': """create table t (
-  f1 varchar(10),
-  f2 varchar(10),
-  cf computed by (f1 || ' - ' || f2)
-);
-
-insert into t (f1,f2) values ('0123456789','abcdefghij');
-commit;
-""",
  'test_type': 'ISQL',
- 'test_script': """set blob off;
+ 'init_script': 
+  """
+    recreate table t (
+      f1 varchar(10),
+      f2 varchar(10),
+      cf computed by (f1 || ' - ' || f2)
+    );
+    
+    insert into t (f1,f2) values ('0123456789','abcdefghij');
+    commit;
+  """,
+ 'test_script': 
+  """
+    set blob off;
+    set list on;
+    
+    select f1,f2,cf as cf_before_altering from t;
+    
+    select b.rdb$field_name field_name, cast(a.rdb$computed_source as varchar(80)) computed_source_before_altering
+    from rdb$fields a 
+    join rdb$relation_fields b  on a.rdb$field_name = b.rdb$field_source
+    where b.rdb$field_name = upper('CF');
+    
+    alter table t alter cf type varchar(30);
+    commit;
 
-select * from t;
-
-select a.* from rdb$fields a join rdb$relation_fields b on
-  a.rdb$field_name = b.rdb$field_source
-  where b.rdb$field_name = 'CF';
-
-alter table t alter cf type varchar(30);
-commit;
-""",
- 'expected_stdout': """
-F1         F2         CF
-========== ========== =======================
-0123456789 abcdefghij 0123456789 - abcdefghij
-
-
-RDB$FIELD_NAME                                                                                RDB$QUERY_NAME                                                                                RDB$VALIDATION_BLR RDB$VALIDATION_SOURCE  RDB$COMPUTED_BLR RDB$COMPUTED_SOURCE RDB$DEFAULT_VALUE RDB$DEFAULT_SOURCE RDB$FIELD_LENGTH RDB$FIELD_SCALE RDB$FIELD_TYPE RDB$FIELD_SUB_TYPE RDB$MISSING_VALUE RDB$MISSING_SOURCE   RDB$DESCRIPTION RDB$SYSTEM_FLAG  RDB$QUERY_HEADER RDB$SEGMENT_LENGTH RDB$EDIT_STRING                                                                                                                 RDB$EXTERNAL_LENGTH RDB$EXTERNAL_SCALE RDB$EXTERNAL_TYPE RDB$DIMENSIONS RDB$NULL_FLAG RDB$CHARACTER_LENGTH RDB$COLLATION_ID RDB$CHARACTER_SET_ID RDB$FIELD_PRECISION RDB$SECURITY_CLASS                                                                            RDB$OWNER_NAME
-=============================================================================== =============================================================================== ================== ===================== ================= =================== ================= ================== ================ =============== ============== ================== ================= ================== ================= =============== ================= ================== =============================================================================== =================== ================== ================= ============== ============= ==================== ================ ==================== =================== =============================================================================== ===============================================================================
-RDB$3                                                                                         <null>                                                                                                    <null>                <null>             2:4ab             2:4ac            <null>             <null>               23               0             37                  0            <null>             <null>            <null>               0            <null>             <null> <null>                                                                                                                                       <null>             <null>            <null>         <null>        <null>               <null>                0                    0              <null> SQL$356                                                                                       SYSDBA
-
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-unsuccessful metadata update
--ALTER TABLE T failed
--Cannot add or remove COMPUTED from column CF
-"""
+    select f1,f2,cf as cf_after_altering from t;
+    
+    select b.rdb$field_name field_name, cast(a.rdb$computed_source as varchar(80)) computed_source_after_altering
+    from rdb$fields a 
+    join rdb$relation_fields b  on a.rdb$field_name = b.rdb$field_source
+    where b.rdb$field_name = upper('CF');
+  """,
+ 'expected_stdout': 
+  """
+    F1                              0123456789
+    F2                              abcdefghij
+    CF_BEFORE_ALTERING              0123456789 - abcdefghij
+    
+    FIELD_NAME                      CF                                                                                           
+    COMPUTED_SOURCE_BEFORE_ALTERING (f1 || ' - ' || f2)
+    
+    F1                              0123456789
+    F2                              abcdefghij
+    CF_AFTER_ALTERING               0123456789 - abcdefghij
+    
+    FIELD_NAME                      CF                                                                                           
+    COMPUTED_SOURCE_AFTER_ALTERING  (f1 || ' - ' || f2)
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -ALTER TABLE T failed
+    -Cannot add or remove COMPUTED from column CF
+  """
 }
 ]
 }

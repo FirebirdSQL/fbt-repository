@@ -10,149 +10,85 @@
  'firebird_version': '2.5.1',
  'platform': 'Windows',
  'page_size': '4096',
- 'init_script': """create table t1 (col double precision primary key);
-commit;
-create table t2 (col float);
-commit;
-""",
  'test_type': 'ISQL',
- 'test_script': """select count(*) "1" from rdb$relations where rdb$relation_id = 0;
-select count(*) "1" from rdb$relations where rdb$relation_id = 0e0;
-select count(*) "1" from rdb$relations where rdb$relation_id = (1e0 - 1e0);
-select count(*) "1" from rdb$relations where rdb$relation_id = -0e0;
-select count(*) "1" from rdb$relations where rdb$relation_id = -(1e0 - 1e0);
-select count(*) "1" from rdb$database where 0e0 = -0e0;
-insert into t2 (col) values (0e0);
-insert into t2 (col) values (-0e0);
-commit;
-select count(distinct col) from t2;
-insert into t1 (col) values (0e0);
-commit;
-insert into t1 (col) values (-0e0);
-commit;
-select col, count(*) from t1 group by col;""",
- 'expected_stdout': """SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-       COUNT
-============
-           1
-
-SQL>
-                    COL        COUNT
-======================= ============
-     0.0000000000000000            1
-
-SQL>""",
- 'expected_stderr': """Statement failed, SQLSTATE = 23000
-
-violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "T1"
-
--Problematic key value is ("COL" = 0.0000000000000000)
-
-"""
+ 'init_script': 
+  """
+    recreate table t_float_no_pk (col float);
+    commit;
+    insert into t_float_no_pk (col) values (0e0);
+    insert into t_float_no_pk (col) values (-0e0);
+    commit;
+    
+    recreate table t1_double_as_pk (col double precision, constraint t1_double_pk primary key(col) using index t1_double_pk);
+    commit;
+  """,
+ 'test_script': 
+  """
+    set list on;
+    select count(*) "where id = 0"            from rdb$relations where rdb$relation_id = 0;
+    select count(*) "where id = 0e0"          from rdb$relations where rdb$relation_id = 0e0;
+    select count(*) "where id = (1e0 - 1e0)"  from rdb$relations where rdb$relation_id = (1e0 - 1e0);
+    select count(*) "where id = -0e0"         from rdb$relations where rdb$relation_id = -0e0;
+    select count(*) "where id = -(1e0 - 1e0)" from rdb$relations where rdb$relation_id = -(1e0 - 1e0);
+    select count(*) "where 0e0 = -0e0"        from rdb$database where 0e0 = -0e0;
+    
+    insert into t1_double_as_pk (col) values (0e0);
+    commit;
+    insert into t1_double_as_pk (col) values (-0e0);
+    commit;
+    select count(distinct col) "t_float_no_pk: count(dist col)" from t_float_no_pk;
+    select count(*) "t_double_pk: col, count(*)" from t1_double_as_pk group by col;
+    -- :: NB ::: Problematic key representaion for 0e0 differ in Windows vs Linux!
+    -- NIX: -Problematic key value is ("COL" = 0.000000000000000)
+    -- WIN: -Problematic key value is ("COL" = 0.0000000000000000)
+    --                                                          ^
+  """,
+ 'expected_stdout': 
+  """
+    where id = 0                    1
+    where id = 0e0                  1
+    where id = (1e0 - 1e0)          1
+    where id = -0e0                 1
+    where id = -(1e0 - 1e0)         1
+    where 0e0 = -0e0                1
+    t_float_no_pk: count(dist col)  1
+    t_double_pk: col, count(*)      1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 23000
+    violation of PRIMARY or UNIQUE KEY constraint "T1_DOUBLE_PK" on table "T1_DOUBLE_AS_PK"
+    -Problematic key value is ("COL" = 0.0000000000000000)
+  """
 },
 {
  'firebird_version': '2.5.1',
  'platform': 'Linux:MacOS:Solaris:FreeBSD:HP-UX',
  'page_size': '4096',
- 'init_script': """create table t1 (col double precision primary key);
-commit;
-create table t2 (col float);
-commit;
+ 'init_script': 
+  """
 """,
  'test_type': 'ISQL',
- 'test_script': """select count(*) "1" from rdb$relations where rdb$relation_id = 0;
-select count(*) "1" from rdb$relations where rdb$relation_id = 0e0;
-select count(*) "1" from rdb$relations where rdb$relation_id = (1e0 - 1e0);
-select count(*) "1" from rdb$relations where rdb$relation_id = -0e0;
-select count(*) "1" from rdb$relations where rdb$relation_id = -(1e0 - 1e0);
-select count(*) "1" from rdb$database where 0e0 = -0e0;
-insert into t2 (col) values (0e0);
-insert into t2 (col) values (-0e0);
-commit;
-select count(distinct col) from t2;
-insert into t1 (col) values (0e0);
-commit;
-insert into t1 (col) values (-0e0);
-commit;
-select col, count(*) from t1 group by col;""",
- 'expected_stdout': """SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-           1
-============
-           1
-
-SQL>
-       COUNT
-============
-           1
-
-SQL>
-                    COL        COUNT
-======================= ============
-     0.0000000000000000            1
-
-SQL>""",
- 'expected_stderr': """Statement failed, SQLSTATE = 23000
-
-violation of PRIMARY or UNIQUE KEY constraint "INTEG_2" on table "T1"
-
--Problematic key value is ("COL" = 0.00000000000000000)
-
-"""
+ 'test_script': 
+  """
+  """,
+ 'expected_stdout': 
+  """
+    where id = 0                    1
+    where id = 0e0                  1
+    where id = (1e0 - 1e0)          1
+    where id = -0e0                 1
+    where id = -(1e0 - 1e0)         1
+    where 0e0 = -0e0                1
+    t_float_no_pk: count(dist col)  1
+    t_double_pk: col, count(*)      1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 23000
+    violation of PRIMARY or UNIQUE KEY constraint "T1_DOUBLE_PK" on table "T1_DOUBLE_AS_PK"
+    -Problematic key value is ("COL" = 0.000000000000000)
+  """
 }
 ]
 }
