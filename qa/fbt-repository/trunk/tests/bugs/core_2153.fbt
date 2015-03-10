@@ -11,28 +11,23 @@
  'platform': 'All',
  'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """set count on ;
-
-select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
-where rdb$character_set_name similar to '%(av|ie){2,}%' ;
-
-select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
-where rdb$character_set_name similar to '%((av)|(ie)){2,}%' ;
-
-select RDB$DESCRIPTION, RDB$RELATION_ID, RDB$SECURITY_CLASS, RDB$CHARACTER_SET_NAME from rdb$database
-where rdb$character_set_name similar to '%(av)|{2,}%' ;
-""",
- 'expected_stdout': """Records affected: 0
-Records affected: 0
-
-  RDB$DESCRIPTION RDB$RELATION_ID RDB$SECURITY_CLASS                                                                            RDB$CHARACTER_SET_NAME
-================= =============== =============================================================================== ===============================================================================
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-
-Invalid SIMILAR TO pattern
-
-"""
+ 'test_script': 
+  """
+    set list on;
+    select iif( 'avieieavav' similar to '%(av|ie){2,}%', 1, 0) r from rdb$database;
+    select iif( 'avieieieav' similar to '%((av)|(ie)){2,}%', 1, 0) r from rdb$database;
+    select iif( 'eiavieieav' similar to '%(av)|{2,}%', 1, 0) r from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    R                               1
+    R                               1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    Invalid SIMILAR TO pattern
+  """
 }
 ]
 }
