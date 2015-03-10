@@ -1,0 +1,11 @@
+fb21sS_bin=C:\MIX\firebird\fb21\bin
+fb21sS_port=3217
+
+fb25sC_bin=C:\MIX\firebird\fb25\bin
+fb25sC_port=3050
+
+fb30sC_bin=C:\MIX\firebird\fb30
+fb30sC_port=3330
+
+fb30sS_bin=C:\MIX\firebird\fb30sc
+fb30sS_port=3333
