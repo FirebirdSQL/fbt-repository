@@ -10,109 +10,46 @@
  'firebird_version': '2.5.0',
  'platform': 'All',
  'page_size': '4096',
- 'init_script': """CREATE TABLE TABLE_1 (
-    ID INTEGER
-);
-
-CREATE TABLE TABLE_2 (
-    ID INTEGER
-);
-
-CREATE TABLE TABLE_3 (
-    ID INTEGER
-);
-""",
  'test_type': 'ISQL',
- 'test_script': """CREATE OR ALTER VIEW VW_TABLE(
-    ID)
-AS
-select
-    id
-from table_1;
-
-commit;
-
-CREATE OR ALTER VIEW VW_TABLE(
-    ID)
-AS
-select
-    id
-from table_2;
-
-commit;
-
-CREATE OR ALTER VIEW VW_TABLE(
-    ID)
-AS
-select
-    id
-from table_3;
-
-commit;
-
-select * from RDB$VIEW_RELATIONS;
-
-""",
- 'expected_stdout': """
-RDB$VIEW_NAME                                                                                 RDB$RELATION_NAME                                                                             RDB$VIEW_CONTEXT RDB$CONTEXT_NAME
-=============================================================================== =============================================================================== ================ ===============================================================================
-VW_TABLE                                                                                      TABLE_3                                                                                                      1 TABLE_3
-
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'page_size': '4096',
- 'init_script': """CREATE TABLE TABLE_1 (
-    ID INTEGER
-);
-
-CREATE TABLE TABLE_2 (
-    ID INTEGER
-);
-
-CREATE TABLE TABLE_3 (
-    ID INTEGER
-);
-""",
- 'test_type': 'ISQL',
- 'test_script': """CREATE OR ALTER VIEW VW_TABLE(
-    ID)
-AS
-select
-    id
-from table_1;
-
-commit;
-
-CREATE OR ALTER VIEW VW_TABLE(
-    ID)
-AS
-select
-    id
-from table_2;
-
-commit;
-
-CREATE OR ALTER VIEW VW_TABLE(
-    ID)
-AS
-select
-    id
-from table_3;
-
-commit;
-
-select * from RDB$VIEW_RELATIONS;
-
-""",
- 'expected_stdout': """
-RDB$VIEW_NAME                                                                                 RDB$RELATION_NAME                                                                             RDB$VIEW_CONTEXT RDB$CONTEXT_NAME                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              RDB$CONTEXT_TYPE RDB$PACKAGE_NAME
-=============================================================================== =============================================================================== ================ =============================================================================== ================ ===============================================================================
-VW_TABLE                                                                                      TABLE_3                                                                                                      1 TABLE_3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      0 <null>
-
-"""
+ 'init_script': 
+  """
+    recreate table table_1 (id integer);
+    recreate table table_2 (id integer);
+    recreate table table_3 (id integer);
+    
+    create or alter view vw_table(id) as
+    select id from table_1;
+    commit;
+    
+    create or alter view vw_table(id) as
+    select id from table_2;
+    commit;
+    
+    create or alter view vw_table(id) as
+    select id
+    from table_3;
+    commit;
+  """,
+ 'test_script': 
+  """
+    set list on;
+    set width vew_name 31;
+    set width rel_name 31;
+    set width ctx_name 31;
+    select
+         rdb$view_name as vew_name
+        ,rdb$relation_name as rel_name
+        ,rdb$view_context
+        ,rdb$context_name as ctx_name
+    from rdb$view_relations rv;
+  """,
+ 'expected_stdout': 
+  """
+    VEW_NAME                        VW_TABLE                                                                                     
+    REL_NAME                        TABLE_3                                                                                      
+    RDB$VIEW_CONTEXT                1
+    CTX_NAME                        TABLE_3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+  """
 }
 ]
 }
