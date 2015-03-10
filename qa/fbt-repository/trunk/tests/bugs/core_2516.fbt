@@ -10,26 +10,59 @@
  'firebird_version': '2.5',
  'platform': 'All',
  'page_size': '4096',
- 'init_script': """create domain t_smallint_array
-as
-smallint [0:2];
-
-""",
  'test_type': 'ISQL',
- 'test_script': """set term ^ ;
-create procedure sp_smallint_array(x t_smallint_array)
- returns (y t_smallint_array)
-as
-begin
- y=x;
- suspend;
-end ^
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 0A000
-Dynamic SQL Error
--feature is not supported
--Usage of domain or TYPE OF COLUMN of array type in PSQL
-"""
+ 'init_script': 
+  """
+    create domain t_smallint_array as smallint [0:2];
+  """,
+ 'test_script': 
+  """
+    set term ^;
+    create procedure sp_smallint_array(x t_smallint_array)
+     returns (y t_smallint_array)
+    as
+    begin
+      y=x;
+      suspend;
+    end
+    ^ set term ;^
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 0A000
+    Dynamic SQL Error
+    -feature is not supported
+    -Usage of domain or TYPE OF COLUMN of array type in PSQL
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+    create domain t_smallint_array as smallint [0:2];
+  """,
+ 'test_script': 
+  """
+    set term ^;
+    create procedure sp_smallint_array(x t_smallint_array)
+     returns (y t_smallint_array)
+    as
+    begin
+      y=x;
+      suspend;
+    end
+    ^ set term ;^
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 0A000
+    CREATE PROCEDURE SP_SMALLINT_ARRAY failed
+    -Dynamic SQL Error
+    -feature is not supported
+    -Usage of domain or TYPE OF COLUMN of array type in PSQL  """
 }
 ]
 }
