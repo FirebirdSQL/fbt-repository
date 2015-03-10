@@ -10,132 +10,57 @@
  'firebird_version': '2.0.2',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """SET TERM !!;
-execute block returns (res varchar(31))
- as
- begin
-    for execute statement 'select cast(rdb$relation_name as varchar(24))
- from rdb$relations where rdb$system_flag = 1'
-    into :res do suspend;
- end!!
-""",
- 'expected_stdout': """
-
-
-RDB$PAGES
-RDB$DATABASE
-RDB$FIELDS
-RDB$INDEX_SEGMENTS
-RDB$INDICES
-RDB$RELATION_FIELDS
-RDB$RELATIONS
-RDB$VIEW_RELATIONS
-RDB$FORMATS
-RDB$SECURITY_CLASSES
-RDB$FILES
-RDB$TYPES
-RDB$TRIGGERS
-RDB$DEPENDENCIES
-RDB$FUNCTIONS
-RDB$FUNCTION_ARGUMENTS
-RDB$FILTERS
-RDB$TRIGGER_MESSAGES
-RDB$USER_PRIVILEGES
-RDB$TRANSACTIONS
-
-
-
-RDB$GENERATORS
-RDB$FIELD_DIMENSIONS
-RDB$RELATION_CONSTRAINTS
-RDB$REF_CONSTRAINTS
-RDB$CHECK_CONSTRAINTS
-RDB$LOG_FILES
-RDB$PROCEDU
-RDB$PROCEDURE_PARAMETERS
-RDB$CHARACTER_SETS
-RDB$COLLATIONS
-RDB$EXCEPTIONS
-RDB$ROLES
-RDB$BACKUP_HISTORY
-
-
-
-
-
-
-""",
- 'substitutions': [('MON.*',''),('RES.*',''),('==.*','')]
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': """SET TERM !!;
-execute block returns (res varchar(31))
- as
- begin
-    for execute statement 'select cast(rdb$relation_name as varchar(24))
- from rdb$relations where rdb$system_flag = 1'
-    into :res do suspend;
- end!!
-""",
- 'expected_stdout': """
-RES
-===============================
-RDB$PAGES
-RDB$DATABASE
-RDB$FIELDS
-RDB$INDEX_SEGMENTS
-RDB$INDICES
-RDB$RELATION_FIELDS
-RDB$RELATIONS
-RDB$VIEW_RELATIONS
-RDB$FORMATS
-RDB$SECURITY_CLASSES
-RDB$FILES
-RDB$TYPES
-RDB$TRIGGERS
-RDB$DEPENDENCIES
-RDB$FUNCTIONS
-RDB$FUNCTION_ARGUMENTS
-RDB$FILTERS
-RDB$TRIGGER_MESSAGES
-RDB$USER_PRIVILEGES
-RDB$TRANSACTIONS
-
-RES
-===============================
-RDB$GENERATORS
-RDB$FIELD_DIMENSIONS
-RDB$RELATION_CONSTRAINTS
-RDB$REF_CONSTRAINTS
-RDB$CHECK_CONSTRAINTS
-RDB$LOG_FILES
-RDB$PROCEDURES
-RDB$PROCEDURE_PARAMETERS
-RDB$CHARACTER_SETS
-RDB$COLLATIONS
-RDB$EXCEPTIONS
-RDB$ROLES
-RDB$BACKUP_HISTORY
-MON$DATABASE
-MON$ATTACHMENTS
-MON$TRANSACTIONS
-MON$STATEMENTS
-MON$CALL_STACK
-MON$IO_STATS
-MON$RECORD_STATS
-
-RES
-===============================
-MON$CONTEXT_VARIABLES
-MON$MEMORY_USAGE
-RDB$PACKAGES
-SEC$USERS
-
-""",
- 'substitutions': [('MON.*',''),('RES.*',''),('==.*','')]
+ 'test_script':
+  """
+    set list on; 
+    set term ^;
+    execute block returns (res varchar(31))
+     as
+     begin
+        for execute statement
+            'select cast(rdb$relation_name as varchar(24)) '
+            || ' from rdb$relations r where r.rdb$system_flag = 1 and r.rdb$relation_name NOT starting with ''MON$'''
+            || '  order by rdb$relation_id rows 30'
+            into :res
+        do
+            suspend;
+    end
+    ^
+    set term ;^
+  """,
+ 'expected_stdout':
+  """
+    RES                             RDB$PAGES               
+    RES                             RDB$DATABASE            
+    RES                             RDB$FIELDS              
+    RES                             RDB$INDEX_SEGMENTS      
+    RES                             RDB$INDICES             
+    RES                             RDB$RELATION_FIELDS     
+    RES                             RDB$RELATIONS           
+    RES                             RDB$VIEW_RELATIONS      
+    RES                             RDB$FORMATS             
+    RES                             RDB$SECURITY_CLASSES    
+    RES                             RDB$FILES               
+    RES                             RDB$TYPES               
+    RES                             RDB$TRIGGERS            
+    RES                             RDB$DEPENDENCIES        
+    RES                             RDB$FUNCTIONS           
+    RES                             RDB$FUNCTION_ARGUMENTS  
+    RES                             RDB$FILTERS             
+    RES                             RDB$TRIGGER_MESSAGES    
+    RES                             RDB$USER_PRIVILEGES     
+    RES                             RDB$TRANSACTIONS        
+    RES                             RDB$GENERATORS          
+    RES                             RDB$FIELD_DIMENSIONS    
+    RES                             RDB$RELATION_CONSTRAINTS
+    RES                             RDB$REF_CONSTRAINTS     
+    RES                             RDB$CHECK_CONSTRAINTS   
+    RES                             RDB$LOG_FILES           
+    RES                             RDB$PROCEDURES          
+    RES                             RDB$PROCEDURE_PARAMETERS
+    RES                             RDB$CHARACTER_SETS      
+    RES                             RDB$COLLATIONS          
+  """
 }
 ]
 }
