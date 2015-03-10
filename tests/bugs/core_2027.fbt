@@ -12,129 +12,64 @@
  'connection_character_set': 'UTF8',
  'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """select rdb$relation_name
-  from rdb$relations
-  order by '0' || rdb$relation_name;
-""",
- 'expected_stdout': """
-RDB$RELATION_NAME
-===============================================================================
-MON$ATTACHMENTS
-MON$CALL_STACK
-MON$CONTEXT_VARIABLES
-MON$DATABASE
-MON$IO_STATS
-MON$MEMORY_USAGE
-MON$RECORD_STATS
-MON$STATEMENTS
-MON$TRANSACTIONS
-RDB$BACKUP_HISTORY
-RDB$CHARACTER_SETS
-RDB$CHECK_CONSTRAINTS
-RDB$COLLATIONS
-RDB$DATABASE
-RDB$DEPENDENCIES
-RDB$EXCEPTIONS
-RDB$FIELDS
-RDB$FIELD_DIMENSIONS
-RDB$FILES
-RDB$FILTERS
+ 'test_script': 
+  """
+    create table t(rel_name char(31) character set unicode_fss);
+    commit;
+    insert into t 
+    select r.rdb$relation_name from rdb$relations r 
+    order by r.rdb$relation_id
+    rows 40; -- minimal numer of rows in rdb$relations that is common for 2.5 and 3.0
+    commit;
 
-RDB$RELATION_NAME
-===============================================================================
-RDB$FORMATS
-RDB$FUNCTIONS
-RDB$FUNCTION_ARGUMENTS
-RDB$GENERATORS
-RDB$INDEX_SEGMENTS
-RDB$INDICES
-RDB$LOG_FILES
-RDB$PAGES
-RDB$PROCEDURES
-RDB$PROCEDURE_PARAMETERS
-RDB$REF_CONSTRAINTS
-RDB$RELATIONS
-RDB$RELATION_CONSTRAINTS
-RDB$RELATION_FIELDS
-RDB$ROLES
-RDB$SECURITY_CLASSES
-RDB$TRANSACTIONS
-RDB$TRIGGERS
-RDB$TRIGGER_MESSAGES
-RDB$TYPES
-
-RDB$RELATION_NAME
-===============================================================================
-RDB$USER_PRIVILEGES
-RDB$VIEW_RELATIONS
-
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'connection_character_set': 'UTF8',
- 'page_size': '4096',
- 'test_type': 'ISQL',
- 'test_script': """select rdb$relation_name
-  from rdb$relations
-  order by '0' || rdb$relation_name;
-""",
- 'expected_stdout': """
-RDB$RELATION_NAME
-===============================
-MON$ATTACHMENTS
-MON$CALL_STACK
-MON$CONTEXT_VARIABLES
-MON$DATABASE
-MON$IO_STATS
-MON$MEMORY_USAGE
-MON$RECORD_STATS
-MON$STATEMENTS
-MON$TRANSACTIONS
-RDB$BACKUP_HISTORY
-RDB$CHARACTER_SETS
-RDB$CHECK_CONSTRAINTS
-RDB$COLLATIONS
-RDB$DATABASE
-RDB$DEPENDENCIES
-RDB$EXCEPTIONS
-RDB$FIELDS
-RDB$FIELD_DIMENSIONS
-RDB$FILES
-RDB$FILTERS
-
-RDB$RELATION_NAME
-===============================
-RDB$FORMATS
-RDB$FUNCTIONS
-RDB$FUNCTION_ARGUMENTS
-RDB$GENERATORS
-RDB$INDEX_SEGMENTS
-RDB$INDICES
-RDB$LOG_FILES
-RDB$PACKAGES
-RDB$PAGES
-RDB$PROCEDURES
-RDB$PROCEDURE_PARAMETERS
-RDB$REF_CONSTRAINTS
-RDB$RELATIONS
-RDB$RELATION_CONSTRAINTS
-RDB$RELATION_FIELDS
-RDB$ROLES
-RDB$SECURITY_CLASSES
-RDB$TRANSACTIONS
-RDB$TRIGGERS
-RDB$TRIGGER_MESSAGES
-
-RDB$RELATION_NAME
-===============================
-RDB$TYPES
-RDB$USER_PRIVILEGES
-RDB$VIEW_RELATIONS
-SEC$USERS
-
-"""
+    set list on;
+    select t.rel_name
+    from t
+    order by '0' || t.rel_name;
+  """,
+ 'expected_stdout': 
+  """
+    REL_NAME                        MON$ATTACHMENTS
+    REL_NAME                        MON$CALL_STACK
+    REL_NAME                        MON$DATABASE
+    REL_NAME                        MON$IO_STATS
+    REL_NAME                        MON$RECORD_STATS
+    REL_NAME                        MON$STATEMENTS
+    REL_NAME                        MON$TRANSACTIONS
+    REL_NAME                        RDB$BACKUP_HISTORY
+    REL_NAME                        RDB$CHARACTER_SETS
+    REL_NAME                        RDB$CHECK_CONSTRAINTS
+    REL_NAME                        RDB$COLLATIONS
+    REL_NAME                        RDB$DATABASE
+    REL_NAME                        RDB$DEPENDENCIES
+    REL_NAME                        RDB$EXCEPTIONS
+    REL_NAME                        RDB$FIELDS
+    REL_NAME                        RDB$FIELD_DIMENSIONS
+    REL_NAME                        RDB$FILES
+    REL_NAME                        RDB$FILTERS
+    REL_NAME                        RDB$FORMATS
+    REL_NAME                        RDB$FUNCTIONS
+    REL_NAME                        RDB$FUNCTION_ARGUMENTS
+    REL_NAME                        RDB$GENERATORS
+    REL_NAME                        RDB$INDEX_SEGMENTS
+    REL_NAME                        RDB$INDICES
+    REL_NAME                        RDB$LOG_FILES
+    REL_NAME                        RDB$PAGES
+    REL_NAME                        RDB$PROCEDURES
+    REL_NAME                        RDB$PROCEDURE_PARAMETERS
+    REL_NAME                        RDB$REF_CONSTRAINTS
+    REL_NAME                        RDB$RELATIONS
+    REL_NAME                        RDB$RELATION_CONSTRAINTS
+    REL_NAME                        RDB$RELATION_FIELDS
+    REL_NAME                        RDB$ROLES
+    REL_NAME                        RDB$SECURITY_CLASSES
+    REL_NAME                        RDB$TRANSACTIONS
+    REL_NAME                        RDB$TRIGGERS
+    REL_NAME                        RDB$TRIGGER_MESSAGES
+    REL_NAME                        RDB$TYPES
+    REL_NAME                        RDB$USER_PRIVILEGES
+    REL_NAME                        RDB$VIEW_RELATIONS
+  """
 }
 ]
 }
