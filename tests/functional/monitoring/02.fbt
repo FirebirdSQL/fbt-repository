@@ -38,7 +38,7 @@ SELECT ATT.MON$USER, STMT.MON$SQL_TEXT
   """
     set width usr 31;
     set list on;
-    select a.mon$user usr, s.mon$sql_text sql
+    select a.mon$user usr, s.mon$sql_text sql_text
     from mon$attachments a
         join mon$statements s on a.mon$attachment_id = s.mon$attachment_id
     where
@@ -48,14 +48,15 @@ SELECT ATT.MON$USER, STMT.MON$SQL_TEXT
  'expected_stdout':
   """
     USR                             SYSDBA                                                                                       
-    SQL                             0:2
-    select a.mon$user usr, s.mon$sql_text sql
+    SQL_TEXT                        0:2
+    select a.mon$user usr, s.mon$sql_text sql_text
     from mon$attachments a
         join mon$statements s on a.mon$attachment_id = s.mon$attachment_id
     where
         a.mon$attachment_id = current_connection
         and s.mon$state = 1
-  """
+  """,
+  'substitutions': [('SQL_TEXT.*','')]
 },
 {
  'firebird_version': '3.0',
@@ -65,7 +66,7 @@ SELECT ATT.MON$USER, STMT.MON$SQL_TEXT
   """
     set width usr 31;
     set list on;
-    select a.mon$user usr, s.mon$sql_text sql
+    select a.mon$user usr, s.mon$sql_text sql_text
     from mon$attachments a
         join mon$statements s on a.mon$attachment_id = s.mon$attachment_id
     where
@@ -75,14 +76,15 @@ SELECT ATT.MON$USER, STMT.MON$SQL_TEXT
  'expected_stdout':
   """
     USR                             SYSDBA                                                                                       
-    SQL                             0:1
-    select a.mon$user usr, s.mon$sql_text sql
+    SQL_TEXT                        0:1
+    select a.mon$user usr, s.mon$sql_text sql_text
     from mon$attachments a
         join mon$statements s on a.mon$attachment_id = s.mon$attachment_id
     where
         a.mon$attachment_id = current_connection
         and s.mon$state = 1
-  """
+  """,
+  'substitutions': [('SQL_TEXT.*','')]
 }
 ]
 }
