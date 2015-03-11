@@ -64,6 +64,101 @@ except Exception, e:
 - Foreign key reference target does not exist
 - Problematic key value is ("FKEY" = 1)
 """
+},
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script':
+  """
+    -- ::: NB ::: 
+    -- 1. Python crashes on Windows XP with script for 2.1. 
+    --    Changed test to be run via ISQL with autonomous transaction ( >= 2.5)
+    --    Test of error message in Wodows Events log:
+    --    [rus] Ошибка приложения python.exe, версия 0.0.0.0, модуль fbclient.dll, версия 3.0.0.31702, адрес 0x000d4717
+    -- 2. Error output differs in 2.5 and 3.0 for this script.
+    recreate table t_detl(id int);
+    commit;
+    recreate table t_main(
+         id int constraint t_main_pk primary key using index t_main_pk
+        ,uniq_ref int constraint t_main_uk unique using index t_main_uk
+    );
+    commit;
+    recreate table t_detl(
+        id int constraint t_detl_pk primary key using index t_detl_pk,
+        master_uniq_ref int constraint t_detl_fk_mur references t_main(uniq_ref) using index t_detl_fk_mur
+    );
+    commit;
+    
+    insert into t_main(id, uniq_ref) values(1, 1);
+    commit;
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    commit;
+    set transaction read committed record_version no wait;
+    set term ^;
+    execute block as
+    begin
+        delete from t_main where id=1;
+        in autonomous transaction do
+        insert into t_detl(id, master_uniq_ref) values(100, 1);
+    end
+    ^
+    set term ;^
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 40001
+    lock conflict on no wait transaction
+    -violation of FOREIGN KEY constraint "T_DETL_FK_MUR" on table "T_DETL"
+    -Foreign key reference target does not exist
+    -Problematic key value is ("MASTER_UNIQ_REF" = 1)
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    recreate table t_detl(id int);
+    commit;
+    recreate table t_main(
+         id int constraint t_main_pk primary key using index t_main_pk
+        ,uniq_ref int constraint t_main_uk unique using index t_main_uk
+    );
+    commit;
+    recreate table t_detl(
+        id int constraint t_detl_pk primary key using index t_detl_pk,
+        master_uniq_ref int constraint t_detl_fk_mur references t_main(uniq_ref) using index t_detl_fk_mur
+    );
+    commit;
+    
+    insert into t_main(id, uniq_ref) values(1, 1);
+    commit;
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    commit;
+    set transaction read committed record_version no wait;
+    set term ^;
+    execute block as
+    begin
+        delete from t_main where id=1;
+        in autonomous transaction do
+        insert into t_detl(id, master_uniq_ref) values(100, 1);
+    end
+    ^
+    set term ;^
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 23000
+    violation of FOREIGN KEY constraint "T_DETL_FK_MUR" on table "T_DETL"
+    -Foreign key reference target does not exist
+    -Problematic key value is ("MASTER_UNIQ_REF" = 1)
+  """
 }
 ]
 }
