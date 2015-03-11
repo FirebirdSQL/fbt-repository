@@ -7851,7 +7851,8 @@ RDB$SYSTEM_FLAG                 1
 RDB$FLAGS                       0
 RDB$VALID_BLR                   <null>
 RDB$DEBUG_INFO                  <null>
-  """
+  """,
+  'substitutions': [('RDB\$TRIGGER_BLR.*','')]
 },
 {
  'firebird_version': '2.5',
@@ -10105,7 +10106,8 @@ RDB$SYSTEM_FLAG                 1
 RDB$FLAGS                       0
 RDB$VALID_BLR                   <null>
 RDB$DEBUG_INFO                  <null>
-  """
+  """,
+  'substitutions': [('RDB\$TRIGGER_BLR.*','')]
 },
 {
  'firebird_version': '3.0',
@@ -12477,7 +12479,8 @@ RDB$VALID_BLR                   <null>
 RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
-  """
+  """,
+  'substitutions': [('RDB\$TRIGGER_BLR.*','')]
 }
 ]
 }
