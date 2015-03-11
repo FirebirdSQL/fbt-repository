@@ -20,12 +20,12 @@ NONE"""
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 'SELECT RDB$CHARACTER_SET_NAME FROM rdb$Database;',
- 'expected_stdout': """
-RDB$CHARACTER_SET_NAME
-===============================================================================
-NONE
-
-"""
+ 'expected_stdout': 
+  """
+    RDB$CHARACTER_SET_NAME
+    NONE
+  """,
+  'substitutions': [('=.*','')]
 }
 ]
 }
