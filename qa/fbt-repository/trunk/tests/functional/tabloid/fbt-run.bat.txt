@@ -1,76 +1,358 @@
 @echo off
 setlocal enabledelayedexpansion enableextensions
 
+@rem File name: ..\fbt-repo\fbt-run.bat 
+@rem It is recommended to put this file in the top-level QA folder - "fbt-repo".
+@rem Running sample: C:\MIX\firebird\QA\fbt-repo\fbt-run.bat core_NNNN.fbt 
+@rem Also it is convenient to 'bind' this batch to files with pattern *.fbt
+@rem from sub-folder fbt-repo\tests\ (FAR: F10 / Commands / File associations)
+@rem In that case one may always to sit in the folder with .fbt files
+@rem (e.g. fbt-repo\tests\bugs\) and run all necessary tests only by pressing
+@rem [ ENTER ] key on selected .fbt
+
 if "%1"=="" (
   echo Arg #1 is mandatory - name of .sql
-  goto end
+  exit
 )
 
-@rem check that GNU sed for Windows is avaliable:
-sed 2>tmp.sed-usage.tmp
-findstr /i /c /b "Usage: sed.EXE" tmp.sed-usage.tmp 1>nul 2>&1
-if errorlevel 1 (
-  del tmp.sed-usage.tmp
-  echo GNU sed.exe utility required for this batch.
-  echo Check also that you have: libiconv2.dll, libintl3.dll and regex2.dll 
-  echo for successful work of sed.exe
-  goto end
-)
-del tmp.sed-usage.tmp
+cd >tmp.tmp.tmp
+set /p curdir= < tmp.tmp.tmp
+del tmp.tmp.tmp
 
-call :readcfg %~n0.conf
+set cdprefix=
+set find_what=%~dp0
+set repl_with=
+for /f "tokens=* delims=\" %%a in ("%curdir%") do (
+  set string=%%a
+  set cdprefix=!string:%find_what%=%repl_with%!
+  set cdprefix=!cdprefix:tests\=%repl_with%!
+  set cdprefix=!cdprefix:\=.!
+)
+
+set fbt_name=%~n1
 
 @echo off
 
-copy e20.fd0 e20.fdb 1>nul
+::::::::::::::::::::::::  change dir to batch ::::::::::::::::::::::
+cd %~dp0
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::  read fbt-run.conf  ::::::::::::::::::::::
+call :readcfg %~n0.conf
+:: Result:
+:: get values of all necessary env. variables (fbNNhome, fbNNport)
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+@rem results: 0=ok, 1=fault
+
+set res21=0
+set res25=0
+set res30sS=0
+set res30sC=0
+
+set e21size=0
+set e25size=0
+set err30sS=0
+set err30sC=0
+
+del fbt-run.21*.* 2>nul
+del fbt-run.25*.* 2>nul
+del fbt-run.30*.* 2>nul
+
+@rem if specified than ONLY this FB version will be checked: 25 30ss or 30sc
+set fb_only=%2
+
+if /i .%fb_only%.==.21. goto run21
+if /i .%fb_only%.==.25. goto run25
+if /i .%fb_only%.==.30sS. goto run30sS
+if /i .%fb_only%.==.30sC. goto run30sC
+goto run21
+
+:run21
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.21.log
+  echo ------------------------------------------------------->>fbt-run.21.log
+  %fb21home%\fbsvcmgr localhost/%fb21port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.21.log 2>&1
+  set fbt_run=fbt_run -b %fb21home% %cdprefix%.%fbt_name% -o localhost/%fb21port%
+
+  set msg=Command: %fbt_run%
+  echo.
+  echo %msg%
+  echo %msg%>>fbt-run.21.log
+
+  cmd /c %fbt_run% 1>>fbt-run.21.log 2>fbt-run.21.err
+  copy %~dp0results.trf fbt-run.21.trf 1>nul
+
+  findstr /B /I "Nothing to run" fbt-run.21.log 1>nul 2>&1
+  if errorlevel 1 goto chkr21
+  set res21=1                       &:: .......... no sense to check on errors because of "Nothing to run"
+  goto run25
+
+:chkr21
+  findstr /B /I "FAIL ERROR" fbt-run.21.log 1>nul 2>&1
+  if errorlevel 1 (
+     findstr /b /c:Ran fbt-run.21.log 1>nul 2>&1
+     if errorlevel 1 set res21=1
+
+     findstr /b /e /c:OK fbt-run.21.log 1>nul 2>&1
+     if errorlevel 1 set res21=1
+
+     if .!res21!.==.0. (
+       echo FB 2.1: SUCCESS          &:: ............ test finished OK, continue next one .........
+       if /i .%fb_only%.==.21. goto chk_err
+       goto run25
+     )
+  )
+  echo ### FB 2.1: FAILED ###
+  set res21=1
+  goto run25
+
+
+:run25
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.25.log
+  echo ------------------------------------------------------->>fbt-run.25.log
+  %fb25home%\fbsvcmgr localhost/%fb25port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.25.log 2>&1
+  set fbt_run=fbt_run -b %fb25home% %cdprefix%.%fbt_name% -o localhost/%fb25port%
+
+  set msg=Command: %fbt_run%
+  echo.
+  echo %msg%
+  echo %msg%>>fbt-run.25.log
+
+  cmd /c %fbt_run% 1>>fbt-run.25.log 2>fbt-run.25.err
+  copy %~dp0results.trf fbt-run.25.trf 1>nul
+
+  findstr /B /I "Nothing to run" fbt-run.25.log 1>nul 2>&1
+  if errorlevel 1 goto chkr25
+  set res25=1                       &:: .......... no sense to check on errors because of "Nothing to run"
+  goto run30sS
+
+:chkr25
+  findstr /B /I "FAIL ERROR" fbt-run.25.log 1>nul 2>&1
+  if errorlevel 1 (
+     findstr /b /c:Ran fbt-run.25.log 1>nul 2>&1
+     if errorlevel 1 set res25=1
+
+     findstr /b /e /c:OK fbt-run.25.log 1>nul 2>&1
+     if errorlevel 1 set res25=1
+
+     if .!res25!.==.0. (
+       echo FB 2.5: SUCCESS          &:: ............ test finished OK, continue next one .........
+       if /i .%fb_only%.==.25. goto chk_err
+       goto run30sS
+     )
+  )
+  echo ### FB 2.5: FAILED ###
+  set res25=1
+  goto run30sS
+
+:run30sS
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.30sS.log
+  echo ------------------------------------------------------->>fbt-run.30sS.log
+  %fb30sShome%\fbsvcmgr localhost/%fb30sSport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30sS.log 2>&1
+  echo.
+
+  set fbt_run=fbt_run -b %fb30sShome% %cdprefix%.%fbt_name% -o localhost/%fb30sSport%
+  set msg=Command: %fbt_run%
+  echo %msg%
+  echo %msg%>>fbt-run.30sS.log
+
+  cmd /c %fbt_run% 1>>fbt-run.30sS.log 2>fbt-run.30sS.err
+  copy %~dp0results.trf fbt-run.30sS.trf 1>nul
+
+  findstr /B /I "Nothing to run" fbt-run.30sS.log 1>nul 2>&1
+  if errorlevel 1 goto chkr30sS
+  set res30sS=1                       &:: .......... no sense to check on errors because of "Nothing to run"
+  goto run30sC
+
+
+:chkr30sS
+  findstr /B /I "FAIL ERROR" fbt-run.30sS.log 1>nul 2>&1
+  if errorlevel 1 (
+     findstr /b /c:Ran fbt-run.30sS.log 1>nul 2>&1
+     if errorlevel 1 set res30sS=1
+
+     findstr /b /e /c:OK fbt-run.30sS.log 1>nul 2>&1
+     if errorlevel 1 set res30sS=1
+
+     if .!res30sS!.==.0. (
+       echo FB 3.0 SUPER: SUCCESS            &:: ............ test finished OK, continue next one .........
+       if /i .%fb_only%.==.30sS. goto chk_err
+       goto run30sC
+     )
+  )
+
+  echo ### FB 3.0 SUPER: FAILED ###
+  set res30sS=1
+  goto run30sC
+
+
+:run30sC
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.30sC.log
+  echo ------------------------------------------------------->>fbt-run.30sC.log
+  %fb30sChome%\fbsvcmgr localhost/%fb30sCport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30sC.log 2>&1
+  echo.
+
+  set fbt_run=fbt_run -b %fb30sChome% %cdprefix%.%fbt_name% -o localhost/%fb30sCport%
+  set msg=Command: %fbt_run%
+  echo %msg%
+  echo %msg%>>fbt-run.30sC.log
+
+  cmd /c %fbt_run% 1>>fbt-run.30sC.log 2>fbt-run.30sC.err
+  copy %~dp0results.trf fbt-run.30sC.trf 1>nul
+
+  findstr /B /I "Nothing to run" fbt-run.30sC.log 1>nul 2>&1
+  if errorlevel 1 goto chkr30sC
+  set res30sC=1                       &:: .......... no sense to check on errors because of "Nothing to run"
+
+  goto chk_err
+
+:chkr30sC
+  findstr /B /I "FAIL ERROR" fbt-run.30sC.log 1>nul 2>&1
+  if errorlevel 1 (
+     findstr /b /c:Ran fbt-run.30sC.log 1>nul 2>&1
+     if errorlevel 1 set res30sC=1
+
+     findstr /b /e /c:OK fbt-run.30sC.log 1>nul 2>&1
+     if errorlevel 1 set res30sC=1
+
+     if .!res30sC!.==.0. (
+       echo FB 3.0 CLASSIC: SUCCESS            &:: ............ test finished OK, continue next one .........
+       if /i .%fb_only%.==.30sC. goto chk_err
+       goto chk_err
+     )
+  )
+
+  echo ### FB 3.0 CLASSIC: FAILED ###
+  set res30sC=1
+  goto chk_err                         &:: ::::::::::::::::  show log *AND* errors ::::::::::::::::::
+
+
+@rem --- final check ---
+:chk_err
+  
+  @rem Take a little pause (enough to see all results)
+  ping -n 1 -w 500 1.1.1.1 1>nul 2>&1
+
+  for /f "usebackq" %%A in ('fbt-run.21.err') do set e21size=%%~zA
+  if .%e21size%.==.. set e21size=0
+  if %e21size% gtr 0 (
+   set res21=1
+  )
+
+  for /f "usebackq" %%A in ('fbt-run.25.err') do set e25size=%%~zA
+  if .%e25size%.==.. set e25size=0
+  if %e25size% gtr 0 (
+   set res25=1
+  )
+
+  for /f "usebackq" %%A in ('fbt-run.30sS.err') do set err30sS=%%~zA
+  if .%err30sS%.==.. set err30sS=0
+  if %err30sS% gtr 0 (
+    set res30sS=1
+  )
+
+  for /f "usebackq" %%A in ('fbt-run.30sC.err') do set err30sC=%%~zA
+  if .%err30sC%.==.. set err30sC=0
+  if %err30sC% gtr 0 (
+    set res30sC=1
+  )
+
 echo.
-echo|set /p=%time%, test: 
-echo.|C:\MIX\firebird\oldfb20\bin\isql -z localhost/3207:C:\MIX\firebird\QA\fbt-repo\tmp\E20.FDB|findstr /i /b /c:"WI-"|findstr /i /e /c:"2.0"
-set run_isql=%fb20Cs_bin%\isql localhost/%fb20Cs_port%:%~dp0e20.fdb -i %1 ^| sed "s/ *$//"
-echo %run_isql%
-cmd /c %run_isql% 1>e20Cs.log 2>e20Cs.err
-
-
-copy e21.fd0 e21.fdb 1>nul
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log21: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+type fbt-run.21.log
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log21: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 echo.
-echo|set /p=%time%, test: 
-%fb21Cs_bin%\fbsvcmgr localhost/%fb21Cs_port%:service_mgr user %isc_user% password %isc_password% info_server_version
-set run_isql=%fb21Cs_bin%\isql localhost/%fb21Cs_port%:%~dp0e21.fdb -i %1 ^| sed "s/ *$//"
-echo %run_isql%
-cmd /c %run_isql% 1>e21Cs.log 2>e21Cs.err
-
-copy e25.fd0 e25.fdb 1>nul
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+type fbt-run.25.log
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 echo.
-echo|set /p=%time%, test: 
-%fb25sC_bin%\fbsvcmgr localhost/%fb25sC_port%:service_mgr user %isc_user% password %isc_password% info_server_version
-set run_isql=%fb25sC_bin%\isql localhost/%fb25sC_port%:%~dp0e25.fdb -i %1 ^| sed "s/ *$//"
-echo %run_isql%
-cmd /c %run_isql% 1>e25sC.log 2>e25sC.err
-
-copy e30.fd0 e30.fdb 1>nul
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPER: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+type fbt-run.30sS.log
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPER: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 echo.
-echo|set /p=%time%, test: 
-%fb30sC_bin%\fbsvcmgr localhost/%fb30sC_port%:service_mgr user %isc_user% password %isc_password% info_server_version
-set run_isql=%fb30sC_bin%\isql localhost/%fb30sC_port%:%~dp0e30.fdb -i %1 ^| sed "s/ *$//"
-echo %run_isql%
-cmd /c %run_isql% 1>e30sC.log 2>e30sC.err
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 CLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+type fbt-run.30sC.log
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 CLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 
-copy e30.fd0 e30.fdb 1>nul
-echo.
-echo|set /p=%time%, test: 
-%fb30sS_bin%\fbsvcmgr localhost/%fb30sS_port%:service_mgr user %isc_user% password %isc_password% info_server_version
-set run_isql=%fb30sS_bin%\isql localhost/%fb30sS_port%:%~dp0e30.fdb -i %1 ^| sed "s/ *$//"
-echo %run_isql%
-cmd /c %run_isql% 1>e30sS.log 2>e30sS.err
+set /a overall=%res21%+%res25%+%res30sS%+%res30sC%
+set faults=
+if NOT .%res21%.==.0. set faults=%faults%_2.1
+if NOT .%res25%.==.0. set faults=%faults%_2.5
+if NOT .%res30sS%.==.0. set faults=%faults%_3.0sS
+if NOT .%res30sC%.==.0. set faults=%faults%_3.0sC
+set faults=%faults:_= %
 
-for /f "tokens=*" %%A in ('dir /b e20Cs.* e21Cs.* e25sC.* e30sC.* e30sS.*') do (
-  set esize=%%~zA
-  if .!esize!.==.. set esize=0
-  if .!esize!.==.0. del %%A 2>nul
+if .%overall%.==.0. (
+  echo.
+  echo ###  A L L    O K  ###
+  del fbt-run.30*.err
+  del fbt-run.30*.log
+  del fbt-run.25.err
+  del fbt-run.25.log
+  del fbt-run.21.err
+  del fbt-run.21.log
+  @rem Take a little pause (enough to see all thre results)
+  ping -n 1 -w 500 1.1.1.1 1>nul 2>&1
+) else (
+
+  if .%e21size%. gtr .0. (
+    echo.
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err21: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    type fbt-run.21.err
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err21: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  ) else (
+    del fbt-run.21.err
+  )
+
+  if .%e25size%. gtr .0. (
+    echo.
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    type fbt-run.25.err
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  ) else (
+    del fbt-run.25.err
+  )
+
+  if .%err30sS%. gtr .0. (
+    echo.
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 SUPER: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    type fbt-run.30sS.err
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 SUPER: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  ) else (
+    del fbt-run.30sS.err
+  )
+
+  if .%err30sC%. gtr .0. (
+    echo.
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 CLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    type fbt-run.30sC.err
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 CLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  ) else (
+    del fbt-run.30sC.err
+  )
+  
+  echo.
+  echo ###   A C H T U N G  ###  At least one of tests FAILED ^>^>^> %faults% ^<^<^<
+  echo.
+  echo Check results in files fbt_check_this.***.log
+  echo -----------------------------------------------
+  fbt_view -d %~dp0fbt-run.21.trf 1>fbt_check_this.21.log 2>&1
+  fbt_view -d %~dp0fbt-run.25.trf 1>fbt_check_this.25.log 2>&1
+  fbt_view -d %~dp0fbt-run.30sS.trf 1>fbt_check_this.30sS.log 2>&1
+  fbt_view -d %~dp0fbt-run.30sC.trf 1>fbt_check_this.30sC.log 2>&1
+  del %~dp0fbt-run.21.trf
+  del %~dp0fbt-run.25.trf
+  del %~dp0fbt-run.30sS.trf
+  del %~dp0fbt-run.30sC.trf
 )
+cd /d %curdir%
 
+if NOT .%overall%.==.0. ping -n 1 -w 2000 1.1.1.1 1>nul 2>&1
 goto end
 
+
+@rem ::::::::::::::::::::::::::::::::::::::   r e a d    c o n f i g   :::::::::::::::::::::::::::::::::::::::::
 :readcfg
 
 set cfg=%1
