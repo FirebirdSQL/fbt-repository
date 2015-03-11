@@ -29,107 +29,191 @@ RDB$TRIGGER_NAME                               8               1
  'firebird_version': '2.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$GENERATORS;',
- 'expected_stdout': """
-RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION
-=============================================================================== ================ =============== =================
-RDB$SECURITY_CLASS                                                                                           1               1            <null>
-SQL$DEFAULT                                                                                                  2               1            <null>
-RDB$PROCEDURES                                                                                               3               1              14:2
-==============================================================================
-RDB$DESCRIPTION:
-Procedure ID
-==============================================================================
-RDB$EXCEPTIONS                                                                                               4               1              14:4
-==============================================================================
-RDB$DESCRIPTION:
-Exception ID
-==============================================================================
-RDB$CONSTRAINT_NAME                                                                                          5               1              14:6
-==============================================================================
-RDB$DESCRIPTION:
-Implicit constraint name
-==============================================================================
-RDB$FIELD_NAME                                                                                               6               1              14:8
-==============================================================================
-RDB$DESCRIPTION:
-Implicit domain name
-==============================================================================
-RDB$INDEX_NAME                                                                                               7               1              14:a
-==============================================================================
-RDB$DESCRIPTION:
-Implicit index name
-==============================================================================
-RDB$TRIGGER_NAME                                                                                             8               1              14:c
-==============================================================================
-RDB$DESCRIPTION:
-Implicit trigger name
-==============================================================================
-RDB$BACKUP_HISTORY                                                                                           9               1              14:e
-==============================================================================
-RDB$DESCRIPTION:
-Nbackup technology
-==============================================================================
-
-"""
+ 'test_script':
+  """
+    set blob all;
+    set list on;
+    select *
+    from rdb$generators;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$GENERATOR_NAME              RDB$SECURITY_CLASS
+    RDB$GENERATOR_ID                1
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 <null>
+    
+    RDB$GENERATOR_NAME              SQL$DEFAULT
+    RDB$GENERATOR_ID                2
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 <null>
+    
+    RDB$GENERATOR_NAME              RDB$PROCEDURES
+    RDB$GENERATOR_ID                3
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:2
+    Procedure ID
+    
+    RDB$GENERATOR_NAME              RDB$EXCEPTIONS
+    RDB$GENERATOR_ID                4
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:4
+    Exception ID
+    
+    RDB$GENERATOR_NAME              RDB$CONSTRAINT_NAME
+    RDB$GENERATOR_ID                5
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:6
+    Implicit constraint name
+    
+    RDB$GENERATOR_NAME              RDB$FIELD_NAME
+    RDB$GENERATOR_ID                6
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:8
+    Implicit domain name
+    
+    RDB$GENERATOR_NAME              RDB$INDEX_NAME
+    RDB$GENERATOR_ID                7
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:a
+    Implicit index name
+    
+    RDB$GENERATOR_NAME              RDB$TRIGGER_NAME
+    RDB$GENERATOR_ID                8
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:c
+    Implicit trigger name
+    
+    RDB$GENERATOR_NAME              RDB$BACKUP_HISTORY
+    RDB$GENERATOR_ID                9
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:e
+    Nbackup technology
+  """,
+  'substitutions': [('RDB\$DESCRIPTION.*','')]
 },
 {
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$GENERATORS;',
- 'expected_stdout': """
-RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION RDB$SECURITY_CLASS                                                                            RDB$OWNER_NAME                                                                                    RDB$INITIAL_VALUE
-=============================================================================== ================ =============== ================= =============================================================================== =============================================================================== =====================
-RDB$SECURITY_CLASS                                                                                           1               1            <null> SQL$138                                                                                       SYSDBA                                                                                                            0
-SQL$DEFAULT                                                                                                  2               1            <null> SQL$139                                                                                       SYSDBA                                                                                                            0
-RDB$PROCEDURES                                                                                               3               1             14:ef SQL$140                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Procedure ID
-==============================================================================
-RDB$EXCEPTIONS                                                                                               4               1             14:f0 SQL$141                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Exception ID
-==============================================================================
-RDB$CONSTRAINT_NAME                                                                                          5               1             14:f1 SQL$142                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Implicit constraint name
-==============================================================================
-RDB$FIELD_NAME                                                                                               6               1             14:f2 SQL$143                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Implicit domain name
-==============================================================================
-RDB$INDEX_NAME                                                                                               7               1             14:f3 SQL$144                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Implicit index name
-==============================================================================
-RDB$TRIGGER_NAME                                                                                             8               1             14:f4 SQL$145                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Implicit trigger name
-==============================================================================
-RDB$BACKUP_HISTORY                                                                                           9               1             14:f5 SQL$146                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Nbackup technology
-==============================================================================
-RDB$FUNCTIONS                                                                                               10               1             14:f6 SQL$147                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Function ID
-==============================================================================
-RDB$GENERATOR_NAME                                                                                          11               1             14:f7 SQL$148                                                                                       SYSDBA                                                                                                            0
-==============================================================================
-RDB$DESCRIPTION:
-Implicit generator name
-==============================================================================
-
-"""
+ 'test_script':
+  """
+    set blob all;
+    set list on;
+    select *
+    from rdb$generators;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$GENERATOR_NAME              RDB$SECURITY_CLASS
+    RDB$GENERATOR_ID                1
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 <null>
+    RDB$SECURITY_CLASS              SQL$150
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              SQL$DEFAULT
+    RDB$GENERATOR_ID                2
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 <null>
+    RDB$SECURITY_CLASS              SQL$151
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$PROCEDURES
+    RDB$GENERATOR_ID                3
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:ef
+    Procedure ID
+    RDB$SECURITY_CLASS              SQL$152
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$EXCEPTIONS
+    RDB$GENERATOR_ID                4
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f0
+    Exception ID
+    RDB$SECURITY_CLASS              SQL$153
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$CONSTRAINT_NAME
+    RDB$GENERATOR_ID                5
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f1
+    Implicit constraint name
+    RDB$SECURITY_CLASS              SQL$154
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$FIELD_NAME
+    RDB$GENERATOR_ID                6
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f2
+    Implicit domain name
+    RDB$SECURITY_CLASS              SQL$155
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$INDEX_NAME
+    RDB$GENERATOR_ID                7
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f3
+    Implicit index name
+    RDB$SECURITY_CLASS              SQL$156
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$TRIGGER_NAME
+    RDB$GENERATOR_ID                8
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f4
+    Implicit trigger name
+    RDB$SECURITY_CLASS              SQL$157
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$BACKUP_HISTORY
+    RDB$GENERATOR_ID                9
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f5
+    Nbackup technology
+    RDB$SECURITY_CLASS              SQL$158
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$FUNCTIONS
+    RDB$GENERATOR_ID                10
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f6
+    Function ID
+    RDB$SECURITY_CLASS              SQL$159
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    
+    RDB$GENERATOR_NAME              RDB$GENERATOR_NAME
+    RDB$GENERATOR_ID                11
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 14:f7
+    Implicit generator name
+    RDB$SECURITY_CLASS              SQL$160
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+  """,
+  'substitutions': [('RDB\$DESCRIPTION.*','')]
 }
 ]
 }
