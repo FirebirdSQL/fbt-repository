@@ -11,13 +11,35 @@
  'platform': 'All',
  'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """DROP ROLE RDB$ADMIN;
-COMMIT;
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-unsuccessful metadata update
--Cannot delete system SQL role RDB$ADMIN
-"""
+ 'test_script': 
+  """
+    DROP ROLE RDB$ADMIN;
+    COMMIT;
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -Cannot delete system SQL role RDB$ADMIN
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    DROP ROLE RDB$ADMIN;
+    COMMIT;
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -DROP ROLE RDB$ADMIN failed
+    -Cannot delete system SQL role RDB$ADMIN
+  """
 }
 ]
 }
