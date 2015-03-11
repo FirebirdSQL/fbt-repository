@@ -73,8 +73,8 @@ except Exception, e:
     -- ::: NB ::: 
     -- 1. Python crashes on Windows XP with script for 2.1. 
     --    Changed test to be run via ISQL with autonomous transaction ( >= 2.5)
-    --    Test of error message in Wodows Events log:
-    --    [rus] Ошибка приложения python.exe, версия 0.0.0.0, модуль fbclient.dll, версия 3.0.0.31702, адрес 0x000d4717
+    --    Test of error message in Wodows Events log (translated from russian):
+    --    Appilcation error python.exe, version 0.0.0.0, unit fbclient.dll, version 3.0.0.31702, address 0x000d4717
     -- 2. Error output differs in 2.5 and 3.0 for this script.
     recreate table t_detl(id int);
     commit;
