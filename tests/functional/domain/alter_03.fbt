@@ -27,77 +27,26 @@ CHECK (VALUE LIKE 'TE%')
 {
  'firebird_version': '2.0',
  'platform': 'All',
- 'init_script': 'CREATE DOMAIN test VARCHAR(63);',
  'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test ADD CONSTRAINT CHECK (VALUE LIKE 'TE%');
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$VALIDATION_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """RDB$FIELD_NAME                                                                                RDB$VALIDATION_SOURCE
-=============================================================================== =====================
-TEST                                                                                                      2:11e
-==============================================================================
-RDB$VALIDATION_SOURCE:
-CHECK (VALUE LIKE 'TE%')
-=============================================================================="""
-},
-{
- 'firebird_version': '2.1',
- 'platform': 'All',
- 'init_script': 'CREATE DOMAIN test VARCHAR(63);',
- 'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test ADD CONSTRAINT CHECK (VALUE LIKE 'TE%');
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$VALIDATION_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """
-RDB$FIELD_NAME                                                                                RDB$VALIDATION_SOURCE
-=============================================================================== =====================
-TEST                                                                                                      2:1f2
-==============================================================================
-RDB$VALIDATION_SOURCE:
-CHECK (VALUE LIKE 'TE%')
-==============================================================================
-
-"""
-},
-{
- 'firebird_version': '2.5',
- 'platform': 'All',
- 'init_script': 'CREATE DOMAIN test VARCHAR(63);',
- 'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test ADD CONSTRAINT CHECK (VALUE LIKE 'TE%');
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$VALIDATION_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """RDB$FIELD_NAME                                                                                RDB$VALIDATION_SOURCE
-=============================================================================== =====================
-TEST                                                                                                      2:1f6
-==============================================================================
-RDB$VALIDATION_SOURCE:
-CHECK (VALUE LIKE 'TE%')
-==============================================================================
-
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'init_script': 'CREATE DOMAIN test VARCHAR(63);',
- 'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test ADD CONSTRAINT CHECK (VALUE LIKE 'TE%');
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$VALIDATION_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """RDB$FIELD_NAME                                                                                RDB$VALIDATION_SOURCE
-=============================================================================== =====================
-TEST                                                                                                      2:4ab
-==============================================================================
-RDB$VALIDATION_SOURCE:
-CHECK (VALUE LIKE 'TE%')
-==============================================================================
-
-"""
+ 'init_script': 
+  """
+    create domain test varchar(63);
+    commit;
+  """,
+ 'test_script': 
+  """
+    alter domain test add constraint check (value like 'te%');
+    commit;
+    set list on;
+    set blob all;
+    select rdb$field_name, rdb$validation_source from rdb$fields where rdb$field_name=upper('test');  
+  """,
+ 'expected_stdout': 
+  """
+    RDB$FIELD_NAME                  TEST
+    check (value like 'te%')
+  """,
+  'substitutions': [('RDB\$VALIDATION_SOURCE.*','')]
 }
 ]
 }
