@@ -1603,9 +1603,9 @@ RDB$PAGE_NUMBER RDB$RELATION_ID RDB$PAGE_SEQUENCE RDB$PAGE_TYPE
  'test_script':
   """
     set list on;
-    select p.rdb$page_number, p.rdb$relation_id, p.rdb$page_sequence, p.rdb$page_type
-    from rdb$pages p
-    order by p.rdb$page_number;
+    select *
+    from rdb$pages
+    order by rdb$page_number;
   """,
  'expected_stdout': 
   """
