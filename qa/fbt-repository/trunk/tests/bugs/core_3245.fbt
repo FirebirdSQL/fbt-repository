@@ -10,32 +10,42 @@
  'firebird_version': '2.1.5',
  'platform': 'All',
  'page_size': '4096',
- 'test_type': 'Python',
- 'test_script': '''cur = db_conn.cursor()
-cmd = """
- with q (s) as (
-    select cast(cast('abc' as char(32767)) as blob sub_type text)
-             || cast('def' as char(32767))
-             || cast('ghi' as char(32767))
-             || 'jkl'
-    from rdb$database
-  ),
-  r (sub_for, sub_nofor) as (
-    select substring(s from 8000 for 120000),
-                substring(s from 8000)
-    from q
-  )
-  select char_length(s), right(s, 3),
-              char_length(sub_for), right(sub_for, 3),
-              char_length(sub_nofor), right(sub_nofor, 3)
-  from q cross join r;"""
-cur.execute(cmd)
-printData(cur)
-''',
- 'expected_stdout': """CHAR_LENGTH RIGHT CHAR_LENGTH RIGHT CHAR_LENGTH RIGHT
------------ ----- ----------- ----- ----------- -----
-98304       jkl   90305       jkl   90305       jkl
-"""
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    with q (s) as (
+        select cast(cast('abc' as char(32767)) as blob sub_type text)
+                 || cast('def' as char(32767))
+                 || cast('ghi' as char(32767))
+                 || 'tail'
+        from rdb$database
+    )
+    ,r (sub_for, sub_nofor) as (
+        select substring(s from 8000 for 120000),
+                    substring(s from 8000)
+        from q
+    )
+    select 
+      char_length(s) as "char_length(s)"
+      ,right(s, 3) as "blob_right(s,3)"
+      ,char_length(sub_for) as "char_length(sub_for)"
+      ,right(sub_for, 3) as "blob_right(sub_for, 3)"
+      ,char_length(sub_nofor) as "char_length(sub_nofor)"
+      ,right(sub_nofor, 3) as "blob_right(sub_nofor, 3)"
+    from q cross join r
+    ;
+  """,
+ 'expected_stdout': 
+  """
+    char_length(s)                  98305
+    ail
+    char_length(sub_for)            90306
+    ail
+    char_length(sub_nofor)          90306
+    ail
+  """,
+  'substitutions': [('blob_.*','')]
 }
 ]
 }
