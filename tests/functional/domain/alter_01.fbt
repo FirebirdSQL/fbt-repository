@@ -29,85 +29,28 @@ DEFAULT 'test string'
 {
  'firebird_version': '2.0',
  'platform': 'All',
- 'init_script': """CREATE DOMAIN test VARCHAR(63);
-""",
  'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test SET DEFAULT 'test string';
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$DEFAULT_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """RDB$FIELD_NAME                                                                                RDB$DEFAULT_SOURCE
-=============================================================================== ==================
-TEST                                                                                                      2:11e
-==============================================================================
-RDB$DEFAULT_SOURCE:
-DEFAULT 'test string'
-==============================================================================
+ 'init_script': 
+  """
+    create domain test varchar(63);
+  """,
+ 'test_script': 
+  """
+    alter domain test set default 'test string';
+    commit;
+    set list on;
+    set blob all;
+    select rdb$field_name, rdb$default_source
+    from rdb$fields where rdb$field_name=upper('test');
+  """,
+ 'expected_stdout': 
+  """
+    RDB$FIELD_NAME                  TEST
+    RDB$DEFAULT_SOURCE              2:1e1
+    default 'test string'
+  """,
+  'substitutions': [('RDB\$DEFAULT_SOURCE.*','')]
 
-"""
-},
-{
- 'firebird_version': '2.1',
- 'platform': 'All',
- 'init_script': """CREATE DOMAIN test VARCHAR(63);
-""",
- 'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test SET DEFAULT 'test string';
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$DEFAULT_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """
-RDB$FIELD_NAME                                                                                RDB$DEFAULT_SOURCE
-=============================================================================== ==================
-TEST                                                                                                      2:1f2
-==============================================================================
-RDB$DEFAULT_SOURCE:
-DEFAULT 'test string'
-==============================================================================
-
-"""
-},
-{
- 'firebird_version': '2.5',
- 'platform': 'All',
- 'init_script': """CREATE DOMAIN test VARCHAR(63);
-""",
- 'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test SET DEFAULT 'test string';
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$DEFAULT_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """
-RDB$FIELD_NAME                                                                                RDB$DEFAULT_SOURCE
-=============================================================================== ==================
-TEST                                                                                                      2:1f6
-==============================================================================
-RDB$DEFAULT_SOURCE:
-DEFAULT 'test string'
-==============================================================================
-
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'init_script': """CREATE DOMAIN test VARCHAR(63);
-""",
- 'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test SET DEFAULT 'test string';
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$DEFAULT_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';
-""",
- 'expected_stdout': """
-RDB$FIELD_NAME                                                                                RDB$DEFAULT_SOURCE
-=============================================================================== ==================
-TEST                                                                                                      2:4ab
-==============================================================================
-RDB$DEFAULT_SOURCE:
-DEFAULT 'test string'
-==============================================================================
-
-"""
 }
 ]
 }
