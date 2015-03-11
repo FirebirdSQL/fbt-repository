@@ -15,13 +15,36 @@
  'firebird_version': '2.5.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$ROLES;',
- 'expected_stdout': """
-RDB$ROLE_NAME                                                                                 RDB$OWNER_NAME                                                                                  RDB$DESCRIPTION RDB$SYSTEM_FLAG
-=============================================================================== =============================================================================== ================= ===============
-RDB$ADMIN                                                                                     SYSDBA                                                                                                   <null>               4
-
-"""
+ 'test_script': 
+  """
+    set list on;
+    select * from RDB$ROLES;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$ROLE_NAME                   RDB$ADMIN
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 4
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select * from RDB$ROLES;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$ROLE_NAME                   RDB$ADMIN
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+  """
 }
 ]
 }
