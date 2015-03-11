@@ -36,7 +36,8 @@ INSERT INTO test VALUES(10);""",
 
 Operation violates CHECK constraint  on view or table TEST
 -At trigger 'CHECK_2'
-"""
+""",
+ 'substitutions': [('-At trigger.*','')]
 },
 {
  'firebird_version': '2.5.0',
@@ -50,7 +51,8 @@ INSERT INTO test VALUES(10);""",
 
 Operation violates CHECK constraint  on view or table TEST
 -At trigger 'CHECK_2'
-"""
+""",
+ 'substitutions': [('-At trigger.*','')]
 },
 {
  'firebird_version': '3.0',
@@ -63,7 +65,8 @@ INSERT INTO test VALUES(10);""",
  'expected_stderr': """Statement failed, SQLSTATE = 23000
 Operation violates CHECK constraint  on view or table TEST
 -At trigger 'CHECK_1'
-"""
+""",
+ 'substitutions': [('-At trigger.*','')]
 }
 ]
 }
