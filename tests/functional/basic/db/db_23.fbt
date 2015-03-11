@@ -2089,7 +2089,8 @@ RDB$OWNER_NAME                  SYSDBA
 RDB$DEFAULT_CLASS               <null>
 RDB$FLAGS                       <null>
 RDB$RELATION_TYPE               3
-  """
+  """,
+  'substitutions': [('RDB\$RUNTIME.*','')]
 },
 {
  'firebird_version': '2.5',
@@ -3200,7 +3201,8 @@ RDB$OWNER_NAME                  SYSDBA
 RDB$DEFAULT_CLASS               <null>
 RDB$FLAGS                       <null>
 RDB$RELATION_TYPE               3
-  """
+  """,
+  'substitutions': [('RDB\$RUNTIME.*','')]
 },
 {
  'firebird_version': '3.0',
@@ -4381,7 +4383,8 @@ RDB$OWNER_NAME                  SYSDBA
 RDB$DEFAULT_CLASS               <null>
 RDB$FLAGS                       <null>
 RDB$RELATION_TYPE               3
-  """
+  """,
+  'substitutions': [('RDB\$RUNTIME.*','')]
 }
 ]
 }
