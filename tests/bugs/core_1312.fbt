@@ -6,26 +6,28 @@
 'description': 'Check if password validation is done as soon as possible',
 'versions': [
 {
- 'firebird_version': '2.5.0',
+ 'firebird_version': '2.0.2',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """COMMIT;
-CONNECT 'BLA' USER 'QQQ' PASSWORD 'ZZZ';
-
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 28000
+ 'test_script': 
+  """
+    commit;
+    connect 'localhost:bla' user 'qqq' password 'zzz';
+  """,
+ 'expected_stderr': """Statement failed, SQLCODE = -902
 Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
 """
 },
 {
- 'firebird_version': '2.0.2',
+ 'firebird_version': '2.5.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """COMMIT;
-CONNECT 'BLA' USER 'QQQ' PASSWORD 'ZZZ';
-
-""",
- 'expected_stderr': """Statement failed, SQLCODE = -902
+ 'test_script': 
+  """
+    commit;
+    connect 'localhost:bla' user 'qqq' password 'zzz';
+  """,
+ 'expected_stderr': """Statement failed, SQLSTATE = 28000
 Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
 """
 }
