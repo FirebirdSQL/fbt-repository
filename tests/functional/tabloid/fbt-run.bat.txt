@@ -59,6 +59,7 @@ set err30sC=0
 del fbt-run.21*.* 2>nul
 del fbt-run.25*.* 2>nul
 del fbt-run.30*.* 2>nul
+del fbt_check_this.*.log 2>nul
 
 @rem if specified than ONLY this FB version will be checked: 25 30ss or 30sc
 set fb_only=%2
@@ -341,14 +342,15 @@ if .%overall%.==.0. (
   fbt_view -d %~dp0fbt-run.25.trf 1>fbt_check_this.25.log 2>&1
   fbt_view -d %~dp0fbt-run.30sS.trf 1>fbt_check_this.30sS.log 2>&1
   fbt_view -d %~dp0fbt-run.30sC.trf 1>fbt_check_this.30sC.log 2>&1
-  del %~dp0fbt-run.21.trf
-  del %~dp0fbt-run.25.trf
-  del %~dp0fbt-run.30sS.trf
-  del %~dp0fbt-run.30sC.trf
 )
+del %~dp0results.trf 2>nul
+del %~dp0fbt-run.21.trf 2>nul
+del %~dp0fbt-run.25.trf 2>nul
+del %~dp0fbt-run.30sS.trf 2>nul
+del %~dp0fbt-run.30sC.trf 2>nul
 cd /d %curdir%
 
-if NOT .%overall%.==.0. ping -n 1 -w 2000 1.1.1.1 1>nul 2>&1
+if NOT .%overall%.==.0. ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
 goto end
 
 
