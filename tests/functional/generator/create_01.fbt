@@ -27,29 +27,43 @@ TEST                                           9          <null>
  'firebird_version': '2.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """CREATE GENERATOR test;
-COMMIT;
-SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME='TEST';""",
- 'expected_stdout': """
-RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION
-=============================================================================== ================ =============== =================
-TEST                                                                                                        10               0            <null>
-
-"""
+ 'test_script': 
+  """
+    create generator test;
+    commit;
+    set list on;
+    select * from rdb$generators where rdb$generator_name=upper('test');  
+  """,
+ 'expected_stdout': 
+  """
+    RDB$GENERATOR_NAME              TEST
+    RDB$GENERATOR_ID                10
+    RDB$SYSTEM_FLAG                 0
+    RDB$DESCRIPTION                 <null>
+  """
 },
 {
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """CREATE GENERATOR test;
-COMMIT;
-SELECT * FROM RDB$GENERATORS WHERE RDB$GENERATOR_NAME='TEST';""",
- 'expected_stdout': """
-RDB$GENERATOR_NAME                                                                            RDB$GENERATOR_ID RDB$SYSTEM_FLAG   RDB$DESCRIPTION RDB$SECURITY_CLASS                                                                            RDB$OWNER_NAME                                                                                    RDB$INITIAL_VALUE
-=============================================================================== ================ =============== ================= =============================================================================== =============================================================================== =====================
-TEST                                                                                                        12               0            <null> SQL$353                                                                                       SYSDBA                                                                                                            0
-
-"""
+ 'test_script': 
+  """
+    create generator test;
+    commit;
+    set list on;
+    select * from rdb$generators where rdb$generator_name=upper('test');  
+  """,
+ 'expected_stdout': 
+  """
+    RDB$GENERATOR_NAME              TEST
+    RDB$GENERATOR_ID                12
+    RDB$SYSTEM_FLAG                 0
+    RDB$DESCRIPTION                 <null>
+    RDB$SECURITY_CLASS              SQL$366
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         1
+  """
 }
 ]
 }
