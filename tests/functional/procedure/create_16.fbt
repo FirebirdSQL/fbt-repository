@@ -8,38 +8,41 @@
 {
  'firebird_version': '2.1',
  'platform': 'All',
- 'init_script': """SET TERM !!;
-CREATE PROCEDURE WITH_SUSPEND (NOM1 VARCHAR(20) CHARACTER SET ISO8859_1 COLLATE FR_FR)
- RETURNS (NOM3 VARCHAR(20) CHARACTER SET ISO8859_1 COLLATE ISO8859_1)
- AS
- DECLARE VARIABLE NOM2 VARCHAR(20) CHARACTER SET ISO8859_1 COLLATE FR_CA;
-BEGIN
- NOM2=NOM1;
- NOM3=NOM2;
- SUSPEND;
-END !!
-
-CREATE PROCEDURE NO_SUSPEND RETURNS(
-  p1 SMALLINT)
-AS
-BEGIN
-  p1=1;
-END !!
-
-
-SET TERM ;!!
-COMMIT;
-""",
  'test_type': 'ISQL',
- 'test_script': """SELECT RDB$PROCEDURE_NAME, RDB$PROCEDURE_TYPE
-FROM RDB$PROCEDURES ORDER BY 1;""",
- 'expected_stdout': """
-RDB$PROCEDURE_NAME                                                                            RDB$PROCEDURE_TYPE
-=============================================================================== ==================
-NO_SUSPEND                                                                                                     2
-WITH_SUSPEND                                                                                                   1
+ 'init_script': 
+  """
+    set term ^;
+    create or alter procedure with_suspend (nom1 varchar(20) character set iso8859_1 collate fr_fr)
+    returns (nom3 varchar(20) character set iso8859_1 collate iso8859_1) as
+        declare variable nom2 varchar(20) character set iso8859_1 collate fr_ca;
+    begin
+        nom2=nom1;
+        nom3=nom2;
+        suspend;
+    end ^
+    
+    create or alter procedure no_suspend returns(p1 smallint) as
+    begin
+        p1=1;
+    end ^
+    set term ;^
+    commit;
+  """,
+ 'test_script': 
+  """
+    set list on;
+    select rdb$procedure_name, rdb$procedure_type
+    from rdb$procedures
+    order by 1;  
+  """,
+ 'expected_stdout':
+  """
+    RDB$PROCEDURE_NAME              NO_SUSPEND
+    RDB$PROCEDURE_TYPE              2
 
-"""
+    RDB$PROCEDURE_NAME              WITH_SUSPEND
+    RDB$PROCEDURE_TYPE              1
+  """
 }
 ]
 }
