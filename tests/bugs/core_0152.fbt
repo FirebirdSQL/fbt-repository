@@ -26,6 +26,29 @@ OUTPUT SQLDA version: 1 sqln: 20 sqld: 1
           0.000000000
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set sqlda_display;
+    select current_timestamp - current_timestamp from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+INPUT message field count: 0
+
+OUTPUT message field count: 1
+01: sqltype: 580 INT64	 		 scale: -9 subtype: 1 len: 8
+  :  name: SUBTRACT  alias: SUBTRACT
+  : table:   owner:
+
+             SUBTRACT
+=====================
+          0.000000000
+  """
 }
 ]
 }
