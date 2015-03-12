@@ -114,7 +114,7 @@ GB_2312                         <null>                                          
   """
     set list on;
     set blob all;
-    select * from RDB$CHARACTER_SETS;;
+    select * from RDB$CHARACTER_SETS;
   """,
  'expected_stdout': 
   """
@@ -607,7 +607,7 @@ GB_2312                         <null>                                          
   """
     set list on;
     set blob all;
-    select * from RDB$CHARACTER_SETS;;
+    select * from RDB$CHARACTER_SETS;
   """,
  'expected_stdout': 
   """
@@ -1130,7 +1130,7 @@ GB_2312                         <null>                                          
   """
     set list on;
     set blob all;
-    select * from RDB$CHARACTER_SETS;;
+    select * from RDB$CHARACTER_SETS;
   """,
  'expected_stdout': 
   """
@@ -1663,7 +1663,7 @@ GB_2312                         <null>                                          
   """
     set list on;
     set blob all;
-    select * from RDB$CHARACTER_SETS;;
+    select * from RDB$CHARACTER_SETS;
   """,
  'expected_stdout': 
   """
