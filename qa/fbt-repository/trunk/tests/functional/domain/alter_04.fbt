@@ -22,17 +22,26 @@ TEST                                           <null>
 {
  'firebird_version': '2.0',
  'platform': 'All',
- 'init_script': "CREATE DOMAIN test VARCHAR(63) CHECK(VALUE LIKE 'TE%');",
  'test_type': 'ISQL',
- 'test_script': """ALTER DOMAIN test DROP CONSTRAINT;
-COMMIT;
-SELECT RDB$FIELD_NAME, RDB$VALIDATION_SOURCE FROM rdb$fields WHERE RDB$FIELD_NAME='TEST';""",
- 'expected_stdout': """
-RDB$FIELD_NAME                                                                                RDB$VALIDATION_SOURCE
-=============================================================================== =====================
-TEST                                                                                                         <null>
-
-"""
+ 'init_script':
+  """
+    create domain test varchar(63) check(value like 'te%');
+    commit;
+  """,
+ 'test_script': 
+  """
+    set list on;
+    alter domain test drop constraint;
+    commit;
+    select rdb$field_name, rdb$validation_source
+    from rdb$fields
+    where rdb$field_name = upper('test');
+  """,
+ 'expected_stdout': 
+  """
+    RDB$FIELD_NAME                  TEST
+    RDB$VALIDATION_SOURCE           <null>
+  """
 }
 ]
 }
