@@ -53,6 +53,33 @@ RDB$ADMIN                                                                       
 TEST                                                                                          SYSDBA                                                                                                   <null>               0
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create role test;
+    commit;
+    set list on;
+    select * from rdb$roles;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$ROLE_NAME                   RDB$ADMIN
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    
+    RDB$ROLE_NAME                   TEST
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 0
+    RDB$SECURITY_CLASS              <null>
+  """
 }
+
 ]
 }
