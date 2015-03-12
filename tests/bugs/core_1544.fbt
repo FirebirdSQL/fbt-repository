@@ -26,6 +26,43 @@ as
   end ^
 
 """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- ::: WARNING ::: This code executes about ~3-4 minutes on Pentium 3.0 GHz with SATA HDD
+    set term ^;
+    execute block as
+        declare i int = 0;
+        declare n int = 32839;
+    begin
+        while (i<n) do
+        begin
+            in autonomous transaction do
+            execute statement 'create or alter procedure p' || i || ' as begin end';
+
+            in autonomous transaction do
+            execute statement 'drop procedure p' || i;
+            i = i + 1;
+        end
+    end
+    ^
+    set term ;^
+    commit; -- at this point value of generator `rdb$procedures` is 32840
+    create procedure aux_sp1 as begin end;
+    create procedure aux_sp2 as begin end;
+    commit;
+    set list on; 
+    select gen_id(rdb$procedures,0) gen_rdb_proc_curr_value from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    GEN_RDB_PROC_CURR_VALUE         32842
+  """
 }
 ]
 }
