@@ -277,29 +277,34 @@ Collations:
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 'show system ;',
- 'expected_stdout': """Tables:
+ 'expected_stdout': 
+  """
+Tables:
        MON$ATTACHMENTS                        MON$CALL_STACK
        MON$CONTEXT_VARIABLES                  MON$DATABASE
        MON$IO_STATS                           MON$MEMORY_USAGE
        MON$RECORD_STATS                       MON$STATEMENTS
-       MON$TRANSACTIONS                       RDB$BACKUP_HISTORY
+       MON$TABLE_STATS                        MON$TRANSACTIONS
+       RDB$AUTH_MAPPING                       RDB$BACKUP_HISTORY
        RDB$CHARACTER_SETS                     RDB$CHECK_CONSTRAINTS
        RDB$COLLATIONS                         RDB$DATABASE
-       RDB$DEPENDENCIES                       RDB$EXCEPTIONS
-       RDB$FIELDS                             RDB$FIELD_DIMENSIONS
-       RDB$FILES                              RDB$FILTERS
-       RDB$FORMATS                            RDB$FUNCTIONS
-       RDB$FUNCTION_ARGUMENTS                 RDB$GENERATORS
-       RDB$INDEX_SEGMENTS                     RDB$INDICES
-       RDB$LOG_FILES                          RDB$PACKAGES
-       RDB$PAGES                              RDB$PROCEDURES
-       RDB$PROCEDURE_PARAMETERS               RDB$REF_CONSTRAINTS
-       RDB$RELATIONS                          RDB$RELATION_CONSTRAINTS
-       RDB$RELATION_FIELDS                    RDB$ROLES
-       RDB$SECURITY_CLASSES                   RDB$TRANSACTIONS
-       RDB$TRIGGERS                           RDB$TRIGGER_MESSAGES
-       RDB$TYPES                              RDB$USER_PRIVILEGES
-       RDB$VIEW_RELATIONS                     SEC$USERS
+       RDB$DB_CREATORS                        RDB$DEPENDENCIES
+       RDB$EXCEPTIONS                         RDB$FIELDS
+       RDB$FIELD_DIMENSIONS                   RDB$FILES
+       RDB$FILTERS                            RDB$FORMATS
+       RDB$FUNCTIONS                          RDB$FUNCTION_ARGUMENTS
+       RDB$GENERATORS                         RDB$INDEX_SEGMENTS
+       RDB$INDICES                            RDB$LOG_FILES
+       RDB$PACKAGES                           RDB$PAGES
+       RDB$PROCEDURES                         RDB$PROCEDURE_PARAMETERS
+       RDB$REF_CONSTRAINTS                    RDB$RELATIONS
+       RDB$RELATION_CONSTRAINTS               RDB$RELATION_FIELDS
+       RDB$ROLES                              RDB$SECURITY_CLASSES
+       RDB$TRANSACTIONS                       RDB$TRIGGERS
+       RDB$TRIGGER_MESSAGES                   RDB$TYPES
+       RDB$USER_PRIVILEGES                    RDB$VIEW_RELATIONS
+       SEC$DB_CREATORS                        SEC$GLOBAL_AUTH_MAPPING
+       SEC$USERS                              SEC$USER_ATTRIBUTES
 
 Collations:
        ASCII                                  BIG_5
@@ -377,7 +382,7 @@ Collations:
        WIN1257_LV                             WIN1258
        WIN_CZ                                 WIN_CZ_CI_AI
        WIN_PTBR
-"""
+  """
 }
 ]
 }
