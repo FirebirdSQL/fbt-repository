@@ -10,14 +10,15 @@ fails on string truncation""",
  'firebird_version': '2.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """select substring(current_user from 4) from rdb$database;
-""",
- 'expected_stdout': """
-SUBSTRING
-===============================================================================
-DBA
-
-"""
+ 'test_script': 
+  """
+    set list on; 
+    select substring(current_user from 4) from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    SUBSTRING                       DBA
+  """
 }
 ]
 }
