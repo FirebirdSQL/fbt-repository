@@ -83,7 +83,7 @@ ORDER BY
     -- clause (index navigation) without bitmap building.
     -- See: http://tracker.firebirdsql.org/browse/CORE-1550
     -- ("the same index should never appear in both ORDER and INDEX parts of the same plan item")
-    set explain on;
+    set plan on;
     select
       e.begindatetime,
       e.enddatetime
@@ -96,11 +96,7 @@ ORDER BY
   """,
  'expected_stdout': 
   """
-    Select Expression
-    -> Filter
-    -> Table "ERA" as "E" Access By ID
-    -> Index "PK_BEGINDATETIME" Range Scan (lower bound: 1/1)
-    
+    PLAN (E ORDER PK_BEGINDATETIME)
                 BEGINDATETIME               ENDDATETIME
     ========================= =========================
     1858-11-15 18:00:00.0000  1858-11-15 20:00:00.0000
