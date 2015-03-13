@@ -3,9 +3,13 @@
 'qmid': 'functional.arno.optimizer.opt_inner_join_03',
 'tracker_id': '',
 'title': 'INNER JOIN join order',
-'description': """With a INNER JOIN the relation with the smallest expected result should be the first one in process order. The next relation should be the next relation with expected smallest result based on previous relation and do on till last relation.
-
-Old/Current limitation in Firebird does stop checking order possibilties above 7 relations.""",
+'description': 
+ """
+   With a INNER JOIN the relation with the smallest expected result should be the first one in process order. 
+   The next relation should be the next relation with expected smallest result based on previous relation 
+   and do on till last relation.
+   Before 2.0, Firebird did stop checking order possibilties above 7 relations.
+ """,
 'versions': [
 {
  'firebird_version': '2.0',
