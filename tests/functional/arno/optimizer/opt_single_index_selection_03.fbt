@@ -69,46 +69,8 @@ WHERE
          100          100
          101          100
 
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'init_script': 
-  """
-    recreate table sel_test( f1 int not null, f2 int );
-    commit;
-    insert into sel_test(f1, f2)
-    select r, (r/2)*2
-    from (select row_number()over() r from rdb$types a, (select 1 i from rdb$types rows 10) b)
-    rows 1000;
-    commit;
-    create unique desc index idx_f1_unq_desc on sel_test(f1);
-    create unique index idx_f1_unq_asc on sel_test(f1);
-    create desc index idx_f2_desc on sel_test(f2);
-    create index idx_f2_asc on sel_test(f2);
-    commit;
-
-  """,
- 'test_script': 
-  """
-    set plan on;
-    select st.f1, st.f2
-    from sel_test st
-    where
-        st.f1 >= 1 and -- we have UNIQUE indices for this field but this is INequality expression.
-        st.f2 = 100; -- Optimizer should choose to scan only index on `F2`, and choose ASCending one.
-  """,
- 'expected_stdout': 
-  """
-    PLAN (ST INDEX (IDX_F2_ASC))
-          F1           F2 
-         100          100 
-         101          100 
-  """,
- 'substitutions': [('=.*','')]
+""",
+  'substitutions': [('=.*','')]
 }
-
 ]
 }
