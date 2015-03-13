@@ -21,7 +21,7 @@
       (select 
           coalesce( (select count(*) from rdb$relations), -1) 
           -- Aliasing of expression results in derived tables is mandatory in 3.0
-          -- otherwise get compilation error
+          -- otherwise get error about metadata updating:
           -- -no column name specified for column number 1 in derived table 
           -- <missing arg #2 - possibly status vector overflow>
           as tabs_cnt -- <<<<<<<<<<<<<<< nb <<<<<<<<<<<
