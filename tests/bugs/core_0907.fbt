@@ -6,6 +6,63 @@
 'description': '',
 'versions': [
 {
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+    recreate table crash (a1 integer,a2 integer,a3 integer, a4 integer) ;
+    commit;
+    insert into crash (a1, a2, a3, a4) values ( 1, 2, 3, 4);
+    insert into crash (a1, a2, a3    ) values ( 2, 3, 4   );
+    insert into crash (a1, a2,     a4) values ( 2, 3,    4);
+    commit;
+    alter table crash add a5 computed by (a2*a3*a4);
+    commit;
+  """,
+ 'test_script': 
+  """
+    -- Since 3.0 one may do like this (and NOT by updating RDB tables):
+    -- ALTER TABLE <table name> ALTER <field name> [NOT] NULL
+    -- ALTER DOMAIN <domain name> [NOT] NULL
+    
+    -- This attempt will FAIL with message:
+    -- -Cannot make field A5 of table CRASH NOT NULL because there are NULLs present
+    alter table crash alter a5 not null; 
+    commit;
+    
+    update crash set a3=1 where a3 is null;
+    update crash set a4=1 where a4 is null;
+    commit;
+    
+    alter table crash alter a1 not null; 
+    alter table crash alter a2 not null; 
+    alter table crash alter a3 not null; 
+    alter table crash alter a4 not null; 
+    alter table crash alter a5 not null; 
+    commit;
+    update crash set a1=null, a2=null, a3=null,a4=null rows 1;
+    commit;
+    show table crash;
+  """,
+ 'expected_stdout': 
+  """
+    A1                              INTEGER Not Null 
+    A2                              INTEGER Not Null 
+    A3                              INTEGER Not Null 
+    A4                              INTEGER Not Null 
+    A5                              Computed by: (a2*a3*a4)
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 22006
+    unsuccessful metadata update
+    -Cannot make field A5 of table CRASH NOT NULL because there are NULLs present
+    Statement failed, SQLSTATE = 23000
+    validation error for column "CRASH"."A1", value "*** null ***"
+  """
+},
+{
  'firebird_version': '2.5.0',
  'platform': 'All',
  'init_script': """create table crash (A1 INTEGER,A2 INTEGER,A3 integer, A4 INTEGER) ;
