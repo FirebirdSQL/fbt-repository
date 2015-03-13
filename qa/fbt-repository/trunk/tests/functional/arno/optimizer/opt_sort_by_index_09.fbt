@@ -73,7 +73,105 @@ ORDER BY
            3
            7
           15
-"""
+""",
+ 'substitutions': [('=.*','')]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+    create table table_66 (id integer);
+    commit;
+    set term ^ ;
+    create procedure pr_filltable_66 as
+      declare fillid integer;
+    begin
+      fillid = 2147483647;
+      while (fillid > 0) do
+      begin
+        insert into table_66 (id) values (:fillid);
+        fillid = fillid / 2;
+      end
+      insert into table_66 (id) values (null);
+      insert into table_66 (id) values (0);
+      insert into table_66 (id) values (null);
+      fillid = -2147483648;
+      while (fillid < 0) do
+      begin
+        insert into table_66 (id) values (:fillid);
+        fillid = fillid / 2;
+      end
+    end
+    ^
+    set term ; ^
+    commit;
+    
+    execute procedure pr_filltable_66;
+    commit;
+    
+    create asc index i_table_66_asc on table_66 (id);
+    create desc index i_table_66_desc on table_66 (id);
+    commit;
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- Queries with RANGE index scan now have in the plan only "ORDER"
+    -- clause (index navigation) without bitmap building.
+    -- See: http://tracker.firebirdsql.org/browse/CORE-1550
+    -- ("the same index should never appear in both ORDER and INDEX parts of the same plan item")
+    set explain on;
+
+    select id as id_asc
+    from table_66 t66
+    where t66.id between -20 and 20
+    order by t66.id asc;
+
+    select id as id_desc
+    from table_66 t66
+    where t66.id between -20 and 20
+    order by t66.id desc;
+
+  """,
+ 'expected_stdout': 
+  """
+    Select Expression
+        -> Filter
+            -> Table "TABLE_66" as "T66" Access By ID
+                -> Index "I_TABLE_66_ASC" Range Scan (lower bound: 1/1, upper bound: 1/1)
+          ID_ASC
+    ============
+             -16
+              -8
+              -4
+              -2
+              -1
+               0
+               1
+               3
+               7
+              15
+    
+    Select Expression
+        -> Filter
+            -> Table "TABLE_66" as "T66" Access By ID
+                -> Index "I_TABLE_66_DESC" Range Scan (lower bound: 1/1, upper bound: 1/1)
+         ID_DESC
+    ============
+              15
+               7
+               3
+               1
+               0
+              -1
+              -2
+              -4
+              -8
+             -16
+  """,
+ 'substitutions': [('=.*','')]
 }
+
 ]
 }
