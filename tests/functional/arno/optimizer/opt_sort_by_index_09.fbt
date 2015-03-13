@@ -121,7 +121,13 @@ ORDER BY
     -- clause (index navigation) without bitmap building.
     -- See: http://tracker.firebirdsql.org/browse/CORE-1550
     -- ("the same index should never appear in both ORDER and INDEX parts of the same plan item")
-    set explain on;
+
+    -- :::::::::::::::::::::::::::::::::::::::::::::::
+    -- do *NOT* use SET E`XPLAIN untill extremely need. 
+    -- Always consult with Dmitry before doing this!
+    -- :::::::::::::::::::::::::::::::::::::::::::::::
+
+    set plan on; 
 
     select id as id_asc
     from table_66 t66
@@ -136,39 +142,31 @@ ORDER BY
   """,
  'expected_stdout': 
   """
-    Select Expression
-        -> Filter
-            -> Table "TABLE_66" as "T66" Access By ID
-                -> Index "I_TABLE_66_ASC" Range Scan (lower bound: 1/1, upper bound: 1/1)
-          ID_ASC
-    ============
-             -16
-              -8
-              -4
-              -2
-              -1
-               0
-               1
-               3
-               7
-              15
-    
-    Select Expression
-        -> Filter
-            -> Table "TABLE_66" as "T66" Access By ID
-                -> Index "I_TABLE_66_DESC" Range Scan (lower bound: 1/1, upper bound: 1/1)
-         ID_DESC
-    ============
-              15
-               7
-               3
-               1
-               0
-              -1
-              -2
-              -4
-              -8
-             -16
+    PLAN (T66 ORDER I_TABLE_66_ASC)
+    ID_ASC
+       -16
+        -8
+        -4
+        -2
+        -1
+         0
+         1
+         3
+         7
+        15
+
+    PLAN (T66 ORDER I_TABLE_66_DESC)
+    ID_DESC
+         15
+          7
+          3
+          1
+          0
+         -1
+         -2
+         -4
+         -8
+        -16
   """,
  'substitutions': [('=.*','')]
 }
