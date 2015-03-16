@@ -43,21 +43,18 @@ call :readcfg %~n0.conf
 :: get values of all necessary env. variables (fbNNhome, fbNNport)
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+
 @rem results: 0=ok, 1=fault
 
 set res21=0
 set res25=0
-
 set res30sS=0
-set res30Cs=0
 set res30sC=0
 
 set e21size=0
 set e25size=0
-
-set err30Cs=0
-set err30sC=0
 set err30sS=0
+set err30sC=0
 
 del fbt-run.21*.* 2>nul
 del fbt-run.25*.* 2>nul
@@ -69,22 +66,18 @@ set fb_only=%2
 
 if /i .%fb_only%.==.21. goto run21
 if /i .%fb_only%.==.25. goto run25
-
-if /i .%fb_only%.==.30Cs. goto run30Cs
-if /i .%fb_only%.==.30sC. goto run30sC
 if /i .%fb_only%.==.30sS. goto run30sS
+if /i .%fb_only%.==.30sC. goto run30sC
 goto run21
 
 :run21
-  echo.
-  set msg=%time%, FB 2.1. Test: %fbt_name%
-  echo %msg%
-  echo %msg%>fbt-run.21.log
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.21.log
   echo ------------------------------------------------------->>fbt-run.21.log
   %fb21home%\fbsvcmgr localhost/%fb21port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.21.log 2>&1
   set fbt_run=fbt_run -b %fb21home% %cdprefix%.%fbt_name% -o localhost/%fb21port%
 
   set msg=Command: %fbt_run%
+  echo.
   echo %msg%
   echo %msg%>>fbt-run.21.log
 
@@ -93,7 +86,6 @@ goto run21
 
   findstr /B /I "Nothing to run" fbt-run.21.log 1>nul 2>&1
   if errorlevel 1 goto chkr21
-  echo ### FB 2.1: "NOTHING TO RUN" - ERROR(?) ###
   set res21=1                       &:: .......... no sense to check on errors because of "Nothing to run"
   goto run25
 
@@ -118,15 +110,13 @@ goto run21
 
 
 :run25
-  echo.
-  set msg=%time%, FB 2.5. Test: %fbt_name%
-  echo %msg%
-  echo %msg%>fbt-run.25.log
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.25.log
   echo ------------------------------------------------------->>fbt-run.25.log
   %fb25home%\fbsvcmgr localhost/%fb25port%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.25.log 2>&1
   set fbt_run=fbt_run -b %fb25home% %cdprefix%.%fbt_name% -o localhost/%fb25port%
 
   set msg=Command: %fbt_run%
+  echo.
   echo %msg%
   echo %msg%>>fbt-run.25.log
 
@@ -135,7 +125,6 @@ goto run21
 
   findstr /B /I "Nothing to run" fbt-run.25.log 1>nul 2>&1
   if errorlevel 1 goto chkr25
-  echo ### FB 2.5: "NOTHING TO RUN" - ERROR(?) ###
   set res25=1                       &:: .......... no sense to check on errors because of "Nothing to run"
   goto run30sS
 
@@ -159,12 +148,10 @@ goto run21
   goto run30sS
 
 :run30sS
-  echo.
-  set msg=%time%, FB 3.0 SUPER. Test: %fbt_name%
-  echo %msg%
-  echo %msg%>fbt-run.30sS.log
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.30sS.log
   echo ------------------------------------------------------->>fbt-run.30sS.log
   %fb30sShome%\fbsvcmgr localhost/%fb30sSport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30sS.log 2>&1
+  echo.
 
   set fbt_run=fbt_run -b %fb30sShome% %cdprefix%.%fbt_name% -o localhost/%fb30sSport%
   set msg=Command: %fbt_run%
@@ -176,7 +163,6 @@ goto run21
 
   findstr /B /I "Nothing to run" fbt-run.30sS.log 1>nul 2>&1
   if errorlevel 1 goto chkr30sS
-  echo ### FB 3.0 SUPER: "NOTHING TO RUN" - ERROR(?) ###
   set res30sS=1                       &:: .......... no sense to check on errors because of "Nothing to run"
   goto run30sC
 
@@ -193,66 +179,20 @@ goto run21
      if .!res30sS!.==.0. (
        echo FB 3.0 SUPER: SUCCESS            &:: ............ test finished OK, continue next one .........
        if /i .%fb_only%.==.30sS. goto chk_err
-       goto run30Cs
+       goto run30sC
      )
   )
 
   echo ### FB 3.0 SUPER: FAILED ###
   set res30sS=1
-  goto run30Cs
-
-
-:run30Cs
-  echo.
-  set msg=%time%, FB 3.0 CLASSIC. Test: %fbt_name%
-  echo %msg%
-  echo %msg%>fbt-run.30Cs.log
-  echo ------------------------------------------------------->>fbt-run.30Cs.log
-  %fb30Cshome%\fbsvcmgr localhost/%fb30Csport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30Cs.log 2>&1
-
-  set fbt_run=fbt_run -b %fb30Cshome% %cdprefix%.%fbt_name% -o localhost/%fb30Csport%
-  set msg=Command: %fbt_run%
-  echo %msg%
-  echo %msg%>>fbt-run.30Cs.log
-
-  cmd /c %fbt_run% 1>>fbt-run.30Cs.log 2>fbt-run.30Cs.err
-  copy %~dp0results.trf fbt-run.30Cs.trf 1>nul
-
-  findstr /B /I "Nothing to run" fbt-run.30Cs.log 1>nul 2>&1
-  if errorlevel 1 goto chkr30Cs
-  echo ### FB 3.0 CLASSIC: "NOTHING TO RUN" - ERROR(?) ###
-  set res30Cs=1                       &:: .......... no sense to check on errors because of "Nothing to run"
-  goto run30sC
-
-
-:chkr30Cs
-  findstr /B /I "FAIL ERROR" fbt-run.30Cs.log 1>nul 2>&1
-  if errorlevel 1 (
-     findstr /b /c:Ran fbt-run.30Cs.log 1>nul 2>&1
-     if errorlevel 1 set res30Cs=1
-
-     findstr /b /e /c:OK fbt-run.30Cs.log 1>nul 2>&1
-     if errorlevel 1 set res30Cs=1
-
-     if .!res30Cs!.==.0. (
-       echo FB 3.0 CLASSIC: SUCCESS            &:: ............ test finished OK, continue next one .........
-       if /i .%fb_only%.==.30Cs. goto chk_err
-       goto run30sC
-     )
-  )
-
-  echo ### FB 3.0 CLASSIC: FAILED ###
-  set res30Cs=1
   goto run30sC
 
 
 :run30sC
-  echo.
-  set msg=%time%, FB 3.0 SUPERCLASSIC. Test: %fbt_name%
-  echo %msg%
-  echo %msg%>fbt-run.30sC.log
+  echo %date%, %time%, running test: %fbt_name%>fbt-run.30sC.log
   echo ------------------------------------------------------->>fbt-run.30sC.log
   %fb30sChome%\fbsvcmgr localhost/%fb30sCport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>>fbt-run.30sC.log 2>&1
+  echo.
 
   set fbt_run=fbt_run -b %fb30sChome% %cdprefix%.%fbt_name% -o localhost/%fb30sCport%
   set msg=Command: %fbt_run%
@@ -264,7 +204,6 @@ goto run21
 
   findstr /B /I "Nothing to run" fbt-run.30sC.log 1>nul 2>&1
   if errorlevel 1 goto chkr30sC
-  echo ### FB 3.0 SUPERCLASSIC: "NOTHING TO RUN" - ERROR(?) ###
   set res30sC=1                       &:: .......... no sense to check on errors because of "Nothing to run"
 
   goto chk_err
@@ -279,13 +218,13 @@ goto run21
      if errorlevel 1 set res30sC=1
 
      if .!res30sC!.==.0. (
-       echo FB 3.0 SUPERCLASSIC: SUCCESS            &:: ............ test finished OK, continue next one .........
+       echo FB 3.0 CLASSIC: SUCCESS            &:: ............ test finished OK, continue next one .........
        if /i .%fb_only%.==.30sC. goto chk_err
        goto chk_err
      )
   )
 
-  echo ### FB 3.0 SUPERCLASSIC: FAILED ###
+  echo ### FB 3.0 CLASSIC: FAILED ###
   set res30sC=1
   goto chk_err                         &:: ::::::::::::::::  show log *AND* errors ::::::::::::::::::
 
@@ -314,12 +253,6 @@ goto run21
     set res30sS=1
   )
 
-  for /f "usebackq" %%A in ('fbt-run.30Cs.err') do set err30Cs=%%~zA
-  if .%err30Cs%.==.. set err30Cs=0
-  if %err30Cs% gtr 0 (
-    set res30Cs=1
-  )
-
   for /f "usebackq" %%A in ('fbt-run.30sC.err') do set err30sC=%%~zA
   if .%err30sC%.==.. set err30sC=0
   if %err30sC% gtr 0 (
@@ -340,19 +273,14 @@ type fbt-run.30sS.log
 echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPER: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 echo.
 echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 CLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-type fbt-run.30Cs.log
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 CLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-echo.
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPERCLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 type fbt-run.30sC.log
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPERCLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 CLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 
-set /a overall=%res21%+%res25%+%res30sS%+%res30sC%+%res30Cs%
+set /a overall=%res21%+%res25%+%res30sS%+%res30sC%
 set faults=
 if NOT .%res21%.==.0. set faults=%faults%_2.1
 if NOT .%res25%.==.0. set faults=%faults%_2.5
 if NOT .%res30sS%.==.0. set faults=%faults%_3.0sS
-if NOT .%res30Cs%.==.0. set faults=%faults%_3.0Cs
 if NOT .%res30sC%.==.0. set faults=%faults%_3.0sC
 set faults=%faults:_= %
 
@@ -396,24 +324,15 @@ if .%overall%.==.0. (
     del fbt-run.30sS.err
   )
 
-  if .%err30Cs%. gtr .0. (
-    echo.
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 CLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-    type fbt-run.30Cs.err
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 CLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-  ) else (
-    del fbt-run.30Cs.err
-  )
-
   if .%err30sC%. gtr .0. (
     echo.
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 SUPERCLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 CLASSIC: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
     type fbt-run.30sC.err
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 SUPERCLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err30 CLASSIC: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
   ) else (
     del fbt-run.30sC.err
   )
- 
+  
   echo.
   echo ###   A C H T U N G  ###  At least one of tests FAILED ^>^>^> %faults% ^<^<^<
   echo.
@@ -422,17 +341,13 @@ if .%overall%.==.0. (
   fbt_view -d %~dp0fbt-run.21.trf 1>fbt_check_this.21.log 2>&1
   fbt_view -d %~dp0fbt-run.25.trf 1>fbt_check_this.25.log 2>&1
   fbt_view -d %~dp0fbt-run.30sS.trf 1>fbt_check_this.30sS.log 2>&1
-  fbt_view -d %~dp0fbt-run.30Cs.trf 1>fbt_check_this.30Cs.log 2>&1
   fbt_view -d %~dp0fbt-run.30sC.trf 1>fbt_check_this.30sC.log 2>&1
 )
-
 del %~dp0results.trf 2>nul
 del %~dp0fbt-run.21.trf 2>nul
 del %~dp0fbt-run.25.trf 2>nul
 del %~dp0fbt-run.30sS.trf 2>nul
-del %~dp0fbt-run.30Cs.trf 2>nul
 del %~dp0fbt-run.30sC.trf 2>nul
-
 cd /d %curdir%
 
 if NOT .%overall%.==.0. ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
