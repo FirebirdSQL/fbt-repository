@@ -100,7 +100,7 @@ goto run21
 :chkr21
   findstr /B /I "FAIL ERROR" fbt-run.21.log 1>nul 2>&1
   if errorlevel 1 (
-     findstr /b /c:Ran fbt-run.21.log 1>nul 2>&1
+     findstr /i /r /b /c:"Ran [1-9] tests in" fbt-run.21.log 1>nul 2>&1
      if errorlevel 1 set res21=1
 
      findstr /b /e /c:OK fbt-run.21.log 1>nul 2>&1
@@ -142,7 +142,7 @@ goto run21
 :chkr25
   findstr /B /I "FAIL ERROR" fbt-run.25.log 1>nul 2>&1
   if errorlevel 1 (
-     findstr /b /c:Ran fbt-run.25.log 1>nul 2>&1
+     findstr /i /r /b /c:"Ran [1-9] tests in" fbt-run.25.log 1>nul 2>&1
      if errorlevel 1 set res25=1
 
      findstr /b /e /c:OK fbt-run.25.log 1>nul 2>&1
@@ -184,7 +184,7 @@ goto run21
 :chkr30sS
   findstr /B /I "FAIL ERROR" fbt-run.30sS.log 1>nul 2>&1
   if errorlevel 1 (
-     findstr /b /c:Ran fbt-run.30sS.log 1>nul 2>&1
+     findstr /i /r /b /c:"Ran [1-9] tests in" fbt-run.30sS.log 1>nul 2>&1
      if errorlevel 1 set res30sS=1
 
      findstr /b /e /c:OK fbt-run.30sS.log 1>nul 2>&1
@@ -228,7 +228,7 @@ goto run21
 :chkr30Cs
   findstr /B /I "FAIL ERROR" fbt-run.30Cs.log 1>nul 2>&1
   if errorlevel 1 (
-     findstr /b /c:Ran fbt-run.30Cs.log 1>nul 2>&1
+     findstr /i /r /b /c:"Ran [1-9] tests in" fbt-run.30Cs.log 1>nul 2>&1
      if errorlevel 1 set res30Cs=1
 
      findstr /b /e /c:OK fbt-run.30Cs.log 1>nul 2>&1
@@ -272,7 +272,7 @@ goto run21
 :chkr30sC
   findstr /B /I "FAIL ERROR" fbt-run.30sC.log 1>nul 2>&1
   if errorlevel 1 (
-     findstr /b /c:Ran fbt-run.30sC.log 1>nul 2>&1
+     findstr /i /r /b /c:"Ran [1-9] tests in" fbt-run.30sC.log 1>nul 2>&1
      if errorlevel 1 set res30sC=1
 
      findstr /b /e /c:OK fbt-run.30sC.log 1>nul 2>&1
