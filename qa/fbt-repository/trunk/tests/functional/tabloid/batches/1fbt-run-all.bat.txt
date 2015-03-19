@@ -25,11 +25,12 @@ call :readcfg %~n0.conf
 copy e20.fd0 e20.fdb 1>nul
 echo.
 echo|set /p=%time%, test: 
-echo.|C:\MIX\firebird\oldfb20\bin\isql -z localhost/3207:C:\MIX\firebird\QA\fbt-repo\tmp\E20.FDB|findstr /i /b /c:"WI-"|findstr /i /e /c:"2.0"
+echo.|%fb20Cs_bin%\isql -z localhost/%fb20Cs_port%:%~dp0e20.fdb|findstr /i /b /c:"WI-"|findstr /i /e /c:"2.0"
 set run_isql=%fb20Cs_bin%\isql localhost/%fb20Cs_port%:%~dp0e20.fdb -i %1 2^>e20Cs.err ^| sed "s/ *$//" 1^>e20Cs.log
 echo "%run_isql%"
 cmd /c %run_isql% 
 @rem 1>e20Cs.log 2>e20Cs.err
+
 
 copy e21.fd0 e21.fdb 1>nul
 echo.
