@@ -1,6 +1,6 @@
 -- DDL of objects that are used in aux. database mon-stat-gathering-3_0.fdb
 ---------------------------------------------------------------------------
-
+create or alter view v_agg_stat_main as select 1 id from rdb$database;
 create or alter view v_agg_stat_tabs as select 1 id from rdb$database;
 create or alter procedure sp_truncate_stat as begin end;
 create or alter procedure sp_gather_stat as begin end;
@@ -244,3 +244,25 @@ group by
     ,b.table_name
 ;
 commit;
+
+create or alter view v_agg_stat_main as
+select
+    b.rowset
+    ,sum( b.mult * b.pg_reads ) page_reads
+    ,sum( b.mult * b.pg_writes ) page_writes
+    ,sum( b.mult * b.pg_fetches ) page_fetches
+    ,sum( b.mult * b.pg_marks ) page_marks
+    ,sum( b.mult * b.rec_seq_reads ) natural_reads
+    ,sum( b.mult * b.rec_idx_reads ) indexed_reads
+    ,sum( b.mult * b.rec_inserts ) inserts
+    ,sum( b.mult * b.rec_updates ) updades
+    ,sum( b.mult * b.rec_deletes ) deletes
+    ,sum( b.mult * b.rec_backouts ) backouts
+    ,sum( b.mult * b.rec_purges ) purges
+    ,sum( b.mult * b.rec_expunges ) expunges
+from stat_log_main b
+group by
+    b.rowset
+;
+commit;
+
