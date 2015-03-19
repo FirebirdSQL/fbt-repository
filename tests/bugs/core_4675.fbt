@@ -10,7 +10,7 @@
  'firebird_version': '3.0',
  'platform': 'All',
  'database': 'Existing',
- 'database_name': 'mon-stat-gathering-ddl-3_0.fdb',
+ 'database_name': 'mon-stat-gathering-3_0.fdb',
  'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
