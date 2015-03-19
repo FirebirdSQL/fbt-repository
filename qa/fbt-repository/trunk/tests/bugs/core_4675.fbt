@@ -9,8 +9,8 @@
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'database': 'Existing',
- 'database_name': 'mon-stat-gathering-3_0.fdb',
+ 'database': 'Restore',
+ 'backup_file': 'mon-stat-gathering-3_0.fbk',
  'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
