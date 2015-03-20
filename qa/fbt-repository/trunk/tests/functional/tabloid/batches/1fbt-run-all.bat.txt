@@ -50,7 +50,15 @@ cmd /c %run_isql%
 
 copy e30.fd0 e30.fdb 1>nul
 echo.
-echo|set /p=%time%, test: 
+echo|set /p=%time%, test Cs: 
+%fb30Cs_bin%\fbsvcmgr localhost/%fb30Cs_port%:service_mgr user %isc_user% password %isc_password% info_server_version
+set run_isql=%fb30Cs_bin%\isql localhost/%fb30Cs_port%:%~dp0e30.fdb -i %1 2^>e30Cs.err ^| sed "s/ *$//" 1^>e30Cs.log
+echo "%run_isql%"
+cmd /c %run_isql% 
+
+copy e30.fd0 e30.fdb 1>nul
+echo.
+echo|set /p=%time%, test sC: 
 %fb30sC_bin%\fbsvcmgr localhost/%fb30sC_port%:service_mgr user %isc_user% password %isc_password% info_server_version
 set run_isql=%fb30sC_bin%\isql localhost/%fb30sC_port%:%~dp0e30.fdb -i %1 2^>e30sC.err ^| sed "s/ *$//" 1^>e30sC.log
 echo "%run_isql%"
@@ -58,13 +66,13 @@ cmd /c %run_isql%
 
 copy e30.fd0 e30.fdb 1>nul
 echo.
-echo|set /p=%time%, test: 
+echo|set /p=%time%, test SS: 
 %fb30sS_bin%\fbsvcmgr localhost/%fb30sS_port%:service_mgr user %isc_user% password %isc_password% info_server_version
 set run_isql=%fb30sS_bin%\isql localhost/%fb30sS_port%:%~dp0e30.fdb -i %1 2^>e30sS.err ^| sed "s/ *$//" 1^>e30sS.log
 echo "%run_isql%"
 cmd /c %run_isql% 
 
-for /f "tokens=*" %%A in ('dir /b e20Cs.* e21Cs.* e25sC.* e30sC.* e30sS.*') do (
+for /f "tokens=*" %%A in ('dir /b e20Cs.* e21Cs.* e25sC.* e30Cs.* e30sC.* e30sS.*') do (
   set esize=%%~zA
   if .!esize!.==.. set esize=0
   if .!esize!.==.0. del %%A 2>nul
