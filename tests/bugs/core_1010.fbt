@@ -127,40 +127,42 @@ unsuccessful metadata update
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """CREATE EXCEPTION RDB$TEST 'Test';
-
-commit;
-
-set term ^ ;
-
-CREATE OR ALTER TRIGGER RDB$PROCEDURES_BIU FOR RDB$PROCEDURES
-ACTIVE AFTER UPDATE OR DELETE POSITION 0
-as
-begin
-    EXCEPTION RDB$TEST;
-end^
-
-commit^
-
-create or alter procedure proctest
- returns (result integer)
-as
-begin
-  result = 0;
-  suspend;
-end^
-
-set term ; ^
-
-commit;
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = HY000
-unsuccessful metadata update
--CREATE OR ALTER PROCEDURE PROCTEST failed
--exception 1
--RDB$TEST
--Test
-"""
+ 'test_script': 
+  """
+    -- Since WI-T3.0.0.31733:
+    -- Updated STDERR for 3.0: added new line with the name of trigger that raises exception
+    create exception rdb$test '!!!';
+    commit;
+    
+    set term ^ ;
+    create or alter trigger rdb$procedures_biu for rdb$procedures
+    active after update or delete position 0
+    as
+    begin
+        EXCEPTION RDB$TEST;
+    end
+    ^
+    commit^
+    
+    create or alter procedure proctest returns (result integer) as
+    begin
+        result = 0;
+        suspend;
+    end^
+    set term ; ^
+    commit;
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    unsuccessful metadata update
+    -CREATE OR ALTER PROCEDURE PROCTEST failed
+    -exception 1
+    -RDB$TEST
+    -!!!
+    -At trigger 'RDB$PROCEDURES_BIU' line: 5, col: 5
+  """,
+  'substitutions': [('line:.*',''),('col:.*','')]
 }
 ]
 }
