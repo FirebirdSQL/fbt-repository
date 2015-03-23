@@ -40,7 +40,14 @@ CREATE TABLE""",
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': "create table ext_log external file '$(DATABASE_LOCATION)z.dat' (F1 INT, F2 BLOB SUB_TYPE TEXT);",
+ 'test_script': 
+  """
+    -- Untill build 3.0.0.31721 STDERR was:
+    -- -Data type BLOB is not supported ... field '<Missing arg #3 - possibly status vector overflow>'
+    -- Since WI-T3.0.0.31733 STDERR became normal - contains name of field. 
+    -- See correction in 'expected_stderr' secsion (23.03.2015).
+    create table ext_log external file '$(DATABASE_LOCATION)z.dat' (F1 INT, F2 BLOB SUB_TYPE TEXT);
+  """,
  'expected_stderr': 
   """
     Statement failed, SQLSTATE = HY004
@@ -48,7 +55,7 @@ CREATE TABLE""",
     -CREATE TABLE EXT_LOG failed
     -SQL error code = -607
     -Invalid command
-    -Data type BLOB is not supported for EXTERNAL TABLES. Relation 'EXT_LOG', field '<Missing arg #3 - possibly status vector overflow>'
+    -Data type BLOB is not supported for EXTERNAL TABLES. Relation 'EXT_LOG', field 'F2'
   """
 }
 ]
