@@ -4858,7 +4858,7 @@ GB_2312                                        0                   57           
     RDB$FUNCTION_NAME               <null>
     RDB$BASE_COLLATION_NAME         <null>
     RDB$SPECIFIC_ATTRIBUTES         1d:f3
-    COLL-VERSION=58.0.6.50
+    COLL-VERSION=58.0.6.xx
     RDB$SECURITY_CLASS              SQL$219
     RDB$OWNER_NAME                  SYSDBA
     
@@ -4871,7 +4871,7 @@ GB_2312                                        0                   57           
     RDB$FUNCTION_NAME               <null>
     RDB$BASE_COLLATION_NAME         UNICODE
     RDB$SPECIFIC_ATTRIBUTES         1d:f4
-    COLL-VERSION=58.0.6.50
+    COLL-VERSION=58.0.6.xx
     RDB$SECURITY_CLASS              SQL$220
     RDB$OWNER_NAME                  SYSDBA
     
@@ -6545,7 +6545,7 @@ GB_2312                                        0                   57           
     RDB$FUNCTION_NAME               <null>
     RDB$BASE_COLLATION_NAME         <null>
     RDB$SPECIFIC_ATTRIBUTES         1d:f6
-    COLL-VERSION=58.0.6.50
+    COLL-VERSION=58.0.6.xx
     RDB$SECURITY_CLASS              SQL$359
     RDB$OWNER_NAME                  SYSDBA
     
@@ -6573,7 +6573,10 @@ GB_2312                                        0                   57           
     RDB$SECURITY_CLASS              SQL$361
     RDB$OWNER_NAME                  SYSDBA
   """,
- 'substitutions': [('RDB\$SPECIFIC_ATTRIBUTES.*','')]
+ 'substitutions': [
+    ('RDB\$SPECIFIC_ATTRIBUTES.*',''),
+    ('COLL-VERSION=58\.0\.6\.[0-9][0-9]','COLL-VERSION=58.0.6.xx')
+    ]
 }
 ]
 }
