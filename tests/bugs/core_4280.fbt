@@ -1,0 +1,41 @@
+{
+'id': 'bugs.core_4280',
+'qmid': None,
+'tracker_id': 'CORE-4280',
+'title': 'FB3: Stored function accepts duplicate input arguments',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set term ^;
+    create function test (x integer, x integer) -- argument `x` appears twice
+    returns integer
+    as
+    begin
+      return x + 1;
+    end 
+    ^
+    set term ;^
+    commit;
+    show func;
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    CREATE FUNCTION TEST failed
+    -SQL error code = -901
+    -duplicate specification of X - not supported
+    There are no user-defined functions in this database
+  """
+}
+]
+}
