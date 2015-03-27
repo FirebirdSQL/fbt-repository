@@ -18,7 +18,19 @@ call :readcfg %~n0.conf
 :: get values of all necessary env. variables (fbNNhome, fbNNport)
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-set sql=%~n0.tmp
+set vbs=%~n0.tmp.vbs
+del %vbs% 2>nul
+echo strDate = DatePart("yyyy",Date) _>>%vbs%
+echo    ^& Right("0" ^& DatePart("m",Date), 2) _>>%vbs%
+echo    ^& Right("0" ^& DatePart("d",Date), 2)>>%vbs%
+echo Wscript.Echo(strDate)>>%vbs%
+for /f %%i in ('cscript /nologo %vbs%') do set dts=%%i
+del %vbs% 2>nul
+
+set fbh=!fbhost:.=_!
+set sql=%~n0.%dts%.!fbh!.sql
+::echo %sql%
+
 del %sql% 2>nul
 if exist %sql% goto err_init
 del tmp-fbt-run.* 2>nul
@@ -44,16 +56,9 @@ set skip_cnt=0
 
 set skipinfo=SKIPPED, see settings in %~n0.conf
 
-echo -- GENERATED AUTO, DO NOT EDIT!       >>%sql%
-echo recreate table run_stat(              >>%sql%
-echo    fb_arch     varchar(10^)           >>%sql%
-echo   ,fb_build    varchar(30^)           >>%sql%
-echo   ,fbt_name    varchar(255^)          >>%sql%
-echo   ,num_tests   smallint               >>%sql%
-echo   ,elapsed_sec numeric(12,3^)         >>%sql%
-echo   ,err_size    int                    >>%sql%
-echo ^);                                   >>%sql%
-echo commit;                               >>%sql%
+:::::::::::::::::::::::  a d d    D D L  o f   t a b l e   a n d   v i e w  :::::::::::::::::
+call :init_sql %sql%
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set all_beg_dts=%date% %time%
 for /f %%a in ('dir /s /b /o:N %fbtpatt%') do (
@@ -70,7 +75,7 @@ for /f %%a in ('dir /s /b /o:N %fbtpatt%') do (
   @rem Cut off drive + current_dir:
   set fbt2run=!fbtfile:%find_what%=%repl_with%!
 
-  @rem Remove 'tests':
+  @rem Remove 'tests' from rest part of path:
   set fbt2run=!fbt2run:tests\=%repl_with%!
 
   set skip_this=0
@@ -112,18 +117,48 @@ for /f %%a in ('dir /s /b /o:N %fbtpatt%') do (
 
   set /a skip_cnt=%skip_cnt%+!skip_this!
 
+
+  if .%run25sC%.==.1. (
+    set path=%fb25client%;%pythonPath%;%pythonPath%\Scripts;%APPDATA%\Python\Scripts;%SystemRoot%;%SystemRoot%\system32
+    if .!iter!.==.1. (
+      echo -- Determine build number of FB 2.5 sC>>%sql%
+      echo -- PATH=!path!>>%sql%
+      set cmd_svc=%fb25client%\fbsvcmgr %fbhost%/%fb25sCport%:service_mgr user %fbusr% password %fbpwd% info_server_version
+      echo -- Command: !cmd_svc!>>%sql%
+      cmd /c !cmd_svc! 1>tmp-fbt-run.tmp 2>&1
+      @rem %fb25client%\fbsvcmgr %fbhost%/%fb25sCport%:service_mgr user %fbusr% password %fbpwd% info_server_version 1>tmp-fbt-run.tmp 2>&1
+      for /f "tokens=3" %%i in (tmp-fbt-run.tmp) do (
+        set bld25sC=%%i
+      )
+      echo -- Result: ^>!bld25sC!^< >>%sql%
+      del tmp-fbt-run.tmp 2>nul
+    )
+    if .!skip_this!.==.0. (
+      call :run_single_fbt 2.5-sC !bld25sC! %fb25client% %fbhost% %fb25sCport% !fbt2run! %fbtdpath% %sql%
+    ) else (
+      set msg=%%a - %skipinfo%
+      echo !msg!
+      echo -- !msg!>>%sql%
+    )
+  )
   
   if .%run30sS%.==.1. (
+    set path=%fb30client%;%pythonPath%;%pythonPath%\Scripts;%APPDATA%\Python\Scripts;%SystemRoot%;%SystemRoot%\system32
     if .!iter!.==.1. (
-      @rem Determine build number of this FB
-      %fb30sShome%\fbsvcmgr localhost/%fb30sSport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>tmp-fbt-run.tmp 2>&1
+      echo -- Determine build number of FB 3.0 sS>>%sql%
+      echo -- PATH=!path!>>%sql%
+      set cmd_svc=%fb30client%\fbsvcmgr %fbhost%/%fb30sSport%:service_mgr user %fbusr% password %fbpwd% info_server_version
+      echo -- Command: !cmd_svc!>>%sql%
+      cmd /c !cmd_svc! 1>tmp-fbt-run.tmp 2>&1
+      @rem %fb30client%\fbsvcmgr %fbhost%/%fb30sSport%:service_mgr user %fbusr% password %fbpwd% info_server_version 1>tmp-fbt-run.tmp 2>&1
       for /f "tokens=3" %%i in (tmp-fbt-run.tmp) do (
         set bld30sS=%%i
       )
+      echo -- Result: ^>!bld30sS!^< >>%sql%
       del tmp-fbt-run.tmp 2>nul
     )
     if .!skip_this!.==.0. ( 
-      call :run_single_fbt 3.0-sS !bld30sS! %fb30sShome% %fb30sSport% !fbt2run! %sql%
+      call :run_single_fbt 3.0-sS !bld30sS! %fb30client% %fbhost% %fb30sSport% !fbt2run! %fbtdpath% %sql%
     ) else (
       set msg=%%a - %skipinfo%
       echo !msg!
@@ -132,16 +167,22 @@ for /f %%a in ('dir /s /b /o:N %fbtpatt%') do (
   )
 
   if .%run30sC%.==.1. (
+    set path=%fb30client%;%pythonPath%;%pythonPath%\Scripts;%APPDATA%\Python\Scripts;%SystemRoot%;%SystemRoot%\system32
     if .!iter!.==.1. (
-      @rem Determine build number of this FB
-      %fb30sChome%\fbsvcmgr localhost/%fb30sCport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>tmp-fbt-run.tmp 2>&1
+      echo -- Determine build number of FB 3.0 sC>>%sql%
+      echo -- PATH=!path!>>%sql%
+      set cmd_svc=%fb30client%\fbsvcmgr %fbhost%/%fb30sCport%:service_mgr user %fbusr% password %fbpwd% info_server_version
+      echo -- Command: !cmd_svc!>>%sql%
+      cmd /c !cmd_svc! 1>tmp-fbt-run.tmp 2>&1
+      @rem %fb30client%\fbsvcmgr %fbhost%/%fb30sCport%:service_mgr user %fbusr% password %fbpwd% info_server_version 1>tmp-fbt-run.tmp 2>&1
       for /f "tokens=3" %%i in (tmp-fbt-run.tmp) do (
         set bld30sC=%%i
       )
+      echo -- Result: ^>!bld30sC!^< >>%sql%
       del tmp-fbt-run.tmp 2>nul
     )
     if .!skip_this!.==.0. (
-      call :run_single_fbt 3.0-sC !bld30sC! %fb30sChome% %fb30sCport% !fbt2run! %sql%
+      call :run_single_fbt 3.0-sC !bld30sC! %fb30client% %fbhost% %fb30sCport% !fbt2run! %fbtdpath% %sql%
     ) else (
       set msg=%%a - %skipinfo%
       echo !msg!
@@ -150,16 +191,22 @@ for /f %%a in ('dir /s /b /o:N %fbtpatt%') do (
   )
 
   if .%run30Cs%.==.1. (
+    set path=%fb30client%;%pythonPath%;%pythonPath%\Scripts;%APPDATA%\Python\Scripts;%SystemRoot%;%SystemRoot%\system32
     if .!iter!.==.1. (
-      @rem Determine build number of this FB
-      %fb30Cshome%\fbsvcmgr localhost/%fb30Csport%:service_mgr user %isc_user% password %isc_password% info_server_version 1>tmp-fbt-run.tmp 2>&1
+      echo -- Determine build number of FB 3.0 Cs>>%sql%
+      echo -- PATH=!path!>>%sql%
+      set cmd_svc=%fb30client%\fbsvcmgr %fbhost%/%fb30Csport%:service_mgr user %fbusr% password %fbpwd% info_server_version
+      echo -- Command: !cmd_svc!>>%sql%
+      cmd /c !cmd_svc! 1>tmp-fbt-run.tmp 2>&1
+      @rem %fb30client%\fbsvcmgr %fbhost%/%fb30Csport%:service_mgr user %fbusr% password %fbpwd% info_server_version 1>tmp-fbt-run.tmp 2>&1
       for /f "tokens=3" %%i in (tmp-fbt-run.tmp) do (
         set bld30Cs=%%i
       )
+      echo -- Result: ^>!bld30Cs!^< >>%sql%
       del tmp-fbt-run.tmp 2>nul
     )
     if .!skip_this!.==.0. (
-      call :run_single_fbt 3.0-Cs !bld30Cs! %fb30Cshome% %fb30Csport% !fbt2run! %sql%
+      call :run_single_fbt 3.0-Cs !bld30Cs! %fb30client% %fbhost% %fb30Csport% !fbt2run! %fbtdpath% %sql%
     ) else (
       set msg=%%a - %skipinfo%
       echo !msg!
@@ -187,17 +234,35 @@ goto end
 
   setlocal
 
+  @rem These two vars needs here only for writing in log:
   set fbarch=%1
   set fbbuild=%2
-  set fbhome=%3
-  set fbport=%4
-  set fbt2run=%5
-  set sql=%6
+
+  @rem Where client binaries are:
+  set fbcdir=%3
+
+  @rem Name of host and port which is to be tested now:
+  set fbhost=%4
+  set fbport=%5
+
+  @rem Name of test:
+  set fbt2run=%6
+
+  rem  Path where fbt_run should attempt to create .fdb file for running test.
+  rem  NB: trailing slash is mandatory and has to match OS specifics.
+  rem  This value will be substituted after switch '-d' in fbt_run command, i.e.:
+  rem  fbt_run -b <local_path_to_isql> bugs.core_0086 -o 192.168.0.220/3333 -d /tmp/firebird/
+  
+  set fbtdpath=%7
+
+  @rem Name of SQL log where results are to be added:
+  set sql=%8
 
   echo.
-  set fbt_run=fbt_run -b %fbhome% %fbt2run% -o localhost/%fbport%
+  set fbt_run=fbt_run -b %fbcdir% %fbt2run% -o %fbhost%/%fbport% -d %fbtdpath%
   set msg=%date% %time%. STARTING: %fbt_run%
   echo %msg%
+
   echo.>>%sql%
   echo -- %msg%>>%sql%
   del resutls.trf 2>nul
@@ -233,7 +298,7 @@ goto end
       @Rem Remove last character 's' from elapsed time: 1.512s ==> 1.512
       set elaptime=!elaptime:s=%repl_with%!
 
-      echo insert into run_stat(fb_arch, fb_build, fbt_name, num_tests, elapsed_sec, err_size^)>>%sql%
+      echo insert into fbt_sql(fb_arch, fb_build, fbt_name, num_tests, elapsed_sec, err_size^)>>%sql%
       echo               values('%fbarch%', '%fbbuild%', '!fbt2run!', !numtests!, !elaptime!, 0^);>>%sql%
     )
     set msg=%date% %time%. SUCCESS:  !run_txt!
@@ -243,7 +308,7 @@ goto end
     set msg=%date% %time%. FAILED: !fbt2run!
     echo !msg!
     echo -- !msg!>>%sql%
-    echo insert into run_stat(fb_arch, fb_build, fbt_name, num_tests, elapsed_sec, err_size^)>>%sql%
+    echo insert into fbt_sql(fb_arch, fb_build, fbt_name, num_tests, elapsed_sec, err_size^)>>%sql%
     echo               values('%fbarch%', '%fbbuild%', '!fbt2run!', null, null, !err_size!^);>>%sql%
     echo.>>%sql%
     if .!err_size!.==.0. (
@@ -342,6 +407,95 @@ for /F "tokens=*" %%a in ('findstr /i /r /c:"^[ 	]*[a-z,0-9]" %cfg%') do (
     )
   )
 )
+goto:eof
+
+:init_sql
+  setlocal
+  set sql=%1
+  echo -- GENERATED AUTO, DO NOT EDIT!       >>%sql%
+  echo create or alter view v_fbt_sql as select 1 id from rdb$database;>>%sql%
+  echo commit;                               >>%sql%
+  echo recreate table fbt_sql(               >>%sql%
+  echo    fb_arch     varchar(10^)           >>%sql%
+  echo   ,fb_build    varchar(30^)           >>%sql%
+  echo   ,fbt_name    varchar(255^)          >>%sql%
+  echo   ,num_tests   smallint               >>%sql%
+  echo   ,elapsed_sec numeric(12,3^)         >>%sql%
+  echo   ,err_size    int                    >>%sql%
+  echo ^);                                   >>%sql%
+  echo commit;                               >>%sql%
+
+  echo create or alter view v_fbt_sql as >>%sql%
+  echo with >>%sql%
+  echo c1 as ( >>%sql%
+  echo     select fbt_name, time30_sS, time30_sC, time30_Cs >>%sql%
+  echo     from( >>%sql%
+  echo         select >>%sql%
+  echo             r.fbt_name >>%sql%
+  echo             ,max(iif( r.fb_arch='2.5-Cs', r.elapsed_sec, null )) as time25_Cs >>%sql%
+  echo             ,max(iif( r.fb_arch='2.5-sC', r.elapsed_sec, null )) as time25_sC >>%sql%
+  echo             ,max(iif( r.fb_arch='3.0-Cs', r.elapsed_sec, null )) as time30_Cs >>%sql%
+  echo             ,max(iif( r.fb_arch='3.0-sC', r.elapsed_sec, null )) as time30_sC >>%sql%
+  echo             ,max(iif( r.fb_arch='3.0-sS', r.elapsed_sec, null )) as time30_sS >>%sql%
+  echo         from fbt_sql r >>%sql%
+  echo         group by 1 >>%sql%
+  echo     ) >>%sql%
+  echo ) >>%sql%
+  echo ,c2 as ( >>%sql%
+  echo   select >>%sql%
+  echo     fbt_name >>%sql%
+  echo     ,time25_Cs,time25_sC >>%sql%
+  echo     ,time30_sS,time30_sC,time30_Cs >>%sql%
+  echo     ,minvalue(time25_Cs,time25_sC) time25_min >>%sql%
+  echo     ,maxvalue(time25_Cs,time25_sC) time25_min >>%sql%
+  echo     ,minvalue(time30_sS,time30_sC,time30_Cs) time30_min >>%sql%
+  echo     ,maxvalue(time30_sS,time30_sC,time30_Cs) time30_max >>%sql%
+  echo   from c1 >>%sql%
+  echo ) >>%sql%
+  echo ,c3 as ( >>%sql%
+  echo   select >>%sql%
+  echo     fbt_name >>%sql%
+  echo     ,time25_Cs,time25_sC >>%sql%
+  echo     ,time25_min,time25_max >>%sql%
+  echo     ,cast(100.00 * time25_max / time25_min - 100 as numeric(10,2)) as diff25_percent >>%sql%
+  echo     ,time30_sS,time30_sC,time30_Cs >>%sql%
+  echo     ,time30_min,time30_max >>%sql%
+  echo     ,cast(100.00 * time30_max / time30_min - 100 as numeric(10,2)) as diff30_percent >>%sql%
+  echo     ,1.00 * time25_min / time30_min as time25_vs_time30>>%sql%
+  echo     ,iif(time30_min=time30_sS, 'sS30', iif(time30_min=time30_sC, 'sC30', iif(time30_min=time30_Cs, 'Cs30', null) ) ) arch30_winner >>%sql%
+  echo     ,iif(time30_max=time30_sS, 'sS30', iif(time30_max=time30_sC, 'sC30', iif(time30_max=time30_Cs, 'Cs30', null) ) ) arch30_looser >>%sql%
+  echo   from c2 >>%sql%
+  echo ) >>%sql%
+  echo ,c4 as ( >>%sql%
+  echo   select >>%sql%
+  echo     fbt_name >>%sql%
+  echo     ,time25_Cs,time25_sC >>%sql%
+  echo     ,time25_min,time25_max >>%sql%
+  echo     ,diff25_percent >>%sql%
+  echo     ,time30_Cs,time30_sC,time30_sS >>%sql%
+  echo     ,time30_min,time30_max >>%sql%
+  echo     ,diff30_percent >>%sql%
+  echo     ,time25_vs_time30>>%sql%
+  echo     ,arch30_winner >>%sql%
+  echo     ,arch30_looser >>%sql%
+  echo     ,count(iif(arch30_winner='sS30',1,null))over() sS30_winner_cnt >>%sql%
+  echo     ,count(iif(arch30_winner='sC30',1,null))over() sC30_winner_cnt >>%sql%
+  echo     ,count(iif(arch30_winner='Cs30',1,null))over() Cs30_winner_cnt >>%sql%
+  echo     ,count(iif(arch30_looser='sS30',1,null))over() sS30_looser_cnt >>%sql%
+  echo     ,count(iif(arch30_looser='sC30',1,null))over() sC30_looser_cnt >>%sql%
+  echo     ,count(iif(arch30_looser='Cs30',1,null))over() Cs30_looser_cnt >>%sql%
+  echo     ,sum(time25_Cs)over() Cs25_total_time >>%sql%
+  echo     ,sum(time25_sC)over() sC25_total_time >>%sql%
+  echo     ,sum(time30_Cs)over() Cs30_total_time >>%sql%
+  echo     ,sum(time30_sC)over() sC30_total_time >>%sql%
+  echo     ,sum(time30_sS)over() sS30_total_time >>%sql%
+  echo   from c3 >>%sql%
+  echo ) >>%sql%
+  echo select * from c4 >>%sql%
+  echo ; >>%sql%
+  echo commit; >>%sql%
+
+  endlocal
 goto:eof
 
 :err_init
