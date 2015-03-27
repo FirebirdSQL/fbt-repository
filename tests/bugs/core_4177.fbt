@@ -1,0 +1,62 @@
+{
+'id': 'bugs.core_4177',
+'qmid': None,
+'tracker_id': 'CORE-4177',
+'title': 'Problem with some boolean expressions not being allowed',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    
+    set list on;
+
+    select 1 x1
+    from rdb$database
+    where (1=1) is true;
+    
+    select 1 x2
+    from rdb$database
+    where true = true = true is not false is not distinct from not false is not false is not distinct from not false is not distinct from not false = not false is not distinct from not false ;
+    
+    select 1 x3
+    from rdb$database
+    where not false and not false = not not not not true and not not not false = not not true and not not not not not not not false;
+
+
+    select 1 x4a
+    from rdb$database
+    where not false and not false is not false;
+
+
+    select 1 x4b
+    from rdb$database
+    where not false and not false = not not not false;
+
+    -- This currently FAILS. Will be uncommented later in case of post-fix for this ticket:
+    -- select 1 x4c
+    -- from rdb$database
+    -- where not false and not false is not not not false;
+    -- this also FAILS:
+    -- where not false and not false is not distinct from not false;
+  """,
+ 'expected_stdout': 
+  """
+    X1                              1
+    X2                              1
+    X3                              1
+    X4A                             1
+    X4B                             1  
+  """
+}
+]
+}
