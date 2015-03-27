@@ -1,0 +1,68 @@
+{
+'id': 'bugs.core_4201',
+'qmid': None,
+'tracker_id': 'CORE-4201',
+'title': 'Regression: Computed field returns null value inside BI trigger',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    drop user tmp$c4200;
+    commit;
+    create user tmp$c4200 password '123';
+    commit;
+    
+    set list on;
+    set transaction no wait;
+    select sec$user_name from sec$users where sec$user_name = 'SYSDBA';
+    
+    set term ^;
+    execute block returns(connect_from rdb$user, connect_diff smallint) as
+        declare v_dbname type of column mon$database.mon$database_name;
+        declare v_stt varchar(1024);
+        declare v_usr rdb$user = 'tmp$c4200';
+        declare v_pwd varchar(20) = '123';
+        declare v_sysdba_attach int;
+    begin
+        select 'localhost:' || d.mon$database_name, current_connection
+        from mon$database d
+        into v_dbname, v_sysdba_attach;
+    
+        v_stt = 'select mon$user, sign( current_connection - :y ) from mon$attachments where upper(trim(mon$user)) = upper(:x) rows 1';
+    
+        execute statement (v_stt)  ( x := v_usr, y := v_sysdba_attach )
+        on external (v_dbname) 
+        as user :v_usr password :v_pwd
+        into connect_from, connect_diff;
+    
+        suspend;
+    
+    end
+    ^
+    set term ;^
+    rollback;
+    drop user tmp$c4200;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    SEC$USER_NAME                   SYSDBA
+    CONNECT_FROM                    TMP$C4200
+    CONNECT_DIFF                    1
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
