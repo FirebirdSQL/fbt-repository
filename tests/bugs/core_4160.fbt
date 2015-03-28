@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_4301',
+'id': 'bugs.core_4160',
 'qmid': None,
-'tracker_id': 'CORE-4301',
+'tracker_id': 'CORE-4160',
 'title': 'Parameterized exception does not accept not ASCII characters as parameter',
 'description': '',
 'min_versions': '3.0',
@@ -50,36 +50,37 @@
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 42000
     exception 1
     -EX_NEGATIVE_REMAINDER
     - Czech: New Balance bude menší než nula (-1)
 
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 42000
     exception 1
     -EX_NEGATIVE_REMAINDER
     - Portuguese: New saldo será menor do que zero (-2)
 
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 42000
     exception 1
     -EX_NEGATIVE_REMAINDER
     - Danish: New Balance vil være mindre end nul (-3)
 
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 42000
     exception 1
     -EX_NEGATIVE_REMAINDER
     - Greek: Νέα ισορροπία θα είναι κάτω από το μηδέν (-4)
 
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 42000
     exception 1
     -EX_NEGATIVE_REMAINDER
     - French: Nouveau solde sera inférieur à zéro (-5)
 
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 42000
     exception 1
     -EX_NEGATIVE_REMAINDER
     - Russian: Новый остаток будет меньше нуля (-6)
-  """
+  """,
+  'substitutions': [('-At procedure.*','')]
 }
 ]
 }
