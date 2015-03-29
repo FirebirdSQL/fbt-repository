@@ -1,0 +1,815 @@
+{
+'id': 'bugs.core_4091',
+'qmid': None,
+'tracker_id': 'CORE-4091',
+'title': 'Incorrect full join result with ROW_NUMBER() Function in CTE',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+    -- Decided to create tables XTYPES and XFORMATS and add data from corresponding 
+    -- RDB$-tables which was there at the time of build WI-T3.0.0.31749.
+
+    recreate table rtypes( xtype smallint );
+    commit;
+    
+    recreate table rformats( xformat smallint );
+    commit;
+    
+    insert into rtypes (xtype) values (14);
+    insert into rtypes (xtype) values (7);
+    insert into rtypes (xtype) values (8);
+    insert into rtypes (xtype) values (9);
+    insert into rtypes (xtype) values (10);
+    insert into rtypes (xtype) values (27);
+    insert into rtypes (xtype) values (35);
+    insert into rtypes (xtype) values (37);
+    insert into rtypes (xtype) values (261);
+    insert into rtypes (xtype) values (40);
+    insert into rtypes (xtype) values (45);
+    insert into rtypes (xtype) values (12);
+    insert into rtypes (xtype) values (13);
+    insert into rtypes (xtype) values (16);
+    insert into rtypes (xtype) values (23);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (7);
+    insert into rtypes (xtype) values (8);
+    insert into rtypes (xtype) values (9);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (8192);
+    insert into rtypes (xtype) values (8193);
+    insert into rtypes (xtype) values (8194);
+    insert into rtypes (xtype) values (8195);
+    insert into rtypes (xtype) values (8196);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (7);
+    insert into rtypes (xtype) values (8);
+    insert into rtypes (xtype) values (9);
+    insert into rtypes (xtype) values (10);
+    insert into rtypes (xtype) values (11);
+    insert into rtypes (xtype) values (12);
+    insert into rtypes (xtype) values (13);
+    insert into rtypes (xtype) values (14);
+    insert into rtypes (xtype) values (15);
+    insert into rtypes (xtype) values (16);
+    insert into rtypes (xtype) values (17);
+    insert into rtypes (xtype) values (18);
+    insert into rtypes (xtype) values (19);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (7);
+    insert into rtypes (xtype) values (8);
+    insert into rtypes (xtype) values (9);
+    insert into rtypes (xtype) values (10);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (0);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (10);
+    insert into rtypes (xtype) values (11);
+    insert into rtypes (xtype) values (12);
+    insert into rtypes (xtype) values (21);
+    insert into rtypes (xtype) values (22);
+    insert into rtypes (xtype) values (23);
+    insert into rtypes (xtype) values (34);
+    insert into rtypes (xtype) values (35);
+    insert into rtypes (xtype) values (36);
+    insert into rtypes (xtype) values (37);
+    insert into rtypes (xtype) values (38);
+    insert into rtypes (xtype) values (39);
+    insert into rtypes (xtype) values (40);
+    insert into rtypes (xtype) values (45);
+    insert into rtypes (xtype) values (46);
+    insert into rtypes (xtype) values (13);
+    insert into rtypes (xtype) values (47);
+    insert into rtypes (xtype) values (14);
+    insert into rtypes (xtype) values (50);
+    insert into rtypes (xtype) values (9);
+    insert into rtypes (xtype) values (15);
+    insert into rtypes (xtype) values (16);
+    insert into rtypes (xtype) values (17);
+    insert into rtypes (xtype) values (18);
+    insert into rtypes (xtype) values (48);
+    insert into rtypes (xtype) values (49);
+    insert into rtypes (xtype) values (51);
+    insert into rtypes (xtype) values (52);
+    insert into rtypes (xtype) values (53);
+    insert into rtypes (xtype) values (54);
+    insert into rtypes (xtype) values (55);
+    insert into rtypes (xtype) values (19);
+    insert into rtypes (xtype) values (58);
+    insert into rtypes (xtype) values (59);
+    insert into rtypes (xtype) values (60);
+    insert into rtypes (xtype) values (44);
+    insert into rtypes (xtype) values (56);
+    insert into rtypes (xtype) values (57);
+    insert into rtypes (xtype) values (63);
+    insert into rtypes (xtype) values (64);
+    insert into rtypes (xtype) values (65);
+    insert into rtypes (xtype) values (66);
+    insert into rtypes (xtype) values (67);
+    insert into rtypes (xtype) values (68);
+    insert into rtypes (xtype) values (69);
+    insert into rtypes (xtype) values (1);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (2);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (3);
+    insert into rtypes (xtype) values (4);
+    insert into rtypes (xtype) values (5);
+    insert into rtypes (xtype) values (6);
+    insert into rtypes (xtype) values (10);
+    insert into rtypes (xtype) values (11);
+    insert into rtypes (xtype) values (12);
+    insert into rtypes (xtype) values (21);
+    insert into rtypes (xtype) values (21);
+    insert into rtypes (xtype) values (21);
+    insert into rtypes (xtype) values (22);
+    insert into rtypes (xtype) values (22);
+    insert into rtypes (xtype) values (22);
+    insert into rtypes (xtype) values (23);
+    insert into rtypes (xtype) values (23);
+    insert into rtypes (xtype) values (23);
+    insert into rtypes (xtype) values (34);
+    insert into rtypes (xtype) values (34);
+    insert into rtypes (xtype) values (34);
+    insert into rtypes (xtype) values (35);
+    insert into rtypes (xtype) values (35);
+    insert into rtypes (xtype) values (36);
+    insert into rtypes (xtype) values (36);
+    insert into rtypes (xtype) values (37);
+    insert into rtypes (xtype) values (37);
+    insert into rtypes (xtype) values (38);
+    insert into rtypes (xtype) values (38);
+    insert into rtypes (xtype) values (39);
+    insert into rtypes (xtype) values (39);
+    insert into rtypes (xtype) values (39);
+    insert into rtypes (xtype) values (40);
+    insert into rtypes (xtype) values (40);
+    insert into rtypes (xtype) values (40);
+    insert into rtypes (xtype) values (45);
+    insert into rtypes (xtype) values (46);
+    insert into rtypes (xtype) values (13);
+    insert into rtypes (xtype) values (47);
+    insert into rtypes (xtype) values (14);
+    insert into rtypes (xtype) values (9);
+    insert into rtypes (xtype) values (15);
+    insert into rtypes (xtype) values (16);
+    insert into rtypes (xtype) values (17);
+    insert into rtypes (xtype) values (18);
+    insert into rtypes (xtype) values (48);
+    insert into rtypes (xtype) values (49);
+    insert into rtypes (xtype) values (51);
+    insert into rtypes (xtype) values (52);
+    insert into rtypes (xtype) values (53);
+    insert into rtypes (xtype) values (54);
+    insert into rtypes (xtype) values (55);
+    insert into rtypes (xtype) values (58);
+    insert into rtypes (xtype) values (59);
+    insert into rtypes (xtype) values (60);
+    insert into rtypes (xtype) values (65);
+    insert into rtypes (xtype) values (44);
+    insert into rtypes (xtype) values (44);
+    insert into rtypes (xtype) values (44);
+    insert into rtypes (xtype) values (56);
+    insert into rtypes (xtype) values (56);
+    insert into rtypes (xtype) values (56);
+    insert into rtypes (xtype) values (57);
+    insert into rtypes (xtype) values (57);
+    insert into rtypes (xtype) values (57);
+    commit;
+    
+    insert into rformats (xformat) values (1);
+    insert into rformats (xformat) values (1);
+    commit;
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+
+    with a as (
+        select t.xtype, row_number() over (order by t.rdb$db_key) as rn from rtypes t
+    ),
+    b as (
+        select f.xformat, row_number() over (order by f.rdb$db_key) as rn from rformats f
+    )
+    select
+        xtype,
+        xformat
+    from a
+    full outer join b on a.rn = b.rn
+    order by 1,2;
+  """,
+ 'expected_stdout':
+  """
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           0
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         <null>
+    XTYPE                           1
+    XFORMAT                         1
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           2
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           3
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           4
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           5
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           6
+    XFORMAT                         <null>
+    XTYPE                           7
+    XFORMAT                         <null>
+    XTYPE                           7
+    XFORMAT                         <null>
+    XTYPE                           7
+    XFORMAT                         <null>
+    XTYPE                           7
+    XFORMAT                         <null>
+    XTYPE                           8
+    XFORMAT                         <null>
+    XTYPE                           8
+    XFORMAT                         <null>
+    XTYPE                           8
+    XFORMAT                         <null>
+    XTYPE                           8
+    XFORMAT                         <null>
+    XTYPE                           9
+    XFORMAT                         <null>
+    XTYPE                           9
+    XFORMAT                         <null>
+    XTYPE                           9
+    XFORMAT                         <null>
+    XTYPE                           9
+    XFORMAT                         <null>
+    XTYPE                           9
+    XFORMAT                         <null>
+    XTYPE                           9
+    XFORMAT                         <null>
+    XTYPE                           10
+    XFORMAT                         <null>
+    XTYPE                           10
+    XFORMAT                         <null>
+    XTYPE                           10
+    XFORMAT                         <null>
+    XTYPE                           10
+    XFORMAT                         <null>
+    XTYPE                           10
+    XFORMAT                         1
+    XTYPE                           11
+    XFORMAT                         <null>
+    XTYPE                           11
+    XFORMAT                         <null>
+    XTYPE                           11
+    XFORMAT                         <null>
+    XTYPE                           12
+    XFORMAT                         <null>
+    XTYPE                           12
+    XFORMAT                         <null>
+    XTYPE                           12
+    XFORMAT                         <null>
+    XTYPE                           12
+    XFORMAT                         <null>
+    XTYPE                           13
+    XFORMAT                         <null>
+    XTYPE                           13
+    XFORMAT                         <null>
+    XTYPE                           13
+    XFORMAT                         <null>
+    XTYPE                           13
+    XFORMAT                         <null>
+    XTYPE                           14
+    XFORMAT                         <null>
+    XTYPE                           14
+    XFORMAT                         <null>
+    XTYPE                           14
+    XFORMAT                         <null>
+    XTYPE                           14
+    XFORMAT                         <null>
+    XTYPE                           15
+    XFORMAT                         <null>
+    XTYPE                           15
+    XFORMAT                         <null>
+    XTYPE                           15
+    XFORMAT                         <null>
+    XTYPE                           16
+    XFORMAT                         <null>
+    XTYPE                           16
+    XFORMAT                         <null>
+    XTYPE                           16
+    XFORMAT                         <null>
+    XTYPE                           16
+    XFORMAT                         <null>
+    XTYPE                           17
+    XFORMAT                         <null>
+    XTYPE                           17
+    XFORMAT                         <null>
+    XTYPE                           17
+    XFORMAT                         <null>
+    XTYPE                           18
+    XFORMAT                         <null>
+    XTYPE                           18
+    XFORMAT                         <null>
+    XTYPE                           18
+    XFORMAT                         <null>
+    XTYPE                           19
+    XFORMAT                         <null>
+    XTYPE                           19
+    XFORMAT                         <null>
+    XTYPE                           21
+    XFORMAT                         <null>
+    XTYPE                           21
+    XFORMAT                         <null>
+    XTYPE                           21
+    XFORMAT                         <null>
+    XTYPE                           21
+    XFORMAT                         <null>
+    XTYPE                           22
+    XFORMAT                         <null>
+    XTYPE                           22
+    XFORMAT                         <null>
+    XTYPE                           22
+    XFORMAT                         <null>
+    XTYPE                           22
+    XFORMAT                         <null>
+    XTYPE                           23
+    XFORMAT                         <null>
+    XTYPE                           23
+    XFORMAT                         <null>
+    XTYPE                           23
+    XFORMAT                         <null>
+    XTYPE                           23
+    XFORMAT                         <null>
+    XTYPE                           23
+    XFORMAT                         <null>
+    XTYPE                           27
+    XFORMAT                         <null>
+    XTYPE                           34
+    XFORMAT                         <null>
+    XTYPE                           34
+    XFORMAT                         <null>
+    XTYPE                           34
+    XFORMAT                         <null>
+    XTYPE                           34
+    XFORMAT                         <null>
+    XTYPE                           35
+    XFORMAT                         <null>
+    XTYPE                           35
+    XFORMAT                         <null>
+    XTYPE                           35
+    XFORMAT                         <null>
+    XTYPE                           35
+    XFORMAT                         <null>
+    XTYPE                           36
+    XFORMAT                         <null>
+    XTYPE                           36
+    XFORMAT                         <null>
+    XTYPE                           36
+    XFORMAT                         <null>
+    XTYPE                           37
+    XFORMAT                         <null>
+    XTYPE                           37
+    XFORMAT                         <null>
+    XTYPE                           37
+    XFORMAT                         <null>
+    XTYPE                           37
+    XFORMAT                         <null>
+    XTYPE                           38
+    XFORMAT                         <null>
+    XTYPE                           38
+    XFORMAT                         <null>
+    XTYPE                           38
+    XFORMAT                         <null>
+    XTYPE                           39
+    XFORMAT                         <null>
+    XTYPE                           39
+    XFORMAT                         <null>
+    XTYPE                           39
+    XFORMAT                         <null>
+    XTYPE                           39
+    XFORMAT                         <null>
+    XTYPE                           40
+    XFORMAT                         <null>
+    XTYPE                           40
+    XFORMAT                         <null>
+    XTYPE                           40
+    XFORMAT                         <null>
+    XTYPE                           40
+    XFORMAT                         <null>
+    XTYPE                           40
+    XFORMAT                         <null>
+    XTYPE                           44
+    XFORMAT                         <null>
+    XTYPE                           44
+    XFORMAT                         <null>
+    XTYPE                           44
+    XFORMAT                         <null>
+    XTYPE                           44
+    XFORMAT                         <null>
+    XTYPE                           45
+    XFORMAT                         <null>
+    XTYPE                           45
+    XFORMAT                         <null>
+    XTYPE                           45
+    XFORMAT                         <null>
+    XTYPE                           46
+    XFORMAT                         <null>
+    XTYPE                           46
+    XFORMAT                         <null>
+    XTYPE                           47
+    XFORMAT                         <null>
+    XTYPE                           47
+    XFORMAT                         <null>
+    XTYPE                           48
+    XFORMAT                         <null>
+    XTYPE                           48
+    XFORMAT                         <null>
+    XTYPE                           49
+    XFORMAT                         <null>
+    XTYPE                           49
+    XFORMAT                         <null>
+    XTYPE                           50
+    XFORMAT                         <null>
+    XTYPE                           51
+    XFORMAT                         <null>
+    XTYPE                           51
+    XFORMAT                         <null>
+    XTYPE                           52
+    XFORMAT                         <null>
+    XTYPE                           52
+    XFORMAT                         <null>
+    XTYPE                           53
+    XFORMAT                         <null>
+    XTYPE                           53
+    XFORMAT                         <null>
+    XTYPE                           54
+    XFORMAT                         <null>
+    XTYPE                           54
+    XFORMAT                         <null>
+    XTYPE                           55
+    XFORMAT                         <null>
+    XTYPE                           55
+    XFORMAT                         <null>
+    XTYPE                           56
+    XFORMAT                         <null>
+    XTYPE                           56
+    XFORMAT                         <null>
+    XTYPE                           56
+    XFORMAT                         <null>
+    XTYPE                           56
+    XFORMAT                         <null>
+    XTYPE                           57
+    XFORMAT                         <null>
+    XTYPE                           57
+    XFORMAT                         <null>
+    XTYPE                           57
+    XFORMAT                         <null>
+    XTYPE                           57
+    XFORMAT                         <null>
+    XTYPE                           58
+    XFORMAT                         <null>
+    XTYPE                           58
+    XFORMAT                         <null>
+    XTYPE                           59
+    XFORMAT                         <null>
+    XTYPE                           59
+    XFORMAT                         <null>
+    XTYPE                           60
+    XFORMAT                         <null>
+    XTYPE                           60
+    XFORMAT                         <null>
+    XTYPE                           63
+    XFORMAT                         <null>
+    XTYPE                           64
+    XFORMAT                         <null>
+    XTYPE                           65
+    XFORMAT                         <null>
+    XTYPE                           65
+    XFORMAT                         <null>
+    XTYPE                           66
+    XFORMAT                         <null>
+    XTYPE                           67
+    XFORMAT                         <null>
+    XTYPE                           68
+    XFORMAT                         <null>
+    XTYPE                           69
+    XFORMAT                         <null>
+    XTYPE                           261
+    XFORMAT                         <null>
+    XTYPE                           8192
+    XFORMAT                         <null>
+    XTYPE                           8193
+    XFORMAT                         <null>
+    XTYPE                           8194
+    XFORMAT                         <null>
+    XTYPE                           8195
+    XFORMAT                         <null>
+    XTYPE                           8196
+    XFORMAT                         <null>
+  """
+}
+]
+}
