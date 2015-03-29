@@ -1,0 +1,42 @@
+{
+'id': 'bugs.core_4119',
+'qmid': None,
+'tracker_id': 'CORE-4119',
+'title': 'Metadata source becomes wrong after twice transliteration to the metadata charset',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set term ^;
+    create procedure myproc
+    as
+    begin
+    -- Моя процедура
+    end^
+    set term ;^
+    show procedure myproc;
+  """,
+ 'expected_stdout': 
+  """
+    Procedure text:
+    =============================================================================
+    begin
+    -- Моя процедура
+    end
+    =============================================================================
+  """,
+  'substitutions': [('=.*','')]
+}
+]
+}
