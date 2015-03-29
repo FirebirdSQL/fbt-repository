@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_4081',
+'id': 'bugs.core_4082',
 'qmid': None,
-'tracker_id': 'CORE-4081',
+'tracker_id': 'CORE-4082',
 'title': 'Wrong error message (should point out the proper expected length)',
 'description': '',
 'min_versions': '3.0',
