@@ -1,0 +1,33 @@
+{
+'id': 'bugs.core_3899',
+'qmid': None,
+'tracker_id': 'CORE-3899',
+'title': 'row_number(), rank() and dense_rank() return BIGINT datatype in dialect 1',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'sql_dialect': 1,
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on; 
+    -- Output was checked on LI-T3.0.0.31749 (2.6.39-400.17.1.el6uek.x86_64) and WI-T3.0.0.31756 (Win XP):
+    select row_number()over() rno, rank()over() rnk, dense_rank()over() drk 
+    from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    RNO                             1.000000000000000
+    RNK                             1.000000000000000
+    DRK                             1.000000000000000
+  """
+}
+]
+}
