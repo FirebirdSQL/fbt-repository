@@ -1,0 +1,94 @@
+{
+'id': 'bugs.core_4054',
+'qmid': None,
+'tracker_id': 'CORE-4054',
+'title': 'role not passed on external execute stmt',
+'description': '',
+'min_versions': '2.5.3',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    drop user tmp$c4054;
+    commit;
+    create user tmp$c4054 password '123';
+    commit;
+    revoke all on all from tmp$c4054;
+    commit;
+
+    create table test(id int);
+    commit;
+    insert into test(id) values(789654123);
+    commit;
+
+
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop role r4054';
+    when any do
+        begin
+        end
+    end
+    ^
+    set term ;^
+    commit;
+    create role r4054;
+    commit;
+    
+    
+    grant select on test to role r4054;
+    commit;
+    
+    grant r4054 to tmp$c4054;
+    commit;
+    
+    set list on;
+    set term ^;
+    execute block returns (who_am_i varchar(30), whats_my_role varchar(30), what_i_see int) as
+        declare v_dbname type of column mon$database.mon$database_name;
+        declare v_usr rdb$user = 'tmp$c4054';
+        declare v_pwd rdb$user = '123';
+        declare v_role type of column rdb$roles.rdb$role_name;
+    begin
+        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
+
+        --######################
+        v_role = upper('r4054'); -- !!! ACHTUNG !!! ROLE NAME MUST BE ALWAYS PASSED IN UPPER CASE !!!
+        --######################
+        -- Explanation can be seen here (russian):
+        -- http://www.sql.ru/forum/actualutils.aspx?action=gotomsg&tid=1074439&msg=15494916
+        for
+            execute statement 'select current_user, current_role, t.id from test t'
+            on external v_dbname
+            as user v_usr 
+               password v_pwd 
+               role v_role -- ####### ONCE AGAIN: ALWAYS PASS ROLE NAME IN *UPPER* CASE! ##########
+            into who_am_i, whats_my_role, what_i_see
+        do
+            suspend;
+    end
+    ^
+    set term ;^
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    WHO_AM_I                        TMP$C4054
+    WHATS_MY_ROLE                   R4054
+    WHAT_I_SEE                      789654123
+  """,
+ 'expected_stderr':
+  """
+    Warning: ALL on ALL is not granted to TMP$C4054.
+  """
+}
+]
+}
