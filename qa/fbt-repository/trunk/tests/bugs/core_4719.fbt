@@ -1,0 +1,38 @@
+{
+'id': 'bugs.core_4073',
+'qmid': None,
+'tracker_id': 'CORE-4073',
+'title': 'Constant columns getting empty value with subselect from procedure',
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    --drop user tmp$c4719;
+    --commit;
+    --create user tmp$c4719 password '123';
+    --commit;
+    revoke all on all from tmp$c4719;
+    commit;
+    --drop user tmp$c4719;
+    --commit;
+  """,
+ 'expected_stderr':
+  """
+    Warning: ALL on ALL is not granted to TMP$C4719.
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
