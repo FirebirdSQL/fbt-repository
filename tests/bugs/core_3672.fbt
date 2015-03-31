@@ -1,0 +1,28 @@
+{
+'id': 'bugs.core_3672',
+'qmid': '',
+'tracker_id': 'CORE-3672',
+'title': 'computed index by substring function for long columns',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table tbl_test(col1 varchar(2000) character set utf8 collate utf8);
+    commit;
+    create index idx1 on tbl_test computed by (substring(col1 from 1 for 20));
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
