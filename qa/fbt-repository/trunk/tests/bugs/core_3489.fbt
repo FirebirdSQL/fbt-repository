@@ -1,0 +1,51 @@
+{
+'id': 'bugs.core_3489',
+'qmid': '',
+'tracker_id': 'CORE-3489',
+'title': 'Blob transliteration may not happen inside the union',
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'init_script':
+  """
+  """,
+ 'test_script': 
+  """
+	set term ^;
+	create or alter procedure p_test
+	returns (
+		msg blob sub_type 1 segment size 80 character set unicode_fss)
+	AS
+	begin
+		msg= 'Это проверка на вывод строки "Йцукёнг"'; -- text in cyrillic
+		suspend;
+	end
+	^
+	set term ;^
+	commit;
+
+	set list on;
+	select msg
+	from p_test
+	union
+	select msg
+	from p_test;
+  """,
+ 'expected_stdout': 
+  """
+	MSG                             0:7
+	Это проверка на вывод строки "Йцукёнг"
+
+	MSG                             0:a
+	Это проверка на вывод строки "Йцукёнг"  
+  """,
+  'substitutions': [('MSG.*','')]
+}
+]
+}
