@@ -14176,6 +14176,37 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$SECURITY_CLASS              SQL$141
     RDB$OWNER_NAME                  SYSDBA
     
+    RDB$FIELD_NAME                  MON$SEC_DATABASE
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                7
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  14
+    RDB$FIELD_SUB_TYPE              2
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   1
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                0
+    RDB$CHARACTER_SET_ID            2
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$142
+    RDB$OWNER_NAME                  SYSDBA
+    
     RDB$FIELD_NAME                  RDB$MAP_NAME
     RDB$QUERY_NAME                  <null>
     RDB$VALIDATION_BLR              <null>
@@ -14204,7 +14235,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                0
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$142
+    RDB$SECURITY_CLASS              SQL$143
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$MAP_USING
@@ -14235,7 +14266,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                0
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$143
+    RDB$SECURITY_CLASS              SQL$144
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$MAP_DB
@@ -14266,7 +14297,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                0
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$144
+    RDB$SECURITY_CLASS              SQL$145
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$MAP_FROM_TYPE
@@ -14297,7 +14328,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                0
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$145
+    RDB$SECURITY_CLASS              SQL$146
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$MAP_FROM
@@ -14328,7 +14359,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                0
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$146
+    RDB$SECURITY_CLASS              SQL$147
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$MAP_TO
@@ -14359,7 +14390,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                0
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$147
+    RDB$SECURITY_CLASS              SQL$148
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$GENERATOR_INCREMENT
@@ -14390,7 +14421,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                <null>
     RDB$CHARACTER_SET_ID            <null>
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$148
+    RDB$SECURITY_CLASS              SQL$149
     RDB$OWNER_NAME                  SYSDBA
     
     RDB$FIELD_NAME                  RDB$PLAN
@@ -14421,10 +14452,13 @@ RDB$FIELD_PRECISION             <null>                                      <nul
     RDB$COLLATION_ID                <null>
     RDB$CHARACTER_SET_ID            3
     RDB$FIELD_PRECISION             <null>
-    RDB$SECURITY_CLASS              SQL$149
+    RDB$SECURITY_CLASS              SQL$150
     RDB$OWNER_NAME                  SYSDBA
   """,
-  'substitutions': [('RDB\$DEFAULT_VALUE.*','')]
+  'substitutions': [
+    ('RDB\$DEFAULT_VALUE.*',''),
+    ('RDB\$SECURITY_CLASS              SQL\$.*','RDB\$SECURITY_CLASS              SQL\$')
+  ]
 }
 ]
 }
