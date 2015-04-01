@@ -1,0 +1,222 @@
+@echo off
+
+@rem #############################################################################################################
+@rem #########    U P G R A D E     F I R E B I R D     I N S A N C E S     F R O M    S N A P S H O T   #########
+@rem #############################################################################################################
+
+@rem This batch tries to:
+@rem 1. Stop all Firebird services which are specified in the setting variable %FB_SERVICES%.
+@rem 2. Remove client libraries (fbclient.ddl) before any further action (exit if this fails),
+@rem 3. For each of files from source snapshot folder %SNAPSHOT_DIR%,
+@rem    ***EXCEPT*** firebird.conf, databases.conf and security3.fdb, do:
+@rem    3.1. Try to remove file with the same name in the corresponding directory of Firebird, log if fault.
+@rem    3.2. In case of successfully removed file - copy it from %SNAPSHOT_DIR%
+@rem 4. Start all Firebird services.
+@rem 5. Obtain server versions via fbsvcmgr and display them.
+@rem 6. Check log of its own job for text about failed removals of old files and output it.
+
+
+setlocal enabledelayedexpansion enableextensions
+
+@rem List of Firebird services to be upgraded:
+set FB_SERVICES=fb30Cs fb30sC fb30sS
+
+@rem Folder where downloaded snapshot files are:
+set SNAPSHOT_DIR=C:\1INSTALL\FIREBIRD\snapshot_builds\30
+
+set log=%~n0.log
+del %log% 2>nul
+
+@rem #############################################################################################################
+@rem ##########################  T R Y I N G    T O    S T O P    S E R V I C E S  ###############################
+@rem #############################################################################################################
+for /d %%s in ( %FB_SERVICES% ) do (
+  echo %%s
+  @rem debug!
+  @rem sc start FirebirdServer%%s
+  @rem ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
+
+  sc query FirebirdServer%%s | findstr /i /c:"STOPPED" 1>nul 2>&1
+  if errorlevel 1 (
+    set msg=Stopping service FirebirdServer%%s
+    echo !msg!
+    echo.>>%log%
+    echo !msg!>>%log%
+    sc stop FirebirdServer%%s >>%log%
+    ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
+    echo After pause:>>%log%
+    sc query FirebirdServer%%s>>%log%
+    sc query FirebirdServer%%s | findstr /i /c:"STOPPED" 1>nul 2>&1
+    if errorlevel 1 (
+      set msg=CAN NOT STOP SERVICE! Job terminated.
+      echo !msg!
+      echo !msg!>>%log%
+      exit
+    ) else (
+      set msg=Service has been successfully stopped.
+      echo !msg!
+      echo !msg!>>%log%
+    )
+  ) else (
+    sc query FirebirdServer%%s>>%log%
+    set msg=Service already has been stopped.
+    echo !msg!
+    echo !msg!>>%log%
+  )
+)
+
+@rem #############################################################################################################
+@rem ####################  T R Y I N G    T O    D E L E T E    F B C L I E N T . D L L  #########################
+@rem #############################################################################################################
+
+for /d %%i in ( %FB_SERVICES% ) do (
+  del %~n0.err 2>nul
+
+  for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%i ^| findstr /i /c:"ImagePath"') do (
+    set fn=%%k
+    set fp=%%~dpk
+    set fp=!fp:~0,-1!
+    set msg=Home dir for %%i: !fp!
+    echo !msg!
+    echo !msg!>>%log%
+  )
+
+  set fn=!fp!\fbclient.dll
+  if exist !fn! (
+    set msg=Trying to delete !fn! - perhaps it can be loaded now by some app.
+    echo !msg!
+    echo !msg!>>%log%
+    del !fn! 2>%~n0.err
+    type %~n0.err>>%log%
+    for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
+    if .!errsize!.==.. set errsize=0
+    if !errsize! gtr 0 (
+       echo dir !fn!>>%log%
+       dir !fn! | findstr /i /c:fbclient.dll>>%log%
+       set msg=File !fn! can not be deleted. Batch terminated.
+       echo !msg!
+       echo !msg!>>%log%
+       del %~n0.err 2>nul
+       exit
+    )
+    set msg=File !fn! has been successfully deleted.
+    echo !msg!
+    echo !msg!>>%log%
+  ) else (
+    set msg=Client library !fn! does not exist. Skip trying to delete it.
+    echo !msg!
+    echo !msg!>>%log%
+  )
+)
+del %~n0.err 2>nul
+
+:m1
+
+@rem #############################################################################################################
+@rem #################  C O P Y I N G     A L L    F I L E S    F R O M     S N A P S H O T ######################
+@rem #############################################################################################################
+for /d %%i in ( %FB_SERVICES% ) do (
+  for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%i ^| findstr /i /c:"ImagePath"') do (
+    set fn=%%k
+    set fp=%%~dpk
+    set fp=!fp:~0,-1!
+
+    echo Copying files from %SNAPSHOT_DIR% to !fp!. . .
+    for /f %%a in ('dir /s /a-d /b %SNAPSHOT_DIR%') do (
+      @rem set fn=%%~da%%~pa%%a
+      set sn=%%a
+      set sp=%%~da%%~pa
+      set tp=!sn:%SNAPSHOT_DIR%\=%%~dpk!
+    
+      set skip=0
+      if /i "%%~nxa"=="firebird.conf" set skip=1
+      if /i "%%~nxa"=="databases.conf" set skip=1
+      if /i "%%~nxa"=="security3.fdb" set skip=1
+      if .!skip!.==.1. (
+        set msg=#################################### %%a - skipped>>%log%
+        echo !msg!
+        echo !msg!>>%log%
+      ) else (
+        del %~n0.err 2>nul
+        if exist !tp! (
+          set del_cmd=del !tp!
+          echo !del_cmd! 1>>%log%
+          cmd /c !del_cmd! 2>%~n0.err
+        )
+        for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
+        if .!errsize!.==.. set errsize=0
+        if !errsize! gtr 0 (
+          set msg=### FAILED TO EXECUTE ### !del_cmd! - replacement could be incompleted.
+          type %~n0.err>>%log%
+          echo !msg!
+          echo !msg!>>%log%
+        ) else (
+          set copy_cmd=copy !sn! !tp!
+          echo !copy_cmd!>>%log%
+          cmd /c !copy_cmd! 1>>%log% 2>&1
+        )
+      )
+    )
+  )
+)
+
+@rem #############################################################################################################
+@rem ################################   S T A R T I N G     S E R V I C E S    ###################################
+@rem #############################################################################################################
+for /d %%s in ( %FB_SERVICES% ) do (
+  set msg=Starting service FirebirdServer%%s
+  echo !msg!
+  echo.>>%log%
+  echo !msg!>>%log%
+  sc start FirebirdServer%%s 1>>%log% 2>&1
+  ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
+  echo After pause:>>%log%
+  sc query FirebirdServer%%s 1>>%log% 2>&1
+
+  sc query FirebirdServer%%s | findstr /i /c:"RUNNING" 1>nul 2>&1
+  if errorlevel 1 (
+    set msg=CAN NOT START SERVICE %%s
+  ) else (
+    set msg=Service has been successfully started.
+  )
+  echo !msg!
+  echo !msg!>>%log%
+
+)
+
+@rem #############################################################################################################
+@rem ###########################   O B T A I N    S E R V E R    V E R S I O N S   ###############################
+@rem #############################################################################################################
+for /d %%s in ( %FB_SERVICES% ) do (
+  for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%s ^| findstr /i /c:"ImagePath"') do (
+    set fn=%%k
+    set fp=%%~dpk
+    set fp=!fp:~0,-1!
+
+    set cmd_svc=!fp!\fbsvcmgr localhost:service_mgr user SYSDBA password masterke info_server_version
+    set msg=Trying to obtain server version for service %%s
+    echo !msg!
+    echo !msg!>>%log%
+    echo !cmd_svc!>>%log%
+    cmd /c !cmd_svc! 1>%~n0.err 2>&1
+    type %~n0.err
+    type %~n0.err>>%log%
+    del %~n0.err 2>nul
+  )
+)
+
+findstr /i /c:"FAILED TO EXECUTE" %log% 1>%~n0.err 2>nul
+if errorlevel 1 (
+  echo.
+  echo No faults occured during replacement files.
+) else (
+  echo.
+  echo ::: ACHTUNG :::
+  echo.
+  echo At least one file in some of target folders COULD NOT be replaced:
+  type %~n0.err
+)
+del %~n0.err 2>nul
+echo.
+echo Check log in the file: %log%
+echo.
