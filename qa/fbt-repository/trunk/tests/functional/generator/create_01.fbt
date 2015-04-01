@@ -63,7 +63,10 @@ TEST                                           9          <null>
     RDB$OWNER_NAME                  SYSDBA
     RDB$INITIAL_VALUE               0
     RDB$GENERATOR_INCREMENT         1
-  """
+  """,
+  'substitutions': [
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
+  ]
 }
 ]
 }
