@@ -2290,7 +2290,10 @@ GB_2312                         <null>                                          
     RDB$BYTES_PER_CHARACTER         4
     RDB$SECURITY_CLASS              SQL$212
     RDB$OWNER_NAME                  SYSDBA
-  """
+  """,
+  'substitutions': [
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
+  ]
 }
 ]
 }

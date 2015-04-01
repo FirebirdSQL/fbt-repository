@@ -14457,7 +14457,7 @@ RDB$FIELD_PRECISION             <null>                                      <nul
   """,
   'substitutions': [
     ('RDB\$DEFAULT_VALUE.*',''),
-    ('RDB\$SECURITY_CLASS              SQL\$.*','RDB\$SECURITY_CLASS              SQL\$')
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
   ]
 }
 ]

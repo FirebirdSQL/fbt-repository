@@ -65,7 +65,9 @@
     RDB$CHARACTER_SET_NAME          NONE
     RDB$LINGER                      <null>
   """,
-  'substitutions': [('RDB\$SECURITY_CLASS              SQL\$.*','RDB\$SECURITY_CLASS              SQL\$')]
+  'substitutions': [
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
+  ]
 }
 ]
 }

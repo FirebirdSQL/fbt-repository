@@ -213,7 +213,10 @@ RDB$TRIGGER_NAME                               8               1
     RDB$INITIAL_VALUE               0
     RDB$GENERATOR_INCREMENT         0
   """,
-  'substitutions': [('RDB\$DESCRIPTION.*','')]
+  'substitutions': [
+    ('RDB\$DESCRIPTION.*',''),
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
+   ]
 }
 ]
 }
