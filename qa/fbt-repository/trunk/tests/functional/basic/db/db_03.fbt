@@ -6575,7 +6575,8 @@ GB_2312                                        0                   57           
   """,
  'substitutions': [
     ('RDB\$SPECIFIC_ATTRIBUTES.*',''),
-    ('COLL-VERSION=58\.0\.6\.[0-9][0-9]','COLL-VERSION=58.0.6.xx')
+    ('COLL-VERSION=58\.0\.6\.[0-9][0-9]','COLL-VERSION=58.0.6.xx'),
+    ('RDB\$SECURITY_CLASS              SQL\$.*','RDB\$SECURITY_CLASS              SQL\$')
     ]
 }
 ]
