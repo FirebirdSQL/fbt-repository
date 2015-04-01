@@ -208,7 +208,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$2
+    RDB$SECURITY_CLASS              SQL$2                                                                                        
     RDB$ACL                         9:1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -216,7 +216,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$3
+    RDB$SECURITY_CLASS              SQL$3                                                                                        
     RDB$ACL                         9:2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -224,7 +224,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$4
+    RDB$SECURITY_CLASS              SQL$4                                                                                        
     RDB$ACL                         9:3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -232,7 +232,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$5
+    RDB$SECURITY_CLASS              SQL$5                                                                                        
     RDB$ACL                         9:4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -240,7 +240,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$6
+    RDB$SECURITY_CLASS              SQL$6                                                                                        
     RDB$ACL                         9:5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -248,7 +248,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$7
+    RDB$SECURITY_CLASS              SQL$7                                                                                        
     RDB$ACL                         9:6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -256,7 +256,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$8
+    RDB$SECURITY_CLASS              SQL$8                                                                                        
     RDB$ACL                         9:7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -264,7 +264,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$9
+    RDB$SECURITY_CLASS              SQL$9                                                                                        
     RDB$ACL                         9:8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -272,7 +272,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$10
+    RDB$SECURITY_CLASS              SQL$10                                                                                       
     RDB$ACL                         9:9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -280,7 +280,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$11
+    RDB$SECURITY_CLASS              SQL$11                                                                                       
     RDB$ACL                         9:a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -288,7 +288,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$12
+    RDB$SECURITY_CLASS              SQL$12                                                                                       
     RDB$ACL                         9:b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -296,7 +296,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$13
+    RDB$SECURITY_CLASS              SQL$13                                                                                       
     RDB$ACL                         9:c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -304,7 +304,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$14
+    RDB$SECURITY_CLASS              SQL$14                                                                                       
     RDB$ACL                         9:d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -312,7 +312,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$15
+    RDB$SECURITY_CLASS              SQL$15                                                                                       
     RDB$ACL                         9:e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -320,7 +320,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$16
+    RDB$SECURITY_CLASS              SQL$16                                                                                       
     RDB$ACL                         9:f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -328,7 +328,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$17
+    RDB$SECURITY_CLASS              SQL$17                                                                                       
     RDB$ACL                         9:10
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -336,7 +336,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$18
+    RDB$SECURITY_CLASS              SQL$18                                                                                       
     RDB$ACL                         9:11
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -344,7 +344,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$19
+    RDB$SECURITY_CLASS              SQL$19                                                                                       
     RDB$ACL                         9:12
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -352,7 +352,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$20
+    RDB$SECURITY_CLASS              SQL$20                                                                                       
     RDB$ACL                         9:13
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -360,7 +360,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$21
+    RDB$SECURITY_CLASS              SQL$21                                                                                       
     RDB$ACL                         9:14
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -368,7 +368,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$22
+    RDB$SECURITY_CLASS              SQL$22                                                                                       
     RDB$ACL                         9:15
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -376,7 +376,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$23
+    RDB$SECURITY_CLASS              SQL$23                                                                                       
     RDB$ACL                         9:16
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -384,7 +384,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$24
+    RDB$SECURITY_CLASS              SQL$24                                                                                       
     RDB$ACL                         9:17
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -392,7 +392,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$25
+    RDB$SECURITY_CLASS              SQL$25                                                                                       
     RDB$ACL                         9:18
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -400,7 +400,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$26
+    RDB$SECURITY_CLASS              SQL$26                                                                                       
     RDB$ACL                         9:19
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -408,7 +408,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$27
+    RDB$SECURITY_CLASS              SQL$27                                                                                       
     RDB$ACL                         9:1a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -416,7 +416,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$28
+    RDB$SECURITY_CLASS              SQL$28                                                                                       
     RDB$ACL                         9:1b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -424,7 +424,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$29
+    RDB$SECURITY_CLASS              SQL$29                                                                                       
     RDB$ACL                         9:1c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -432,7 +432,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$30
+    RDB$SECURITY_CLASS              SQL$30                                                                                       
     RDB$ACL                         9:1d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -440,7 +440,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$31
+    RDB$SECURITY_CLASS              SQL$31                                                                                       
     RDB$ACL                         9:1e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -448,7 +448,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$32
+    RDB$SECURITY_CLASS              SQL$32                                                                                       
     RDB$ACL                         9:1f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -456,7 +456,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$33
+    RDB$SECURITY_CLASS              SQL$33                                                                                       
     RDB$ACL                         9:20
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -464,7 +464,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$34
+    RDB$SECURITY_CLASS              SQL$34                                                                                       
     RDB$ACL                         9:21
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -472,7 +472,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$35
+    RDB$SECURITY_CLASS              SQL$35                                                                                       
     RDB$ACL                         9:22
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -480,7 +480,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$36
+    RDB$SECURITY_CLASS              SQL$36                                                                                       
     RDB$ACL                         9:23
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -488,7 +488,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$37
+    RDB$SECURITY_CLASS              SQL$37                                                                                       
     RDB$ACL                         9:24
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -496,7 +496,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$38
+    RDB$SECURITY_CLASS              SQL$38                                                                                       
     RDB$ACL                         9:25
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -504,7 +504,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$39
+    RDB$SECURITY_CLASS              SQL$39                                                                                       
     RDB$ACL                         9:26
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -512,7 +512,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$40
+    RDB$SECURITY_CLASS              SQL$40                                                                                       
     RDB$ACL                         9:27
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -520,7 +520,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$41
+    RDB$SECURITY_CLASS              SQL$41                                                                                       
     RDB$ACL                         9:28
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -528,7 +528,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$42
+    RDB$SECURITY_CLASS              SQL$42                                                                                       
     RDB$ACL                         9:29
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -536,7 +536,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$43
+    RDB$SECURITY_CLASS              SQL$43                                                                                       
     RDB$ACL                         9:2a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -544,7 +544,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$44
+    RDB$SECURITY_CLASS              SQL$44                                                                                       
     RDB$ACL                         9:2b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -552,7 +552,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$45
+    RDB$SECURITY_CLASS              SQL$45                                                                                       
     RDB$ACL                         9:2c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -560,7 +560,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$46
+    RDB$SECURITY_CLASS              SQL$46                                                                                       
     RDB$ACL                         9:2d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -568,7 +568,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$47
+    RDB$SECURITY_CLASS              SQL$47                                                                                       
     RDB$ACL                         9:2e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -576,7 +576,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$48
+    RDB$SECURITY_CLASS              SQL$48                                                                                       
     RDB$ACL                         9:2f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -584,7 +584,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$49
+    RDB$SECURITY_CLASS              SQL$49                                                                                       
     RDB$ACL                         9:30
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -592,7 +592,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$50
+    RDB$SECURITY_CLASS              SQL$50                                                                                       
     RDB$ACL                         9:31
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -600,7 +600,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$51
+    RDB$SECURITY_CLASS              SQL$51                                                                                       
     RDB$ACL                         9:32
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -608,7 +608,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$52
+    RDB$SECURITY_CLASS              SQL$52                                                                                       
     RDB$ACL                         9:33
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -616,7 +616,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$53
+    RDB$SECURITY_CLASS              SQL$53                                                                                       
     RDB$ACL                         9:34
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -624,7 +624,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$54
+    RDB$SECURITY_CLASS              SQL$54                                                                                       
     RDB$ACL                         9:35
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -632,7 +632,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$55
+    RDB$SECURITY_CLASS              SQL$55                                                                                       
     RDB$ACL                         9:36
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -640,7 +640,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$56
+    RDB$SECURITY_CLASS              SQL$56                                                                                       
     RDB$ACL                         9:37
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -648,7 +648,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$57
+    RDB$SECURITY_CLASS              SQL$57                                                                                       
     RDB$ACL                         9:38
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -656,7 +656,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$58
+    RDB$SECURITY_CLASS              SQL$58                                                                                       
     RDB$ACL                         9:39
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -664,7 +664,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$59
+    RDB$SECURITY_CLASS              SQL$59                                                                                       
     RDB$ACL                         9:3a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -672,7 +672,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$60
+    RDB$SECURITY_CLASS              SQL$60                                                                                       
     RDB$ACL                         9:3b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -680,7 +680,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$61
+    RDB$SECURITY_CLASS              SQL$61                                                                                       
     RDB$ACL                         9:3c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -688,7 +688,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$62
+    RDB$SECURITY_CLASS              SQL$62                                                                                       
     RDB$ACL                         9:3d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -696,7 +696,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$63
+    RDB$SECURITY_CLASS              SQL$63                                                                                       
     RDB$ACL                         9:3e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -704,7 +704,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$64
+    RDB$SECURITY_CLASS              SQL$64                                                                                       
     RDB$ACL                         9:3f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -712,7 +712,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$65
+    RDB$SECURITY_CLASS              SQL$65                                                                                       
     RDB$ACL                         9:40
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -720,7 +720,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$66
+    RDB$SECURITY_CLASS              SQL$66                                                                                       
     RDB$ACL                         9:41
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -728,7 +728,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$67
+    RDB$SECURITY_CLASS              SQL$67                                                                                       
     RDB$ACL                         9:42
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -736,7 +736,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$68
+    RDB$SECURITY_CLASS              SQL$68                                                                                       
     RDB$ACL                         9:2cd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -744,7 +744,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$69
+    RDB$SECURITY_CLASS              SQL$69                                                                                       
     RDB$ACL                         9:2ce
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -752,7 +752,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$70
+    RDB$SECURITY_CLASS              SQL$70                                                                                       
     RDB$ACL                         9:2cf
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -760,7 +760,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$71
+    RDB$SECURITY_CLASS              SQL$71                                                                                       
     RDB$ACL                         9:2d0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -768,7 +768,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$72
+    RDB$SECURITY_CLASS              SQL$72                                                                                       
     RDB$ACL                         9:2d1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -776,7 +776,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$73
+    RDB$SECURITY_CLASS              SQL$73                                                                                       
     RDB$ACL                         9:2d2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -784,7 +784,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$74
+    RDB$SECURITY_CLASS              SQL$74                                                                                       
     RDB$ACL                         9:2d3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -792,7 +792,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$75
+    RDB$SECURITY_CLASS              SQL$75                                                                                       
     RDB$ACL                         9:2d4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -800,7 +800,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$76
+    RDB$SECURITY_CLASS              SQL$76                                                                                       
     RDB$ACL                         9:2d5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -808,7 +808,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$77
+    RDB$SECURITY_CLASS              SQL$77                                                                                       
     RDB$ACL                         9:2d6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -816,7 +816,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$78
+    RDB$SECURITY_CLASS              SQL$78                                                                                       
     RDB$ACL                         9:2d7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -824,7 +824,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$79
+    RDB$SECURITY_CLASS              SQL$79                                                                                       
     RDB$ACL                         9:2d8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -832,7 +832,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$80
+    RDB$SECURITY_CLASS              SQL$80                                                                                       
     RDB$ACL                         9:2d9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -840,7 +840,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$81
+    RDB$SECURITY_CLASS              SQL$81                                                                                       
     RDB$ACL                         9:2da
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -848,7 +848,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$82
+    RDB$SECURITY_CLASS              SQL$82                                                                                       
     RDB$ACL                         9:2db
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -856,7 +856,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$83
+    RDB$SECURITY_CLASS              SQL$83                                                                                       
     RDB$ACL                         9:2dc
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -864,7 +864,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$84
+    RDB$SECURITY_CLASS              SQL$84                                                                                       
     RDB$ACL                         9:2dd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -872,7 +872,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$85
+    RDB$SECURITY_CLASS              SQL$85                                                                                       
     RDB$ACL                         9:2de
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -880,7 +880,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$86
+    RDB$SECURITY_CLASS              SQL$86                                                                                       
     RDB$ACL                         9:2df
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -888,7 +888,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$87
+    RDB$SECURITY_CLASS              SQL$87                                                                                       
     RDB$ACL                         9:2e0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -896,7 +896,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$88
+    RDB$SECURITY_CLASS              SQL$88                                                                                       
     RDB$ACL                         9:2e1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -904,7 +904,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$89
+    RDB$SECURITY_CLASS              SQL$89                                                                                       
     RDB$ACL                         9:2e2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -912,7 +912,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$90
+    RDB$SECURITY_CLASS              SQL$90                                                                                       
     RDB$ACL                         9:2e3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -920,7 +920,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$91
+    RDB$SECURITY_CLASS              SQL$91                                                                                       
     RDB$ACL                         9:2e4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -928,7 +928,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$92
+    RDB$SECURITY_CLASS              SQL$92                                                                                       
     RDB$ACL                         9:2e5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -936,7 +936,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$93
+    RDB$SECURITY_CLASS              SQL$93                                                                                       
     RDB$ACL                         9:2e6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -944,7 +944,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$94
+    RDB$SECURITY_CLASS              SQL$94                                                                                       
     RDB$ACL                         9:2e7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -952,7 +952,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$95
+    RDB$SECURITY_CLASS              SQL$95                                                                                       
     RDB$ACL                         9:2e8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -960,7 +960,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$96
+    RDB$SECURITY_CLASS              SQL$96                                                                                       
     RDB$ACL                         9:2e9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -968,7 +968,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$97
+    RDB$SECURITY_CLASS              SQL$97                                                                                       
     RDB$ACL                         9:2ea
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -976,7 +976,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$98
+    RDB$SECURITY_CLASS              SQL$98                                                                                       
     RDB$ACL                         9:2eb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -984,7 +984,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$99
+    RDB$SECURITY_CLASS              SQL$99                                                                                       
     RDB$ACL                         9:2ec
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -992,7 +992,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$100
+    RDB$SECURITY_CLASS              SQL$100                                                                                      
     RDB$ACL                         9:2ed
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1000,7 +1000,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$101
+    RDB$SECURITY_CLASS              SQL$101                                                                                      
     RDB$ACL                         9:2ee
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1008,7 +1008,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$102
+    RDB$SECURITY_CLASS              SQL$102                                                                                      
     RDB$ACL                         9:2ef
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1016,7 +1016,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$103
+    RDB$SECURITY_CLASS              SQL$103                                                                                      
     RDB$ACL                         9:2f0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1024,7 +1024,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$104
+    RDB$SECURITY_CLASS              SQL$104                                                                                      
     RDB$ACL                         9:2f1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1032,7 +1032,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$105
+    RDB$SECURITY_CLASS              SQL$105                                                                                      
     RDB$ACL                         9:2f2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1040,7 +1040,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$106
+    RDB$SECURITY_CLASS              SQL$106                                                                                      
     RDB$ACL                         9:2f3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1048,7 +1048,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$107
+    RDB$SECURITY_CLASS              SQL$107                                                                                      
     RDB$ACL                         9:2f4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1056,7 +1056,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$108
+    RDB$SECURITY_CLASS              SQL$108                                                                                      
     RDB$ACL                         9:2f5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1064,7 +1064,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$109
+    RDB$SECURITY_CLASS              SQL$109                                                                                      
     RDB$ACL                         9:2f6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1072,7 +1072,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$110
+    RDB$SECURITY_CLASS              SQL$110                                                                                      
     RDB$ACL                         9:2f7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1080,7 +1080,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$111
+    RDB$SECURITY_CLASS              SQL$111                                                                                      
     RDB$ACL                         9:2f8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1088,7 +1088,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$112
+    RDB$SECURITY_CLASS              SQL$112                                                                                      
     RDB$ACL                         9:2f9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1096,7 +1096,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$113
+    RDB$SECURITY_CLASS              SQL$113                                                                                      
     RDB$ACL                         9:2fa
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1104,7 +1104,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$114
+    RDB$SECURITY_CLASS              SQL$114                                                                                      
     RDB$ACL                         9:2fb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1112,7 +1112,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$115
+    RDB$SECURITY_CLASS              SQL$115                                                                                      
     RDB$ACL                         9:2fc
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1120,7 +1120,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$116
+    RDB$SECURITY_CLASS              SQL$116                                                                                      
     RDB$ACL                         9:2fd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1128,7 +1128,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$117
+    RDB$SECURITY_CLASS              SQL$117                                                                                      
     RDB$ACL                         9:2fe
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1136,7 +1136,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$118
+    RDB$SECURITY_CLASS              SQL$118                                                                                      
     RDB$ACL                         9:2ff
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1144,7 +1144,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$119
+    RDB$SECURITY_CLASS              SQL$119                                                                                      
     RDB$ACL                         9:300
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1152,7 +1152,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$120
+    RDB$SECURITY_CLASS              SQL$120                                                                                      
     RDB$ACL                         9:301
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1160,7 +1160,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$121
+    RDB$SECURITY_CLASS              SQL$121                                                                                      
     RDB$ACL                         9:302
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1168,7 +1168,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$122
+    RDB$SECURITY_CLASS              SQL$122                                                                                      
     RDB$ACL                         9:303
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1176,7 +1176,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$123
+    RDB$SECURITY_CLASS              SQL$123                                                                                      
     RDB$ACL                         9:304
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1184,7 +1184,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$124
+    RDB$SECURITY_CLASS              SQL$124                                                                                      
     RDB$ACL                         9:305
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1192,7 +1192,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$125
+    RDB$SECURITY_CLASS              SQL$125                                                                                      
     RDB$ACL                         9:306
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1200,7 +1200,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$126
+    RDB$SECURITY_CLASS              SQL$126                                                                                      
     RDB$ACL                         9:307
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1208,7 +1208,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$127
+    RDB$SECURITY_CLASS              SQL$127                                                                                      
     RDB$ACL                         9:308
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1216,7 +1216,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$128
+    RDB$SECURITY_CLASS              SQL$128                                                                                      
     RDB$ACL                         9:309
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1224,7 +1224,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$129
+    RDB$SECURITY_CLASS              SQL$129                                                                                      
     RDB$ACL                         9:30a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1232,7 +1232,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$130
+    RDB$SECURITY_CLASS              SQL$130                                                                                      
     RDB$ACL                         9:30b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1240,7 +1240,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$131
+    RDB$SECURITY_CLASS              SQL$131                                                                                      
     RDB$ACL                         9:30c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1248,7 +1248,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$132
+    RDB$SECURITY_CLASS              SQL$132                                                                                      
     RDB$ACL                         9:30d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1256,7 +1256,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$133
+    RDB$SECURITY_CLASS              SQL$133                                                                                      
     RDB$ACL                         9:30e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1264,7 +1264,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$134
+    RDB$SECURITY_CLASS              SQL$134                                                                                      
     RDB$ACL                         9:30f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1272,7 +1272,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$135
+    RDB$SECURITY_CLASS              SQL$135                                                                                      
     RDB$ACL                         9:4ab
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1280,7 +1280,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$136
+    RDB$SECURITY_CLASS              SQL$136                                                                                      
     RDB$ACL                         9:4ac
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1288,7 +1288,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$137
+    RDB$SECURITY_CLASS              SQL$137                                                                                      
     RDB$ACL                         9:4ad
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1296,7 +1296,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$138
+    RDB$SECURITY_CLASS              SQL$138                                                                                      
     RDB$ACL                         9:4ae
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1304,7 +1304,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$139
+    RDB$SECURITY_CLASS              SQL$139                                                                                      
     RDB$ACL                         9:4af
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1312,7 +1312,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$140
+    RDB$SECURITY_CLASS              SQL$140                                                                                      
     RDB$ACL                         9:4b0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1320,7 +1320,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$141
+    RDB$SECURITY_CLASS              SQL$141                                                                                      
     RDB$ACL                         9:4b1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1328,7 +1328,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$142
+    RDB$SECURITY_CLASS              SQL$142                                                                                      
     RDB$ACL                         9:4b2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1336,7 +1336,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$143
+    RDB$SECURITY_CLASS              SQL$143                                                                                      
     RDB$ACL                         9:4b3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1344,7 +1344,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$144
+    RDB$SECURITY_CLASS              SQL$144                                                                                      
     RDB$ACL                         9:4b4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1352,7 +1352,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$145
+    RDB$SECURITY_CLASS              SQL$145                                                                                      
     RDB$ACL                         9:4b5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1360,7 +1360,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$146
+    RDB$SECURITY_CLASS              SQL$146                                                                                      
     RDB$ACL                         9:4b6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1368,7 +1368,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$147
+    RDB$SECURITY_CLASS              SQL$147                                                                                      
     RDB$ACL                         9:4b7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1376,7 +1376,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$148
+    RDB$SECURITY_CLASS              SQL$148                                                                                      
     RDB$ACL                         9:4b8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1384,7 +1384,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$149
+    RDB$SECURITY_CLASS              SQL$149                                                                                      
     RDB$ACL                         9:4b9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1392,7 +1392,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$150
+    RDB$SECURITY_CLASS              SQL$150                                                                                      
     RDB$ACL                         9:4ba
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1400,7 +1400,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$151
+    RDB$SECURITY_CLASS              SQL$151                                                                                      
     RDB$ACL                         9:4bb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1408,7 +1408,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$152
+    RDB$SECURITY_CLASS              SQL$152                                                                                      
     RDB$ACL                         9:4bc
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1416,7 +1416,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$153
+    RDB$SECURITY_CLASS              SQL$153                                                                                      
     RDB$ACL                         9:4bd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1424,7 +1424,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$154
+    RDB$SECURITY_CLASS              SQL$154                                                                                      
     RDB$ACL                         9:4be
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1432,7 +1432,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$155
+    RDB$SECURITY_CLASS              SQL$155                                                                                      
     RDB$ACL                         9:4bf
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1440,7 +1440,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$156
+    RDB$SECURITY_CLASS              SQL$156                                                                                      
     RDB$ACL                         9:4c0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1448,7 +1448,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$157
+    RDB$SECURITY_CLASS              SQL$157                                                                                      
     RDB$ACL                         9:4c1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1456,7 +1456,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$158
+    RDB$SECURITY_CLASS              SQL$158                                                                                      
     RDB$ACL                         9:4c2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1464,7 +1464,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$159
+    RDB$SECURITY_CLASS              SQL$159                                                                                      
     RDB$ACL                         9:4c3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1472,7 +1472,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$160
+    RDB$SECURITY_CLASS              SQL$160                                                                                      
     RDB$ACL                         9:4c4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1480,7 +1480,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$161
+    RDB$SECURITY_CLASS              SQL$161                                                                                      
     RDB$ACL                         9:4c5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1488,7 +1488,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$162
+    RDB$SECURITY_CLASS              SQL$162                                                                                      
     RDB$ACL                         9:4c6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1496,7 +1496,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$163
+    RDB$SECURITY_CLASS              SQL$163                                                                                      
     RDB$ACL                         9:4c7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1504,7 +1504,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$164
+    RDB$SECURITY_CLASS              SQL$164                                                                                      
     RDB$ACL                         9:4c8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1512,7 +1512,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$165
+    RDB$SECURITY_CLASS              SQL$165                                                                                      
     RDB$ACL                         9:4c9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1520,7 +1520,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$166
+    RDB$SECURITY_CLASS              SQL$166                                                                                      
     RDB$ACL                         9:4ca
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1528,7 +1528,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$167
+    RDB$SECURITY_CLASS              SQL$167                                                                                      
     RDB$ACL                         9:4cb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1536,7 +1536,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$168
+    RDB$SECURITY_CLASS              SQL$168                                                                                      
     RDB$ACL                         9:4cc
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1544,7 +1544,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$169
+    RDB$SECURITY_CLASS              SQL$169                                                                                      
     RDB$ACL                         9:4cd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1552,7 +1552,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$170
+    RDB$SECURITY_CLASS              SQL$170                                                                                      
     RDB$ACL                         9:4ce
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1560,7 +1560,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$171
+    RDB$SECURITY_CLASS              SQL$171                                                                                      
     RDB$ACL                         9:4cf
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1568,7 +1568,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$172
+    RDB$SECURITY_CLASS              SQL$172                                                                                      
     RDB$ACL                         9:4d0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1576,7 +1576,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$173
+    RDB$SECURITY_CLASS              SQL$173                                                                                      
     RDB$ACL                         9:4d1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1584,7 +1584,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$174
+    RDB$SECURITY_CLASS              SQL$174                                                                                      
     RDB$ACL                         9:4d2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1592,7 +1592,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$175
+    RDB$SECURITY_CLASS              SQL$175                                                                                      
     RDB$ACL                         9:4d3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1600,7 +1600,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$176
+    RDB$SECURITY_CLASS              SQL$176                                                                                      
     RDB$ACL                         9:4d4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1608,7 +1608,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$177
+    RDB$SECURITY_CLASS              SQL$177                                                                                      
     RDB$ACL                         9:4d5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1616,7 +1616,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$178
+    RDB$SECURITY_CLASS              SQL$178                                                                                      
     RDB$ACL                         9:4d6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1624,7 +1624,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$179
+    RDB$SECURITY_CLASS              SQL$179                                                                                      
     RDB$ACL                         9:4d7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1632,7 +1632,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$180
+    RDB$SECURITY_CLASS              SQL$180                                                                                      
     RDB$ACL                         9:4d8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1640,7 +1640,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$181
+    RDB$SECURITY_CLASS              SQL$181                                                                                      
     RDB$ACL                         9:4d9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1648,7 +1648,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$182
+    RDB$SECURITY_CLASS              SQL$182                                                                                      
     RDB$ACL                         9:4da
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1656,7 +1656,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$183
+    RDB$SECURITY_CLASS              SQL$183                                                                                      
     RDB$ACL                         9:4db
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1664,7 +1664,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$184
+    RDB$SECURITY_CLASS              SQL$184                                                                                      
     RDB$ACL                         9:4dc
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1672,7 +1672,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$185
+    RDB$SECURITY_CLASS              SQL$185                                                                                      
     RDB$ACL                         9:4dd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1680,7 +1680,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$186
+    RDB$SECURITY_CLASS              SQL$186                                                                                      
     RDB$ACL                         9:4de
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1688,7 +1688,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$187
+    RDB$SECURITY_CLASS              SQL$187                                                                                      
     RDB$ACL                         9:4df
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1696,7 +1696,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$188
+    RDB$SECURITY_CLASS              SQL$188                                                                                      
     RDB$ACL                         9:4e0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1704,7 +1704,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$189
+    RDB$SECURITY_CLASS              SQL$189                                                                                      
     RDB$ACL                         9:4e1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1712,7 +1712,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$190
+    RDB$SECURITY_CLASS              SQL$190                                                                                      
     RDB$ACL                         9:4e2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1720,7 +1720,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$191
+    RDB$SECURITY_CLASS              SQL$191                                                                                      
     RDB$ACL                         9:4e3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1728,7 +1728,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$192
+    RDB$SECURITY_CLASS              SQL$192                                                                                      
     RDB$ACL                         9:4e4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1736,7 +1736,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$193
+    RDB$SECURITY_CLASS              SQL$193                                                                                      
     RDB$ACL                         9:4e5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1744,7 +1744,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$194
+    RDB$SECURITY_CLASS              SQL$194                                                                                      
     RDB$ACL                         9:4e6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1752,7 +1752,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$195
+    RDB$SECURITY_CLASS              SQL$195                                                                                      
     RDB$ACL                         9:4e7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1760,7 +1760,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$196
+    RDB$SECURITY_CLASS              SQL$196                                                                                      
     RDB$ACL                         9:4e8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1768,7 +1768,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$197
+    RDB$SECURITY_CLASS              SQL$197                                                                                      
     RDB$ACL                         9:4e9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1776,7 +1776,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$198
+    RDB$SECURITY_CLASS              SQL$198                                                                                      
     RDB$ACL                         9:4ea
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1784,7 +1784,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$199
+    RDB$SECURITY_CLASS              SQL$199                                                                                      
     RDB$ACL                         9:4eb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1792,7 +1792,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$200
+    RDB$SECURITY_CLASS              SQL$200                                                                                      
     RDB$ACL                         9:4ec
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1800,7 +1800,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$201
+    RDB$SECURITY_CLASS              SQL$201                                                                                      
     RDB$ACL                         9:4ed
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1808,7 +1808,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$202
+    RDB$SECURITY_CLASS              SQL$202                                                                                      
     RDB$ACL                         9:689
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1816,7 +1816,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$203
+    RDB$SECURITY_CLASS              SQL$203                                                                                      
     RDB$ACL                         9:68a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1824,7 +1824,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$204
+    RDB$SECURITY_CLASS              SQL$204                                                                                      
     RDB$ACL                         9:68b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1832,7 +1832,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$205
+    RDB$SECURITY_CLASS              SQL$205                                                                                      
     RDB$ACL                         9:68c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1840,7 +1840,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$206
+    RDB$SECURITY_CLASS              SQL$206                                                                                      
     RDB$ACL                         9:68d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1848,7 +1848,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$207
+    RDB$SECURITY_CLASS              SQL$207                                                                                      
     RDB$ACL                         9:68e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1856,7 +1856,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$208
+    RDB$SECURITY_CLASS              SQL$208                                                                                      
     RDB$ACL                         9:68f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1864,7 +1864,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$209
+    RDB$SECURITY_CLASS              SQL$209                                                                                      
     RDB$ACL                         9:690
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1872,7 +1872,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$210
+    RDB$SECURITY_CLASS              SQL$210                                                                                      
     RDB$ACL                         9:691
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1880,7 +1880,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$211
+    RDB$SECURITY_CLASS              SQL$211                                                                                      
     RDB$ACL                         9:692
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1888,7 +1888,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$212
+    RDB$SECURITY_CLASS              SQL$212                                                                                      
     RDB$ACL                         9:693
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1896,7 +1896,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$213
+    RDB$SECURITY_CLASS              SQL$213                                                                                      
     RDB$ACL                         9:694
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1904,7 +1904,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$214
+    RDB$SECURITY_CLASS              SQL$214                                                                                      
     RDB$ACL                         9:695
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1912,7 +1912,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$215
+    RDB$SECURITY_CLASS              SQL$215                                                                                      
     RDB$ACL                         9:696
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1920,7 +1920,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$216
+    RDB$SECURITY_CLASS              SQL$216                                                                                      
     RDB$ACL                         9:697
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1928,7 +1928,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$217
+    RDB$SECURITY_CLASS              SQL$217                                                                                      
     RDB$ACL                         9:698
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1936,7 +1936,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$218
+    RDB$SECURITY_CLASS              SQL$218                                                                                      
     RDB$ACL                         9:699
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1944,7 +1944,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$219
+    RDB$SECURITY_CLASS              SQL$219                                                                                      
     RDB$ACL                         9:69a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1952,7 +1952,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$220
+    RDB$SECURITY_CLASS              SQL$220                                                                                      
     RDB$ACL                         9:69b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1960,7 +1960,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$221
+    RDB$SECURITY_CLASS              SQL$221                                                                                      
     RDB$ACL                         9:69c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1968,7 +1968,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$222
+    RDB$SECURITY_CLASS              SQL$222                                                                                      
     RDB$ACL                         9:69d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1976,7 +1976,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$223
+    RDB$SECURITY_CLASS              SQL$223                                                                                      
     RDB$ACL                         9:69e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1984,7 +1984,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$224
+    RDB$SECURITY_CLASS              SQL$224                                                                                      
     RDB$ACL                         9:69f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -1992,7 +1992,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$225
+    RDB$SECURITY_CLASS              SQL$225                                                                                      
     RDB$ACL                         9:6a0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2000,7 +2000,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$226
+    RDB$SECURITY_CLASS              SQL$226                                                                                      
     RDB$ACL                         9:6a1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2008,7 +2008,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$227
+    RDB$SECURITY_CLASS              SQL$227                                                                                      
     RDB$ACL                         9:6a2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2016,7 +2016,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$228
+    RDB$SECURITY_CLASS              SQL$228                                                                                      
     RDB$ACL                         9:6a3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2024,7 +2024,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$229
+    RDB$SECURITY_CLASS              SQL$229                                                                                      
     RDB$ACL                         9:6a4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2032,7 +2032,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$230
+    RDB$SECURITY_CLASS              SQL$230                                                                                      
     RDB$ACL                         9:6a5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2040,7 +2040,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$231
+    RDB$SECURITY_CLASS              SQL$231                                                                                      
     RDB$ACL                         9:6a6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2048,7 +2048,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$232
+    RDB$SECURITY_CLASS              SQL$232                                                                                      
     RDB$ACL                         9:6a7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2056,7 +2056,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$233
+    RDB$SECURITY_CLASS              SQL$233                                                                                      
     RDB$ACL                         9:6a8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2064,7 +2064,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$234
+    RDB$SECURITY_CLASS              SQL$234                                                                                      
     RDB$ACL                         9:6a9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2072,7 +2072,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$235
+    RDB$SECURITY_CLASS              SQL$235                                                                                      
     RDB$ACL                         9:6aa
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2080,7 +2080,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$236
+    RDB$SECURITY_CLASS              SQL$236                                                                                      
     RDB$ACL                         9:6ab
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2088,7 +2088,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$237
+    RDB$SECURITY_CLASS              SQL$237                                                                                      
     RDB$ACL                         9:6ac
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2096,7 +2096,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$238
+    RDB$SECURITY_CLASS              SQL$238                                                                                      
     RDB$ACL                         9:6ad
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2104,7 +2104,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$239
+    RDB$SECURITY_CLASS              SQL$239                                                                                      
     RDB$ACL                         9:6ae
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2112,7 +2112,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$240
+    RDB$SECURITY_CLASS              SQL$240                                                                                      
     RDB$ACL                         9:6af
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2120,7 +2120,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$241
+    RDB$SECURITY_CLASS              SQL$241                                                                                      
     RDB$ACL                         9:6b0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2128,7 +2128,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$242
+    RDB$SECURITY_CLASS              SQL$242                                                                                      
     RDB$ACL                         9:6b1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2136,7 +2136,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$243
+    RDB$SECURITY_CLASS              SQL$243                                                                                      
     RDB$ACL                         9:6b2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2144,7 +2144,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$244
+    RDB$SECURITY_CLASS              SQL$244                                                                                      
     RDB$ACL                         9:6b3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2152,7 +2152,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$245
+    RDB$SECURITY_CLASS              SQL$245                                                                                      
     RDB$ACL                         9:6b4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2160,7 +2160,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$246
+    RDB$SECURITY_CLASS              SQL$246                                                                                      
     RDB$ACL                         9:6b5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2168,7 +2168,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$247
+    RDB$SECURITY_CLASS              SQL$247                                                                                      
     RDB$ACL                         9:6b6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2176,7 +2176,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$248
+    RDB$SECURITY_CLASS              SQL$248                                                                                      
     RDB$ACL                         9:6b7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2184,7 +2184,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$249
+    RDB$SECURITY_CLASS              SQL$249                                                                                      
     RDB$ACL                         9:6b8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2192,7 +2192,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$250
+    RDB$SECURITY_CLASS              SQL$250                                                                                      
     RDB$ACL                         9:6b9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2200,7 +2200,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$251
+    RDB$SECURITY_CLASS              SQL$251                                                                                      
     RDB$ACL                         9:6ba
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2208,7 +2208,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$252
+    RDB$SECURITY_CLASS              SQL$252                                                                                      
     RDB$ACL                         9:6bb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2216,7 +2216,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$253
+    RDB$SECURITY_CLASS              SQL$253                                                                                      
     RDB$ACL                         9:6bc
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2224,7 +2224,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$254
+    RDB$SECURITY_CLASS              SQL$254                                                                                      
     RDB$ACL                         9:6bd
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2232,7 +2232,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$255
+    RDB$SECURITY_CLASS              SQL$255                                                                                      
     RDB$ACL                         9:6be
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2240,7 +2240,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$256
+    RDB$SECURITY_CLASS              SQL$256                                                                                      
     RDB$ACL                         9:6bf
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2248,7 +2248,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$257
+    RDB$SECURITY_CLASS              SQL$257                                                                                      
     RDB$ACL                         9:6c0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2256,7 +2256,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$258
+    RDB$SECURITY_CLASS              SQL$258                                                                                      
     RDB$ACL                         9:6c1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2264,7 +2264,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$259
+    RDB$SECURITY_CLASS              SQL$259                                                                                      
     RDB$ACL                         9:6c2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2272,7 +2272,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$260
+    RDB$SECURITY_CLASS              SQL$260                                                                                      
     RDB$ACL                         9:6c3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2280,7 +2280,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$261
+    RDB$SECURITY_CLASS              SQL$261                                                                                      
     RDB$ACL                         9:6c4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2288,7 +2288,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$262
+    RDB$SECURITY_CLASS              SQL$262                                                                                      
     RDB$ACL                         9:6c5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2296,7 +2296,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$263
+    RDB$SECURITY_CLASS              SQL$263                                                                                      
     RDB$ACL                         9:6c6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2304,7 +2304,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$264
+    RDB$SECURITY_CLASS              SQL$264                                                                                      
     RDB$ACL                         9:6c7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2312,7 +2312,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$265
+    RDB$SECURITY_CLASS              SQL$265                                                                                      
     RDB$ACL                         9:6c8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2320,7 +2320,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$266
+    RDB$SECURITY_CLASS              SQL$266                                                                                      
     RDB$ACL                         9:6c9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2328,7 +2328,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$267
+    RDB$SECURITY_CLASS              SQL$267                                                                                      
     RDB$ACL                         9:6ca
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2336,7 +2336,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$268
+    RDB$SECURITY_CLASS              SQL$268                                                                                      
     RDB$ACL                         9:6cb
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2344,7 +2344,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$269
+    RDB$SECURITY_CLASS              SQL$269                                                                                      
     RDB$ACL                         9:867
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2352,7 +2352,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$270
+    RDB$SECURITY_CLASS              SQL$270                                                                                      
     RDB$ACL                         9:868
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2360,7 +2360,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$271
+    RDB$SECURITY_CLASS              SQL$271                                                                                      
     RDB$ACL                         9:869
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2368,7 +2368,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$272
+    RDB$SECURITY_CLASS              SQL$272                                                                                      
     RDB$ACL                         9:86a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2376,7 +2376,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$273
+    RDB$SECURITY_CLASS              SQL$273                                                                                      
     RDB$ACL                         9:86b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2384,7 +2384,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$274
+    RDB$SECURITY_CLASS              SQL$274                                                                                      
     RDB$ACL                         9:86c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2392,7 +2392,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$275
+    RDB$SECURITY_CLASS              SQL$275                                                                                      
     RDB$ACL                         9:86d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2400,7 +2400,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$276
+    RDB$SECURITY_CLASS              SQL$276                                                                                      
     RDB$ACL                         9:86e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2408,7 +2408,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$277
+    RDB$SECURITY_CLASS              SQL$277                                                                                      
     RDB$ACL                         9:86f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2416,7 +2416,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$278
+    RDB$SECURITY_CLASS              SQL$278                                                                                      
     RDB$ACL                         9:870
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2424,7 +2424,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$279
+    RDB$SECURITY_CLASS              SQL$279                                                                                      
     RDB$ACL                         9:871
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2432,7 +2432,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$280
+    RDB$SECURITY_CLASS              SQL$280                                                                                      
     RDB$ACL                         9:872
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2440,7 +2440,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$281
+    RDB$SECURITY_CLASS              SQL$281                                                                                      
     RDB$ACL                         9:873
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2448,7 +2448,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$282
+    RDB$SECURITY_CLASS              SQL$282                                                                                      
     RDB$ACL                         9:874
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2456,7 +2456,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$283
+    RDB$SECURITY_CLASS              SQL$283                                                                                      
     RDB$ACL                         9:875
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2464,7 +2464,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$284
+    RDB$SECURITY_CLASS              SQL$284                                                                                      
     RDB$ACL                         9:876
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2472,7 +2472,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$285
+    RDB$SECURITY_CLASS              SQL$285                                                                                      
     RDB$ACL                         9:877
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2480,7 +2480,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$286
+    RDB$SECURITY_CLASS              SQL$286                                                                                      
     RDB$ACL                         9:878
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2488,7 +2488,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$287
+    RDB$SECURITY_CLASS              SQL$287                                                                                      
     RDB$ACL                         9:879
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2496,7 +2496,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$288
+    RDB$SECURITY_CLASS              SQL$288                                                                                      
     RDB$ACL                         9:87a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2504,7 +2504,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$289
+    RDB$SECURITY_CLASS              SQL$289                                                                                      
     RDB$ACL                         9:87b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2512,7 +2512,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$290
+    RDB$SECURITY_CLASS              SQL$290                                                                                      
     RDB$ACL                         9:87c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2520,7 +2520,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$291
+    RDB$SECURITY_CLASS              SQL$291                                                                                      
     RDB$ACL                         9:87d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2528,7 +2528,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$292
+    RDB$SECURITY_CLASS              SQL$292                                                                                      
     RDB$ACL                         9:87e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2536,7 +2536,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$293
+    RDB$SECURITY_CLASS              SQL$293                                                                                      
     RDB$ACL                         9:87f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2544,7 +2544,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$294
+    RDB$SECURITY_CLASS              SQL$294                                                                                      
     RDB$ACL                         9:880
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2552,7 +2552,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$295
+    RDB$SECURITY_CLASS              SQL$295                                                                                      
     RDB$ACL                         9:881
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2560,7 +2560,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$296
+    RDB$SECURITY_CLASS              SQL$296                                                                                      
     RDB$ACL                         9:882
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2568,7 +2568,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$297
+    RDB$SECURITY_CLASS              SQL$297                                                                                      
     RDB$ACL                         9:883
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2576,7 +2576,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$298
+    RDB$SECURITY_CLASS              SQL$298                                                                                      
     RDB$ACL                         9:884
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2584,7 +2584,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$299
+    RDB$SECURITY_CLASS              SQL$299                                                                                      
     RDB$ACL                         9:885
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2592,7 +2592,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$300
+    RDB$SECURITY_CLASS              SQL$300                                                                                      
     RDB$ACL                         9:886
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2600,7 +2600,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$301
+    RDB$SECURITY_CLASS              SQL$301                                                                                      
     RDB$ACL                         9:887
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2608,7 +2608,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$302
+    RDB$SECURITY_CLASS              SQL$302                                                                                      
     RDB$ACL                         9:888
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2616,7 +2616,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$303
+    RDB$SECURITY_CLASS              SQL$303                                                                                      
     RDB$ACL                         9:889
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2624,7 +2624,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$304
+    RDB$SECURITY_CLASS              SQL$304                                                                                      
     RDB$ACL                         9:88a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2632,7 +2632,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$305
+    RDB$SECURITY_CLASS              SQL$305                                                                                      
     RDB$ACL                         9:88b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2640,7 +2640,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$306
+    RDB$SECURITY_CLASS              SQL$306                                                                                      
     RDB$ACL                         9:88c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2648,7 +2648,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$307
+    RDB$SECURITY_CLASS              SQL$307                                                                                      
     RDB$ACL                         9:88d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2656,7 +2656,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$308
+    RDB$SECURITY_CLASS              SQL$308                                                                                      
     RDB$ACL                         9:88e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2664,7 +2664,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$309
+    RDB$SECURITY_CLASS              SQL$309                                                                                      
     RDB$ACL                         9:88f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2672,7 +2672,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$310
+    RDB$SECURITY_CLASS              SQL$310                                                                                      
     RDB$ACL                         9:890
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2680,7 +2680,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$311
+    RDB$SECURITY_CLASS              SQL$311                                                                                      
     RDB$ACL                         9:891
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2688,7 +2688,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$312
+    RDB$SECURITY_CLASS              SQL$312                                                                                      
     RDB$ACL                         9:892
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2696,7 +2696,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$313
+    RDB$SECURITY_CLASS              SQL$313                                                                                      
     RDB$ACL                         9:893
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2704,7 +2704,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$314
+    RDB$SECURITY_CLASS              SQL$314                                                                                      
     RDB$ACL                         9:894
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2712,7 +2712,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$315
+    RDB$SECURITY_CLASS              SQL$315                                                                                      
     RDB$ACL                         9:895
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2720,7 +2720,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$316
+    RDB$SECURITY_CLASS              SQL$316                                                                                      
     RDB$ACL                         9:896
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2728,7 +2728,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$317
+    RDB$SECURITY_CLASS              SQL$317                                                                                      
     RDB$ACL                         9:897
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2736,7 +2736,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$318
+    RDB$SECURITY_CLASS              SQL$318                                                                                      
     RDB$ACL                         9:898
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2744,7 +2744,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$319
+    RDB$SECURITY_CLASS              SQL$319                                                                                      
     RDB$ACL                         9:899
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2752,7 +2752,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$320
+    RDB$SECURITY_CLASS              SQL$320                                                                                      
     RDB$ACL                         9:89a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2760,7 +2760,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$321
+    RDB$SECURITY_CLASS              SQL$321                                                                                      
     RDB$ACL                         9:89b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2768,7 +2768,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$322
+    RDB$SECURITY_CLASS              SQL$322                                                                                      
     RDB$ACL                         9:89c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2776,7 +2776,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$323
+    RDB$SECURITY_CLASS              SQL$323                                                                                      
     RDB$ACL                         9:89d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2784,7 +2784,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$324
+    RDB$SECURITY_CLASS              SQL$324                                                                                      
     RDB$ACL                         9:89e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2792,7 +2792,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$325
+    RDB$SECURITY_CLASS              SQL$325                                                                                      
     RDB$ACL                         9:89f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2800,7 +2800,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$326
+    RDB$SECURITY_CLASS              SQL$326                                                                                      
     RDB$ACL                         9:8a0
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2808,7 +2808,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$327
+    RDB$SECURITY_CLASS              SQL$327                                                                                      
     RDB$ACL                         9:8a1
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2816,7 +2816,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$328
+    RDB$SECURITY_CLASS              SQL$328                                                                                      
     RDB$ACL                         9:8a2
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2824,7 +2824,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$329
+    RDB$SECURITY_CLASS              SQL$329                                                                                      
     RDB$ACL                         9:8a3
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2832,7 +2832,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$330
+    RDB$SECURITY_CLASS              SQL$330                                                                                      
     RDB$ACL                         9:8a4
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2840,7 +2840,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$331
+    RDB$SECURITY_CLASS              SQL$331                                                                                      
     RDB$ACL                         9:8a5
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2848,7 +2848,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$332
+    RDB$SECURITY_CLASS              SQL$332                                                                                      
     RDB$ACL                         9:8a6
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2856,7 +2856,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$333
+    RDB$SECURITY_CLASS              SQL$333                                                                                      
     RDB$ACL                         9:8a7
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2864,7 +2864,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$334
+    RDB$SECURITY_CLASS              SQL$334                                                                                      
     RDB$ACL                         9:8a8
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2872,7 +2872,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$335
+    RDB$SECURITY_CLASS              SQL$335                                                                                      
     RDB$ACL                         9:8a9
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2880,7 +2880,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$336
+    RDB$SECURITY_CLASS              SQL$336                                                                                      
     RDB$ACL                         9:a45
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2888,7 +2888,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$337
+    RDB$SECURITY_CLASS              SQL$337                                                                                      
     RDB$ACL                         9:a46
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2896,7 +2896,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$338
+    RDB$SECURITY_CLASS              SQL$338                                                                                      
     RDB$ACL                         9:a47
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2904,7 +2904,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$339
+    RDB$SECURITY_CLASS              SQL$339                                                                                      
     RDB$ACL                         9:a48
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2912,7 +2912,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$340
+    RDB$SECURITY_CLASS              SQL$340                                                                                      
     RDB$ACL                         9:a49
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2920,7 +2920,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$341
+    RDB$SECURITY_CLASS              SQL$341                                                                                      
     RDB$ACL                         9:a4a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2928,7 +2928,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$342
+    RDB$SECURITY_CLASS              SQL$342                                                                                      
     RDB$ACL                         9:a4b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2936,7 +2936,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$343
+    RDB$SECURITY_CLASS              SQL$343                                                                                      
     RDB$ACL                         9:a4c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2944,7 +2944,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$344
+    RDB$SECURITY_CLASS              SQL$344                                                                                      
     RDB$ACL                         9:a4d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2952,7 +2952,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$345
+    RDB$SECURITY_CLASS              SQL$345                                                                                      
     RDB$ACL                         9:a4e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2960,7 +2960,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$346
+    RDB$SECURITY_CLASS              SQL$346                                                                                      
     RDB$ACL                         9:a4f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2968,7 +2968,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$347
+    RDB$SECURITY_CLASS              SQL$347                                                                                      
     RDB$ACL                         9:a50
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2976,7 +2976,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$348
+    RDB$SECURITY_CLASS              SQL$348                                                                                      
     RDB$ACL                         9:a51
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2984,7 +2984,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$349
+    RDB$SECURITY_CLASS              SQL$349                                                                                      
     RDB$ACL                         9:a52
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -2992,7 +2992,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$350
+    RDB$SECURITY_CLASS              SQL$350                                                                                      
     RDB$ACL                         9:a53
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3000,7 +3000,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$351
+    RDB$SECURITY_CLASS              SQL$351                                                                                      
     RDB$ACL                         9:a54
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3008,7 +3008,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$352
+    RDB$SECURITY_CLASS              SQL$352                                                                                      
     RDB$ACL                         9:a55
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3016,7 +3016,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$353
+    RDB$SECURITY_CLASS              SQL$353                                                                                      
     RDB$ACL                         9:a56
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3024,7 +3024,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$354
+    RDB$SECURITY_CLASS              SQL$354                                                                                      
     RDB$ACL                         9:a57
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3032,7 +3032,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$355
+    RDB$SECURITY_CLASS              SQL$355                                                                                      
     RDB$ACL                         9:a58
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3040,7 +3040,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$356
+    RDB$SECURITY_CLASS              SQL$356                                                                                      
     RDB$ACL                         9:a59
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3048,7 +3048,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$357
+    RDB$SECURITY_CLASS              SQL$357                                                                                      
     RDB$ACL                         9:a5a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3056,7 +3056,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$358
+    RDB$SECURITY_CLASS              SQL$358                                                                                      
     RDB$ACL                         9:a5b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3064,7 +3064,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$359
+    RDB$SECURITY_CLASS              SQL$359                                                                                      
     RDB$ACL                         9:a5c
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3072,7 +3072,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$360
+    RDB$SECURITY_CLASS              SQL$360                                                                                      
     RDB$ACL                         9:a5d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3080,7 +3080,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$361
+    RDB$SECURITY_CLASS              SQL$361                                                                                      
     RDB$ACL                         9:a5e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3088,7 +3088,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$TABLES
+    RDB$SECURITY_CLASS              SQL$362                                                                                      
     RDB$ACL                         9:a5f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3096,7 +3096,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$VIEWS
+    RDB$SECURITY_CLASS              SQL$TABLES                                                                                   
     RDB$ACL                         9:a60
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3104,7 +3104,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$PROCEDURES
+    RDB$SECURITY_CLASS              SQL$VIEWS                                                                                    
     RDB$ACL                         9:a61
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3112,7 +3112,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$FUNCTIONS
+    RDB$SECURITY_CLASS              SQL$PROCEDURES                                                                               
     RDB$ACL                         9:a62
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3120,7 +3120,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$PACKAGES
+    RDB$SECURITY_CLASS              SQL$FUNCTIONS                                                                                
     RDB$ACL                         9:a63
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3128,7 +3128,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$GENERATORS
+    RDB$SECURITY_CLASS              SQL$PACKAGES                                                                                 
     RDB$ACL                         9:a64
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3136,7 +3136,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$DOMAINS
+    RDB$SECURITY_CLASS              SQL$GENERATORS                                                                               
     RDB$ACL                         9:a65
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3144,7 +3144,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$EXCEPTIONS
+    RDB$SECURITY_CLASS              SQL$DOMAINS                                                                                  
     RDB$ACL                         9:a66
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3152,7 +3152,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$ROLES
+    RDB$SECURITY_CLASS              SQL$EXCEPTIONS                                                                               
     RDB$ACL                         9:a67
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3160,7 +3160,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$CHARSETS
+    RDB$SECURITY_CLASS              SQL$ROLES                                                                                    
     RDB$ACL                         9:a68
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3168,7 +3168,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$COLLATIONS
+    RDB$SECURITY_CLASS              SQL$CHARSETS                                                                                 
     RDB$ACL                         9:a69
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3176,7 +3176,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$FILTERS
+    RDB$SECURITY_CLASS              SQL$COLLATIONS                                                                               
     RDB$ACL                         9:a6a
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3184,7 +3184,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$362
+    RDB$SECURITY_CLASS              SQL$FILTERS                                                                                  
     RDB$ACL                         9:a6b
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, usage)
@@ -3192,15 +3192,15 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$363
+    RDB$SECURITY_CLASS              SQL$363                                                                                      
     RDB$ACL                         9:a6c
                 ACL version 1
-                    person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
-                    all users: (*.*), privileges: (select)
+                    person: SYSDBA, privileges: (control, alter, drop, usage)
+                    all users: (*.*), privileges: (usage)
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$DEFAULT1
+    RDB$SECURITY_CLASS              SQL$364                                                                                      
     RDB$ACL                         9:a6d
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
@@ -3208,7 +3208,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$364
+    RDB$SECURITY_CLASS              SQL$DEFAULT1                                                                                 
     RDB$ACL                         9:a6e
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
@@ -3216,7 +3216,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$DEFAULT2
+    RDB$SECURITY_CLASS              SQL$365                                                                                      
     RDB$ACL                         9:a6f
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
@@ -3224,7 +3224,7 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$365
+    RDB$SECURITY_CLASS              SQL$DEFAULT2                                                                                 
     RDB$ACL                         9:a70
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
@@ -3232,15 +3232,26 @@ RDB$ACL:
     
     RDB$DESCRIPTION                 <null>
     
-    RDB$SECURITY_CLASS              SQL$DEFAULT3
+    RDB$SECURITY_CLASS              SQL$366                                                                                      
     RDB$ACL                         9:a71
                 ACL version 1
                     person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
                     all users: (*.*), privileges: (select)
     
     RDB$DESCRIPTION                 <null>
+    
+    RDB$SECURITY_CLASS              SQL$DEFAULT3                                                                                 
+    RDB$ACL                         9:a72
+                ACL version 1
+                    person: SYSDBA, privileges: (control, alter, drop, select, insert, update, delete)
+                    all users: (*.*), privileges: (select)
+    
+    RDB$DESCRIPTION                 <null>
   """,
-  'substitutions': [('RDB\$ACL.*','')]
+  'substitutions': [
+    ('RDB\$ACL.*',''),
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
+  ]
 }
 ]
 }
