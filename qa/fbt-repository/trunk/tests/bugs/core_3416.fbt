@@ -1,0 +1,53 @@
+{
+'id': 'bugs.core_3416',
+'qmid': '',
+'tracker_id': 'CORE-3416',
+'title': "Inserting Käse into a CHARACTER SET ASCII column succeeds",
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+  'connection_character_set': 'WIN1252',
+ 'test_script': 
+  """
+	-- NB: 2.5.0 also raises error despite ticket's issue "Affects Version/s: 2.5.0" 
+	create table tascii (s_ascii varchar(10) character set ascii);
+	create table tlatin (s_latin varchar(10) character set latin1);
+
+	set count on;
+	set echo on;
+	insert into tascii values ('Käse');
+	select s_ascii from tascii;
+
+	insert into tlatin values ('Käse');
+	select s_latin from tlatin;  
+  """,
+ 'expected_stdout': 
+  """
+	insert into tascii values ('Käse');
+	Records affected: 0
+	select s_ascii from tascii;
+	Records affected: 0
+
+	insert into tlatin values ('Käse');
+	Records affected: 1
+	select s_latin from tlatin;
+
+	S_LATIN    
+	========== 
+	Käse      
+
+	Records affected: 1  
+  """,
+ 'expected_stderr': 
+  """
+	Statement failed, SQLSTATE = 22018
+	arithmetic exception, numeric overflow, or string truncation
+	-Cannot transliterate character between character sets
+  """
+}
+]
+}
