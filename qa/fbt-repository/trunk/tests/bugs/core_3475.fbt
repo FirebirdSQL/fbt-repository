@@ -1,0 +1,52 @@
+{
+'id': 'bugs.core_3475',
+'qmid': None,
+'tracker_id': 'CORE-3475',
+'title': 'Parameters inside the CAST function are described as not nullable',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set planonly;
+    set sqlda_display;
+    select cast(null as int) from rdb$database;
+    select cast(? as int) from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    INPUT message field count: 0
+    
+    PLAN (RDB$DATABASE NATURAL)
+    
+    OUTPUT message field count: 1
+    01: sqltype: 496 LONG      Nullable scale: 0 subtype: 0 len: 4
+      :  name: CAST  alias: CAST
+      : table:   owner:
+    
+    INPUT message field count: 1
+    01: sqltype: 496 LONG      Nullable scale: 0 subtype: 0 len: 4
+      :  name:   alias:
+      : table:   owner:
+    
+    PLAN (RDB$DATABASE NATURAL)
+    
+    OUTPUT message field count: 1
+    01: sqltype: 496 LONG      Nullable scale: 0 subtype: 0 len: 4
+      :  name: CAST  alias: CAST
+      : table:   owner:
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [('[ ]+',' '),('[\t]*',' ')]
+}
+]
+}
