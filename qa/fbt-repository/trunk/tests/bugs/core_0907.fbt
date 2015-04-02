@@ -25,21 +25,27 @@
     -- Since 3.0 one may do like this (and NOT by updating RDB tables):
     -- ALTER TABLE <table name> ALTER <field name> [NOT] NULL
     -- ALTER DOMAIN <domain name> [NOT] NULL
+    -- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    -- 02.04.2015: since rev. 61204 (build 3.0.0.31767)syntax of altering nullability for 
+    -- domains and tables has been changed: mandatory SET | DROP clause now needed, i.e.:
+    -- ALTER TABLE <table name> ALTER <field name> {DROP | SET} NOT NULL
+    -- ALTER DOMAIN <domain name> {DROP | SET} NOT NULL
+    -- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     
     -- This attempt will FAIL with message:
     -- -Cannot make field A5 of table CRASH NOT NULL because there are NULLs present
-    alter table crash alter a5 not null; 
+    alter table crash alter a5 SET not null; 
     commit;
     
     update crash set a3=1 where a3 is null;
     update crash set a4=1 where a4 is null;
     commit;
     
-    alter table crash alter a1 not null; 
-    alter table crash alter a2 not null; 
-    alter table crash alter a3 not null; 
-    alter table crash alter a4 not null; 
-    alter table crash alter a5 not null; 
+    alter table crash alter a1 SET not null; 
+    alter table crash alter a2 SET not null; 
+    alter table crash alter a3 SET not null; 
+    alter table crash alter a4 SET not null; 
+    alter table crash alter a5 SET not null; 
     commit;
     update crash set a1=null, a2=null, a3=null,a4=null rows 1;
     commit;
