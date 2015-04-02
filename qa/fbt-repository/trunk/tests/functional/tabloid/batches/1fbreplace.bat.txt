@@ -7,13 +7,17 @@
 @rem This batch tries to:
 @rem 1. Stop all Firebird services which are specified in the setting variable %FB_SERVICES%.
 @rem 2. Remove client libraries (fbclient.ddl) before any further action (exit if this fails),
-@rem 3. For each of files from source snapshot folder %SNAPSHOT_DIR%,
-@rem    ***EXCEPT*** firebird.conf, databases.conf and security3.fdb, do:
-@rem    3.1. Try to remove file with the same name in the corresponding directory of Firebird, log if fault.
+@rem 3. For each of files from source snapshot folder %SNAPSHOT_DIR%, do:
+@rem    3.1. If filename is 'firebird.conf' or 'databases.conf' than create backup of it in the target folder
+@rem         (command: copy <name>.conf to <name>.conf.previous) in order to restore it after finish all job;
+@rem         After backup will be created - replace <name>.conf with the same file from SNAPSHOT_DIR.
+@rem    3.2. All other files - try to remove file with the same name in the <FB_HOME>, log if fault.
 @rem    3.2. In case of successfully removed file - copy it from %SNAPSHOT_DIR%
-@rem 4. Start all Firebird services.
-@rem 5. Obtain server versions via fbsvcmgr and display them.
-@rem 6. Check log of its own job for text about failed removals of old files and output it.
+@rem 4. Create SYSDBA/masterke account in each security3.fdb using gsec utility
+@rem 5. Restore firebird.conf and databases.conf in <FB_HOME>: copy <name>.conf.previous <name>.conf
+@rem 6. Start all Firebird services.
+@rem 7. Obtain server versions via fbsvcmgr and display them.
+@rem 8. Check log of its own job for text about failed removals of old files and output it.
 
 
 setlocal enabledelayedexpansion enableextensions
@@ -32,19 +36,22 @@ del %log% 2>nul
 @rem #############################################################################################################
 for /d %%s in ( %FB_SERVICES% ) do (
   echo %%s
-  @rem debug!
-  @rem sc start FirebirdServer%%s
-  @rem ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
-
   sc query FirebirdServer%%s | findstr /i /c:"STOPPED" 1>nul 2>&1
   if errorlevel 1 (
     set msg=Stopping service FirebirdServer%%s
     echo !msg!
     echo.>>%log%
     echo !msg!>>%log%
+    set cmd_run=sc stop FirebirdServer%%s
+    echo !cmd_run!
+    echo !cmd_run!>>%log%
     sc stop FirebirdServer%%s >>%log%
-    ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
-    echo After pause:>>%log%
+    echo Wait a few seconds. . .
+    ping -n 1 -w 1500 1.1.1.1 1>nul 2>&1
+    echo Check that service is really stopped:>>%log%
+    set cmd_run=sc query FirebirdServer%%s
+    echo !cmd_run!
+    echo !cmd_run!>>%log%
     sc query FirebirdServer%%s>>%log%
     sc query FirebirdServer%%s | findstr /i /c:"STOPPED" 1>nul 2>&1
     if errorlevel 1 (
@@ -117,8 +124,11 @@ del %~n0.err 2>nul
 @rem #############################################################################################################
 for /d %%i in ( %FB_SERVICES% ) do (
   for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%i ^| findstr /i /c:"ImagePath"') do (
+    @rem Image path of FB service ('drive:\path\firebird.exe'):
     set fn=%%k
+    @rem Path to FB instance ('drive:\path\')
     set fp=%%~dpk
+    @rem Remove trailing backslash:
     set fp=!fp:~0,-1!
 
     echo Copying files from %SNAPSHOT_DIR% to !fp!. . .
@@ -126,16 +136,31 @@ for /d %%i in ( %FB_SERVICES% ) do (
       @rem set fn=%%~da%%~pa%%a
       set sn=%%a
       set sp=%%~da%%~pa
+
+      @rem Replace in full path+filename from SNAPSHOT folder its PATH to the folder of currently processed FB instance:
       set tp=!sn:%SNAPSHOT_DIR%\=%%~dpk!
     
       set skip=0
       if /i "%%~nxa"=="firebird.conf" set skip=1
       if /i "%%~nxa"=="databases.conf" set skip=1
-      if /i "%%~nxa"=="security3.fdb" set skip=1
+      @rem ----- if /i "%%~nxa"=="security3.fdb" set skip=1
       if .!skip!.==.1. (
-        set msg=#################################### %%a - skipped>>%log%
-        echo !msg!
-        echo !msg!>>%log%
+        if exist !tp! (
+          @rem Before replace firebird.conf and databases.conf we have to backup them.
+          @rem After copying all files (and before starting services) these files (`firebird.conf`
+          @rem and `databases.conf`) need to be renamed back.
+
+          set cmd_run=copy !tp! !tp!.previous
+          
+          set msg=### CREATING BACKUP ### %%a
+          echo !msg!>>%log%
+          echo !cmd_run!>>%log%
+
+          cmd /c !cmd_run! 1>>%log% 2>&1
+        )
+        set copy_cmd=copy !sn! !tp!
+        echo !copy_cmd!>>%log%
+        cmd /c !copy_cmd! 1>>%log% 2>&1
       ) else (
         del %~n0.err 2>nul
         if exist !tp! (
@@ -157,6 +182,47 @@ for /d %%i in ( %FB_SERVICES% ) do (
         )
       )
     )
+  )
+)
+del %~n0.tmp.vbs 2>nul
+
+@rem #############################################################################################################
+@rem #############################   C R E A T I N G    S Y S D B A    A C C O U N T  ############################
+@rem #############################                        a n d                       ############################
+@rem #############################   R E S T O R I N G     .c o n f    F I L E S      ############################
+@rem #############################################################################################################
+
+for /d %%s in ( %FB_SERVICES% ) do (
+  for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%s ^| findstr /i /c:"ImagePath"') do (
+    set fn=%%k
+    set fp=%%~dpk
+    set fp=!fp:~0,-1!
+
+    set cmd_run=!fp!\gsec -user sysdba -pass 1 -add sysdba -pw masterke -database !fp!\security3.fdb
+    echo !cmd_run!>>%log%
+    cmd /c !cmd_run! 1>%~n0.err 2>&1
+    type %~n0.err
+    type %~n0.err>>%log%
+    del %~n0.err 2>nul
+
+    set cmd_run=!fp!\gsec -display -database !fp!\security3.fdb
+    echo !cmd_run!>>%log%
+    cmd /c !cmd_run! 1>%~n0.err 2>&1
+    type %~n0.err
+    type %~n0.err>>%log%
+    del %~n0.err 2>nul
+
+    set msg=Restore files that was backed up before copying:
+    echo !msg!
+    echo !msg!>>%log%
+
+    set cmd_run=copy !fp!\firebird.conf.previous !fp!\firebird.conf
+    echo !cmd_run!>>%log%
+    cmd /c !cmd_run! 1>>%log%
+
+    set cmd_run=copy !fp!\databases.conf.previous !fp!\databases.conf
+    echo !cmd_run!>>%log%
+    cmd /c !cmd_run! 1>>%log%
   )
 )
 
@@ -220,3 +286,42 @@ del %~n0.err 2>nul
 echo.
 echo Check log in the file: %log%
 echo.
+goto end
+
+:getFileDTS
+  @rem http://www.dostips.com/DtTutoFunctions.php
+    set vbs=%~n0.tmp.vbs
+    set dts=%~n0.tmp.log
+    if /i .%1.==.gen_vbs. (
+      del %vbs% 2>nul
+      echo 'Created auto, do NOT edit! >>%vbs%
+      echo 'Used to obtain exact timestamp of file >>%vbs%
+      echo 'Usage: cscript ^/^/nologo %vbs% ^<file^> >>%vbs%
+      echo 'Result: last modified timestamp, in format: YYYYMMDDhhmiss >>%vbs%
+      echo Set objFS ^= CreateObject("Scripting.FileSystemObject"^) >>%vbs%
+      echo Set objArgs ^= WScript.Arguments >>%vbs%
+      echo strFile ^= objArgs(0^) >>%vbs%
+      echo ts ^= timeStamp(objFS.GetFile(strFile^).DateLastModified^) >>%vbs%
+      echo WScript.Echo ts >>%vbs%
+      echo. >>%vbs%
+      echo Function timeStamp( d ^) >>%vbs%
+      echo   timeStamp ^= Year(d^) ^& _ >>%vbs%
+      echo   Right("0" ^& Month(d^),2^) ^& _ >>%vbs%
+      echo   Right("0" ^& Day(d^),2^)  ^& _ >>%vbs% 
+      echo   Right("0" ^& Hour(d^),2^) ^& _ >>%vbs%
+      echo   Right("0" ^& Minute(d^),2^) ^& _ >>%vbs%
+      echo   Right("0" ^& Second(d^),2^) >>%vbs%
+      echo End Function >>%vbs%
+      endlocal&goto:eof
+    )
+    if /i .%1.==.get_dts. (
+      @rem echo|set /p=Obtaining timestamp of %2... 
+      cscript //nologo %vbs% %2 1>%dts%
+      @rem type %dts%
+      @rem set /p %~3=<%dts%
+    )
+  endlocal
+goto:eof
+
+
+:end
