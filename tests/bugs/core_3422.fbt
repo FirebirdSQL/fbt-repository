@@ -1,0 +1,129 @@
+{
+'id': 'bugs.core_3422',
+'qmid': None,
+'tracker_id': 'CORE-3422',
+'title': 'Recursive stored procedure shouldnt require execute right to call itself',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    drop user tmp$c3422;
+    commit;
+    create user tmp$c3422 password '123';
+    commit;
+    
+    recreate table tab_foo ( fld integer );
+    commit;
+    
+    set term ^;
+    create or alter procedure sp_r(id integer) as
+    begin
+      if(id is null and id is not null)then execute procedure sp_r(id);
+    end
+    ^
+    
+    create or alter trigger foo_bi for tab_foo
+    active before insert position 15
+    as
+    begin
+      execute procedure sp_r(new.fld);
+    end
+    ^
+    set term ;^
+    commit;
+
+    set term ^;
+    create or alter function fn_rec(i int) returns int
+    as
+    begin
+      if (i>1) then
+        return i*fn_rec(i-1);
+      else
+        return i;
+    end
+    ^
+    
+    create or alter function fn_fact(i int) returns int as
+    begin
+      return fn_rec(i);
+    end
+    ^
+    set term ;^
+    commit;
+   
+    revoke all on all from tmp$c3422;
+    commit;
+
+    grant insert on tab_foo to tmp$c3422;
+    revoke execute on function fn_rec from tmp$c3422;
+    grant execute on function fn_fact to tmp$c3422; 
+    commit;
+
+    grant execute on procedure sp_r to trigger foo_bi;
+    grant execute on function fn_rec to function fn_fact;
+    commit;
+
+    set list on;
+    
+    set term ^;
+    execute block as
+      declare v_dbname type of column mon$database.mon$database_name;
+      declare v_usr varchar(31) = 'tmp$c3422';
+      declare v_pwd varchar(8) = '123';
+    begin
+      v_dbname = 'localhost:' || rdb$get_context('SYSTEM','DB_NAME');
+      execute statement ('insert into tab_foo(fld) values(:x)') ( x := 1 )
+      on external v_dbname
+      as user v_usr password v_pwd;
+    end
+    ^
+    set term ;^
+    commit;
+    select * from tab_foo;
+
+    --------------------------------------------------------------------
+
+    set term ^;
+    execute block returns(fld int) as
+      declare v_dbname type of column mon$database.mon$database_name;
+      declare v_usr varchar(31) = 'tmp$c3422';
+      declare v_pwd varchar(8) = '123';
+    begin
+      v_dbname = 'localhost:' || rdb$get_context('SYSTEM','DB_NAME');
+      execute statement ('select fn_fact( 5 ) from rdb$database')
+      on external v_dbname
+      as user v_usr password v_pwd
+      into fld;
+      suspend;
+    end
+    ^
+    set term ;^
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    FLD                             1
+    FLD                             120
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    record not found for user: TMP$C3422
+    Warning: ALL on ALL is not granted to TMP$C3422.
+    Warning: Execute on FN_REC is not granted to TMP$C3422.
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
