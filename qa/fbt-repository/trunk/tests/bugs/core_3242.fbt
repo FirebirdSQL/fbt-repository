@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_3422',
+'id': 'bugs.core_3242',
 'qmid': None,
-'tracker_id': 'CORE-3422',
+'tracker_id': 'CORE-3242',
 'title': 'Recursive stored procedure shouldnt require execute right to call itself',
 'description': '',
 'min_versions': '3.0',
@@ -15,9 +15,9 @@
   """,
  'test_script':
   """
-    drop user tmp$c3422;
+    drop user tmp$c3242;
     commit;
-    create user tmp$c3422 password '123';
+    create user tmp$c3242 password '123';
     commit;
     
     recreate table tab_foo ( fld integer );
@@ -59,12 +59,12 @@
     set term ;^
     commit;
    
-    revoke all on all from tmp$c3422;
+    revoke all on all from tmp$c3242;
     commit;
 
-    grant insert on tab_foo to tmp$c3422;
-    revoke execute on function fn_rec from tmp$c3422;
-    grant execute on function fn_fact to tmp$c3422; 
+    grant insert on tab_foo to tmp$c3242;
+    revoke execute on function fn_rec from tmp$c3242;
+    grant execute on function fn_fact to tmp$c3242; 
     commit;
 
     grant execute on procedure sp_r to trigger foo_bi;
@@ -76,7 +76,7 @@
     set term ^;
     execute block as
       declare v_dbname type of column mon$database.mon$database_name;
-      declare v_usr varchar(31) = 'tmp$c3422';
+      declare v_usr varchar(31) = 'tmp$c3242';
       declare v_pwd varchar(8) = '123';
     begin
       v_dbname = 'localhost:' || rdb$get_context('SYSTEM','DB_NAME');
@@ -94,7 +94,7 @@
     set term ^;
     execute block returns(fld int) as
       declare v_dbname type of column mon$database.mon$database_name;
-      declare v_usr varchar(31) = 'tmp$c3422';
+      declare v_usr varchar(31) = 'tmp$c3242';
       declare v_pwd varchar(8) = '123';
     begin
       v_dbname = 'localhost:' || rdb$get_context('SYSTEM','DB_NAME');
@@ -116,9 +116,9 @@
  'expected_stderr': 
   """
     Statement failed, SQLSTATE = HY000
-    record not found for user: TMP$C3422
-    Warning: ALL on ALL is not granted to TMP$C3422.
-    Warning: Execute on FN_REC is not granted to TMP$C3422.
+    record not found for user: TMP$C3242
+    Warning: ALL on ALL is not granted to TMP$C3242.
+    Warning: Execute on FN_REC is not granted to TMP$C3242.
   """,
   'substitutions': [
     ('Statement failed, SQLSTATE.*',''),
