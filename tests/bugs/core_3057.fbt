@@ -1,0 +1,48 @@
+{
+'id': 'bugs.core_3057',
+'qmid': None,
+'tracker_id': 'CORE-3057',
+'title': 'Allow the usage of blobs in COMPUTED BY expressions',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    recreate table test( b1 blob, b2 blob, bconcat1 computed by ( b1 || b2 )); -- this FAILS on 2.5.4
+    commit;
+    alter table test add bconcat2 computed by ( b1 || b2 || bconcat1 );
+    commit;
+    show table test;
+    insert into test(b1, b2) values('qwe', 'rty');
+    
+    set list on;
+    set blob all;
+    select b1 as blob_id_b1, b2 as blob_id_b2, bconcat1 as blob_id_bconcat1, bconcat2 as blob_id_bconcat2 from test;
+  """,
+ 'expected_stdout': 
+  """
+    B1                              BLOB segment 80, subtype BINARY Nullable
+    B2                              BLOB segment 80, subtype BINARY Nullable
+    BCONCAT1                        Computed by: ( b1 || b2 )
+    BCONCAT2                        Computed by: ( b1 || b2 || bconcat1 )
+    
+    BLOB_ID_B1                      80:0
+    qwe
+    BLOB_ID_B2                      80:1
+    rty
+    BLOB_ID_BCONCAT1                0:c
+    qwerty
+    BLOB_ID_BCONCAT2                0:9
+    qwertyqwerty
+  """,
+  'substitutions': [('BLOB_ID_.*','')]
+}
+]
+}
