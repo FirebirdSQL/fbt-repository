@@ -1,0 +1,229 @@
+{
+'id': 'bugs.core_2988',
+'qmid': None,
+'tracker_id': 'CORE-2988',
+'title': 'Concurrent transaction number not reported if lock timeout occurs',
+'description': '',
+'min_versions': '2.5.4',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    drop user tmp$2988;
+    commit;
+    create user tmp$2988 password 'tmp$2988';
+    commit;
+    
+    recreate table test (id integer);
+    insert into test values(1);
+    commit;
+
+    revoke all on all from tmp$2988;
+    grant select,update on test to tmp$2988;
+    commit;
+
+    set transaction lock timeout 1;
+    update test set id = id;
+    
+    set term ^;
+    execute block as
+        declare v_usr char(31) = 'tmp$2988';
+        declare v_pwd varchar(20) = 'tmp$2988';
+        declare v_connect varchar(255);
+        declare v_dummy int;
+    begin
+        execute statement ('update test set id = -1')
+        with autonomous transaction
+        as user v_usr password v_pwd
+        into v_dummy;
+    end
+    ^
+    set term ;^
+    rollback;
+    
+    set transaction read committed no record_version lock timeout 1;
+    update test set id = id;
+    
+    set term ^;
+    execute block as
+        declare v_usr char(31) = 'tmp$2988';
+        declare v_pwd varchar(20) = 'tmp$2988';
+        declare v_connect varchar(255);
+        declare v_dummy int;
+    begin
+        execute statement ('select id from test')
+        with autonomous transaction
+        as user v_usr password v_pwd
+        into v_dummy;
+    end
+    ^
+    set term ;^
+    rollback;
+    
+    set list on;
+    set transaction read committed no record_version lock timeout 1;
+    select id from test with lock;
+    
+    set term ^;
+    execute block as
+        declare v_usr char(31) = 'tmp$2988';
+        declare v_pwd varchar(20) = 'tmp$2988';
+        declare v_connect varchar(255);
+        declare v_dummy int;
+    begin
+        execute statement ('select id from test with lock')
+        with autonomous transaction
+        as user v_usr password v_pwd
+        into v_dummy;
+    end
+    ^
+    set term ;^
+
+    drop user tmp$2988;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    ID                              1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    record not found for user: TMP$2988
+    Warning: ALL on ALL is not granted to TMP$2988.
+    Statement failed, SQLSTATE = 40001
+    lock time-out on wait transaction
+    -deadlock
+    -update conflicts with concurrent update
+    -concurrent transaction number is 127
+    Statement failed, SQLSTATE = 40001
+    lock time-out on wait transaction
+    -deadlock
+    -concurrent transaction number is 130
+    Statement failed, SQLSTATE = 40001
+    lock time-out on wait transaction
+    -deadlock
+    -concurrent transaction number is 133
+  """,
+  'substitutions': [
+    ('record not found for user:.*',''),
+    ('-concurrent transaction number is.*','-concurrent transaction number is')
+  ]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    drop user tmp$2988;
+    commit;
+    create user tmp$2988 password 'tmp$2988';
+    commit;
+    
+    recreate table test (id integer);
+    insert into test values(1);
+    commit;
+
+    revoke all on all from tmp$2988;
+    grant select,update on test to tmp$2988;
+    commit;
+
+    set transaction lock timeout 1;
+    update test set id = id;
+    
+    set term ^;
+    execute block as
+        declare v_usr char(31) = 'tmp$2988';
+        declare v_pwd varchar(20) = 'tmp$2988';
+        declare v_connect varchar(255);
+        declare v_dummy int;
+    begin
+        execute statement ('update test set id = -1')
+        with autonomous transaction
+        as user v_usr password v_pwd
+        into v_dummy;
+    end
+    ^
+    set term ;^
+    rollback;
+    
+    set transaction read committed no record_version lock timeout 1;
+    update test set id = id;
+    
+    set term ^;
+    execute block as
+        declare v_usr char(31) = 'tmp$2988';
+        declare v_pwd varchar(20) = 'tmp$2988';
+        declare v_connect varchar(255);
+        declare v_dummy int;
+    begin
+        execute statement ('select id from test')
+        with autonomous transaction
+        as user v_usr password v_pwd
+        into v_dummy;
+    end
+    ^
+    set term ;^
+    rollback;
+    
+    set list on;
+    set transaction read committed no record_version lock timeout 1;
+    select id from test with lock;
+    
+    set term ^;
+    execute block as
+        declare v_usr char(31) = 'tmp$2988';
+        declare v_pwd varchar(20) = 'tmp$2988';
+        declare v_connect varchar(255);
+        declare v_dummy int;
+    begin
+        execute statement ('select id from test with lock')
+        with autonomous transaction
+        as user v_usr password v_pwd
+        into v_dummy;
+    end
+    ^
+    set term ;^
+
+    drop user tmp$2988;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    ID                              1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    record not found for user: TMP$2988
+    Warning: ALL on ALL is not granted to TMP$2988.
+    Statement failed, SQLSTATE = 40001
+    deadlock
+    -update conflicts with concurrent update
+    -concurrent transaction number is 18
+    Statement failed, SQLSTATE = 40001
+    deadlock
+    -read conflicts with concurrent update
+    -concurrent transaction number is 21
+    Statement failed, SQLSTATE = 40001
+    deadlock
+    -read conflicts with concurrent update
+    -concurrent transaction number is 24
+  """,
+  'substitutions': [
+    ('record not found for user:.*',''),
+    ('-concurrent transaction number is.*','-concurrent transaction number is')
+  ]
+}
+]
+}
