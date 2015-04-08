@@ -3,7 +3,7 @@
 'qmid': 'bugs.core_2861-20',
 'tracker_id': 'CORE-2861',
 'title': 'Cannot remove user with dot in login',
-'description': '',
+'description': 'See also core-1810. Explanation see in CORE-3000',
 'min_versions': None,
 'versions': [
 {
