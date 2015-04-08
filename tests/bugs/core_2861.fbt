@@ -1,0 +1,32 @@
+{
+'id': 'bugs.core_2861',
+'qmid': 'bugs.core_2861-20',
+'tracker_id': 'CORE-2861',
+'title': 'Cannot remove user with dot in login',
+'description': '',
+'min_versions': None,
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': '''commands = """add 'foo.bar.rio' -pw 123
+display 'foo.bar.rio'
+delete 'foo.bar.rio'
+display 'foo.bar.rio'
+quit
+"""
+runProgram('gsec',['-user',user_name,'-pas',user_password],commands)''',
+ 'expected_stdout': 
+  """
+         user name                    uid   gid admin     full name
+    ----------------------------------------------------------------
+    FOO.BAR.RIO                         0     0
+  """,
+ 'expected_stderr': 
+  """
+  """,
+ 'substitutions': [('-.*',''),('GSEC\>','')]
+}
+]
+}
