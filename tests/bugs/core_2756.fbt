@@ -1,0 +1,33 @@
+{
+'id': 'bugs.core_2756',
+'qmid': None,
+'tracker_id': 'CORE-2756',
+'title': 'substring from timestamp - unexpected result',
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set list on;
+    select
+        iif( dts similar to '[[:DIGIT:]]{4}[-][[:DIGIT:]]{2}[-][[:DIGIT:]]{2}[ ]', 1, 0) matching_result
+    from (
+        select
+        substring(current_timestamp from 1 for 11) dts
+        from rdb$database
+    ) x;
+  """,
+ 'expected_stdout': 
+  """
+    MATCHING_RESULT                 1
+  """
+}
+]
+}
