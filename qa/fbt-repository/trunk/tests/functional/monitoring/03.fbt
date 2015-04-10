@@ -3,7 +3,7 @@
 'qmid': 'functional.monitoring.monitoring_03',
 'tracker_id': 'CORE-2233',
 'title': 'Allow non-SYSDBA users to monitor not only their current attachment but other their attachments as well',
-'description': 'Check if non-privileged database users are allowed to see other attachments authenticated using the same user name',
+'description': 'Check if non-privileged database users are allowed to see other attachments authenticated using the same user name. Implementation using ISQL see in tests/bugs/core_2233.fbt',
 'min_versions': None,
 'versions': [
 {
