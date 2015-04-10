@@ -1,0 +1,156 @@
+{
+'id': 'bugs.core_2233',
+'qmid': None,
+'tracker_id': 'CORE-2233',
+'title': 'Allow non-SYSDBA users to monitor not only their current attachment but other their attachments as well',
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    drop user smith;
+    drop user brown;
+    commit;
+    create user smith password '123';
+    create user brown password '456';
+    commit;
+    
+    revoke all on all from smith;
+    revoke all on all from brown;
+    commit;
+    
+    set list on;
+
+    -- Main idea: run execute statement on EXTERNAL datasource and specify every time
+    -- different ROLE (no matter is that role exists or no - connection always WILL be
+    -- etsblished and will be provided with NEW attachment_id in mon$attachments).
+    set term ^;
+    execute block returns(who_am_i varchar(31), num_of_attaches_i_can_see int, users_i_can_see varchar(255) ) as
+        declare v_dbname type of column mon$database.mon$database_name;
+        declare v_stt varchar(255);
+        declare v_usr_smith varchar(31) = 'smith';
+        declare v_pwd_smith varchar(8) = '123';
+        declare v_usr_brown varchar(31) = 'brown';
+        declare v_pwd_brown varchar(8) = '456';
+        declare v_usr_admin varchar(31) = 'SYSDBA';
+        declare v_pwd_admin varchar(8) = 'masterke';
+    begin
+        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
+        v_stt = 'select current_user, count(distinct a.mon$attachment_id), list(trim(a.mon$user)) '
+                || 'from (select * from mon$attachments a where a.mon$remote_protocol is not null order by mon$user) a';
+
+    
+        -- Here we do as non-privileged user and we have to see exactly ONE
+        -- (own) attachment (because this is first execution with auth. info 
+        -- as 'smith/123' and role = 'boss#1'):
+        execute statement v_stt
+        on external v_dbname
+        as user v_usr_smith password v_pwd_smith role upper('BOSS#1')
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+        -- Now we run again as 'smith/123' but give another role in order to
+        -- force engine to create NEW attachment. We have to see here exactly
+        -- TWO attachments (previous one and current):
+        execute statement v_stt
+        on external v_dbname
+        as user v_usr_smith password v_pwd_smith role upper('BOSS#2')
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+        -- At this point we have to see THREE attachments:
+        execute statement v_stt
+        on external v_dbname
+        as user v_usr_smith password v_pwd_smith role upper('BOSS#3')
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+        -- .................................................................
+
+        -- Run statement under DIFFERENT non-privileged user. 
+        -- This user can see here only his own (SINGLE forwhile) attachment:
+        execute statement v_stt
+        on external v_dbname
+        as user v_usr_brown password v_pwd_brown role upper('ACNT#1')
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+        -- Now we run again as 'brown/456' but give another role in order to
+        -- force engine to create NEW attachment. We have to see here exactly
+        -- TWO attachments (previous one and current).
+        -- We can NOT see here attachments of user 'smith'!
+        execute statement v_stt
+        on external v_dbname
+        as user v_usr_brown password v_pwd_brown role upper('ACNT#2')
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+        -- At this point we have to see THREE attachments,but all of them
+        -- must be from user 'brown'.
+        execute statement v_stt
+        on external v_dbname
+        as user v_usr_brown password v_pwd_brown role upper('ACNT#3')
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+        -- .................................................................
+
+        -- This we do as SYSDBA: here we have to see ALL users attachments + our own:
+        execute statement v_stt
+        into who_am_i, num_of_attaches_i_can_see, users_i_can_see;
+        suspend;
+    
+    end
+    ^
+    set term ;^
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    WHO_AM_I                        SMITH
+    NUM_OF_ATTACHES_I_CAN_SEE       1
+    USERS_I_CAN_SEE                 SMITH
+    
+    WHO_AM_I                        SMITH
+    NUM_OF_ATTACHES_I_CAN_SEE       2
+    USERS_I_CAN_SEE                 SMITH,SMITH
+    
+    WHO_AM_I                        SMITH
+    NUM_OF_ATTACHES_I_CAN_SEE       3
+    USERS_I_CAN_SEE                 SMITH,SMITH,SMITH
+    
+    WHO_AM_I                        BROWN
+    NUM_OF_ATTACHES_I_CAN_SEE       1
+    USERS_I_CAN_SEE                 BROWN
+    
+    WHO_AM_I                        BROWN
+    NUM_OF_ATTACHES_I_CAN_SEE       2
+    USERS_I_CAN_SEE                 BROWN,BROWN
+    
+    WHO_AM_I                        BROWN
+    NUM_OF_ATTACHES_I_CAN_SEE       3
+    USERS_I_CAN_SEE                 BROWN,BROWN,BROWN
+    
+    WHO_AM_I                        SYSDBA
+    NUM_OF_ATTACHES_I_CAN_SEE       7
+    USERS_I_CAN_SEE                 BROWN,BROWN,BROWN,SMITH,SMITH,SMITH,SYSDBA
+  """,
+ 'expected_stderr': 
+  """
+    Warning: ALL on ALL is not granted to SMITH.
+    Warning: ALL on ALL is not granted to BROWN.
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
