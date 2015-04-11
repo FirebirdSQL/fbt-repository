@@ -1,0 +1,48 @@
+{
+'id': 'bugs.core_2350',
+'qmid': None,
+'tracker_id': 'CORE-2350',
+'title': 'Too long column name for select alias should be rejected',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    recreate table t1 (i integer);
+    commit;
+
+    insert into t1 values(1);
+    commit;
+
+    set list on;
+    --set echo on;
+
+    select i as i23456789012345678901234567890123456 from t1;
+    select i23456789012345678901234567890123456
+    from (
+      select i as i23456789012345678901234567890123456
+      from t1
+    );
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+  """
+}
+]
+}
