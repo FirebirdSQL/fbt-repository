@@ -15,7 +15,7 @@
   """,
  'test_script':
   """
-recreate table test(monitoring_att_id int, running_stt_id int);
+    recreate table test(monitoring_att_id int, running_stt_id int);
     commit;
     
     set term ^;
