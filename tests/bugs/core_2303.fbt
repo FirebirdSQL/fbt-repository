@@ -1,0 +1,43 @@
+{
+'id': 'bugs.core_2303',
+'qmid': None,
+'tracker_id': 'CORE-2303',
+'title': ' Include PLAN in mon$statements',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set blob all;
+    set list on;
+    commit;
+    select
+        (select sign(count(*)) from rdb$relations r)
+       ,s.mon$explained_plan
+    from mon$statements s
+    where s.mon$transaction_id = current_transaction;
+  """,
+ 'expected_stdout': 
+  """
+    SIGN                            1
+    MON$EXPLAINED_PLAN              0:2
+    
+    Select Expression
+        -> Singularity Check
+            -> Aggregate
+                -> Table "RDB$RELATIONS" as "R" Full Scan
+    Select Expression
+        -> Filter
+            -> Table "MON$STATEMENTS" as "S" Full Scan
+  """,
+  'substitutions': [ ('MON$EXPLAINED_PLAN.*', 'MON$EXPLAINED_PLAN') ]
+}
+]
+}
