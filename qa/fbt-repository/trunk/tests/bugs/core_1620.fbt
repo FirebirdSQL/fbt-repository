@@ -9,7 +9,6 @@
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'sql_dialect': 1,
  'page_size': '4096',
  'init_script': 
   """
