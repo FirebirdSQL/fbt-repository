@@ -1,0 +1,29 @@
+{
+'id': 'bugs.core_1619',
+'qmid': None,
+'tracker_id': 'CORE-1619',
+'title': 'Some aggregate functions doesn't support NULL-constant in 3-d dialect',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select avg(null),sum(null) from rdb$relations;  
+  """,
+ 'expected_stdout': 
+  """
+    AVG                             <null>
+    SUM                             <null>
+  """
+}
+]
+}
