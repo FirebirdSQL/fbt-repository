@@ -1,0 +1,55 @@
+{
+'id': 'bugs.core_1782',
+'qmid': None,
+'tracker_id': 'CORE-1782',
+'title': 'ISQL crashes when fetching data for a column having alias longer than 30 characters',
+'description': '',
+'min_versions': '2.1.7',
+'versions': [
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select 1 as test567890test567890test567890test567890 from rdb$database; 
+  """,
+ 'expected_stdout': 
+  """
+    TEST567890TEST567890TEST567890T 1
+  """,
+ 'expected_stderr': 
+  """
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select 1 as test567890test567890test567890test567890 from rdb$database; 
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+  """
+}
+]
+}
