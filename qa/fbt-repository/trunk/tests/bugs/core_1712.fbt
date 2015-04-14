@@ -1,0 +1,36 @@
+{
+'id': 'bugs.core_1712',
+'qmid': None,
+'tracker_id': 'CORE-1712',
+'title': 'Buffer overflow in conversion',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'sql_dialect': 1,
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table testtable(f1 numeric(15, 2));
+    commit;
+    
+    insert into testtable(f1) values(1e19);
+    commit;
+    
+    set list on;
+    select cast(f1 as varchar(30)) f1_as_varchar30 from testtable;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    F1_AS_VARCHAR30                 1.000000000000000e+019
+  """
+}
+]
+}
