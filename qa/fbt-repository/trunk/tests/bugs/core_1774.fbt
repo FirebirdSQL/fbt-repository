@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_1782',
+'id': 'bugs.core_1744',
 'qmid': None,
-'tracker_id': 'CORE-1782',
+'tracker_id': 'CORE-1744',
 'title': 'Problem with COLLATE ES_ES_CI_AI',
 'description': '',
 'min_versions': '2.0.7',
