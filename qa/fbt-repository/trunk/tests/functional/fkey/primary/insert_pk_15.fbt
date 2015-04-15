@@ -4,7 +4,7 @@
 'tracker_id': '',
 'title': 'Check correct work fix with foreign key',
 'description': """Check foreign key work.
-Master transaction inserts record into master_table but DIES NOT commit.
+Master transaction inserts record into master_table but DOES NOT commit.
 Detail transaction inserts record in detail_table and tries to COMMIT.
 Expected: referential integrity error.""",
 'min_versions': None,
