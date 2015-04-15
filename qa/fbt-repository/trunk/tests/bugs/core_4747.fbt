@@ -1,0 +1,77 @@
+{
+'id': 'bugs.core_4747',
+'qmid': None,
+'tracker_id': 'CORE-4747',
+'title': ' Error "invalid BLOB ID" can occur when retrieving MON$STATEMENTS.MON$SQL_TEXT using ES/EDS and db_connect argument is not specified',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set blob all;
+    
+    recreate table test(sid int, tid int, txt blob);
+    commit;
+    insert into test(sid, tid, txt) select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s rows 1;
+    commit;
+    
+    set term ^;
+    execute block returns( msg varchar(10), running_stt_id int, running_trn_id int, running_stt_text blob) as
+        declare v_dbname varchar(255);
+        declare v_stt1 varchar(1024) = 'select t.sid, t.tid, t.txt from test t';
+        declare v_stt2 varchar(1024) = 'select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$transaction_id = current_transaction rows 1';
+        declare v_usr rdb$user = 'sysdba';
+        declare v_pwd varchar(20) = 'masterke';
+        declare v_trn int;
+    begin
+        -- NOTE: v_dbname is NOT initialized with database connection string.
+    
+        msg = 'point-1';
+        execute statement (v_stt1)
+        on external (v_dbname)
+        as user :v_usr password :v_pwd
+        into running_stt_id, running_trn_id, running_stt_text;
+        suspend;
+    
+        msg = 'point-2';
+        execute statement (v_stt2)
+        on external (v_dbname)
+        as user :v_usr password :v_pwd
+        into running_stt_id, running_trn_id, running_stt_text ;
+        suspend;
+    end
+    ^
+    set term ;^
+    rollback;
+  """,
+ 'expected_stdout': 
+  """
+    MSG                             point-1
+    RUNNING_STT_ID                  111
+    RUNNING_TRN_ID                  219
+    RUNNING_STT_TEXT                91:0
+    insert into test(sid, tid, txt) select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s rows 1
+    
+    MSG                             point-2
+    RUNNING_STT_ID                  140
+    RUNNING_TRN_ID                  224
+    RUNNING_STT_TEXT                0:1
+    select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$transaction_id = current_transaction rows 1
+  """,
+  'substitutions': [
+     ('RUNNING_STT_ID[ ]+[0-9]+','RUNNING_STT_ID'),
+     ('RUNNING_TRN_ID[ ]+[0-9]+','RUNNING_TRN_ID'),
+     ('RUNNING_STT_TEXT.*','')
+  ]
+}
+]
+}
