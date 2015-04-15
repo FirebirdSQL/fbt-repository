@@ -7,7 +7,8 @@
 Master table has primary key consisting of several fields.
 Master transaction modifies non key fields.
 Detail transaction inserts record in detail_table.
-Expected: no errors""",
+Expected: no errors.
+Related to: CORE-1606. Ability to insert child record if parent record is locked but foreign key target unchanged.""",
 'min_versions': None,
 'versions': [
 {
