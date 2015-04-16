@@ -2,7 +2,7 @@
 'id': 'bugs.core_1560',
 'qmid': 'bugs.core_1560',
 'tracker_id': '',
-'title': '',
+'title': 'NULLIF crashes when first parameter is constant empty string',
 'description': '',
 'versions': [
 {
