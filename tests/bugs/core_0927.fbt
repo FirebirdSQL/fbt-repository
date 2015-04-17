@@ -1,0 +1,74 @@
+{
+'id': 'bugs.core_0927',
+'qmid': '',
+'tracker_id': 'CORE-927',
+'title': "Grants don't work for procedures used inside views",
+'description': '',
+'min_versions': '2.5.2',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    drop user usr$c0927;
+    commit;
+    create user usr$c0927 password '123';
+    commit;
+    revoke all on all from usr$c0927;
+    commit;
+    
+    create or alter view v_test as select 1 id from rdb$database;
+    commit;
+    
+    set term ^;
+    create or alter procedure sp_test returns (result integer) as
+    begin
+        result = 1;
+        suspend;
+    end
+    ^
+    set term ;^
+    commit;
+    
+    create or alter view v_test as
+    select (select result from sp_test) r from rdb$database;
+    
+    grant execute on procedure sp_test to view v_test;
+    grant select on v_test to usr$c0927;
+
+    -------------------------------------------------
+    set list on;
+    set term ^;
+    execute block returns(who_am_i varchar(31), result int) as
+        declare v_dbname varchar(255);
+    begin
+        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
+        execute statement 'select current_user, r from v_test'
+        on external v_dbname
+        as user 'usr$c0927' password '123'
+        into who_am_i, result;
+        suspend;
+    end
+    ^
+    set term ;^
+    drop user usr$c0927;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    WHO_AM_I                        USR$C0927
+    RESULT                          1
+  """,
+ 'expected_stderr': 
+  """
+    Warning: ALL on ALL is not granted to USR$C0927.
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
