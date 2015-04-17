@@ -30,7 +30,7 @@
         declare v_stt1 varchar(1024) = 'select t.sid, t.tid, t.txt from test t';
         declare v_stt2 varchar(1024) = 'select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$transaction_id = current_transaction rows 1';
         declare v_usr rdb$user = 'sysdba';
-        declare v_pwd varchar(20) = 'masterke';
+        declare v_pwd varchar(20) = 'masterkey';
         declare v_trn int;
     begin
         -- NOTE: v_dbname is NOT initialized with database connection string.
