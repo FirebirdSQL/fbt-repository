@@ -1,0 +1,35 @@
+{
+'id': 'bugs.core_1378',
+'qmid': 'bugs.core_1378',
+'tracker_id': '',
+'title': 'Domain names and charset issues',
+'description': '',
+'min_versions': '2.1.7',
+'versions': [
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create domain "число" as int;
+    commit;
+    create table test( id "число");
+    commit;
+    set term ^;
+    create procedure sp_test (n_init "число") returns( n_quad "число") as
+    begin
+       suspend;
+    end
+    ^
+    set term ;^
+    commit;
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
