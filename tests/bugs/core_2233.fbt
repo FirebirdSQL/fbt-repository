@@ -40,7 +40,7 @@
         declare v_usr_brown varchar(31) = 'brown';
         declare v_pwd_brown varchar(8) = '456';
         declare v_usr_admin varchar(31) = 'SYSDBA';
-        declare v_pwd_admin varchar(8) = 'masterke';
+        declare v_pwd_admin varchar(8) = 'masterkey';
     begin
         v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
         v_stt = 'select current_user, count(distinct a.mon$attachment_id), list(trim(a.mon$user)) '
