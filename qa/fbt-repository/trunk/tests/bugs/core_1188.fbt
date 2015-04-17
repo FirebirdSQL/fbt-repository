@@ -1,0 +1,54 @@
+{
+'id': 'bugs.core_1188',
+'qmid': None,
+'tracker_id': 'CORE-1188',
+'title': "Select Starting with :Param (Empty string) doesn't work if using index with many fields",
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- NB! As of 17.04.2015 this ticket resolves trouble only for FB-3.0.
+    -- Build WI-V2.5.4.26857 returns NO rows!
+    recreate table testx(
+      f01 varchar(10),
+      f02 varchar(10)
+    );
+    commit;
+    insert into testx values('a','b');
+    commit;
+    create index x_testx_1_2 on testx(f01,f02);
+    commit;
+
+    set list on;
+
+    set term ^;
+    execute block returns(f01 varchar(10), f02 varchar(10)) as
+        declare v_stt varchar(255);
+    begin
+        v_stt = 'select f01, f02 from testx where f01=''a'' and f02 starting with ?';
+        for
+            execute statement(v_stt) ('')
+            into f01, f02
+        do
+            suspend;
+    end
+    ^
+    set term ;^
+  """,
+ 'expected_stdout': 
+  """
+    F01                             a
+    F02                             b
+  """
+}
+]
+}
