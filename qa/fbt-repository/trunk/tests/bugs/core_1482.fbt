@@ -1,0 +1,74 @@
+{
+'id': 'bugs.core_1482',
+'qmid': None,
+'tracker_id': 'CORE-1482',
+'title': "Make optimizer to consider ORDER BY optimization when making decision about join order",
+'description': '',
+'min_versions': '2.0.7',
+'versions': [
+{
+ 'firebird_version': '2.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- NB: currently PLAN is the same for 2.0.7, 2.1.7, 2.5.4 and 3.0.
+    recreate table tmain(id int);
+    recreate table tdetl(id int, pid int);
+    commit;
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop generator g';
+    when any do begin end
+    end
+    ^
+    set term ;^
+    commit;
+    create generator g;
+    commit;
+    
+    set term ^;
+    execute block as
+      declare n_main int = 10000;
+      declare n_detl int = 10;
+      declare i int;
+    begin
+      while(n_main>0) do
+      begin
+        insert into tmain(id) values( gen_id(g,1) );
+        i = 0;
+        while(i<n_detl) do 
+        begin
+          insert into tdetl(id, pid) values( gen_id(g,1), :n_main);
+          i = i+1;
+        end
+        n_main = n_main-1;
+      end
+    end
+    ^
+    set term ;^
+    commit;
+    create index tmain_id on tmain(id);
+    create index tdetl_pid on tdetl(pid);
+    commit;
+    
+    set plan on;
+    set list on;
+    select * from tmain m join tdetl d on m.id = d.pid order by m.id rows 1;
+  """,
+ 'expected_stdout': 
+  """
+    PLAN JOIN (M ORDER TMAIN_ID, D INDEX (TDETL_PID))
+
+    ID                              1
+    ID                              109991
+    PID                             1
+  """
+}
+]
+}
