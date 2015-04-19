@@ -1,0 +1,114 @@
+{
+'id': 'bugs.core_0885',
+'qmid': '',
+'tracker_id': 'CORE-885',
+'title': 'It is impossible to take away rights on update of a column',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    drop user john_senior;
+    drop user mick_junior;
+    commit;
+    create user john_senior password 'sen';
+    create user mick_junior password 'jun';
+    commit;
+    
+    recreate table test(id int, x int, changed_by_user varchar(31) default current_user, changed_by_role varchar(31) default current_role);
+    commit;
+    
+    insert into test(id, x) values(1, null);
+    insert into test(id, x) values(2, null);
+    commit;
+    
+    grant create role to john_senior;
+    grant select, update (x) on test to john_senior with grant option;
+    commit;
+    
+    ----------------------------------------
+    
+    set transaction read committed record_version no wait;
+    set term ^;
+    execute block as
+        declare v_dbname varchar(255);
+        declare v_dml varchar(128) = 'update test set x = :x, changed_by_user = current_user, changed_by_role = current_role where id = :y';
+        declare v_role varchar(31);
+    begin
+        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
+        v_role=upper('modifier');
+    
+        execute statement 'create role ' || v_role
+        with autonomous transaction
+        on external v_dbname
+        as user 'john_senior' password 'sen';
+    
+        execute statement 'grant select, update (x) on test to ' || v_role
+        with autonomous transaction
+        on external v_dbname
+        as user 'john_senior' password 'sen';
+    
+        execute statement 'grant ' || v_role || ' to mick_junior'
+        with autonomous transaction
+        on external v_dbname
+        as user 'john_senior' password 'sen';
+    
+        execute statement (v_dml) ( x := 555, y := 1 )
+        with autonomous transaction
+        on external v_dbname
+        as user 'mick_junior' password 'jun' role v_role;
+    
+        execute statement 'revoke update (x) on test from ' || v_role
+        with autonomous transaction
+        on external v_dbname
+        as user 'john_senior' password 'sen';
+    
+        execute statement (v_dml) ( x := 999, y := 2 )
+        with autonomous transaction
+        on external v_dbname
+        as user 'mick_junior' password 'jun' role v_role;
+    
+    end
+    ^
+    set term ;^
+    commit;
+    
+    set list on;
+    select * from test;
+    
+    drop user john_senior;
+    drop user mick_junior;
+    drop role modifier;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    ID                              1
+    X                               555
+    CHANGED_BY_USER                 MICK_JUNIOR
+    CHANGED_BY_ROLE                 MODIFIER
+    
+    ID                              2
+    X                               <null>
+    CHANGED_BY_USER                 SYSDBA
+    CHANGED_BY_ROLE                 NONE
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    Execute statement error at isc_dsql_prepare :
+    335544352 : no permission for UPDATE access to TABLE TEST
+    Statement : update test set x = ?, changed_by_user = current_user, changed_by_role = current_role where id = ?
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE = HY000',''),
+    ('record not found for user:.*',''),
+    ('Data source.*','')
+  ]
+}
+]
+}
