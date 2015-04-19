@@ -1,0 +1,51 @@
+{
+'id': 'bugs.core_1379',
+'qmid': 'bugs.core_1379',
+'tracker_id': '',
+'title': 'Invalid parameter type when using it in CHAR_LENGTH function',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set term ^;
+    execute block returns(r int) as
+    begin
+        execute statement ('select 1 from rdb$database where char_length(?) = 0') (1) into r;
+        suspend;
+    end
+    ^
+    execute block returns(r int) as
+    begin
+        execute statement ('select 1 from rdb$database where char_length(?) = 0') ('') into r;
+        suspend;
+    end
+    ^
+    execute block returns(r int) as
+        declare c varchar(1) = '';
+    begin
+        execute statement ('select 1 from rdb$database where char_length(?) = 0') (c) into r;
+        suspend;
+    end
+    ^
+    set term ;^
+  """,
+ 'expected_stdout':
+  """
+    R                               <null>
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 22018
+    conversion error from string ""
+    Statement failed, SQLSTATE = 22018
+    conversion error from string ""
+  """
+}
+]
+}
