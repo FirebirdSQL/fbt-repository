@@ -1,0 +1,135 @@
+{
+'id': 'bugs.core_805',
+'qmid': '',
+'tracker_id': 'CORE-805',
+'title': 'Privileges of dynamic statements in SP',
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    drop user john_senior;
+    drop user mick_junior;
+    drop role role_for_mick;
+    commit;
+    create user john_senior password 'qwe';
+    create user mick_junior password '123';
+    commit;
+    
+    create role role_for_mick;
+    commit;
+    
+    create or alter procedure sp_test as
+    begin
+    end;
+    
+    recreate table test(id int, x int);
+    commit;
+    
+    insert into test values(1, 100);
+    commit;
+    
+    set term ^;
+    create or alter procedure sp_test returns(id int, x int) as
+    begin
+      for select id, x from test into id, x do suspend;
+    end
+    ^
+    
+    create or alter procedure sp_main(a_usr varchar(31), a_pwd varchar(31), a_role varchar(31) = 'NONE')
+      returns(who_am_i varchar(31), what_is_my_role varchar(31), id int, x int) as
+    begin
+      for
+          execute statement
+          'select current_user, current_role, id, x from sp_test'
+          WITH CALLER PRIVILEGES
+          as user a_usr password a_pwd role a_role
+          into who_am_i, what_is_my_role, id, x
+      do
+          suspend;
+    end
+    ^
+    set term ;^
+    commit;
+    
+    revoke all on all from john_senior;
+    revoke all on all from mick_junior;
+    revoke all on all from role_for_mick;
+    commit;
+    
+    grant select on test to procedure sp_test;
+    grant execute on procedure sp_main to john_senior;
+    grant execute on procedure sp_main to role_for_mick;
+    grant execute on procedure sp_test to procedure sp_main;
+    grant role_for_mick to mick_junior;
+    commit;
+    
+    set list on;
+    
+    set term ^;
+    execute block returns(who_am_i varchar(31), what_is_my_role varchar(31), id int, x int) as
+    begin
+      for execute statement ('select * from sp_main( :u, :p)') ( u := 'john_senior', p := 'qwe' )
+      into who_am_i, what_is_my_role, id, x
+      do suspend;
+    end
+    ^
+    execute block returns(who_am_i varchar(31), what_is_my_role varchar(31), id int, x int) as
+    begin
+      for execute statement ('select * from sp_main( :u, :p, :r)') ( u := 'mick_junior', p := '123', r := 'ROLE_FOR_MICK' )
+      into who_am_i, what_is_my_role, id, x
+      do suspend;
+    end
+    ^
+    set term ;^
+    commit;
+    
+    drop user john_senior;
+    drop user mick_junior;
+    drop role role_for_mick;
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    WHO_AM_I                        JOHN_SENIOR
+    WHAT_IS_MY_ROLE                 NONE
+    ID                              1
+    X                               100
+    
+    
+    
+    WHO_AM_I                        MICK_JUNIOR
+    WHAT_IS_MY_ROLE                 ROLE_FOR_MICK
+    ID                              1
+    X                               100
+  """
+  ,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = HY000
+    record not found for user: JOHN_SENIOR
+    
+    Statement failed, SQLSTATE = HY000
+    record not found for user: MICK_JUNIOR
+    
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -Role ROLE_FOR_MICK not found
+    
+    Warning: ALL on ALL is not granted to JOHN_SENIOR.
+    Warning: ALL on ALL is not granted to MICK_JUNIOR.
+    Warning: ALL on ALL is not granted to ROLE_FOR_MICK.
+  """,
+  'substitutions': [
+    ('Warning: ALL on ALL is not granted to.*','Warning: ALL on ALL is not granted to'),
+    ('-DROP ROLE ROLE_FOR_MICK failed', ''),
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
