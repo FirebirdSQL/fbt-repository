@@ -1,0 +1,71 @@
+{
+'id': 'bugs.core_4604',
+'qmid': '',
+'tracker_id': 'CORE-4604',
+'title': 'EXECUTE STATEMENT rise varchar char_length() size',
+'description': '',
+'min_versions': '2.5.4',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    set list on;
+    set term ^;
+    execute block returns (str_size integer)
+    as
+        declare variable tmp_guid varchar(38);
+        declare variable tmp_sqltext varchar(300);
+        declare v_dbname type of column mon$database.mon$database_name;
+        declare v_usr varchar(31) = 'SYSDBA';
+        declare v_pwd varchar(31) = 'masterke';
+    begin
+        
+        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
+
+        ---------------------------------------------------------------
+        
+        tmp_guid = uuid_to_char(gen_uuid());
+
+        str_size = char_length(tmp_guid);
+        suspend;
+
+        ---------------------------------------------------------------
+        
+        tmp_sqltext = 'select ''' || tmp_guid || ''' from rdb$database';
+
+        execute statement (:TMP_SQLTEXT) 
+        into :tmp_guid;
+        
+        str_size = char_length(tmp_guid);
+        suspend;
+
+        ---------------------------------------------------------------
+        
+        execute statement (:TMP_SQLTEXT) 
+        on external v_dbname as user v_usr password v_pwd
+        into :tmp_guid;
+        
+        str_size = char_length(tmp_guid);
+        
+        --  Confirmed on WI-T3.0.0.31374 Firebird 3.0 Beta 1/tcp (csprog)/P13
+        -- STR_SIZE                        36
+        -- STR_SIZE                        36
+        -- STR_SIZE                        144        
+
+        suspend;
+
+    end
+    ^
+  """,
+ 'expected_stdout':
+  """
+    STR_SIZE                        36
+    STR_SIZE                        36
+    STR_SIZE                        36
+  """
+}
+]
+}
