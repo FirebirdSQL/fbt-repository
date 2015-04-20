@@ -18,7 +18,13 @@
 	with recursive
 	d as (
 		select
-		 -- this is full list of latin-1 letters with diacritical marks:
+		 -- The following is full list of latin-1 letters with diacritical marks
+		 -- ***EXCEPT*** those which are enumerated in CORE-4739 and currently 
+		 -- do NOT pass comparison using accent insensitive collation:
+		 -- Ø = U+00D8 // LATIN CAPITAL LETTER O WITH STROKE' (U+00D8), used in danish & iceland alphabets;
+		 -- Ð = U+00D0 // LATIN CAPITAL LETTER ETH' (U+00D0), iceland
+		 -- Ŀ = U+013F // LATIN CAPITAL LETTER L WITH MIDDLE DOT' (U+013F), catalone (valencian)
+		 -- Ł = U+0141 // LATIN CAPITAL LETTER L WITH STROKE' (U+0141), polish 
 		 cast( 'ĄÁÃÀÅĂÂÄÇĘÊĖÈËÉĢÏÍÎÌĽÑÒŐÕÔÖÓŞŠŢÚÙÛŰÜŸÝŹŻ' as varchar(80) character set utf8) collate unicode_ci_ai utf8_chr
 		,cast( 'AAAAAAAACEEEEEEGIIIILNOOOOOOSSTUUUUUYYZZ' as varchar(80) character set utf8) collate unicode_ci_ai ascii_up
 		,cast( 'aaaaaaaaceeeeeegiiiilnoooooosstuuuuuyyzz' as varchar(80) character set utf8) collate unicode_ci_ai ascii_lo
