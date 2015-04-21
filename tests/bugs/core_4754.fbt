@@ -1,0 +1,59 @@
+{
+'id': 'bugs.core_4754',
+'qmid': '',
+'tracker_id': 'CORE-4754',
+'title': 'Manipulations with GTT from several attachments (using ES/EDS and different roles) leads to: "internal Firebird consistency check (invalid SEND request (167), file: JrdStatement.cpp line: 325)"',
+'description': '',
+'min_versions': '2.5.5',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    recreate global temporary table gtt_session(x int, y int) on commit preserve rows;
+    commit;
+    
+    set transaction read committed;
+    set term ^;
+    execute block as
+       declare v_dbname type of column mon$database.mon$database_name;
+       declare n int;
+       declare v_usr varchar(31) = 'SYSDBA';
+       declare v_pwd varchar(20) = 'masterkey';
+    begin
+    
+       v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
+    
+       execute statement 'insert into gtt_session select rand()*10, rand()*10 from rdb$types union all select -1, -1 from rdb$database'
+       on external v_dbname
+       as user v_usr password v_pwd role 'poor_dba';
+    
+       --------------------------------------------------------
+    
+       execute statement 'insert into gtt_session select rand()*10, rand()*10 from rdb$types union all select -2, -2 from rdb$database'
+       on external v_dbname
+       as user v_usr password v_pwd role 'cool_dba';
+    
+       execute statement 'create index gtt_session_x_y on gtt_session computed by ( x+y )'
+       with autonomous transaction
+       on external v_dbname
+       as user v_usr password v_pwd role 'cool_dba';
+    
+       --------------------------------------------------------
+    
+       execute statement 'insert into gtt_session select rand()*10, rand()*10 from rdb$types union all select -3, -3 from rdb$database'
+       on external v_dbname
+       as user v_usr password v_pwd role 'super_dba';
+    
+    end
+    ^
+    set term ;^ 
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
