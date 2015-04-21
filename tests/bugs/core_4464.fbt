@@ -1,0 +1,91 @@
+{
+'id': 'bugs.core_4464',
+'qmid': '',
+'tracker_id': 'CORE-4464',
+'title': 'Duplicate tags for CREATE/ALTER USER not handled correctly',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    drop user boss1;
+    drop user boss2;
+    drop user boss3;
+    commit;
+
+    -- Should fail because of duplicate specification of added attr. 'firstname':
+    create user boss1 password '123' tags (firstname='Ozzy', surname='Osbourne', groupname='Black Sabbath', firstname='John');
+
+    -- Should work OK:
+    create user boss2 password '456' tags (firstname='Ian', surname='Gillan', groupname='Deep Purple');
+
+    create user boss3 password '789';
+    commit;
+
+    -- Should fail because of duplicate specification of deleted attr. 'firstname':
+    alter user boss2 set tags (drop firstname, drop surname, drop groupname, drop firstname);
+    commit;
+
+    -- Should work OK:
+    alter user boss3 set tags (firstname='Ozzy', surname='Osbourne', groupname='Black Sabbath');
+    commit;
+
+ 
+    -- Should fail because of duplicate specification of removed and than added attr. 'firstname':
+    alter user boss3 set tags (drop firstname, surname='Gillan', groupname='Deep Purple', firstname='Ian');
+    commit;
+
+    -- temply disabled: output depends on `UserManager` parameter in firebird.conf
+    -- 1) for 'Legacy' output will be:
+    -- LOGIN      TAG                  VAL
+    -- ========== ==================== =========================
+    -- BOSS2      GroupName            Deep Purple
+    -- BOSS3      GroupName            Black Sabbath
+
+    -- 2) for 'Srp' output will be:
+    -- LOGIN      TAG                  VAL
+    -- ========== ==================== =========================
+    -- BOSS2      FIRSTNAME            Ian
+    -- BOSS2      GROUPNAME            Deep Purple
+    -- BOSS2      SURNAME              Gillan
+    -- BOSS3      FIRSTNAME            Ozzy
+    -- BOSS3      GROUPNAME            Black Sabbath
+    -- BOSS3      SURNAME              Osbourne
+
+    -- set width sec_plg 7;
+    -- select
+    --     cast(u.sec$user_name as char(10)) login
+    --     ,cast(a.sec$key as char(20)) tag
+    --     ,cast(a.sec$value as char(25)) val
+    --     --,sec$plugin sec_plg
+    -- from sec$users u
+    -- left join sec$user_attributes a on u.sec$user_name = a.sec$user_name
+    -- where u.sec$user_name in ( upper('boss1'), upper('boss2'), upper('boss3') )
+    -- order by 1,2,3;
+    -- commit;
+
+    drop user boss1;
+    drop user boss2;
+    drop user boss3;
+    commit;
+  """,
+  'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42702
+    Duplicated user attribute FIRSTNAME
+    Statement failed, SQLSTATE = 42702
+    Duplicated user attribute FIRSTNAME
+    Statement failed, SQLSTATE = 42702
+    Duplicated user attribute FIRSTNAME
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE = HY000',''),
+    ('record not found for user:.*','')
+  ]
+}
+]
+}
