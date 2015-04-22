@@ -16,9 +16,8 @@
  'test_type': 'ISQL',
  'test_script': 
   """
-    -- NB: currently PLAN is the same for 2.0.7, 2.1.7, 2.5.4 and 3.0.
-    recreate table tmain(id int);
-    recreate table tdetl(id int, pid int);
+    recreate table tcolor(id int , name varchar(20) );
+    recreate table thorses(id int, color_id int, name varchar(20));
     commit;
     set term ^;
     execute block as
@@ -34,17 +33,18 @@
     
     set term ^;
     execute block as
-      declare n_main int = 10000;
-      declare n_detl int = 10;
+      declare n_main int = 30;
+      declare n_mult_for_detl int;
       declare i int;
     begin
+      n_mult_for_detl = 15000; -- ~ ratio provided by Denis Simonov in his sample, see e-mail
       while(n_main>0) do
       begin
-        insert into tmain(id) values( gen_id(g,1) );
+        insert into tcolor(id, name) values( gen_id(g,1), 'color #' || :n_main );
         i = 0;
-        while(i<n_detl) do 
+        while(i < n_mult_for_detl) do
         begin
-          insert into tdetl(id, pid) values( gen_id(g,1), :n_main);
+          insert into thorses(id, color_id, name) values( gen_id(g,0), :n_main, 'horse #'||gen_id(g,1) );
           i = i+1;
         end
         n_main = n_main-1;
@@ -53,21 +53,33 @@
     ^
     set term ;^
     commit;
-    create index tmain_id on tmain(id);
-    create index tdetl_pid on tdetl(pid);
+    create index tcolor_id on tcolor(id);
+    create index thorses_color_id on thorses(color_id);
     commit;
-    
-    set plan on;
-    set list on;
-    select * from tmain m join tdetl d on m.id = d.pid order by m.id rows 1;
+
+    set planonly;
+    set echo on;
+
+    -- NB: currently PLANs are the same for 2.0.7, 2.1.7, 2.5.4 and 3.0 (confirmed again, 22.04.2015)
+    -- ################################
+    select * from tcolor m join thorses d on m.id = d.color_id order by m.name rows 1;
+    select * from tcolor m join thorses d on m.id = d.color_id order by d.name rows 1;
+    select * from tcolor m join thorses d on m.id = d.color_id order by m.id rows 1;
+    select * from tcolor m join thorses d on m.id = d.color_id order by d.id rows 1;
   """,
  'expected_stdout': 
   """
-    PLAN JOIN (M ORDER TMAIN_ID, D INDEX (TDETL_PID))
+   select * from tcolor m join thorses d on m.id = d.color_id order by m.name rows 1;
+    PLAN SORT (JOIN (M NATURAL, D INDEX (THORSES_COLOR_ID)))
 
-    ID                              1
-    ID                              109991
-    PID                             1
+    select * from tcolor m join thorses d on m.id = d.color_id order by d.name rows 1;
+    PLAN SORT (JOIN (M NATURAL, D INDEX (THORSES_COLOR_ID)))
+
+    select * from tcolor m join thorses d on m.id = d.color_id order by m.id rows 1;
+    PLAN JOIN (M ORDER TCOLOR_ID, D INDEX (THORSES_COLOR_ID))
+
+    select * from tcolor m join thorses d on m.id = d.color_id order by d.id rows 1;
+    PLAN SORT (JOIN (M NATURAL, D INDEX (THORSES_COLOR_ID)))
   """
 }
 ]
