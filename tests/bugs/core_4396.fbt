@@ -1,0 +1,57 @@
+{
+'id': 'bugs.core_4396',
+'qmid': None,
+'tracker_id': 'CORE-4396',
+'title': 'incorrect result query if it is execute through "execute statement"',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table test(run smallint, rn smallint, id int);
+    commit;
+    
+    insert into test(run, rn, id)
+    select 1, row_number()over(), r.rdb$relation_id
+    from rdb$relations r
+    order by rdb$relation_id rows 3;
+    commit;
+    
+    set term ^;
+    execute block returns ( id integer ) as
+        declare r int;
+        declare i int;
+    begin
+        for
+            execute statement
+                'select row_number()over(), rdb$relation_id from rdb$relations order by rdb$relation_id rows 3'
+            on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+                as user 'sysdba' password 'masterke'
+            into r, i
+        do insert into test(run, rn, id) values(2, :r, :i);
+    end
+    ^
+    set term ;^
+    commit;
+    
+    set list on;
+    select count(*) cnt
+    from (
+        select rn,id --,min(run),max(run)
+        from test
+        group by 1,2
+        having max(run)-min(run)<>1
+    ) x;
+  """,
+ 'expected_stdout':
+  """
+    CNT                             0
+  """
+}
+]
+}
