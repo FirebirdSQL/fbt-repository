@@ -1,0 +1,69 @@
+{
+'id': 'bugs.core_4766',
+'qmid': None,
+'tracker_id': 'CORE-4766',
+'title': 'AV when trying to manage users list using EXECUTE STATEMENT on behalf of non-sysdba user which has RDB$ADMIN role',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'sql_dialect': 1,
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    -- NB: user 'boss' is NOT granted with 'RDB$ADMIN' role, only clause "grant admin" present for him
+    -- in the creating statement, so all his attempts to create/drop another user will be FAILED.
+    -- Before snapshot 31807 3rd such fail lead FB to crash (AV).
+
+    create or alter user boss password '123' grant admin role;
+    commit;
+    
+    set term ^;
+    execute block as
+    begin
+        execute statement 'create or alter user mgr1 password ''456'''
+        as user 'BOSS' password '123' role 'RDB$ADMIN';
+    end
+    ^
+    set term ;^
+    commit; -- this lead to first "SQLSTATE = 28000 / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
+
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop user mgr1'
+        as user 'BOSS' password '123' role 'RDB$ADMIN';
+    end  -- this lead to 2nd "SQLSTATE = 28000 / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
+    ^
+    set term ;^
+    commit; -- this lead to FB crash and message about AV apperaed in firebird.log (checked on WI-T3.0.0.31801)
+
+    drop user boss;
+    commit; 
+  """,
+  'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 28000
+    add record error
+    -no permission for INSERT access to TABLE PLG$VIEW_USERS
+
+    Statement failed, SQLSTATE = 28000
+    add record error
+    -no permission for INSERT access to TABLE PLG$VIEW_USERS
+
+    Statement failed, SQLSTATE = 28000
+    add record error
+    -no permission for INSERT access to TABLE PLG$VIEW_USERS
+
+    Statement failed, SQLSTATE = 28000
+    add record error
+    -no permission for INSERT access to TABLE PLG$VIEW_USERS
+  """
+}
+]
+}
