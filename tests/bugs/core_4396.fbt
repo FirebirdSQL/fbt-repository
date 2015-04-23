@@ -31,7 +31,7 @@
             execute statement
                 'select row_number()over(), rdb$relation_id from rdb$relations order by rdb$relation_id rows 3'
             on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-                as user 'sysdba' password 'masterke'
+                as user 'sysdba' password 'masterkey'
             into r, i
         do insert into test(run, rn, id) values(2, :r, :i);
     end
