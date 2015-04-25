@@ -1,0 +1,82 @@
+{
+'id': 'bugs.core_4326',
+'qmid': None,
+'tracker_id': 'CORE-4326',
+'title': 'Keyword SET should not be required in ALTER USER statement',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    create or alter user tmp$c4326 password '123';
+    commit;
+    alter user tmp$c4326 password '456' firstname 'Deep' lastname 'Purple';
+    commit;
+    
+    create or alter view v_user_info as
+    select sec$user_name uname, sec$first_name fname, sec$last_name lname from sec$users
+    where sec$user_name = upper('tmp$c4326');
+    commit;
+    
+    set list on;
+    
+    select * from v_user_info;
+    
+    commit;
+    set transaction read committed;
+    set term ^;
+    execute block returns(
+      uname type of column sec$users.sec$user_name
+      ,fname type of column sec$users.sec$first_name
+      ,lname type of column sec$users.sec$last_name
+    )  as
+      declare v_usr type of column sec$users.sec$user_name = 'tmp$c4326';
+      declare v_pwd varchar(20) = '456';
+    
+    begin
+      execute statement 'alter current user password ''IronMan'' firstname ''Black'' lastname ''Sabbath'''
+      with autonomous transaction
+      on external ( 'localhost:' || rdb$get_context('SYSTEM','DB_NAME') )
+         as user v_usr password v_pwd;
+    
+      for select uname, fname, lname from v_user_info into uname, fname, lname do suspend;
+    
+      execute statement 'alter current user password ''Kashmir'' firstname ''Led'' lastname ''Zeppelin'''
+      on external ( 'localhost:' || rdb$get_context('SYSTEM','DB_NAME') )
+         as user v_usr password 'IronMan';
+    
+    end
+    ^
+    set term ;^
+    commit;
+    
+    select * from v_user_info;
+    
+    drop user tmp$c4326;
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    UNAME                           TMP$C4326
+    FNAME                           Deep
+    LNAME                           Purple
+
+    UNAME                           TMP$C4326
+    FNAME                           Black
+    LNAME                           Sabbath
+
+    UNAME                           TMP$C4326
+    FNAME                           Led
+    LNAME                           Zeppelin
+  """
+}
+]
+}
