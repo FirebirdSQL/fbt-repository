@@ -19,6 +19,10 @@
     set planonly;
     set sqlda_display on;
     select rdb$set_context( ?, ?, ?) x from rdb$database;
+    -- Result is value of constant from src/dsql/sqlda_pub.h, but bit_0
+    -- is ON if this parameter is Nullable, i.e.:
+    -- #define SQL_VARYING 448 ==> 449 for Nullable
+    -- #define SQL_LONG    496 ==> 497 for Nullable
   """,
  'expected_stdout':
   """
@@ -42,6 +46,11 @@
     set planonly;
     set sqlda_display on;
     select rdb$set_context( ?, ?, ?) x from rdb$database;
+    -- NB: output in 3.0 will contain values of sqltype with ZERO in bit_0,
+    -- so it will be: 448 instead of previous 449, and 496 instead of 497.
+    -- Result is value that equal to constant from src/dsql/sqlda_pub.h, i.e:
+    -- #define SQL_VARYING 448
+    -- #define SQL_LONG    496
   """,
  'expected_stdout':
   """
