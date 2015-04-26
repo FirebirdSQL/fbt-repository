@@ -1,0 +1,56 @@
+{
+'id': 'bugs.core_4156',
+'qmid': None,
+'tracker_id': 'CORE-4156',
+'title': 'RDB$GET_CONTEXT/RDB$SET_CONTEXT parameters incorrectly described as CHAR NOT NULL instead of VARCHAR NULLABLE',
+'description': '',
+'min_versions': '2.1.7',
+'versions': [
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    set planonly;
+    set sqlda_display on;
+    select rdb$set_context( ?, ?, ?) x from rdb$database;
+  """,
+ 'expected_stdout':
+  """
+    01: sqltype: 449 VARYING   Nullable sqlscale: 0 sqlsubtype: 0 sqllen: 80
+    02: sqltype: 449 VARYING   Nullable sqlscale: 0 sqlsubtype: 0 sqllen: 80
+    03: sqltype: 449 VARYING   Nullable sqlscale: 0 sqlsubtype: 0 sqllen: 255
+    01: sqltype: 497 LONG	  Nullable sqlscale: 0 sqlsubtype: 0 sqllen: 4
+  """,
+  'substitutions':[('^((?!sqltype).)*$','')]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    set planonly;
+    set sqlda_display on;
+    select rdb$set_context( ?, ?, ?) x from rdb$database;
+  """,
+ 'expected_stdout':
+  """
+    01: sqltype: 448 VARYING   Nullable scale: 0 subtype: 0 len: 80
+    02: sqltype: 448 VARYING   Nullable scale: 0 subtype: 0 len: 80
+    03: sqltype: 448 VARYING   Nullable scale: 0 subtype: 0 len: 255
+    01: sqltype: 496 LONG	  		 scale: 0 subtype: 0 len: 4
+  """,
+  'substitutions':[('^((?!sqltype).)*$','')]
+}
+]
+}
