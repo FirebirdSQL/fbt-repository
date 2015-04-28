@@ -1,0 +1,37 @@
+{
+'id': 'bugs.core_4774',
+'qmid': None,
+'tracker_id': 'CORE-4774',
+'title': 'Table aliasing is unnecessary required when doing UPDATE ... RETURNING RDB$ pseudo-columns',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    recreate table t(id int, x int);
+    commit;
+    insert into t values(1, 100);
+    commit;
+    set planonly;
+    insert into t(id, x) values(2, 200) returning rdb$db_key;
+    delete from t where id=1 returning rdb$db_key;
+    update t set x=-x where id=2 returning rdb$db_key;
+    update t set x=-x where id=2 returning rdb$record_version; 
+  """,
+ 'expected_stdout':
+  """
+    PLAN (T NATURAL)
+    PLAN (T NATURAL)
+    PLAN (T NATURAL)
+  """
+}
+]
+}
