@@ -1,0 +1,37 @@
+{
+'id': 'bugs.core_3545',
+'qmid': None,
+'tracker_id': 'CORE-3545',
+'title': "Inconsistent domain's constraint validation in PSQL",
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    create domain dx varchar(2) check (value < '5');
+    set term ^;
+    execute block as
+      declare v1 dx = '40';
+    begin
+    end
+    ^
+    execute block as
+      declare v1 dx = 40;
+    begin
+    end
+    ^
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
