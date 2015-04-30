@@ -1,0 +1,50 @@
+{
+'id': 'bugs.core_3234',
+'qmid': None,
+'tracker_id': 'CORE-3234',
+'title': 'Support for text BLOBs >= 32K as first argument for TRIM()',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    -- Test was run also for two blobs with length 50'000'000 (+3) bytes - result was OK.
+    set list on;
+    set term ^;
+    execute block returns(b1len int, b2len int, trlen int) as
+      declare b1 blob = '';
+      declare b2 blob;
+      declare s varchar(32760);
+      declare n int = 1000000;
+    begin
+      while( n > 0 ) do
+      begin
+        b1 = b1 || rpad( '', 32760, uuid_to_char(gen_uuid()) );
+        n = n - 32760;
+      end
+      b2 = b1 || 'end';
+      b1len=octet_length(b1);
+      b2len=octet_length(b2);
+      trlen=octet_length( trim(b1 from b2) ); -- here length of `b1` is much more than 32 Kb.
+      suspend;
+    end
+    ^
+    set term ;^
+  """,
+ 'expected_stdout':
+  """
+    B1LEN                           1015560
+    B2LEN                           1015563
+    TRLEN                           3
+  """
+}
+]
+}
