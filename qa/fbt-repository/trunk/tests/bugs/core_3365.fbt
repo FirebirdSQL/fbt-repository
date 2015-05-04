@@ -1,0 +1,75 @@
+{
+'id': 'bugs.core_3365',
+'qmid': None,
+'tracker_id': 'CORE-3365',
+'title': 'Extend syntax for ALTER USER CURRENT_USER',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    -- Note. Changing of TAGS can be seen only when UserManager = Srp.
+    -- This test implies that firebird.conf contain UserManager = Legacy_UserManager, so it changes
+    -- only 'old' attributes: password, first_name, middle_name and last_name.
+
+    set list on;
+    create or alter user boss password 'old' firstname 'john' lastname 'smith';
+    commit;
+    create or alter view v_boss_info as
+    select s.sec$user_name usr_login, s.sec$first_name usr_fname, s.sec$middle_name usr_mname, s.sec$last_name usr_lname
+    from sec$users s
+    where s.sec$user_name = upper('BOSS');
+    
+    set term ^;
+    execute block as
+    begin
+      execute statement 'alter current user set password ''foo'' firstname ''mick'' lastname ''adams'''
+      on external ( 'localhost:'||rdb$get_context('SYSTEM','DB_NAME') )
+      as user 'boss' password 'old';
+    end
+    ^
+    commit
+    ^
+    select * from v_boss_info
+    ^
+    
+    execute block as
+    begin
+      execute statement 'alter current user set password ''bar'' firstname ''jack'' lastname ''moore'' middlename ''henry'''
+      on external ( 'localhost:'||rdb$get_context('SYSTEM','DB_NAME') )
+      as user 'boss' password 'foo';
+    end
+    ^
+    commit
+    ^
+    select * from v_boss_info
+    ^
+    
+    set term ;^
+    commit;
+    drop user boss;
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    USR_LOGIN                       BOSS
+    USR_FNAME                       mick
+    USR_MNAME                       <null>
+    USR_LNAME                       adams
+    
+    USR_LOGIN                       BOSS
+    USR_FNAME                       jack
+    USR_MNAME                       henry
+    USR_LNAME                       moore
+  """
+}
+]
+}
