@@ -4,10 +4,10 @@
 'tracker_id': '',
 'title': 'Invalid parameter type when using it in CHAR_LENGTH function',
 'description': '',
-'min_versions': '3.0',
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 
@@ -34,17 +34,27 @@
     end
     ^
     set term ;^
-  """,
- 'expected_stdout':
-  """
-    R                               <null>
+    -- 05.05.2015: 
+    -- 1) changed min version to 2.5 (according to ticket header info; output in 2.5 and 3.0 now fully matches)
+    -- 2) removed STDOUT (for the first ES);
+    -- 3) changed expected STDERR: all three ES must now raise exception 'Data type unknown'.
   """,
  'expected_stderr':
   """
-    Statement failed, SQLSTATE = 22018
-    conversion error from string ""
-    Statement failed, SQLSTATE = 22018
-    conversion error from string ""
+    Statement failed, SQLSTATE = HY004
+    Dynamic SQL Error
+    -SQL error code = -804
+    -Data type unknown
+
+    Statement failed, SQLSTATE = HY004
+    Dynamic SQL Error
+    -SQL error code = -804
+    -Data type unknown
+
+    Statement failed, SQLSTATE = HY004
+    Dynamic SQL Error
+    -SQL error code = -804
+    -Data type unknown
   """
 }
 ]
