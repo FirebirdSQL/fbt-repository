@@ -10148,101 +10148,141 @@ RDB$TRIGGER_SOURCE              <null>
 RDB$TRIGGER_BLR                 c:7
         	blr_version5,
         	blr_begin,
-        	   blr_if,
-        	      blr_or,
-        	         blr_eql,
-        	            blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
-        	            blr_literal, blr_text, 11,0, 'P','R','I','M','A','R','Y',32,'K','E','Y',
-        	         blr_eql,
-        	            blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
-        	            blr_literal, blr_text, 6,0, 'U','N','I','Q','U','E',
+        	   blr_label, 0,
         	      blr_begin,
-        	         blr_if,
-        	            blr_any,
-        	               blr_rse, 1,
-        	                  blr_relation, 19, 'R','D','B','$','R','E','F','_','C','O','N','S','T','R','A','I','N','T','S', 3,
-        	                  blr_boolean,
-        	                     blr_eql,
-        	                        blr_field, 3, 17, 'R','D','B','$','C','O','N','S','T','_','N','A','M','E','_','U','Q',
-        	                        blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+        	         blr_begin,
+        	            blr_if,
+        	               blr_or,
+        	                  blr_eql,
+        	                     blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
+        	                     blr_literal, blr_text2, 0,0, 11,0, 'P','R','I','M','A','R','Y',32,'K','E','Y',
+        	                  blr_eql,
+        	                     blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
+        	                     blr_literal, blr_text2, 0,0, 6,0, 'U','N','I','Q','U','E',
+        	               blr_begin,
+        	                  blr_begin,
+        	                     blr_if,
+        	                        blr_any,
+        	                           blr_rse, 1,
+        	                              blr_relation, 19, 'R','D','B','$','R','E','F','_','C','O','N','S','T','R','A','I','N','T','S', 2,
+        	                              blr_boolean,
+        	                                 blr_eql,
+        	                                    blr_field, 2, 17, 'R','D','B','$','C','O','N','S','T','_','N','A','M','E','_','U','Q',
+        	                                    blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+        	                              blr_end,
+        	                        blr_begin,
+        	                           blr_begin,
+        	                              blr_leave, 1,
+        	                              blr_end,
+        	                           blr_end,
+        	                        blr_end,
+        	                     blr_end,
         	                  blr_end,
-        	            blr_leave, 1,
+        	               blr_end,
+        	            blr_if,
+        	               blr_eql,
+        	                  blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
+        	                  blr_literal, blr_text2, 0,0, 11,0, 'F','O','R','E','I','G','N',32,'K','E','Y',
+        	               blr_begin,
+        	                  blr_begin,
+        	                     blr_for,
+        	                        blr_rse, 1,
+        	                           blr_relation, 19, 'R','D','B','$','R','E','F','_','C','O','N','S','T','R','A','I','N','T','S', 3,
+        	                           blr_boolean,
+        	                              blr_eql,
+        	                                 blr_field, 3, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+        	                                 blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+        	                           blr_end,
+        	                        blr_erase, 3,
+        	                     blr_end,
+        	                  blr_end,
+        	               blr_end,
+        	            blr_if,
+        	               blr_eql,
+        	                  blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
+        	                  blr_literal, blr_text2, 0,0, 8,0, 'N','O','T',32,'N','U','L','L',
+        	               blr_begin,
+        	                  blr_begin,
+        	                     blr_label, 1,
+        	                        blr_for,
+        	                           blr_rse, 5,
+        	                              blr_relation2, 21, 'R','D','B','$','C','H','E','C','K','_','C','O','N','S','T','R','A','I','N','T','S',
+        	                                 9, 'C','1',32,'C','H','K','C','O','N', 4,
+        	                              blr_relation2, 19, 'R','D','B','$','R','E','L','A','T','I','O','N','_','F','I','E','L','D','S',
+        	                                 6, 'C','1',32,'R','F','L', 5,
+        	                              blr_relation2, 10, 'R','D','B','$','F','I','E','L','D','S',
+        	                                 6, 'C','1',32,'F','L','D', 6,
+        	                              blr_relation2, 11, 'R','D','B','$','I','N','D','I','C','E','S',
+        	                                 6, 'C','1',32,'I','N','D', 7,
+        	                              blr_relation2, 18, 'R','D','B','$','I','N','D','E','X','_','S','E','G','M','E','N','T','S',
+        	                                 9, 'C','1',32,'I','D','X','S','E','G', 8,
+        	                              blr_boolean,
+        	                                 blr_and,
+        	                                    blr_and,
+        	                                       blr_and,
+        	                                          blr_and,
+        	                                             blr_and,
+        	                                                blr_and,
+        	                                                   blr_and,
+        	                                                      blr_eql,
+        	                                                         blr_field, 4, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+        	                                                         blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+        	                                                      blr_eql,
+        	                                                         blr_field, 5, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
+        	                                                         blr_field, 4, 16, 'R','D','B','$','T','R','I','G','G','E','R','_','N','A','M','E',
+        	                                                   blr_eql,
+        	                                                      blr_field, 5, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
+        	                                                      blr_field, 0, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
+        	                                                blr_eql,
+        	                                                   blr_field, 5, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
+        	                                                   blr_field, 8, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
+        	                                             blr_eql,
+        	                                                blr_field, 6, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
+        	                                                blr_field, 5, 16, 'R','D','B','$','F','I','E','L','D','_','S','O','U','R','C','E',
+        	                                          blr_or,
+        	                                             blr_missing,
+        	                                                blr_field, 6, 13, 'R','D','B','$','N','U','L','L','_','F','L','A','G',
+        	                                             blr_eql,
+        	                                                blr_field, 6, 13, 'R','D','B','$','N','U','L','L','_','F','L','A','G',
+        	                                                blr_literal, blr_long, 0, 0,0,0,0,
+        	                                       blr_eql,
+        	                                          blr_field, 7, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
+        	                                          blr_field, 0, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
+        	                                    blr_eql,
+        	                                       blr_field, 7, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
+        	                                       blr_field, 8, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
+        	                              blr_end,
+        	                           blr_begin,
+        	                              blr_begin,
+        	                                 blr_begin,
+        	                                    blr_if,
+        	                                       blr_any,
+        	                                          blr_rse, 1,
+        	                                             blr_relation, 24, 'R','D','B','$','R','E','L','A','T','I','O','N','_','C','O','N','S','T','R','A','I','N','T','S', 9,
+        	                                             blr_boolean,
+        	                                                blr_and,
+        	                                                   blr_eql,
+        	                                                      blr_field, 9, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
+        	                                                      blr_derived_expr, 1, 8,
+        	                                                         blr_field, 8, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
+        	                                                   blr_eql,
+        	                                                      blr_field, 9, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
+        	                                                      blr_literal, blr_text2, 0,0, 11,0, 'P','R','I','M','A','R','Y',32,'K','E','Y',
+        	                                             blr_end,
+        	                                       blr_begin,
+        	                                          blr_begin,
+        	                                             blr_leave, 2,
+        	                                             blr_end,
+        	                                          blr_end,
+        	                                       blr_end,
+        	                                    blr_end,
+        	                                 blr_end,
+        	                              blr_end,
+        	                     blr_end,
+        	                  blr_end,
+        	               blr_end,
         	            blr_end,
         	         blr_end,
-        	      blr_end,
-        	   blr_if,
-        	      blr_eql,
-        	         blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
-        	         blr_literal, blr_text, 11,0, 'F','O','R','E','I','G','N',32,'K','E','Y',
-        	      blr_begin,
-        	         blr_for,
-        	            blr_rse, 1,
-        	               blr_relation, 19, 'R','D','B','$','R','E','F','_','C','O','N','S','T','R','A','I','N','T','S', 4,
-        	               blr_boolean,
-        	                  blr_eql,
-        	                     blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
-        	                     blr_field, 4, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
-        	               blr_end,
-        	            blr_begin,
-        	               blr_erase, 4,
-        	               blr_end,
-        	         blr_end,
-        	      blr_end,
-        	   blr_if,
-        	      blr_eql,
-        	         blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
-        	         blr_literal, blr_text, 8,0, 'N','O','T',32,'N','U','L','L',
-        	      blr_begin,
-        	         blr_for,
-        	            blr_rse, 4,
-        	               blr_relation, 21, 'R','D','B','$','C','H','E','C','K','_','C','O','N','S','T','R','A','I','N','T','S', 5,
-        	               blr_relation, 19, 'R','D','B','$','R','E','L','A','T','I','O','N','_','F','I','E','L','D','S', 6,
-        	               blr_relation, 11, 'R','D','B','$','I','N','D','I','C','E','S', 7,
-        	               blr_relation, 18, 'R','D','B','$','I','N','D','E','X','_','S','E','G','M','E','N','T','S', 8,
-        	               blr_boolean,
-        	                  blr_and,
-        	                     blr_eql,
-        	                        blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
-        	                        blr_field, 5, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
-        	                     blr_and,
-        	                        blr_eql,
-        	                           blr_field, 6, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
-        	                           blr_field, 5, 16, 'R','D','B','$','T','R','I','G','G','E','R','_','N','A','M','E',
-        	                        blr_and,
-        	                           blr_eql,
-        	                              blr_field, 6, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
-        	                              blr_field, 0, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
-        	                           blr_and,
-        	                              blr_eql,
-        	                                 blr_field, 6, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
-        	                                 blr_field, 8, 14, 'R','D','B','$','F','I','E','L','D','_','N','A','M','E',
-        	                              blr_and,
-        	                                 blr_eql,
-        	                                    blr_field, 7, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
-        	                                    blr_field, 0, 17, 'R','D','B','$','R','E','L','A','T','I','O','N','_','N','A','M','E',
-        	                                 blr_eql,
-        	                                    blr_field, 7, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
-        	                                    blr_field, 8, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
-        	               blr_end,
-        	            blr_begin,
-        	               blr_if,
-        	                  blr_any,
-        	                     blr_rse, 1,
-        	                        blr_relation, 24, 'R','D','B','$','R','E','L','A','T','I','O','N','_','C','O','N','S','T','R','A','I','N','T','S', 9,
-        	                        blr_boolean,
-        	                           blr_and,
-        	                              blr_eql,
-        	                                 blr_field, 9, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
-        	                                 blr_field, 8, 14, 'R','D','B','$','I','N','D','E','X','_','N','A','M','E',
-        	                              blr_eql,
-        	                                 blr_field, 9, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
-        	                                 blr_literal, blr_text, 11,0, 'P','R','I','M','A','R','Y',32,'K','E','Y',
-        	                        blr_end,
-        	                  blr_leave, 2,
-        	                  blr_end,
-        	               blr_end,
-        	         blr_end,
-        	      blr_end,
         	   blr_end,
         	blr_eoc
 
@@ -10661,7 +10701,7 @@ RDB$RELATION_NAME               RDB$INDICES
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:10
+RDB$TRIGGER_BLR                 c:1de
         	blr_version5,
         	blr_begin,
         	   blr_if,
@@ -10716,7 +10756,7 @@ RDB$RELATION_NAME               RDB$INDICES
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1de
+RDB$TRIGGER_BLR                 c:1df
         	blr_version5,
         	blr_begin,
         	   blr_if,
@@ -10847,7 +10887,7 @@ RDB$RELATION_NAME               RDB$TRIGGERS
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1df
+RDB$TRIGGER_BLR                 c:1e0
         	blr_version5,
         	blr_begin,
         	   blr_for,
@@ -10887,7 +10927,7 @@ RDB$RELATION_NAME               RDB$TRIGGERS
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e0
+RDB$TRIGGER_BLR                 c:1e1
         	blr_version5,
         	blr_begin,
         	   blr_for,
@@ -10967,7 +11007,7 @@ RDB$RELATION_NAME               RDB$RELATION_FIELDS
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e1
+RDB$TRIGGER_BLR                 c:1e2
         	blr_version5,
         	blr_begin,
         	   blr_for,
@@ -11093,7 +11133,7 @@ RDB$RELATION_NAME               RDB$RELATION_FIELDS
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e2
+RDB$TRIGGER_BLR                 c:1e3
         	blr_version5,
         	blr_begin,
         	   blr_if,
@@ -11257,7 +11297,7 @@ RDB$RELATION_NAME               RDB$RELATION_FIELDS
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                6
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e3
+RDB$TRIGGER_BLR                 c:1e4
         	blr_version5,
         	blr_begin,
         	   blr_for,
@@ -11326,7 +11366,7 @@ RDB$RELATION_NAME               RDB$USER_PRIVILEGES
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e4
+RDB$TRIGGER_BLR                 c:1e5
         	blr_version5,
         	blr_begin,
         	   blr_if,
@@ -11388,7 +11428,7 @@ RDB$RELATION_NAME               RDB$USER_PRIVILEGES
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e5
+RDB$TRIGGER_BLR                 c:1e6
         	blr_version5,
         	blr_begin,
         	   blr_if,
@@ -11450,7 +11490,7 @@ RDB$RELATION_NAME               RDB$USER_PRIVILEGES
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                1
 RDB$TRIGGER_SOURCE              <null>
-RDB$TRIGGER_BLR                 c:1e6
+RDB$TRIGGER_BLR                 c:1e7
         	blr_version5,
         	blr_begin,
         	   blr_if,
