@@ -129,9 +129,8 @@ unsuccessful metadata update
  'test_type': 'ISQL',
  'test_script': 
   """
-    -- Since WI-T3.0.0.31733:
-    -- Updated STDERR for 3.0: added new line with the name of trigger that raises exception
-    create exception rdb$test '!!!';
+    -- Removed old code: all attempts to create triggers on SYSTEM tables now are prohibited, even for SYSDBA.
+    create exception ex_test '!!!';
     commit;
     
     set term ^ ;
@@ -139,7 +138,7 @@ unsuccessful metadata update
     active after update or delete position 0
     as
     begin
-        EXCEPTION RDB$TEST;
+        exception ex_test;
     end
     ^
     commit^
@@ -154,13 +153,10 @@ unsuccessful metadata update
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = HY000
+    Statement failed, SQLSTATE = 28000
     unsuccessful metadata update
-    -CREATE OR ALTER PROCEDURE PROCTEST failed
-    -exception 1
-    -RDB$TEST
-    -!!!
-    -At trigger 'RDB$PROCEDURES_BIU' line: 5, col: 5
+    -CREATE OR ALTER TRIGGER RDB$PROCEDURES_BIU failed
+    -no permission for ALTER access to TABLE RDB$PROCEDURES
   """,
   'substitutions': [('line:.*',''),('col:.*','')]
 }
