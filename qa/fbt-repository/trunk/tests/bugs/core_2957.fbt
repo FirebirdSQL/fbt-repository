@@ -1,0 +1,66 @@
+{
+'id': 'bugs.core_2957',
+'qmid': None,
+'tracker_id': 'CORE-2957',
+'title': 'count(*) from big table returns negative result',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    -- NB: in fact, this test must check data types in SQLDA for columns that are results of aggregated functions
+    -- COUNT and (maybe) SUM.
+    -- As of 2.5, COUNT(*) is still displayed as `LONG` (sql_len = 4 bytes ==> integer, max 2^32-1) rather than INT64.
+    -- Test was made only for 3.0 (as it was said in the ticket header, "Fixed version(s)") and I've added here
+    -- also check for results of aggregating (for smallint, int and bigint) and ranging analytical functions.
+    -- All sqltypes below should be '580 INT64':
+
+    create table test(id bigint, fx int, fs smallint);
+    commit;
+    set sqlda_display;
+    set planonly;
+
+    select 
+         count( id ) cnt_agg
+        ,sum( id ) sum_agg_n64
+        ,sum( fx ) sum_agg_n32
+        ,sum( fs ) sum_agg_n16
+    from test;
+
+    select
+         count( id )over()  cnt_ovr
+        ,sum( id )over()    sum_ovr_n64
+        ,sum( fx )over()    sum_ovr_n32
+        ,sum( fs )over()    sum_ovr_n16
+
+        ,row_number()over() cnt_ovr_n64
+        ,rank()over()       rnk_ovr_n64
+        ,dense_rank()over() drn_ovr_n64
+    from test;
+  """,
+ 'expected_stdout':
+  """
+    01: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
+    02: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
+    03: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
+    04: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
+    01: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
+    02: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
+    03: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
+    04: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
+    05: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
+    06: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
+    07: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
+  """,
+  'substitutions':[('^((?!sqltype).)*$',''), ('[\t]','    ')]
+}
+]
+}
