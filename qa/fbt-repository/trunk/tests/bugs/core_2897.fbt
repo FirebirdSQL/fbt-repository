@@ -1,0 +1,84 @@
+{
+'id': 'bugs.core_2987',
+'qmid': '',
+'tracker_id': 'CORE-2987',
+'title': "Don't send full length of field over the wire when field is null",
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- Measurement showed than on 3.0 (SS/SC/CS) transfer of NULLs is more than 5 (five) times 
+    -- faster than text data with length = 32K. As of 2.5 (SC) than ration is about 1.7 ... 1.8.
+    -- Test fills up two tables: one with text data and another with only nulls.
+    -- Then we receive data from these tables via EZ/EDS, evaluate elapsed time for both cases
+    -- and calculate its ratio. This ratio in 3.0 should be not less than 4x.
+    
+    create or alter procedure sp_test returns(sel_data_ms int, sel_null_ms int) as begin end;
+    recreate table test1(f01 char(32760));
+    recreate table test2(f01 char(32760));
+    commit;
+    
+    insert into test1
+    with recursive r as (select 0 i from rdb$database union all select r.i+1 from r where r.i<99)
+    select rpad('', 32760, uuid_to_char(gen_uuid()) ) from r r1,r r2 rows 3000;
+    
+    insert into test2(f01) select null from test1;
+    commit;
+    
+    set term ^;
+    create or alter procedure sp_test returns( ratio double precision ) as
+      declare v_f01 type of column test1.f01;
+      declare t0 timestamp;
+      declare t1 timestamp;
+      declare t2 timestamp;
+    begin
+        t0='now';
+        for
+            execute statement
+               'select f01 from test1' on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+               as user 'SYSDBA' password 'masterke' role 'R001'
+               into v_f01
+        do begin end
+    
+        t1='now';
+    
+        for
+            execute statement
+               'select f01 from test2' on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+               as user 'SYSDBA' password 'masterke' role 'R002'
+               into v_f01
+        do begin end
+    
+        t2='now';
+    
+        ratio = 1.000 * datediff(millisecond from t0 to t1) / datediff(millisecond from t1 to t2);
+    
+        suspend;
+    
+    end
+    ^
+    set term ;^
+    commit;
+    
+    set list on;
+    select iif( ratio > 4, 'WINS >= 4x', 'REGRESSION') as MEASURE_RESULT from sp_test;
+    select iif( ratio > 4, 'WINS >= 4x', 'REGRESSION') as MEASURE_RESULT from sp_test;
+    select iif( ratio > 4, 'WINS >= 4x', 'REGRESSION') as MEASURE_RESULT from sp_test;
+  """,
+ 'expected_stdout': 
+  """
+   MEASURE_RESULT                  WINS >= 4x
+   MEASURE_RESULT                  WINS >= 4x
+   MEASURE_RESULT                  WINS >= 4x
+  """
+}
+]
+}
