@@ -133,6 +133,7 @@ Default Character set: NONE
  'platform': 'All',
  'user_name': 'test',
  'user_password': 'test',
+ 'init_script':'grant create database to test_user;',
  'test_type': 'ISQL',
  'test_script': 'SHOW DATABASE;',
  'expected_stdout': """        Owner: TEST
