@@ -1,0 +1,79 @@
+{
+'id': 'bugs.core_2555',
+'qmid': None,
+'tracker_id': 'CORE-2555',
+'title': 'CI column does not group correctly with a second column',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    recreate table test(
+         rk char(1) character set none
+        ,ca varchar(10) character set utf8 collate unicode_ci_ai
+        ,cb varchar(10) character set utf8 collate unicode_ci
+    );
+    commit;
+    -- http://en.wikipedia.org/wiki/ISO/IEC_8859-1
+    insert into test values('d',  'ð',  'd');
+    insert into test values('d',  'Ð',  'd');
+    insert into test values('d',  'Ð',  'D');
+    insert into test values('d',  'd',  'd');
+
+    insert into test values('l',  'l',  'Ł');
+    insert into test values('l',  'ł',  'ł');
+
+    insert into test values('o',  'Ø',  'õ');
+    insert into test values('o',  'o',  'Õ');
+    insert into test values('o',  'Ó',  'Õ');
+    insert into test values('o',  'õ',  'Õ');
+    insert into test values('o',  'Ö',  'õ');
+
+    insert into test values('a', 'Ą',  'ä');
+    insert into test values('a', 'Á',  'Ä');
+    insert into test values('a', 'à',  'ä');
+    insert into test values('a', 'â',  'ä');
+
+    insert into test values('c', 'ç',  'Ç');
+    insert into test values('c', 'Ç',  'ç');
+    insert into test values('c', 'C',  'Ç');
+
+    insert into test values('u', 'Ú',  'û');
+    insert into test values('u', 'Ù',  'Û');
+    insert into test values('u', 'ü',  'û');
+
+    insert into test values('s', 'Š',  'Š');
+    insert into test values('s', 'ş',  'š');
+    insert into test values('s', 'š',  'Š');
+
+    insert into test values('n', 'Ñ',  'ñ');
+    insert into test values('n', 'ñ',  'ñ');
+    insert into test values('n', 'Ň',  'Ñ');
+    commit;
+    set list on;
+    select rk from test group by ca,cb,rk;
+  """,
+ 'expected_stdout':
+  """
+    RK                              a
+    RK                              c
+    RK                              d
+    RK                              l
+    RK                              n
+    RK                              o
+    RK                              s
+    RK                              u  
+  """
+}
+]
+}
