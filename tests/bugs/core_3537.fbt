@@ -1,0 +1,308 @@
+{
+'id': 'bugs.core_3537',
+'qmid': None,
+'tracker_id': 'CORE-3537',
+'title': 'There is no need to undo changes made in GTT created with ON COMMIT DELETE ROWS option when transaction is rolled back.',
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'mon-stat-gathering-2_5.fbk',
+ 'database_character_set': 'NONE',
+ 'connection_character_set': 'NONE',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    -- Here we define constants for comparison of ratio between fetches and marks
+    -- when operation is done on: 1) fixed tab; 2) GTT with on commit PRESERVE rows
+    -- and 3) GTT with on commit DELETE rows.
+    -- Values of these constants have been obtained after multiple (>=5) runs on
+    -- FB 2.5 and 3.0, they are the same on SS/SC/CS and equal to 2.7 and 2.2.
+    -- Number for fetches and marks for fixed table and session-level GTT
+    -- rows should be always GREATER than for transaction-level GTT at least on
+    -- that constants:
+   
+    set term ^;
+    execute block as
+    begin
+      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES', '2.5');
+      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS',   '2.0');
+    end
+    ^
+    set term ;^
+
+    recreate table t_fix(
+      s1 varchar(200)
+      unique using index t_fix_s1
+    );
+    
+    recreate global temporary table t_gtt_sav_rows(
+      s1 varchar(200)
+      unique using index t_gtt_sav_rows_s
+    ) on commit PRESERVE rows;
+    
+    
+    recreate global temporary table t_gtt_del_rows(
+      s1 varchar(200)
+      unique using index t_gtt_del_rows_s
+    ) on commit DELETE rows;
+    
+    commit;
+    
+    alter sequence g_gather_stat restart with 0;
+    execute procedure sp_truncate_stat;
+    commit;
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    set term ^;
+    execute block as
+        declare n int = 5000;
+        declare k int;
+    begin
+        k=n;
+        while(k>0) do insert into t_fix(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    rollback; ----------------- (1)
+    
+    
+    execute procedure sp_gather_stat;  ------- catch statistics AFTER measured statement(s)
+    commit;
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    set term ^;
+    execute block as
+        declare n int = 5000;
+        declare k int;
+    begin
+        k=n;
+        while(k>0) do insert into t_gtt_sav_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    rollback; ----------------- (2)
+    
+    
+    execute procedure sp_gather_stat; ------- catch statistics AFTER measured statement(s)
+    commit;
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    
+    set term ^;
+    execute block as
+        declare n int = 5000;
+        declare k int;
+    begin
+        k=n;
+        while(k>0) do insert into t_gtt_del_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    
+    rollback; ----------------- (3)
+    
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    set list on;
+        
+    -- Show results:
+    -- =============
+    select
+         iif( fix_tab_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches ) as gtt_del_vs_fix_tab_fetches
+        ,iif( fix_tab_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks ) as gtt_del_vs_fix_tab_marks
+        ,iif( gtt_ssn_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches) as gtt_del_vs_gtt_sav_fetches
+        ,iif( gtt_ssn_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks) as gtt_del_vs_gtt_sav_marks
+    from (
+        select
+            1.000 * fix_tab_pg_fetches / gtt_trn_pg_fetches fix_tab_to_gtt_trn_fetches
+           ,1.000 * fix_tab_pg_marks / gtt_trn_pg_marks fix_tab_to_gtt_trn_marks
+           ,1.000 * gtt_ssn_pg_fetches / gtt_trn_pg_fetches gtt_ssn_to_gtt_trn_fetches
+           ,1.000 * gtt_ssn_pg_marks / gtt_trn_pg_marks gtt_ssn_to_gtt_trn_marks
+           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES') as numeric(7,2) ) min_profit_for_fetches
+           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS') as numeric(7,2) ) min_profit_for_marks
+        from (
+            select
+                 max( iif(rowset = 1, page_fetches, null) ) fix_tab_pg_fetches
+                ,max( iif(rowset = 1, page_marks, null) ) fix_tab_pg_marks
+                ,max( iif(rowset = 2, page_fetches, null) ) gtt_ssn_pg_fetches
+                ,max( iif(rowset = 2, page_marks, null) ) gtt_ssn_pg_marks
+                ,max( iif(rowset = 3, page_fetches, null) ) gtt_trn_pg_fetches
+                ,max( iif(rowset = 3, page_marks, null) ) gtt_trn_pg_marks
+            from v_agg_stat
+        )
+    );
+  """,
+ 'expected_stdout': 
+  """
+    GTT_DEL_VS_FIX_TAB_FETCHES      WINS >= 2.50 times
+    GTT_DEL_VS_FIX_TAB_MARKS        WINS >= 2.00 times
+    GTT_DEL_VS_GTT_SAV_FETCHES      WINS >= 2.50 times
+    GTT_DEL_VS_GTT_SAV_MARKS        WINS >= 2.00 times
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'mon-stat-gathering-3_0.fbk',
+ 'database_character_set': 'NONE',
+ 'connection_character_set': 'NONE',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    -- Here we define constants for comparison of ratio between fetches and marks
+    -- when operation is done on: 1) fixed tab; 2) GTT with on commit PRESERVE rows
+    -- and 3) GTT with on commit DELETE rows.
+    -- Values of these constants have been obtained after multiple (>=5) runs on
+    -- FB 2.5 and 3.0, and they are the same on SS/SC/CS and equal to 2.7 and 2.2.
+    -- Number for fetches and marks for fixed table and session-level GTT
+    -- rows should be always GREATER than for transaction-level GTT at least on
+    -- that constants:
+
+    set term ^;
+    execute block as
+    begin
+      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES', '2.5');
+      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS',   '2.0');
+    end
+    ^
+    set term ;^
+
+    recreate table t_fix(
+      s1 varchar(200)
+      unique using index t_fix_s1
+    );
+    
+    recreate global temporary table t_gtt_sav_rows(
+      s1 varchar(200)
+      unique using index t_gtt_sav_rows_s
+    ) on commit PRESERVE rows;
+    
+    
+    recreate global temporary table t_gtt_del_rows(
+      s1 varchar(200)
+      unique using index t_gtt_del_rows_s
+    ) on commit DELETE rows;
+    
+    commit;
+    
+    alter sequence g_gather_stat restart with 0;
+    execute procedure sp_truncate_stat;
+    commit;
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    set term ^;
+    execute block as
+        declare n int = 5000;
+        declare k int;
+    begin
+        k=n;
+        while(k>0) do insert into t_fix(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    rollback; ----------------- (1)
+    
+    
+    execute procedure sp_gather_stat;  ------- catch statistics AFTER measured statement(s)
+    commit;
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    set term ^;
+    execute block as
+        declare n int = 5000;
+        declare k int;
+    begin
+        k=n;
+        while(k>0) do insert into t_gtt_sav_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    rollback; ----------------- (2)
+    
+    
+    execute procedure sp_gather_stat; ------- catch statistics AFTER measured statement(s)
+    commit;
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    
+    set term ^;
+    execute block as
+        declare n int = 5000;
+        declare k int;
+    begin
+        k=n;
+        while(k>0) do insert into t_gtt_del_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    
+    rollback; ----------------- (3)
+    
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+    
+    set list on;
+        
+    -- Show results:
+    -- =============
+    select
+         iif( fix_tab_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches ) as gtt_del_vs_fix_tab_fetches
+        ,iif( fix_tab_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks ) as gtt_del_vs_fix_tab_marks
+        ,iif( gtt_ssn_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches) as gtt_del_vs_gtt_sav_fetches
+        ,iif( gtt_ssn_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks) as gtt_del_vs_gtt_sav_marks
+    from (
+        select
+            1.000 * fix_tab_pg_fetches / gtt_trn_pg_fetches fix_tab_to_gtt_trn_fetches
+           ,1.000 * fix_tab_pg_marks / gtt_trn_pg_marks fix_tab_to_gtt_trn_marks
+           ,1.000 * gtt_ssn_pg_fetches / gtt_trn_pg_fetches gtt_ssn_to_gtt_trn_fetches
+           ,1.000 * gtt_ssn_pg_marks / gtt_trn_pg_marks gtt_ssn_to_gtt_trn_marks
+           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES') as numeric(7,2) ) min_profit_for_fetches
+           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS') as numeric(7,2) ) min_profit_for_marks
+        from (
+            select
+                 max( iif(rowset = 1, page_fetches, null) ) fix_tab_pg_fetches
+                ,max( iif(rowset = 1, page_marks, null) ) fix_tab_pg_marks
+                ,max( iif(rowset = 2, page_fetches, null) ) gtt_ssn_pg_fetches
+                ,max( iif(rowset = 2, page_marks, null) ) gtt_ssn_pg_marks
+                ,max( iif(rowset = 3, page_fetches, null) ) gtt_trn_pg_fetches
+                ,max( iif(rowset = 3, page_marks, null) ) gtt_trn_pg_marks
+            from v_agg_stat_main
+        )
+    );
+  """,
+ 'expected_stdout': 
+  """
+    GTT_DEL_VS_FIX_TAB_FETCHES      WINS >= 2.50 times
+    GTT_DEL_VS_FIX_TAB_MARKS        WINS >= 2.00 times
+    GTT_DEL_VS_GTT_SAV_FETCHES      WINS >= 2.50 times
+    GTT_DEL_VS_GTT_SAV_MARKS        WINS >= 2.00 times
+  """
+}
+]
+}
