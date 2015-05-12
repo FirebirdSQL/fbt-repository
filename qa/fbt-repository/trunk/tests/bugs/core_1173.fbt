@@ -1,0 +1,323 @@
+{
+'id': 'bugs.core_1173',
+'qmid': 'bugs.core_1173',
+'tracker_id': '',
+'title': 'Expression index based on computed fields',
+'description': '',
+'min_versions': '2.5.4',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop sequence g'; when any do begin end
+    end
+    ^
+    set term ;^
+    commit;
+    create sequence g;
+    commit;
+    
+    recreate table test1 (
+      kod integer not null,
+      datumzacatek date not null,
+      caszacatek time not null,
+      zacatek computed by (datumzacatek+caszacatek),
+      constraint test1_pk primary key (kod)
+    );
+    commit;
+    
+    insert into test1(kod, datumzacatek, caszacatek)
+    select gen_id(g,1), dateadd( gen_id(g,1) day to cast('01.01.2010' as date) ), dateadd( gen_id(g,1) second to cast('00:00:00' as time) )
+    from rdb$types
+    rows 200;
+    
+    alter sequence g restart with 0;
+    commit;
+    
+    create index i1asc_comp_by_comp_field_zac on test1 computed by (zacatek);
+    commit;
+    
+    --------------------------------------------------------------------------------
+    
+    recreate table test2 (
+      kod integer not null,
+      datumzacatek date not null,
+      caszacatek time not null,
+      zacatek computed by (datumzacatek+caszacatek),
+      constraint test2_pk primary key (kod)
+    );
+    
+    insert into test2(kod, datumzacatek, caszacatek)
+    select gen_id(g,1), dateadd( gen_id(g,1) day to cast('01.01.2010' as date) ), dateadd( gen_id(g,1) second to cast('00:00:00' as time) )
+    from rdb$types
+    rows 200;
+    
+    create index i2asc_comput_by_expr_dat_cas on test2 computed by (datumzacatek+caszacatek);
+    commit;
+    
+    --------------------------------------------------------------------------------
+    set list on;
+    
+    set plan on;
+    select * from test1 where zacatek between '01.03.2010 00:00:00.0000' and '31.03.2010 23:59:59.9999';
+    select * from test2 where zacatek between '01.03.2010 00:00:00.0000' and '31.03.2010 23:59:59.9999';
+    set plan off;
+    
+    commit;
+    drop index i1asc_comp_by_comp_field_zac;
+    drop index i2asc_comput_by_expr_dat_cas;
+    commit;
+    
+    create descending index i1desc_comp_by_comp_field_zac on test1 computed by (zacatek);
+    create descending index i2desc_comput_by_expr_dat_cas on test2 computed by (datumzacatek+caszacatek);
+    commit;
+    
+    set plan on;
+    select * from test1 where zacatek between '01.03.2010 00:00:00.0000' and '31.03.2010 23:59:59.9999';
+    select * from test2 where zacatek between '01.03.2010 00:00:00.0000' and '31.03.2010 23:59:59.9999';
+  """,
+ 'expected_stdout': 
+  """
+    PLAN (TEST1 INDEX (I1ASC_COMP_BY_COMP_FIELD_ZAC))
+    
+    KOD                             58
+    DATUMZACATEK                    2010-03-01
+    CASZACATEK                      00:01:00.0000
+    ZACATEK                         2010-03-01 00:01:00.0000
+    
+    KOD                             61
+    DATUMZACATEK                    2010-03-04
+    CASZACATEK                      00:01:03.0000
+    ZACATEK                         2010-03-04 00:01:03.0000
+    
+    KOD                             64
+    DATUMZACATEK                    2010-03-07
+    CASZACATEK                      00:01:06.0000
+    ZACATEK                         2010-03-07 00:01:06.0000
+    
+    KOD                             67
+    DATUMZACATEK                    2010-03-10
+    CASZACATEK                      00:01:09.0000
+    ZACATEK                         2010-03-10 00:01:09.0000
+    
+    KOD                             70
+    DATUMZACATEK                    2010-03-13
+    CASZACATEK                      00:01:12.0000
+    ZACATEK                         2010-03-13 00:01:12.0000
+    
+    KOD                             73
+    DATUMZACATEK                    2010-03-16
+    CASZACATEK                      00:01:15.0000
+    ZACATEK                         2010-03-16 00:01:15.0000
+    
+    KOD                             76
+    DATUMZACATEK                    2010-03-19
+    CASZACATEK                      00:01:18.0000
+    ZACATEK                         2010-03-19 00:01:18.0000
+    
+    KOD                             79
+    DATUMZACATEK                    2010-03-22
+    CASZACATEK                      00:01:21.0000
+    ZACATEK                         2010-03-22 00:01:21.0000
+    
+    KOD                             82
+    DATUMZACATEK                    2010-03-25
+    CASZACATEK                      00:01:24.0000
+    ZACATEK                         2010-03-25 00:01:24.0000
+    
+    KOD                             85
+    DATUMZACATEK                    2010-03-28
+    CASZACATEK                      00:01:27.0000
+    ZACATEK                         2010-03-28 00:01:27.0000
+    
+    KOD                             88
+    DATUMZACATEK                    2010-03-31
+    CASZACATEK                      00:01:30.0000
+    ZACATEK                         2010-03-31 00:01:30.0000
+    
+    
+    
+    PLAN (TEST2 INDEX (I2ASC_COMPUT_BY_EXPR_DAT_CAS))
+    
+    KOD                             58
+    DATUMZACATEK                    2010-03-01
+    CASZACATEK                      00:01:00.0000
+    ZACATEK                         2010-03-01 00:01:00.0000
+    
+    KOD                             61
+    DATUMZACATEK                    2010-03-04
+    CASZACATEK                      00:01:03.0000
+    ZACATEK                         2010-03-04 00:01:03.0000
+    
+    KOD                             64
+    DATUMZACATEK                    2010-03-07
+    CASZACATEK                      00:01:06.0000
+    ZACATEK                         2010-03-07 00:01:06.0000
+    
+    KOD                             67
+    DATUMZACATEK                    2010-03-10
+    CASZACATEK                      00:01:09.0000
+    ZACATEK                         2010-03-10 00:01:09.0000
+    
+    KOD                             70
+    DATUMZACATEK                    2010-03-13
+    CASZACATEK                      00:01:12.0000
+    ZACATEK                         2010-03-13 00:01:12.0000
+    
+    KOD                             73
+    DATUMZACATEK                    2010-03-16
+    CASZACATEK                      00:01:15.0000
+    ZACATEK                         2010-03-16 00:01:15.0000
+    
+    KOD                             76
+    DATUMZACATEK                    2010-03-19
+    CASZACATEK                      00:01:18.0000
+    ZACATEK                         2010-03-19 00:01:18.0000
+    
+    KOD                             79
+    DATUMZACATEK                    2010-03-22
+    CASZACATEK                      00:01:21.0000
+    ZACATEK                         2010-03-22 00:01:21.0000
+    
+    KOD                             82
+    DATUMZACATEK                    2010-03-25
+    CASZACATEK                      00:01:24.0000
+    ZACATEK                         2010-03-25 00:01:24.0000
+    
+    KOD                             85
+    DATUMZACATEK                    2010-03-28
+    CASZACATEK                      00:01:27.0000
+    ZACATEK                         2010-03-28 00:01:27.0000
+    
+    KOD                             88
+    DATUMZACATEK                    2010-03-31
+    CASZACATEK                      00:01:30.0000
+    ZACATEK                         2010-03-31 00:01:30.0000
+    
+    
+    
+    PLAN (TEST1 INDEX (I1DESC_COMP_BY_COMP_FIELD_ZAC))
+    
+    KOD                             58
+    DATUMZACATEK                    2010-03-01
+    CASZACATEK                      00:01:00.0000
+    ZACATEK                         2010-03-01 00:01:00.0000
+    
+    KOD                             61
+    DATUMZACATEK                    2010-03-04
+    CASZACATEK                      00:01:03.0000
+    ZACATEK                         2010-03-04 00:01:03.0000
+    
+    KOD                             64
+    DATUMZACATEK                    2010-03-07
+    CASZACATEK                      00:01:06.0000
+    ZACATEK                         2010-03-07 00:01:06.0000
+    
+    KOD                             67
+    DATUMZACATEK                    2010-03-10
+    CASZACATEK                      00:01:09.0000
+    ZACATEK                         2010-03-10 00:01:09.0000
+    
+    KOD                             70
+    DATUMZACATEK                    2010-03-13
+    CASZACATEK                      00:01:12.0000
+    ZACATEK                         2010-03-13 00:01:12.0000
+    
+    KOD                             73
+    DATUMZACATEK                    2010-03-16
+    CASZACATEK                      00:01:15.0000
+    ZACATEK                         2010-03-16 00:01:15.0000
+    
+    KOD                             76
+    DATUMZACATEK                    2010-03-19
+    CASZACATEK                      00:01:18.0000
+    ZACATEK                         2010-03-19 00:01:18.0000
+    
+    KOD                             79
+    DATUMZACATEK                    2010-03-22
+    CASZACATEK                      00:01:21.0000
+    ZACATEK                         2010-03-22 00:01:21.0000
+    
+    KOD                             82
+    DATUMZACATEK                    2010-03-25
+    CASZACATEK                      00:01:24.0000
+    ZACATEK                         2010-03-25 00:01:24.0000
+    
+    KOD                             85
+    DATUMZACATEK                    2010-03-28
+    CASZACATEK                      00:01:27.0000
+    ZACATEK                         2010-03-28 00:01:27.0000
+    
+    KOD                             88
+    DATUMZACATEK                    2010-03-31
+    CASZACATEK                      00:01:30.0000
+    ZACATEK                         2010-03-31 00:01:30.0000
+    
+    
+    
+    PLAN (TEST2 INDEX (I2DESC_COMPUT_BY_EXPR_DAT_CAS))
+    
+    KOD                             58
+    DATUMZACATEK                    2010-03-01
+    CASZACATEK                      00:01:00.0000
+    ZACATEK                         2010-03-01 00:01:00.0000
+    
+    KOD                             61
+    DATUMZACATEK                    2010-03-04
+    CASZACATEK                      00:01:03.0000
+    ZACATEK                         2010-03-04 00:01:03.0000
+    
+    KOD                             64
+    DATUMZACATEK                    2010-03-07
+    CASZACATEK                      00:01:06.0000
+    ZACATEK                         2010-03-07 00:01:06.0000
+    
+    KOD                             67
+    DATUMZACATEK                    2010-03-10
+    CASZACATEK                      00:01:09.0000
+    ZACATEK                         2010-03-10 00:01:09.0000
+    
+    KOD                             70
+    DATUMZACATEK                    2010-03-13
+    CASZACATEK                      00:01:12.0000
+    ZACATEK                         2010-03-13 00:01:12.0000
+    
+    KOD                             73
+    DATUMZACATEK                    2010-03-16
+    CASZACATEK                      00:01:15.0000
+    ZACATEK                         2010-03-16 00:01:15.0000
+    
+    KOD                             76
+    DATUMZACATEK                    2010-03-19
+    CASZACATEK                      00:01:18.0000
+    ZACATEK                         2010-03-19 00:01:18.0000
+    
+    KOD                             79
+    DATUMZACATEK                    2010-03-22
+    CASZACATEK                      00:01:21.0000
+    ZACATEK                         2010-03-22 00:01:21.0000
+    
+    KOD                             82
+    DATUMZACATEK                    2010-03-25
+    CASZACATEK                      00:01:24.0000
+    ZACATEK                         2010-03-25 00:01:24.0000
+    
+    KOD                             85
+    DATUMZACATEK                    2010-03-28
+    CASZACATEK                      00:01:27.0000
+    ZACATEK                         2010-03-28 00:01:27.0000
+    
+    KOD                             88
+    DATUMZACATEK                    2010-03-31
+    CASZACATEK                      00:01:30.0000
+    ZACATEK                         2010-03-31 00:01:30.0000
+  """
+}
+]
+}
