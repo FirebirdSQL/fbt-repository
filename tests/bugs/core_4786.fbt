@@ -1,0 +1,32 @@
+{
+'id': 'bugs.core_4786',
+'qmid': '',
+'tracker_id': 'CORE-4786',
+'title': 'Problematic key value (when attempt to insert duplicate in PK/UK) is not shown where length of key >= 127 characters',
+'description': '',
+'min_versions': '2.5.5',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    recreate table test(s varchar(300) constraint test_unq unique using index test_unq); 
+    commit;
+    insert into test values( rpad('', 245, 'qwertyuioplkjhgfdsazxcvbnm') || '12345' );
+    insert into test values( rpad('', 245, 'qwertyuioplkjhgfdsazxcvbnm') || '12345' );
+    -- NB: textual key representation has a limit of 249 characters
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 23000
+    violation of PRIMARY or UNIQUE KEY constraint "TEST_UNQ" on table "TEST"
+    -Problematic key value is ("S" = 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuiopl1234...)
+  """
+}
+]
+}
