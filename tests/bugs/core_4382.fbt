@@ -1,0 +1,48 @@
+{
+'id': 'bugs.core_4382',
+'qmid': '',
+'tracker_id': 'CORE-4382',
+'title': 'User savepoints are not released on commit',
+'description': '',
+'min_versions': '2.5.4',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create table g_test (f integer);
+    create index g_ind on g_test (f);
+    insert into g_test values (1);
+    commit;
+    update g_test set f=2;
+    savepoint a;
+    update g_test set f=3;
+    savepoint b;
+    update g_test set f=4;
+    savepoint c;
+    update g_test set f=5;
+    savepoint d;
+    update g_test set f=6;
+    savepoint e;
+    update g_test set f=7;
+    commit;
+    select * from g_test; 
+    -- Confirmed result of "gstat -i" 
+    -- 1) for 3.0 Alpha1 & Alpha2:
+    -- Root page: 203, depth: 1, leaf buckets: 1, nodes: 6
+    --                                                   ^- orphans, must be: 1 
+    -- 2) for 2.5.3:
+    -- Depth: 1, leaf buckets: 1, nodes: 6
+    -- ^- upper case!                    ^- orphans, must be: 1
+  """,
+ 'test_type': 'Python',
+ 'test_script': "runProgram('gstat',['-i','-user',user_name,'-pas',user_password,dsn])",
+ 'expected_stdout': 
+  """
+    Root page: 203, depth: 1, leaf buckets: 1, nodes: 1
+  """,
+  'substitutions':[('^((?!nodes).)*$',''),('Root page: [0-9]+,',''),('Depth','depth')]
+}
+]
+}
