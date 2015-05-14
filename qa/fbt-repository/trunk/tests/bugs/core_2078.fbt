@@ -328,7 +328,7 @@
   """
 },
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'database': 'Restore',
  'backup_file': 'mon-stat-gathering-3_0.fbk',
