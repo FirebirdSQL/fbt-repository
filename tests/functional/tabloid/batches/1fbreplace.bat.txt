@@ -22,11 +22,23 @@
 
 setlocal enabledelayedexpansion enableextensions
 
+@rem check that 7-Zip is avaliable:
+7z 1>%~n0.log 2>&1
+findstr /i /c /b "7-Zip" %~n0.log 1>nul 2>&1
+if errorlevel 1 (
+  del %~n0.log
+  echo 7-Zip archiver is required for this batch.
+  goto end
+)
+del %~n0.log 2>nul
+
 @rem List of Firebird services to be upgraded:
 set FB_SERVICES=fb30Cs fb30sC fb30sS
+@rem set FB_SERVICES=fb30Cs
 
 @rem Folder where downloaded snapshot files are:
 set SNAPSHOT_DIR=C:\1INSTALL\FIREBIRD\snapshot_builds\30
+@rem set SNAPSHOT_DIR=C:\1Install\FIREBIRD\SNAPSHOT_BUILDS\30.31801\
 
 set log=%~n0.log
 del %log% 2>nul
@@ -72,9 +84,15 @@ for /d %%s in ( %FB_SERVICES% ) do (
   )
 )
 
-@rem #############################################################################################################
-@rem ####################  T R Y I N G    T O    D E L E T E    F B C L I E N T . D L L  #########################
-@rem #############################################################################################################
+@rem ########################################################################################################
+@rem ####################  C R E A T E    T E M P    B A C K U P S   (.7Z)   A N D  #########################
+@rem ####################  T R Y     T O    D E L E T E    F B C L I E N T . D L L  #########################
+@rem ########################################################################################################
+
+set archsuff=19000101000000
+call :getFileDTS gen_vbs
+call :getFileDTS get_dts %log% archsuff
+call :getFileDTS del_tmp
 
 for /d %%i in ( %FB_SERVICES% ) do (
   del %~n0.err 2>nul
@@ -87,6 +105,19 @@ for /d %%i in ( %FB_SERVICES% ) do (
     echo !msg!
     echo !msg!>>%log%
   )
+
+  set archname=tmp.%~n0.backup.%%i.%archsuff%.7z
+  echo Packing previous FB build to !archname!
+  @rem '-ep1' =  excluse base path from arch names; '-idp' = do NOT show (and log) percents progress 
+
+  echo !time! Packing previous FB build to !archname!>>%log%
+  @rem set cmd_run=rar u -m5 -ep1 -idp -r -dh !archname! !fp!\doc !fp!\include !fp!\intl !fp!\lib !fp!\plugins !fp!\*.conf !fp!\*.dll !fp!\*.exe !fp!\*.bat !fp!\firebird.msg !fp!\security*.fdb
+  set cmd_run=7z u -bd -r -ssw !archname! !fp!\doc !fp!\include !fp!\intl !fp!\lib !fp!\plugins !fp!\*.conf !fp!\*.dll !fp!\*.exe !fp!\*.bat !fp!\firebird.msg !fp!\security*.fdb
+  echo !time! !cmd_run!
+  cmd /c !cmd_run! 1>>%log% 2>&1
+
+  echo Done.
+  echo !time! Done.>>%log%
 
   set fn=!fp!\fbclient.dll
   if exist !fn! (
@@ -116,13 +147,14 @@ for /d %%i in ( %FB_SERVICES% ) do (
   )
 )
 del %~n0.err 2>nul
-
+@rem these files will be removed only after SUCCESSFUL finish of this batch: dir tmp.%~n0.backup.*.rar
 :m1
 
 @rem #############################################################################################################
 @rem #################  C O P Y I N G     A L L    F I L E S    F R O M     S N A P S H O T ######################
 @rem #############################################################################################################
 for /d %%i in ( %FB_SERVICES% ) do (
+
   for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%i ^| findstr /i /c:"ImagePath"') do (
     @rem Image path of FB service ('drive:\path\firebird.exe'):
     set fn=%%k
@@ -154,30 +186,33 @@ for /d %%i in ( %FB_SERVICES% ) do (
           
           set msg=### CREATING BACKUP ### %%a
           echo !msg!>>%log%
-          echo !cmd_run!>>%log%
+          echo !time! !cmd_run!>>%log%
 
           cmd /c !cmd_run! 1>>%log% 2>&1
         )
         set copy_cmd=copy !sn! !tp!
-        echo !copy_cmd!>>%log%
+        echo !time! !copy_cmd!>>%log%
+
         cmd /c !copy_cmd! 1>>%log% 2>&1
+
       ) else (
         del %~n0.err 2>nul
         if exist !tp! (
-          set del_cmd=del !tp!
-          echo !del_cmd! 1>>%log%
-          cmd /c !del_cmd! 2>%~n0.err
+          set cmd_del=del !tp!
+          echo !time! !cmd_del! 1>>%log%
+
+          cmd /c !cmd_del! 2>%~n0.err
         )
         for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
         if .!errsize!.==.. set errsize=0
         if !errsize! gtr 0 (
-          set msg=### FAILED TO EXECUTE ### !del_cmd! - replacement could be incompleted.
+          set msg=### FAILED TO EXECUTE ### !cmd_del! - replacement could be incompleted.
           type %~n0.err>>%log%
           echo !msg!
           echo !msg!>>%log%
         ) else (
           set copy_cmd=copy !sn! !tp!
-          echo !copy_cmd!>>%log%
+          echo !time! !copy_cmd!>>%log%
           cmd /c !copy_cmd! 1>>%log% 2>&1
         )
       )
@@ -199,29 +234,62 @@ for /d %%s in ( %FB_SERVICES% ) do (
     set fp=!fp:~0,-1!
 
     set cmd_run=!fp!\gsec -user sysdba -pass 1 -add sysdba -pw masterke -database !fp!\security3.fdb
+    echo !time! Trying to add SYSDBA into security database: !cmd_run!
+    echo !cmd_run!
     echo !cmd_run!>>%log%
-    cmd /c !cmd_run! 1>%~n0.err 2>&1
-    type %~n0.err
-    type %~n0.err>>%log%
-    del %~n0.err 2>nul
 
-    set cmd_run=!fp!\gsec -display -database !fp!\security3.fdb
-    echo !cmd_run!>>%log%
-    cmd /c !cmd_run! 1>%~n0.err 2>&1
-    type %~n0.err
-    type %~n0.err>>%log%
+    echo !time! Check record: point BEFORE using gsec for add SYSDBA, instance: %%s>>%log%
+    cmd /c !cmd_run! 1>%~n0.tmp  2>%~n0.err
+    echo !time! Check record: point AFTER using gsec for add SYSDBA, instance: %%s>>%log%
+
+    for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
+    if .!errsize!.==.. set errsize=0
+    if !errsize! gtr 0 (
+      set msg=### FAILED TO EXECUTE ### !cmd_run!.
+      echo !msg!
+      echo !msg!>>%log%
+      type %~n0.err
+      type %~n0.err>>%log%
+    )
+    type %~n0.tmp
+    type %~n0.tmp>>%log%
     del %~n0.err 2>nul
+    del %~n0.tmp 2>nul
+
+    set cmd_run=!fp!\gsec -display -database !fp!\security3.fdb -user sysdba -pass masterke
+    echo !time! Trying to display SYSDBA info:
+    echo !cmd_run!
+    echo !cmd_run!>>%log%
+    
+    echo !time! Check record: point BEFORE using gsec for display SYSDBA, instance: %%s>>%log%
+    cmd /c !cmd_run! 1>%~n0.tmp 2>%~n0.err
+    echo !time! Check record: point AFTER using gsec for display SYSDBA, instance: %%s>>%log%
+
+    for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
+    if .!errsize!.==.. set errsize=0
+    if !errsize! gtr 0 (
+      set msg=### FAILED TO EXECUTE ### !cmd_run!.
+      echo !msg!
+      echo !msg!>>%log%
+      type %~n0.err
+      type %~n0.err>>%log%
+    )
+
+    type %~n0.tmp
+    type %~n0.tmp>>%log%
+    del %~n0.err 2>nul
+    del %~n0.tmp 2>nul
 
     set msg=Restore files that was backed up before copying:
     echo !msg!
     echo !msg!>>%log%
 
     set cmd_run=copy !fp!\firebird.conf.previous !fp!\firebird.conf
-    echo !cmd_run!>>%log%
+    echo !time! !cmd_run!>>%log%
     cmd /c !cmd_run! 1>>%log%
 
     set cmd_run=copy !fp!\databases.conf.previous !fp!\databases.conf
-    echo !cmd_run!>>%log%
+    echo !time! !cmd_run!>>%log%
     cmd /c !cmd_run! 1>>%log%
   )
 )
@@ -234,14 +302,20 @@ for /d %%s in ( %FB_SERVICES% ) do (
   echo !msg!
   echo.>>%log%
   echo !msg!>>%log%
+  
+  echo !time! Check record: point BEFORE starting instance: %%s>>%log%
+  
   sc start FirebirdServer%%s 1>>%log% 2>&1
+
+  echo !time! Check record: point AFTER starting  instance: %%s>>%log%
+
   ping -n 1 -w 800 1.1.1.1 1>nul 2>&1
   echo After pause:>>%log%
-  sc query FirebirdServer%%s 1>>%log% 2>&1
 
+  sc query FirebirdServer%%s 1>>%log% 2>&1
   sc query FirebirdServer%%s | findstr /i /c:"RUNNING" 1>nul 2>&1
   if errorlevel 1 (
-    set msg=CAN NOT START SERVICE %%s
+    set msg=### FAILED TO EXECUTE ### start service command.
   ) else (
     set msg=Service has been successfully started.
   )
@@ -259,15 +333,31 @@ for /d %%s in ( %FB_SERVICES% ) do (
     set fp=%%~dpk
     set fp=!fp:~0,-1!
 
-    set cmd_svc=!fp!\fbsvcmgr localhost:service_mgr user SYSDBA password masterke info_server_version
+    set cmd_run=!fp!\fbsvcmgr localhost:service_mgr user SYSDBA password masterke info_server_version
     set msg=Trying to obtain server version for service %%s
     echo !msg!
     echo !msg!>>%log%
-    echo !cmd_svc!>>%log%
-    cmd /c !cmd_svc! 1>%~n0.err 2>&1
-    type %~n0.err
-    type %~n0.err>>%log%
+    echo !cmd_run!>>%log%
+
+    echo !time! Check record: point BEFORE get server version, instance: %%s>>%log%
+    cmd /c !cmd_run! 1>%~n0.tmp 2>%~n0.err
+    echo !time! Check record: point AFTER get server version, instance: %%s>>%log%
+
+    for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
+    if .!errsize!.==.. set errsize=0
+    if !errsize! gtr 0 (
+      set msg=### FAILED TO EXECUTE ### !cmd_run!.
+      echo !msg!
+      echo !msg!>>%log%
+      type %~n0.err
+      type %~n0.err>>%log%
+    )
+    type %~n0.tmp
+    echo.>>%log%
+    type %~n0.tmp>>%log%
+    echo.>>%log%
     del %~n0.err 2>nul
+    del %~n0.tmp 2>nul
   )
 )
 
@@ -275,11 +365,23 @@ findstr /i /c:"FAILED TO EXECUTE" %log% 1>%~n0.err 2>nul
 if errorlevel 1 (
   echo.
   echo No faults occured during replacement files.
+  @echo Now we can remove temp backups.
+
+  set cmd_del=del tmp.%~n0.backup.*.7z
+  echo !time! !cmd_del! 1>>%log%
+
+  cmd /c !cmd_del!
+
 ) else (
   echo.
   echo ::: ACHTUNG :::
   echo.
-  echo At least one file in some of target folders COULD NOT be replaced:
+  echo At least one error occured, replacement is INCOMPLETE. 
+  echo You can restore previous FB instances from backups:
+
+  dir tmp.%~n0.backup.*.7z | findstr /c:".7z"
+
+  echo FAILED commands:
   type %~n0.err
 )
 del %~n0.err 2>nul
@@ -318,7 +420,11 @@ goto end
       @rem echo|set /p=Obtaining timestamp of %2... 
       cscript //nologo %vbs% %2 1>%dts%
       @rem type %dts%
-      @rem set /p %~3=<%dts%
+      set /p %~3=<%dts%
+      del %dts% 2>nul
+    )
+    if /i .%1.==.del_tmp. (
+      del %vbs% 2>nul
     )
   endlocal
 goto:eof
