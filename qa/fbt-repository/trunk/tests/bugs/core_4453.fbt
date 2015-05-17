@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_4498',
+'id': 'bugs.core_4453',
 'qmid': None,
-'tracker_id': 'CORE-4498',
+'tracker_id': 'CORE-4453',
 'title': 'Regression: NOT NULL constraint, declared in domain, does not work',
 'description': '',
 'min_versions': '3.0',
