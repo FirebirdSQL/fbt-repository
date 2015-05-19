@@ -30,7 +30,7 @@
 
     set term ^;
     create or alter procedure sp_fill as
-      declare c_added_rows int = 500;
+      declare c_added_rows int = 2000;
     begin
         execute statement
            'insert into test1 '
@@ -81,7 +81,7 @@
     
         sel_data_ms = datediff(millisecond from t0 to t1);
         sel_null_ms = datediff(millisecond from t1 to t2);
-        ratio = 1.000 * sel_data_ms / sel_null_ms;
+        ratio = 1.000 * coalesce( sel_data_ms / nullif(sel_null_ms,0), 9999999.99);
     
         suspend;
     
