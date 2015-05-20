@@ -1,0 +1,158 @@
+{
+'id': 'bugs.core_3131',
+'qmid': None,
+'tracker_id': 'CORE-3131',
+'title': 'WIN1257_LV (Latvian) collation is wrong for 4 letters: A E I U.',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'database_character_set': 'WIN1257',
+ 'connection_character_set': 'WIN1257',
+ 'init_script': 
+  """
+    -- ::: NOTE :::
+	-- In order to check correctness of following statements under ISQL itself (NOT under fbt_run), do following:
+	-- 1) open some text editor that supports charset = win1257 and set encoding for new document = WIN1257
+	--   (e.g. in Notepad++ pull-down menu: "Encoding / Character sets / Baltic / Windows 1257")
+	-- 2) type commands statements that contains diacritical marks (accents) and save to .sql
+	-- 3) open this .sql in FAR editor and ensure that letters with diacritical marks are displayed as SINGLE characters
+	-- 4) run isql -i <script_encoded_in_win1257.sql>
+	-- In order to run this script under fbt_run:
+	-- 1) open Notepad++ new .fbt document and set Encoding = "UTF8 without BOM"
+	-- 2) copy-paste text from <script_encoded_in_win1257.sql>, ensure that letters with diacritical marks are readable
+	--    (it should be pasted here in UTF8 encoding)
+	-- 3) add in `expected_stdout` section required output by copy-paste from result of isql -i <script_encoded_in_win1257.sql>
+	--    (it should be pasted here in UTF8 encoding)
+	-- 4) save .fbt and ensure that it was saved in UTF8 encoding, otherwise exeption like
+	--    "UnicodeDecodeError: 'utf8' codec can't decode byte 0xc3 in position 621: invalid continuation byte"
+	--    will raise.
+	create collation coll_1257_ci_ai
+	   for win1257 from win1257_lv
+	   no pad case insensitive accent sensitive;
+	commit;
+
+	create table test1257 (
+		letter varchar(2) collate coll_1257_ci_ai,
+		sort_index  smallint
+	);
+	
+	-- ### ONCE AGAIN ###
+	-- 1) for checking this under ISQL following must be encoded in WIN1257
+	-- 2) for running under fbt_run utility following must be encoded in UTF8.
+	insert into test1257 values ('Iz',  18);
+	insert into test1257 values ('Īb',  19);
+	insert into test1257 values ('Īz',  20);
+
+	insert into test1257 values ('Ķz',  24);
+	insert into test1257 values ('Ēz',  12);
+	insert into test1257 values ('Gb',  13);
+
+	insert into test1257 values ('Ģz',  16);
+	insert into test1257 values ('Ib',  17);
+
+	insert into test1257 values ('Gz',  14);
+	insert into test1257 values ('Ģb',  15);
+
+	insert into test1257 values ('Ņb',  31);
+	insert into test1257 values ('Ņz',  32);
+	insert into test1257 values ('Cb',  5);
+	insert into test1257 values ('Ūb',  39);
+	insert into test1257 values ('Ūz',  40);
+	insert into test1257 values ('Zb',  41);
+	insert into test1257 values ('Eb',  9);
+	insert into test1257 values ('Ez',  10);
+	insert into test1257 values ('Ēb',  11);
+
+	insert into test1257 values ('Ub',  37);
+	insert into test1257 values ('Uz',  38);
+
+	insert into test1257 values ('Lz',  26);
+	insert into test1257 values ('Ļb',  27);
+	insert into test1257 values ('Ļz',  28);
+	insert into test1257 values ('Kb',  21);
+	insert into test1257 values ('Kz',  22);
+	insert into test1257 values ('Šz',  36);
+	insert into test1257 values ('Lb',  25);
+	insert into test1257 values ('Cz',  6);
+	insert into test1257 values ('Čb',  7);
+	insert into test1257 values ('Čz',  8);
+
+	insert into test1257 values ('Sb',  33);
+	insert into test1257 values ('Sz',  34);
+	insert into test1257 values ('Šb',  35);
+
+	insert into test1257 values ('Nb',  29);
+	insert into test1257 values ('Nz',  30);
+	insert into test1257 values ('Ķb',  23);
+	insert into test1257 values ('Zz',  42);
+	insert into test1257 values ('Žb',  43);
+	insert into test1257 values ('Žz',  44);
+
+	insert into test1257 values ('Ab',  1);
+	insert into test1257 values ('Az',  2);
+	insert into test1257 values ('Āb',  3);
+	insert into test1257 values ('Āz',  4);	
+
+  """,
+ 'test_script': 
+  """
+	set heading off;
+	select *
+	from test1257 tls
+	order by tls.letter collate coll_1257_ci_ai;
+  """,
+ 'expected_stdout':
+  """
+	Ab              1 
+	Az              2 
+	Āb              3 
+	Āz              4 
+	Cb              5 
+	Cz              6 
+	Čb              7 
+	Čz              8 
+	Eb              9 
+	Ez             10 
+	Ēb             11 
+	Ēz             12 
+	Gb             13 
+	Gz             14 
+	Ģb             15 
+	Ģz             16 
+	Ib             17 
+	Iz             18 
+	Īb             19 
+	Īz             20 
+	Kb             21 
+	Kz             22 
+	Ķb             23 
+	Ķz             24 
+	Lb             25 
+	Lz             26 
+	Ļb             27 
+	Ļz             28 
+	Nb             29 
+	Nz             30 
+	Ņb             31 
+	Ņz             32 
+	Sb             33 
+	Sz             34 
+	Šb             35 
+	Šz             36 
+	Ub             37 
+	Uz             38 
+	Ūb             39 
+	Ūz             40 
+	Zb             41 
+	Zz             42 
+	Žb             43 
+	Žz             44 
+  """
+}
+]
+}
