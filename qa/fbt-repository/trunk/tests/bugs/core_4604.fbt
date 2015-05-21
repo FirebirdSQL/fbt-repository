@@ -20,7 +20,7 @@
         declare variable tmp_sqltext varchar(300);
         declare v_dbname type of column mon$database.mon$database_name;
         declare v_usr varchar(31) = 'SYSDBA';
-        declare v_pwd varchar(31) = 'masterke';
+        declare v_pwd varchar(31) = 'masterkey';
     begin
         
         v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');

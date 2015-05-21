@@ -72,7 +72,7 @@
     execute block returns(using_index smallint) as
        declare v_dbname type of column mon$database.mon$database_name;
        declare v_usr varchar(31) = 'SYSDBA';
-       declare v_pwd varchar(31) = 'masterke';
+       declare v_pwd varchar(20) = 'masterkey';
        declare role_1 varchar(31) = 'POOR_DBA';
        declare role_2 varchar(31) = 'COOL_DBA';
        declare role_3 varchar(31) = 'SUPER_DBA';
