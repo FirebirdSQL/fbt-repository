@@ -66,20 +66,20 @@ MAIN table's PK exists for new values in FK
         */
         execute statement ( s  ) ( 1 ) -------------------------------------- [1]: add rows with pid=1
         on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-        as user 'sysdba' password 'masterke' role 'RCHILD';
+        as user 'sysdba' password 'masterkey' role 'RCHILD';
     
         execute statement ( s  ) ( 2 ) -------------------------------------- [2]: add rows with pid=2
         on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-        as user 'sysdba' password 'masterke' role 'RCHILD';
+        as user 'sysdba' password 'masterkey' role 'RCHILD';
     
         execute statement ('update tdetl set pid = 3 - pid') -- rows with pid=1 that were inserted on [1] will have pid=2 and vice versa
         on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-        as user 'sysdba' password 'masterke' role 'RCHILD';
+        as user 'sysdba' password 'masterkey' role 'RCHILD';
     
         for
            execute statement 'select id,pid from tdetl order by id'
            on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-           as user 'sysdba' password 'masterke' role 'RCHILD'
+           as user 'sysdba' password 'masterkey' role 'RCHILD'
            into id,pid
         do
            suspend;

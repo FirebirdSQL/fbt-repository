@@ -25,7 +25,7 @@
         declare v_dbname varchar(255);
         declare v_stt varchar(1024);
         declare v_usr rdb$user = 'sysdba';
-        declare v_pwd varchar(20) = 'masterke';
+        declare v_pwd varchar(20) = 'masterkey';
         declare v_trn int;
     begin
     

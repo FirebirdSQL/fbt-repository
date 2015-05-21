@@ -37,7 +37,7 @@
            || 'with recursive r as (select 0 i from rdb$database union all select r.i+1 from r where r.i<99) '
            || 'select rpad('''', 32760, uuid_to_char(gen_uuid()) ) from r r1,r r2 rows ' || c_added_rows
            on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-           as user 'SYSDBA' password 'masterke' 
+           as user 'SYSDBA' password 'masterkey' 
            role 'R001' ------------------------------- this will create new attach #1 that will be used later!
         ;
         execute statement
@@ -45,7 +45,7 @@
            || 'with recursive r as (select 0 i from rdb$database union all select r.i+1 from r where r.i<99) '
            || 'select null from r r1,r r2 rows ' || c_added_rows
            on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-           as user 'SYSDBA' password 'masterke' 
+           as user 'SYSDBA' password 'masterkey' 
            role 'R002' ------------------------------- this will create new attach #2 that will be used later!
         ;
     end
@@ -62,7 +62,7 @@
         for
             execute statement
                'select f01 from test1' on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-               as user 'SYSDBA' password 'masterke' 
+               as user 'SYSDBA' password 'masterkey' 
                role 'R001' --------------- here we use EXISTING attach #1 (from internal FB connection pool)
                into v_f01
         do begin end
@@ -72,7 +72,7 @@
         for
             execute statement
                'select f01 from test2' on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-               as user 'SYSDBA' password 'masterke' 
+               as user 'SYSDBA' password 'masterkey' 
                role 'R002'  --------------- here we use EXISTING attach #2 (from internal FB connection pool)
                into v_f01
         do begin end
