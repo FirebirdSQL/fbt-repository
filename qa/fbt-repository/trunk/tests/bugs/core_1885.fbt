@@ -7,6 +7,23 @@
 'min_versions': None,
 'versions': [
 {
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    -- Attribute 'LOCALE=en_US' is defined for charset = ISO8859_1 rather that for UTF8, see intl/fbintl.conf 
+    CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = HY000
+    unsuccessful metadata update
+    -CREATE COLLATION UNICODE_ENUS_CI failed
+    -Invalid collation attributes
+  """
+},
+{
  'firebird_version': '2.5.0',
  'platform': 'All',
  'test_type': 'ISQL',
@@ -26,17 +43,6 @@ unsuccessful metadata update
  'expected_stderr': """Statement failed, SQLCODE = -607
 unsuccessful metadata update
 -Invalid collation attributes
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'Windows',
- 'test_type': 'ISQL',
- 'test_script': """CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
-""",
- 'expected_stderr': """
-""",
- 'expected_stdout': """
 """
 }
 ]
