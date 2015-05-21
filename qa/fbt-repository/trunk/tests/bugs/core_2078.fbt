@@ -97,7 +97,7 @@
     returns (
         tab_name varchar(31),
         idx_name varchar(31),
-        idx_stat_afte double precision
+        idx_stat_afte numeric(12, 10)
     )
     as
     begin
@@ -274,52 +274,47 @@
   """
     RUN1_TAB_NAME                   TBIG
     RUN1_IDX_NAME                   TBIG_IDX1_FK_SML               
-    RUN1_IDX_STAT                   0.5000000000000000
+    RUN1_IDX_STAT                   0.5000000000
     
     RUN1_TAB_NAME                   TBIG                           
     RUN1_IDX_NAME                   TBIG_IDX2_FK_MED               
-    RUN1_IDX_STAT                   0.003333333414047957
+    RUN1_IDX_STAT                   0.0033333334
     
     RUN1_TAB_NAME                   TMED                           
     RUN1_IDX_NAME                   TMED_PK                        
-    RUN1_IDX_STAT                   0.003333333414047957
+    RUN1_IDX_STAT                   0.0033333334
     
     RUN1_TAB_NAME                   TSML                           
     RUN1_IDX_NAME                   TSML_PK                        
-    RUN1_IDX_STAT                   0.06666667014360428
-    
+    RUN1_IDX_STAT                   0.0666666701
     
     PLAN JOIN (M NATURAL, B INDEX (TBIG_IDX2_FK_MED), S INDEX (TSML_PK))
     CNT_1_1                         3000
     
-    
     PLAN JOIN (S NATURAL, B INDEX (TBIG_IDX1_FK_SML), M INDEX (TMED_PK))
     CNT_1_2                         1500
     
-    
     RUN2_TAB_NAME                   TBIG                           
     RUN2_IDX_NAME                   TBIG_IDX1_FK_SML               
-    RUN2_IDX_STAT                   0.5000000000000000
+    RUN2_IDX_STAT                   0.5000000000
     
     RUN2_TAB_NAME                   TBIG                           
     RUN2_IDX_NAME                   TBIG_IDX2_FK_MED               
-    RUN2_IDX_STAT                   0.003333333414047957
+    RUN2_IDX_STAT                   0.0033333334
     
     RUN2_TAB_NAME                   TMED                           
     RUN2_IDX_NAME                   TMED_PK                        
-    RUN2_IDX_STAT                   0.003333333414047957
+    RUN2_IDX_STAT                   0.0033333334
     
     RUN2_TAB_NAME                   TSML                           
     RUN2_IDX_NAME                   TSML_PK                        
-    RUN2_IDX_STAT                   0.02222222276031971
+    RUN2_IDX_STAT                   0.0222222228
     
     PLAN JOIN (M NATURAL, B INDEX (TBIG_IDX2_FK_MED), S INDEX (TSML_PK))
     CNT_2_1                         3000
     
-    
     PLAN JOIN (M NATURAL, B INDEX (TBIG_IDX2_FK_MED), S INDEX (TSML_PK))
     CNT_2_2                         1500
-    
     
     FETCHES_1_1                     acceptable
     FETCHES_1_2                     acceptable
@@ -388,7 +383,7 @@
     returns (
         tab_name varchar(31),
         idx_name varchar(31),
-        idx_stat_afte double precision
+        idx_stat_afte numeric(12, 10) -- double precision
     )
     as
     begin
@@ -562,62 +557,56 @@
            ,max( iif(rowset = 4, page_fetches, null) ) fetches_2_2
            ,cast(rdb$get_context('USER_SESSION','MAX_FETCHES_FOR_SLOW') as int) as max_fetches_for_slow
            ,cast(rdb$get_context('USER_SESSION','MAX_FETCHES_FOR_FAST') as int) as max_fetches_for_fast
-        from v_agg_stat_main
+        from v_agg_stat
     )
     ;
-
   """,
  'expected_stdout': 
   """
-    RUN1_TAB_NAME                   TBIG
+    RUN1_TAB_NAME                   TBIG                           
     RUN1_IDX_NAME                   TBIG_IDX1_FK_SML               
-    RUN1_IDX_STAT                   0.5000000000000000
+    RUN1_IDX_STAT                   0.5000000000
     
     RUN1_TAB_NAME                   TBIG                           
     RUN1_IDX_NAME                   TBIG_IDX2_FK_MED               
-    RUN1_IDX_STAT                   0.003333333414047957
+    RUN1_IDX_STAT                   0.0033333334
     
     RUN1_TAB_NAME                   TMED                           
     RUN1_IDX_NAME                   TMED_PK                        
-    RUN1_IDX_STAT                   0.003333333414047957
+    RUN1_IDX_STAT                   0.0033333334
     
     RUN1_TAB_NAME                   TSML                           
     RUN1_IDX_NAME                   TSML_PK                        
-    RUN1_IDX_STAT                   0.06666667014360428
-    
-    
+    RUN1_IDX_STAT                   0.0666666701
+
     PLAN JOIN (M NATURAL, B INDEX (TBIG_IDX2_FK_MED), S INDEX (TSML_PK))
     CNT_1_1                         3000
-    
-    
+
     PLAN JOIN (S NATURAL, B INDEX (TBIG_IDX1_FK_SML), M INDEX (TMED_PK))
     CNT_1_2                         1500
-    
-    
+
     RUN2_TAB_NAME                   TBIG                           
     RUN2_IDX_NAME                   TBIG_IDX1_FK_SML               
-    RUN2_IDX_STAT                   0.5000000000000000
+    RUN2_IDX_STAT                   0.5000000000
     
     RUN2_TAB_NAME                   TBIG                           
     RUN2_IDX_NAME                   TBIG_IDX2_FK_MED               
-    RUN2_IDX_STAT                   0.003333333414047957
+    RUN2_IDX_STAT                   0.0033333334
     
     RUN2_TAB_NAME                   TMED                           
     RUN2_IDX_NAME                   TMED_PK                        
-    RUN2_IDX_STAT                   0.003333333414047957
+    RUN2_IDX_STAT                   0.0033333334
     
     RUN2_TAB_NAME                   TSML                           
     RUN2_IDX_NAME                   TSML_PK                        
-    RUN2_IDX_STAT                   0.02222222276031971
-    
+    RUN2_IDX_STAT                   0.0222222228
+
     PLAN JOIN (M NATURAL, B INDEX (TBIG_IDX2_FK_MED), S INDEX (TSML_PK))
     CNT_2_1                         3000
-    
-    
+
     PLAN JOIN (M NATURAL, B INDEX (TBIG_IDX2_FK_MED), S INDEX (TSML_PK))
     CNT_2_2                         1500
-    
-    
+
     FETCHES_1_1                     acceptable
     FETCHES_1_2                     acceptable
     FETCHES_2_1                     acceptable
