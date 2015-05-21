@@ -16,7 +16,12 @@
   """,
  'test_script':
   """
-    -- NB: user 'boss' is NOT granted with 'RDB$ADMIN' role, only clause "grant admin" present for him
+    -- Note-1. Name of table in STDERR depends on value of UserManager = { Srp | Legacy_UserManager }.
+    -- For 'Srp' it will be 'PLG$SRP_VIEW', for Legacy_UserManager -- PLG$VIEW_USERS.
+    -- Because of this, section 'substitution' has been added in order to ignore rest part of line
+    -- after words 'TABLE PLG'.
+
+    -- Note-2. User 'boss' is NOT granted with 'RDB$ADMIN' role, only clause "grant admin" present for him
     -- in the creating statement, so all his attempts to create/drop another user will be FAILED.
     -- Before snapshot 31807 3rd such fail lead FB to crash (AV).
 
@@ -50,7 +55,11 @@
   """
     Statement failed, SQLSTATE = 28000
     add record error
-    -no permission for INSERT access to TABLE PLG$VIEW_USERS
+    -no permission for INSERT access to TABLE PLG$SRP_VIEW
+
+    Statement failed, SQLSTATE = 28000
+    add record error
+    -no permission for INSERT access to TABLE PLG$SRP_VIEW
 
     Statement failed, SQLSTATE = 28000
     add record error
@@ -59,11 +68,8 @@
     Statement failed, SQLSTATE = 28000
     add record error
     -no permission for INSERT access to TABLE PLG$VIEW_USERS
-
-    Statement failed, SQLSTATE = 28000
-    add record error
-    -no permission for INSERT access to TABLE PLG$VIEW_USERS
-  """
+  """,
+  'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'), ('TABLE PLG\$SRP_VIEW', 'TABLE PLG') ]
 }
 ]
 }
