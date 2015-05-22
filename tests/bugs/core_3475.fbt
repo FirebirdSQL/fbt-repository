@@ -17,36 +17,18 @@
   """
     set planonly;
     set sqlda_display;
-    select cast(null as int) from rdb$database;
-    select cast(? as int) from rdb$database;
+    select cast(null as int) v1, cast(? as int) v2 from rdb$database;
   """,
  'expected_stdout': 
   """
-    INPUT message field count: 0
-    
-    PLAN (RDB$DATABASE NATURAL)
-    
-    OUTPUT message field count: 1
-    01: sqltype: 496 LONG      Nullable scale: 0 subtype: 0 len: 4
-      :  name: CAST  alias: CAST
-      : table:   owner:
-    
-    INPUT message field count: 1
-    01: sqltype: 496 LONG      Nullable scale: 0 subtype: 0 len: 4
-      :  name:   alias:
-      : table:   owner:
-    
-    PLAN (RDB$DATABASE NATURAL)
-    
-    OUTPUT message field count: 1
-    01: sqltype: 496 LONG      Nullable scale: 0 subtype: 0 len: 4
-      :  name: CAST  alias: CAST
-      : table:   owner:
+    01: sqltype: 496 LONG	  Nullable scale: 0 subtype: 0 len: 4
+    01: sqltype: 496 LONG	  Nullable scale: 0 subtype: 0 len: 4
+    02: sqltype: 496 LONG	  Nullable scale: 0 subtype: 0 len: 4
   """,
  'expected_stderr': 
   """
   """,
-  'substitutions': [('[ ]+',' '),('[\t]*',' ')]
+  'substitutions': [('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
 ]
 }
