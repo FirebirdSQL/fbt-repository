@@ -55,9 +55,12 @@
     commit;
     set blob all;
     set list on;
-    select rdb$trigger_source
+    -- Ticket:
+    -- select * from rdb$triggers where rdb$trigger_source like 'CHECK%' ==> "Cannot transliterate character between character sets."
+    -- select * from rdb$triggers where rdb$trigger_source starting 'CHECK' ==> works fine.
+    select rdb$trigger_name, rdb$trigger_source
     from rdb$triggers 
-    where rdb$relation_name = upper('test') and rdb$trigger_name starting with upper('CHECK_')
+    where rdb$trigger_source like 'check%'
     order by cast(replace(rdb$trigger_name, 'CHECK_', '') as int);
   """,
  'expected_stdout':
