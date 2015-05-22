@@ -1,0 +1,100 @@
+{
+'id': 'bugs.core_1539',
+'qmid': None,
+'tracker_id': 'CORE-1539',
+'title': "select * from rdb$triggers where rdb$trigger_source like 'CHECK%'",
+'description': '',
+'min_versions': '2.1',
+'versions': [
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'init_script': 
+  """
+    -- ::: NOTE :::
+	-- In order to check correctness of following statements under ISQL itself (NOT under fbt_run), do following:
+	-- 1) open some text editor that supports charset = win1251 and set encoding for new document = WIN1251
+	--   (e.g. in Notepad++ pull-down menu: "Encoding / Character sets / Cyrillic / Windows 1251")
+	-- 2) type text save to .sql
+	-- 3) open this .sql in FAR editor and ensure that letters are displayed as SINGLE-BYTE characters
+	-- 4) run isql -i <script_encoded_in_win1251.sql>
+	-- In order to run this script under fbt_run:
+	-- 1) open Notepad++ new .fbt document and set Encoding = "UTF8 without BOM"
+	-- 2) copy-paste text from <script_encoded_in_win1251.sql>, ensure that letters remains readable
+	--    (it should be pasted here in UTF8 encoding)
+	-- 3) add in `expected_stdout` section required output by copy-paste from result of isql -i <script_encoded_in_win1251.sql>
+	--    (it should be pasted here in UTF8 encoding)
+	-- 4) save .fbt and ensure that it was saved in UTF8 encoding, otherwise exeption like
+	--    "UnicodeDecodeError: 'utf8' codec can't decode byte 0xc3 in position 621: invalid continuation byte"
+	--    will raise.
+	
+  """,
+ 'test_script': 
+  """
+	-- ### ONCE AGAIN ###
+	-- 1) for checking this under ISQL following must be encoded in WIN1251
+	-- 2) for running under fbt_run utility following must be encoded in UTF8.
+    recreate table test (
+        bugtype         varchar(20),
+        bugfrequency    varchar(20),
+        decision        varchar(20),
+        fixerkey        int,
+        decisiondate date
+    );
+    
+    alter table test
+        add constraint test_bugtype check (bugtype in ('зрабіць', 'трэба зрабіць', 'недахоп', 'памылка', 'катастрофа'))
+        ,add constraint test_bugfrequency check (bugfrequency in ('ніколі', 'зрэдку', 'часам', 'часта', 'заўсёды', 'не прыкладаецца'))
+        ,add constraint test_decision check (decision in ('адкрыта', 'зроблена', 'састарэла', 'адхілена', 'часткова', 'выдалена'))
+        ,add constraint test_fixerkey check ((decision = 'адкрыта' and fixerkey is null and decisiondate is null) or (decision <> 'адкрыта' and not fixerkey is null and not decisiondate is null))
+    ;
+    commit;
+    set blob all;
+    set list on;
+    select rdb$trigger_source
+    from rdb$triggers 
+    where rdb$relation_name = upper('test') and rdb$trigger_name starting with upper('CHECK_')
+    order by cast(replace(rdb$trigger_name, 'CHECK_', '') as int);
+  """,
+ 'expected_stdout':
+  """
+    RDB$TRIGGER_NAME                CHECK_25                       
+    RDB$TRIGGER_SOURCE              0:3
+    check (bugtype in ('зрабіць', 'трэба зрабіць', 'недахоп', 'памылка', 'катастрофа'))
+
+    RDB$TRIGGER_NAME                CHECK_26                       
+    RDB$TRIGGER_SOURCE              0:6
+    check (bugtype in ('зрабіць', 'трэба зрабіць', 'недахоп', 'памылка', 'катастрофа'))
+
+    RDB$TRIGGER_NAME                CHECK_27                       
+    RDB$TRIGGER_SOURCE              0:9
+    check (bugfrequency in ('ніколі', 'зрэдку', 'часам', 'часта', 'заўсёды', 'не прыкладаецца'))
+
+    RDB$TRIGGER_NAME                CHECK_28                       
+    RDB$TRIGGER_SOURCE              0:c
+    check (bugfrequency in ('ніколі', 'зрэдку', 'часам', 'часта', 'заўсёды', 'не прыкладаецца'))
+
+    RDB$TRIGGER_NAME                CHECK_29                       
+    RDB$TRIGGER_SOURCE              0:f
+    check (decision in ('адкрыта', 'зроблена', 'састарэла', 'адхілена', 'часткова', 'выдалена'))
+
+    RDB$TRIGGER_NAME                CHECK_30                       
+    RDB$TRIGGER_SOURCE              0:12
+    check (decision in ('адкрыта', 'зроблена', 'састарэла', 'адхілена', 'часткова', 'выдалена'))
+
+    RDB$TRIGGER_NAME                CHECK_31                       
+    RDB$TRIGGER_SOURCE              0:15
+    check ((decision = 'адкрыта' and fixerkey is null and decisiondate is null) or (decision <> 'адкрыта' and not fixerkey is null and not decisiondate is null))
+
+    RDB$TRIGGER_NAME                CHECK_32                       
+    RDB$TRIGGER_SOURCE              0:18
+    check ((decision = 'адкрыта' and fixerkey is null and decisiondate is null) or (decision <> 'адкрыта' and not fixerkey is null and not decisiondate is null))
+  """,
+  'substitutions':[('RDB\$TRIGGER_SOURCE.*',''),('RDB\$TRIGGER_NAME.*','')]
+}
+]
+}
