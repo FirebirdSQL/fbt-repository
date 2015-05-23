@@ -1,0 +1,70 @@
+{
+'id': 'bugs.core_1642',
+'qmid': None,
+'tracker_id': 'CORE-1642',
+'title': 'Change type of returning value of CHAR_LENGTH, BIT_LENGTH and OCTET_LENGTH of BLOBs to bigint',
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    drop user alan;
+    drop user john;
+    drop user mick;
+
+    create user alan password '123';
+    create user john password '456';
+    create user mick password '789';
+    
+    set list on;
+    set term ^;
+    execute block returns(alan_check varchar(3), john_check varchar(3), mick_check varchar(3) ) as
+    begin
+      execute statement 'select iif(current_connection - mon$attachment_id = 0, ''OK.'',''BAD'') from mon$attachments'
+      on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+      as user 'alan' password '123'
+      into alan_check;
+    
+      execute statement 'select iif(current_connection - mon$attachment_id = 0, ''OK.'',''BAD'') from mon$attachments'
+      on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+      as user 'john' password '456'
+      into john_check;
+    
+      execute statement 'select iif(current_connection - mon$attachment_id = 0, ''OK.'',''BAD'') from mon$attachments'
+      on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+      as user 'mick' password '789'
+      into mick_check;
+    
+      suspend;
+    
+    end
+    ^
+    set term ;^
+   
+    drop user alan;
+    drop user john;
+    drop user mick;
+
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    ALAN_CHECK                      OK.
+    JOHN_CHECK                      OK.
+    MICK_CHECK                      OK.
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[('Statement failed, SQLSTATE = HY000',''),('record not found for user:.*','')]
+}
+]
+}
