@@ -1,0 +1,101 @@
+{
+'id': 'bugs.core_0606',
+'qmid': None,
+'tracker_id': 'CORE-0606',
+'title': ' Tricky role defeats basic SQL security',
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set term ^;
+    execute block as
+    begin
+        begin
+            execute statement 'drop role "FOR CVC"';
+        when any do begin end
+        end
+        begin
+            execute statement 'drop role "FOR"';
+        when any do begin end
+        end
+        begin
+            execute statement 'drop user cvc';
+        when any do begin end
+        end
+    end
+    ^set term ;^
+    commit;
+
+    recreate table "t t"(data int);
+    commit;
+    insert into "t t" values(123456);
+    commit;
+
+    create user cvc password 'pw';
+    commit;
+
+    create role "FOR CVC";
+    create role "FOR";
+
+    grant "FOR CVC" to user cvc;
+    grant select on table "t t" to "FOR";
+    commit;
+
+    show grants;
+    commit;
+    
+    set list on;
+    set term ^;
+    execute block returns(who_am_i varchar(31), i_m_playing_role varchar(31)) as
+    begin
+      for 
+         execute statement 'select current_user, current_role from rdb$database'
+         on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+         as user 'cvc' password 'pw' role '"FOR CVC"'
+         into who_am_i, i_m_playing_role
+      do
+         suspend;
+    end
+    ^
+    
+    execute block returns(data int) as
+    begin
+      for 
+         execute statement 'select data from "t t"'
+         on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+         as user 'cvc' password 'pw' role '"FOR CVC"'
+         into data
+      do
+         suspend;
+    end
+    ^ set term ;^
+  """,
+ 'expected_stdout': 
+  """
+    /* Grant permissions for this database */
+    GRANT SELECT ON t t TO ROLE FOR
+    GRANT FOR CVC TO CVC
+    
+    WHO_AM_I                        CVC
+    I_M_PLAYING_ROLE                FOR CVC
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    Execute statement error at isc_dsql_prepare :
+    335544352 : no permission for SELECT access to TABLE t t
+    Statement : select data from "t t"
+    Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+  """,
+  'substitutions':[('Data source : Firebird::.*','Data source : Firebird::'),('read/select','SELECT')]
+}
+]
+}
