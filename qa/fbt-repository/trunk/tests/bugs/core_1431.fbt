@@ -1,0 +1,197 @@
+{
+'id': 'bugs.core_1431',
+'qmid': '',
+'tracker_id': 'CORE-1431',
+'title': 'Greek characters in cp1251 vs uppercasing',
+'description': '',
+'min_versions': '2.1.7',
+'versions': [
+{
+ 'firebird_version': '2.1',
+ 'platform': 'All',
+ 'connection_character_set': 'WIN1251',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+	recreate table c1251(c char(1) character set win1251);
+	commit;
+
+	-- http://www.columbia.edu/kermit/cp1251.html
+	insert into c1251(c) values('Ђ'); --  128  08/00  200  80  CYRILLIC CAPITAL LETTER DJE
+	insert into c1251(c) values('Ѓ'); --  129  08/01  201  81  CYRILLIC CAPITAL LETTER GJE
+	insert into c1251(c) values('‚'); --  130  08/02  202  82  LOW 9 SINGLE QUOTE
+	insert into c1251(c) values('ѓ'); --  131  08/03  203  83  CYRILLIC SMALL LETTER GJE
+	insert into c1251(c) values('„'); --  132  08/04  204  84  LOW 9 DOUBLE QUOTE
+	insert into c1251(c) values('…'); --  133  08/05  205  85  ELLIPSIS
+	insert into c1251(c) values('†'); --  134  08/06  206  86  DAGGER
+	insert into c1251(c) values('‡'); --  135  08/07  207  87  DOUBLE DAGGER
+	insert into c1251(c) values('€'); --  136  08/08  210  88  EURO SIGN
+	insert into c1251(c) values('‰'); --  137  08/09  211  89  PER MIL SIGN
+	insert into c1251(c) values('Љ'); --  138  08/10  212  8A  CYRILLIC CAPITAL LETTER LJE
+	insert into c1251(c) values('‹'); --  139  08/11  213  8B  LEFT SINGLE QUOTE BRACKET
+	insert into c1251(c) values('Њ'); --  140  08/12  214  8C  CYRILLIC CAPITAL LETTER NJE
+	insert into c1251(c) values('Ќ'); --  141  08/13  215  8D  CYRILLIC CAPITAL LETTER KJE
+	insert into c1251(c) values('Ћ'); --  142  08/14  216  8E  CYRILLIC CAPITAL LETTER TSHE
+	insert into c1251(c) values('Џ'); --  143  08/15  217  8F  CYRILLIC CAPITAL LETTER DZHE
+	insert into c1251(c) values('ђ'); --  144  09/00  220  90  CYRILLIC SMALL LETTER DJE
+	insert into c1251(c) values('‘'); --  145  09/01  221  91  HIGH 6 SINGLE QUOTE
+	insert into c1251(c) values('’'); --  146  09/02  222  92  HIGH 9 SINGLE QUOTE
+	insert into c1251(c) values('“'); --  147  09/03  223  93  HIGH 6 DOUBLE QUOTE
+	insert into c1251(c) values('”'); --  148  09/04  224  94  HIGH 9 DOUBLE QUOTE
+	insert into c1251(c) values('•'); --  149  09/05  225  95  LARGE CENTERED DOT
+	insert into c1251(c) values('–'); --  150  09/06  226  96  EN DASH
+	insert into c1251(c) values('—'); --  151  09/07  227  97  EM DASH
+	insert into c1251(c) values('?'); --  152  09/08  230  98  (UNDEFINED)
+	insert into c1251(c) values('™'); --  153  09/09  231  99  TRADEMARK SIGN
+	insert into c1251(c) values('љ'); --  154  09/10  232  9A  CYRILLIC SMALL LETTER LJE
+	insert into c1251(c) values('›'); --  155  09/11  233  9B  RIGHT SINGLE QUOTE BRACKET
+	insert into c1251(c) values('њ'); --  156  09/12  234  9C  CYRILLIC SMALL LETTER NJE
+	insert into c1251(c) values('ќ'); --  157  09/13  235  9D  CYRILLIC SMALL LETTER KJE
+	insert into c1251(c) values('ћ'); --  158  09/14  236  9E  CYRILLIC CAPITAL LETTER TSHE
+	insert into c1251(c) values('џ'); --  159  09/15  237  9F  CYRILLIC CAPITAL LETTER DZHE
+	--insert into c1251(c) values(' '); --  160  10/00  240  A0  NO-BREAK SPACE
+	insert into c1251(c) values('Ў'); --  161  10/01  241  A1  CYRILLIC CAPITAL LETTER SHORT U
+	insert into c1251(c) values('ў'); --  162  10/02  242  A2  CYRILLIC SMALL LETTER SHORT U
+	insert into c1251(c) values('Ј'); --  163  10/03  243  A3  CYRILLIC CAPITAL LETTER JE
+	insert into c1251(c) values('¤'); --  164  10/04  244  A4  CURRENCY SIGN
+	insert into c1251(c) values('Ґ'); --  165  10/05  245  A5  CYRILLIC CAPITAL LETTER GHE WITH UPTURN
+	insert into c1251(c) values('¦'); --  166  10/06  246  A6  BROKEN BAR
+	insert into c1251(c) values('§'); --  167  10/07  247  A7  PARAGRAPH SIGN
+	insert into c1251(c) values('Ё'); --  168  10/08  250  A8  CYRILLIC CAPITAL LETTER IO
+	insert into c1251(c) values('©'); --  169  10/09  251  A9  COPYRIGHT SIGN
+	insert into c1251(c) values('Є'); --  170  10/10  252  AA  CYRILLIC CAPITAL LETTER UKRAINIAN IE
+	insert into c1251(c) values('«'); --  171  10/11  253  AB  LEFT ANGLE QUOTATION MARK
+	insert into c1251(c) values('¬'); --  172  10/12  254  AC  NOT SIGN
+	insert into c1251(c) values('­'); --  173  10/13  255  AD  SOFT HYPHEN
+	insert into c1251(c) values('®'); --  174  10/14  256  AE  REGISTERED TRADE MARK SIGN
+	insert into c1251(c) values('Ї'); --  175  10/15  257  AF  CYRILLIC CAPITAL LETTER YI
+	insert into c1251(c) values('°'); --  176  11/00  260  B0  DEGREE SIGN, RING ABOVE
+	insert into c1251(c) values('±'); --  177  11/01  261  B1  PLUS-MINUS SIGN
+	insert into c1251(c) values('І'); --  178  11/02  262  B2  CYRILLIC CAPITAL LETTER BYELORUSSION-UKRAINIAN I
+	insert into c1251(c) values('і'); --  179  11/03  263  B3  CYRILLIC SMALL LETTER BYELORUSSION-UKRAINIAN I
+	insert into c1251(c) values('ґ'); --  180  11/04  264  B4  CYRILLIC SMALL LETTER GHE WITH UPTURN
+	insert into c1251(c) values('µ'); --  181  11/05  265  B5  MICRO SIGN
+	insert into c1251(c) values('¶'); --  182  11/06  266  B6  PILCROW SIGN
+	insert into c1251(c) values('·'); --  183  11/07  267  B7  MIDDLE DOT
+	insert into c1251(c) values('ё'); --  184  11/08  270  B8  CYRILLIC SMALL LETTER IO
+	insert into c1251(c) values('№'); --  185  11/09  271  B9  NUMERO SIGN
+	insert into c1251(c) values('є'); --  186  11/10  272  BA  CYRILLIC SMALL LETTER UKRAINIAN IE
+	insert into c1251(c) values('»'); --  187  11/11  273  BB  RIGHT ANGLE QUOTATION MARK
+	insert into c1251(c) values('ј'); --  188  11/12  274  BC  CYRILLIC SMALL LETTER JE
+	insert into c1251(c) values('Ѕ'); --  189  11/13  275  BD  CYRILLIC CAPITAL LETTER DZE
+	insert into c1251(c) values('ѕ'); --  190  11/14  276  BE  CYRILLIC SMALL LETTER DZE
+	insert into c1251(c) values('ї'); --  191  11/15  277  BF  CYRILLIC SMALL LETTER YI
+	insert into c1251(c) values('А'); --  192  12/00  300  C0  CYRILLIC CAPITAL LETTER A
+	insert into c1251(c) values('Б'); --  193  12/01  301  C1  CYRILLIC CAPITAL LETTER BE
+	insert into c1251(c) values('В'); --  194  12/02  302  C2  CYRILLIC CAPITAL LETTER VE
+	insert into c1251(c) values('Г'); --  195  12/03  303  C3  CYRILLIC CAPITAL LETTER GHE
+	insert into c1251(c) values('Д'); --  196  12/04  304  C4  CYRILLIC CAPITAL LETTER DE
+	insert into c1251(c) values('Е'); --  197  12/05  305  C5  CYRILLIC CAPITAL LETTER IE
+	insert into c1251(c) values('Ж'); --  198  12/06  306  C6  CYRILLIC CAPITAL LETTER ZHE
+	insert into c1251(c) values('З'); --  199  12/07  307  C7  CYRILLIC CAPITAL LETTER ZE
+	insert into c1251(c) values('И'); --  200  12/08  310  C8  CYRILLIC CAPITAL LETTER I
+	insert into c1251(c) values('Й'); --  201  12/09  311  C9  CYRILLIC CAPITAL LETTER SHORT I
+	insert into c1251(c) values('К'); --  202  12/10  312  CA  CYRILLIC CAPITAL LETTER KA
+	insert into c1251(c) values('Л'); --  203  12/11  313  CB  CYRILLIC CAPITAL LETTER EL
+	insert into c1251(c) values('М'); --  204  12/12  314  CC  CYRILLIC CAPITAL LETTER EM
+	insert into c1251(c) values('Н'); --  205  12/13  315  CD  CYRILLIC CAPITAL LETTER EN
+	insert into c1251(c) values('О'); --  206  12/14  316  CE  CYRILLIC CAPITAL LETTER O
+	insert into c1251(c) values('П'); --  207  12/15  317  CF  CYRILLIC CAPITAL LETTER PE
+	insert into c1251(c) values('Р'); --  208  13/00  320  D0  CYRILLIC CAPITAL LETTER ER
+	insert into c1251(c) values('С'); --  209  13/01  321  D1  CYRILLIC CAPITAL LETTER ES
+	insert into c1251(c) values('Т'); --  210  13/02  322  D2  CYRILLIC CAPITAL LETTER TE
+	insert into c1251(c) values('У'); --  211  13/03  323  D3  CYRILLIC CAPITAL LETTER U
+	insert into c1251(c) values('Ф'); --  212  13/04  324  D4  CYRILLIC CAPITAL LETTER EF
+	insert into c1251(c) values('Х'); --  213  13/05  325  D5  CYRILLIC CAPITAL LETTER HA
+	insert into c1251(c) values('Ц'); --  214  13/06  326  D6  CYRILLIC CAPITAL LETTER TSE
+	insert into c1251(c) values('Ч'); --  215  13/07  327  D7  CYRILLIC CAPITAL LETTER CHE
+	insert into c1251(c) values('Ш'); --  216  13/08  330  D8  CYRILLIC CAPITAL LETTER SHA
+	insert into c1251(c) values('Щ'); --  217  13/09  331  D9  CYRILLIC CAPITAL LETTER SHCHA
+	insert into c1251(c) values('Ъ'); --  218  13/10  332  DA  CYRILLIC CAPITAL LETTER HARD SIGN
+	insert into c1251(c) values('Ы'); --  219  13/11  333  DB  CYRILLIC CAPITAL LETTER YERU
+	insert into c1251(c) values('Ь'); --  220  13/12  334  DC  CYRILLIC CAPITAL LETTER SOFT SIGN
+	insert into c1251(c) values('Э'); --  221  13/13  335  DD  CYRILLIC CAPITAL LETTER E
+	insert into c1251(c) values('Ю'); --  222  13/14  336  DE  CYRILLIC CAPITAL LETTER YU
+	insert into c1251(c) values('Я'); --  223  13/15  337  DF  CYRILLIC CAPITAL LETTER YA
+	insert into c1251(c) values('а'); --  224  14/00  340  E0  CYRILLIC SMALL LETTER A
+	insert into c1251(c) values('б'); --  225  14/01  341  E1  CYRILLIC SMALL LETTER BE
+	insert into c1251(c) values('в'); --  226  14/02  342  E2  CYRILLIC SMALL LETTER VE
+	insert into c1251(c) values('г'); --  227  14/03  343  E3  CYRILLIC SMALL LETTER GHE
+	insert into c1251(c) values('д'); --  228  14/04  344  E4  CYRILLIC SMALL LETTER DE
+	insert into c1251(c) values('е'); --  229  14/05  345  E5  CYRILLIC SMALL LETTER IE
+	insert into c1251(c) values('ж'); --  230  14/06  346  E6  CYRILLIC SMALL LETTER ZHE
+	insert into c1251(c) values('з'); --  231  14/07  347  E7  CYRILLIC SMALL LETTER ZE
+	insert into c1251(c) values('и'); --  232  14/08  350  E8  CYRILLIC SMALL LETTER I
+	insert into c1251(c) values('й'); --  233  14/09  351  E9  CYRILLIC SMALL LETTER SHORT I
+	insert into c1251(c) values('к'); --  234  14/10  352  EA  CYRILLIC SMALL LETTER KA
+	insert into c1251(c) values('л'); --  235  14/11  353  EB  CYRILLIC SMALL LETTER EL
+	insert into c1251(c) values('м'); --  236  14/12  354  EC  CYRILLIC SMALL LETTER EM
+	insert into c1251(c) values('н'); --  237  14/13  355  ED  CYRILLIC SMALL LETTER EN
+	insert into c1251(c) values('о'); --  238  14/14  356  EE  CYRILLIC SMALL LETTER O
+	insert into c1251(c) values('п'); --  239  14/15  357  EF  CYRILLIC SMALL LETTER PE
+	insert into c1251(c) values('р'); --  240  15/00  360  F0  CYRILLIC SMALL LETTER ER
+	insert into c1251(c) values('с'); --  241  15/01  361  F1  CYRILLIC SMALL LETTER ES
+	insert into c1251(c) values('т'); --  242  15/02  362  F2  CYRILLIC SMALL LETTER TE
+	insert into c1251(c) values('у'); --  243  15/03  363  F3  CYRILLIC SMALL LETTER U
+	insert into c1251(c) values('ф'); --  244  15/04  364  F4  CYRILLIC SMALL LETTER EF
+	insert into c1251(c) values('х'); --  245  15/05  365  F5  CYRILLIC SMALL LETTER HA
+	insert into c1251(c) values('ц'); --  246  15/06  366  F6  CYRILLIC SMALL LETTER TSE
+	insert into c1251(c) values('ч'); --  247  15/07  367  F7  CYRILLIC SMALL LETTER CHE
+	insert into c1251(c) values('ш'); --  248  15/08  370  F8  CYRILLIC SMALL LETTER CHA
+	insert into c1251(c) values('щ'); --  249  15/09  371  F9  CYRILLIC SMALL LETTER SHCHA
+	insert into c1251(c) values('ъ'); --  250  15/10  372  FA  CYRILLIC SMALL LETTER HARD SIGN
+	insert into c1251(c) values('ы'); --  251  15/11  373  FB  CYRILLIC SMALL LETTER YERU
+	insert into c1251(c) values('ь'); --  252  15/12  374  FC  CYRILLIC SMALL LETTER SOFT SIGN
+	insert into c1251(c) values('э'); --  253  15/13  375  FD  CYRILLIC SMALL LETTER E
+	insert into c1251(c) values('ю'); --  254  15/14  376  FE  CYRILLIC SMALL LETTER YU
+	insert into c1251(c) values('я'); --  255  15/15  377  FF  CYRILLIC SMALL LETTER YA
+	commit;
+	set list on;
+	-- Test: following statement should pass OK, w/o exceptions:
+	select upper(c) has_no_upper_case_equiv
+	from c1251
+	group by 1
+	having count(*)<>2;
+  """,
+ 'expected_stdout': 
+  """
+	HAS_NO_UPPER_CASE_EQUIV         ?
+	HAS_NO_UPPER_CASE_EQUIV         ‚
+	HAS_NO_UPPER_CASE_EQUIV         „
+	HAS_NO_UPPER_CASE_EQUIV         …
+	HAS_NO_UPPER_CASE_EQUIV         †
+	HAS_NO_UPPER_CASE_EQUIV         ‡
+	HAS_NO_UPPER_CASE_EQUIV         €
+	HAS_NO_UPPER_CASE_EQUIV         ‰
+	HAS_NO_UPPER_CASE_EQUIV         ‹
+	HAS_NO_UPPER_CASE_EQUIV         ‘
+	HAS_NO_UPPER_CASE_EQUIV         ’
+	HAS_NO_UPPER_CASE_EQUIV         “
+	HAS_NO_UPPER_CASE_EQUIV         ”
+	HAS_NO_UPPER_CASE_EQUIV         •
+	HAS_NO_UPPER_CASE_EQUIV         –
+	HAS_NO_UPPER_CASE_EQUIV         —
+	HAS_NO_UPPER_CASE_EQUIV         ™
+	HAS_NO_UPPER_CASE_EQUIV         ›
+	HAS_NO_UPPER_CASE_EQUIV         ¤
+	HAS_NO_UPPER_CASE_EQUIV         ¦
+	HAS_NO_UPPER_CASE_EQUIV         §
+	HAS_NO_UPPER_CASE_EQUIV         ©
+	HAS_NO_UPPER_CASE_EQUIV         «
+	HAS_NO_UPPER_CASE_EQUIV         ¬
+	HAS_NO_UPPER_CASE_EQUIV         ­
+	HAS_NO_UPPER_CASE_EQUIV         ®
+	HAS_NO_UPPER_CASE_EQUIV         °
+	HAS_NO_UPPER_CASE_EQUIV         ±
+	HAS_NO_UPPER_CASE_EQUIV         µ
+	HAS_NO_UPPER_CASE_EQUIV         ¶
+	HAS_NO_UPPER_CASE_EQUIV         ·
+	HAS_NO_UPPER_CASE_EQUIV         №
+	HAS_NO_UPPER_CASE_EQUIV         »
+  """
+}
+]
+}
