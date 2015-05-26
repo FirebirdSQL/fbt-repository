@@ -54,7 +54,7 @@
       c computed by (extract(day from b)-extract(day from b))
     );
     commit;
-    insert into test(a, b) values(1, current_date);
+    insert into test(a, b) values(1, DATE '2015-05-24');
     insert into test(a, b) values(1, null);
     commit;
     select c from test group by c;
