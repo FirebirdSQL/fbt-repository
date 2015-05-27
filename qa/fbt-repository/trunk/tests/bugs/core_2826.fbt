@@ -1,7 +1,7 @@
 {
 'id': 'bugs.core_2826',
 'qmid': None,
-'tracker_id': 'CORE-2816',
+'tracker_id': 'CORE-2826',
 'title': 'Join condition fails for UTF-8 databases.',
 'description': '',
 'min_versions': '2.1.4',
