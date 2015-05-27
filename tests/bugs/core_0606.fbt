@@ -26,12 +26,11 @@
             execute statement 'drop role "FOR"';
         when any do begin end
         end
-        begin
-            execute statement 'drop user cvc';
-        when any do begin end
-        end
     end
     ^set term ;^
+    commit;
+
+    drop user cvc;
     commit;
 
     recreate table "t t"(data int);
@@ -76,7 +75,14 @@
       do
          suspend;
     end
-    ^ set term ;^
+    ^ 
+    set term ;^
+
+    drop user cvc;
+    commit;
+    drop role "FOR CVC";
+    drop role "FOR";
+    commit;
   """,
  'expected_stdout': 
   """
@@ -95,7 +101,12 @@
     Statement : select data from "t t"
     Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
   """,
-  'substitutions':[('Data source : Firebird::.*','Data source : Firebird::'),('read/select','SELECT')]
+  'substitutions':[
+    ('Statement failed, SQLSTATE = HY000', ''),
+    ('record not found for user:.*', ''),
+    ('read/select','SELECT'),
+    ('Data source : Firebird::.*','Data source : Firebird::')
+  ]
 }
 ]
 }
