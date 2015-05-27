@@ -1,0 +1,176 @@
+{
+'id': 'bugs.core_675',
+'qmid': None,
+'tracker_id': 'CORE-675',
+'title': 'Add entries to RDB$Types',
+'description': """Add new types""",
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """""",
+ 'test_type': 'ISQL',
+ 'test_script': """select RDB$FIELD_NAME, RDB$TYPE, RDB$TYPE_NAME from RDB$TYPES where RDB$FIELD_NAME NOT STARTING WITH 'RDB$CHARACTER' AND RDB$SYSTEM_FLAG=1 ORDER BY 1;
+""",
+ 'expected_stdout': """RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+MON$BACKUP_STATE                       2 MERGE                           
+MON$BACKUP_STATE                       0 NORMAL                          
+MON$BACKUP_STATE                       1 STALLED                         
+MON$ISOLATION_MODE                     2 READ_COMMITTED_VERSION          
+MON$ISOLATION_MODE                     3 READ_COMMITTED_NO_VERSION       
+MON$ISOLATION_MODE                     1 CONCURRENCY                     
+MON$ISOLATION_MODE                     0 CONSISTENCY                     
+MON$SHUTDOWN_MODE                      2 SINGLE_USER_SHUTDOWN            
+MON$SHUTDOWN_MODE                      0 ONLINE                          
+MON$SHUTDOWN_MODE                      3 FULL_SHUTDOWN                   
+MON$SHUTDOWN_MODE                      1 MULTI_USER_SHUTDOWN             
+MON$STATE                              1 ACTIVE                          
+MON$STATE                              0 IDLE                            
+MON$STATE                              2 STALLED                         
+MON$STAT_GROUP                         4 CALL                            
+MON$STAT_GROUP                         0 DATABASE                        
+MON$STAT_GROUP                         2 TRANSACTION                     
+MON$STAT_GROUP                         1 ATTACHMENT                      
+MON$STAT_GROUP                         3 STATEMENT                       
+RDB$DETERMINISTIC_FLAG                 1 DETERMINISTIC                   
+
+RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+RDB$DETERMINISTIC_FLAG                 0 NON_DETERMINISTIC               
+RDB$FIELD_SUB_TYPE                     4 RANGES                          
+RDB$FIELD_SUB_TYPE                     3 ACL                             
+RDB$FIELD_SUB_TYPE                     9 DEBUG_INFORMATION               
+RDB$FIELD_SUB_TYPE                     1 TEXT                            
+RDB$FIELD_SUB_TYPE                     0 BINARY                          
+RDB$FIELD_SUB_TYPE                     2 BLR                             
+RDB$FIELD_SUB_TYPE                     6 FORMAT                          
+RDB$FIELD_SUB_TYPE                     7 TRANSACTION_DESCRIPTION         
+RDB$FIELD_SUB_TYPE                     5 SUMMARY                         
+RDB$FIELD_SUB_TYPE                     8 EXTERNAL_FILE_DESCRIPTION       
+RDB$FIELD_TYPE                        12 DATE                            
+RDB$FIELD_TYPE                        37 VARYING                         
+RDB$FIELD_TYPE                        14 TEXT                            
+RDB$FIELD_TYPE                         7 SHORT                           
+RDB$FIELD_TYPE                        13 TIME                            
+RDB$FIELD_TYPE                        35 TIMESTAMP                       
+RDB$FIELD_TYPE                       261 BLOB                            
+RDB$FIELD_TYPE                        45 BLOB_ID                         
+RDB$FIELD_TYPE                        10 FLOAT                           
+
+RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+RDB$FIELD_TYPE                        16 INT64                           
+RDB$FIELD_TYPE                        23 BOOLEAN                         
+RDB$FIELD_TYPE                        27 DOUBLE                          
+RDB$FIELD_TYPE                         8 LONG                            
+RDB$FIELD_TYPE                        40 CSTRING                         
+RDB$FIELD_TYPE                         9 QUAD                            
+RDB$FUNCTION_TYPE                      0 VALUE                           
+RDB$FUNCTION_TYPE                      1 BOOLEAN                         
+RDB$GRANT_OPTION                       2 ADMIN_OPTION                    
+RDB$GRANT_OPTION                       0 NONE                            
+RDB$GRANT_OPTION                       1 GRANT_OPTION                    
+RDB$IDENTITY_TYPE                      0 ALWAYS                          
+RDB$IDENTITY_TYPE                      1 BY DEFAULT                      
+RDB$INDEX_INACTIVE                     0 ACTIVE                          
+RDB$INDEX_INACTIVE                     1 INACTIVE                        
+RDB$LEGACY_FLAG                        1 LEGACY_STYLE                    
+RDB$LEGACY_FLAG                        0 NEW_STYLE                       
+RDB$MAP_TO_TYPE                        1 ROLE                            
+RDB$MAP_TO_TYPE                        0 USER                            
+RDB$MECHANISM                          4 BY_SCALAR_ARRAY_DESCRIPTOR      
+
+RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+RDB$MECHANISM                          3 BY_ISC_DESCRIPTOR               
+RDB$MECHANISM                          1 BY_REFERENCE                    
+RDB$MECHANISM                          5 BY_REFERENCE_WITH_NULL          
+RDB$MECHANISM                          0 BY_VALUE                        
+RDB$MECHANISM                          2 BY_VMS_DESCRIPTOR               
+RDB$OBJECT_TYPE                       18 PACKAGE                         
+RDB$OBJECT_TYPE                       19 PACKAGE BODY                    
+RDB$OBJECT_TYPE                        4 VALIDATION                      
+RDB$OBJECT_TYPE                       15 UDF                             
+RDB$OBJECT_TYPE                       14 GENERATOR                       
+RDB$OBJECT_TYPE                        0 RELATION                        
+RDB$OBJECT_TYPE                       11 CHARACTER_SET                   
+RDB$OBJECT_TYPE                        9 FIELD                           
+RDB$OBJECT_TYPE                        1 VIEW                            
+RDB$OBJECT_TYPE                       16 BLOB_FILTER                     
+RDB$OBJECT_TYPE                       10 INDEX                           
+RDB$OBJECT_TYPE                       17 COLLATION                       
+RDB$OBJECT_TYPE                        3 COMPUTED_FIELD                  
+RDB$OBJECT_TYPE                       13 ROLE                            
+RDB$OBJECT_TYPE                        5 PROCEDURE                       
+
+RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+RDB$OBJECT_TYPE                        2 TRIGGER                         
+RDB$OBJECT_TYPE                        8 USER                            
+RDB$OBJECT_TYPE                       12 USER_GROUP                      
+RDB$OBJECT_TYPE                        6 EXPRESSION_INDEX                
+RDB$OBJECT_TYPE                        7 EXCEPTION                       
+RDB$PAGE_TYPE                          5 DATA                            
+RDB$PAGE_TYPE                          2 PAGE_INVENTORY                  
+RDB$PAGE_TYPE                         10 SCN_INVENTORY                   
+RDB$PAGE_TYPE                          9 GENERATOR                       
+RDB$PAGE_TYPE                          1 HEADER                          
+RDB$PAGE_TYPE                          8 BLOB                            
+RDB$PAGE_TYPE                          7 INDEX_BUCKET                    
+RDB$PAGE_TYPE                          6 INDEX_ROOT                      
+RDB$PAGE_TYPE                          4 POINTER                         
+RDB$PAGE_TYPE                          3 TRANSACTION_INVENTORY           
+RDB$PARAMETER_MECHANISM                0 NORMAL                          
+RDB$PARAMETER_MECHANISM                1 TYPE OF                         
+RDB$PARAMETER_TYPE                     0 INPUT                           
+RDB$PARAMETER_TYPE                     1 OUTPUT                          
+RDB$PRIVATE_FLAG                       1 PRIVATE                         
+
+RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+RDB$PRIVATE_FLAG                       0 PUBLIC                          
+RDB$PROCEDURE_TYPE                     0 LEGACY                          
+RDB$PROCEDURE_TYPE                     1 SELECTABLE                      
+RDB$PROCEDURE_TYPE                     2 EXECUTABLE                      
+RDB$RELATION_TYPE                      0 PERSISTENT                      
+RDB$RELATION_TYPE                      1 VIEW                            
+RDB$RELATION_TYPE                      3 VIRTUAL                         
+RDB$RELATION_TYPE                      5 GLOBAL_TEMPORARY_DELETE         
+RDB$RELATION_TYPE                      4 GLOBAL_TEMPORARY_PRESERVE       
+RDB$RELATION_TYPE                      2 EXTERNAL                        
+RDB$SYSTEM_FLAG                        6 IDENTITY_GENERATOR              
+RDB$SYSTEM_FLAG                        4 REFERENTIAL_CONSTRAINT          
+RDB$SYSTEM_FLAG                        3 CHECK_CONSTRAINT                
+RDB$SYSTEM_FLAG                        5 VIEW_CHECK                      
+RDB$SYSTEM_FLAG                        2 QLI                             
+RDB$SYSTEM_FLAG                        0 USER                            
+RDB$SYSTEM_FLAG                        1 SYSTEM                          
+RDB$TRANSACTION_STATE                  1 LIMBO                           
+RDB$TRANSACTION_STATE                  2 COMMITTED                       
+RDB$TRANSACTION_STATE                  3 ROLLED_BACK                     
+
+RDB$FIELD_NAME                  RDB$TYPE RDB$TYPE_NAME                   
+=============================== ======== =============================== 
+RDB$TRIGGER_INACTIVE                   0 ACTIVE                          
+RDB$TRIGGER_INACTIVE                   1 INACTIVE                        
+RDB$TRIGGER_TYPE                    8193 DISCONNECT                      
+RDB$TRIGGER_TYPE                    8192 CONNECT                         
+RDB$TRIGGER_TYPE                       6 POST_ERASE                      
+RDB$TRIGGER_TYPE                       4 POST_MODIFY                     
+RDB$TRIGGER_TYPE                       2 POST_STORE                      
+RDB$TRIGGER_TYPE                       3 PRE_MODIFY                      
+RDB$TRIGGER_TYPE                       5 PRE_ERASE                       
+RDB$TRIGGER_TYPE                       1 PRE_STORE                       
+RDB$TRIGGER_TYPE                    8195 TRANSACTION_COMMIT              
+RDB$TRIGGER_TYPE                    8196 TRANSACTION_ROLLBACK            
+RDB$TRIGGER_TYPE                    8194 TRANSACTION_START               
+RDB$UNIQUE_FLAG                        1 UNIQUE                          
+RDB$UNIQUE_FLAG                        0 NON_UNIQUE                      
+
+SQL>"""
+}
+]
+}
