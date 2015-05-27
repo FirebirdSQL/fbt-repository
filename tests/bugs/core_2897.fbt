@@ -18,7 +18,7 @@
     -- Measurement showed than on 3.0 (SS/SC/CS) transfer of NULLs is more than 5 (five) times 
     -- faster than text data with length = 32K. As of 2.5 (SC) than ration is about 1.7 ... 1.8.
     -- Test fills up two tables: one with text data and another with only nulls.
-    -- Then we receive data from these tables via EZ/EDS, evaluate elapsed time for both cases
+    -- Then we receive data from these tables via ES/EDS, evaluate elapsed time for both cases
     -- and calculate its ratio. This ratio in 3.0 should be not less than 4x.
     create or alter procedure sp_test returns(sel_data_ms int, sel_null_ms int) as begin end;
     create or alter procedure sp_test as begin end;
