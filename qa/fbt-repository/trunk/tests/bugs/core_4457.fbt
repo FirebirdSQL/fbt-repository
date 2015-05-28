@@ -2,7 +2,7 @@
 'id': 'bugs.core_4457',
 'qmid': None,
 'tracker_id': 'CORE-4457',
-'title': 'CREATE USER command: Invalid error message',
+'title': '',
 'description': 'DATEADD should support fractional value for MILLISECOND',
 'min_versions': '3.0',
 'versions': [
