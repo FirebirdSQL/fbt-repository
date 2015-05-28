@@ -1,0 +1,49 @@
+{
+'id': 'bugs.core_4018',
+'qmid': None,
+'tracker_id': 'CORE-4018',
+'title': 'Using system domain in procedures arguments/returns cause the proc to be unchangeable',
+'description': """""",
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': """SET TERM !!;
+create or alter procedure CANT_DEL_OR_CHANGE
+returns (info RDB$SOURCE)
+as
+begin
+  /* Procedure Text */
+  suspend;
+end !!
+
+""",
+ 'test_type': 'ISQL',
+ 'test_script': """SET TERM !!;
+create or alter procedure CANT_DEL_OR_CHANGE
+returns (info RDB$SOURCE)
+as
+begin
+  /* Procedure Text */
+  suspend;
+end !!
+SHOW PROCEDURE CANT_DEL_OR_CHANGE!!
+DROP PROCEDURE CANT_DEL_OR_CHANGE!!
+COMMIT!!
+""",
+ 'expected_stdout': """
+Procedure text:
+=============================================================================
+begin
+/* Procedure Text */
+suspend;
+end
+=============================================================================
+Parameters:
+INFO                              OUTPUT (RDB$SOURCE) BLOB CHARACTER SET UNICODE_FSS
+"""
+}
+]
+}
