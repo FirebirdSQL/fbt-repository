@@ -2,8 +2,8 @@
 'id': 'bugs.core_4457',
 'qmid': None,
 'tracker_id': 'CORE-4457',
-'title': '',
-'description': 'DATEADD should support fractional value for MILLISECOND',
+'title': 'DATEADD should support fractional value for MILLISECOND',
+'description': '',
 'min_versions': '3.0',
 'versions': [
 {
