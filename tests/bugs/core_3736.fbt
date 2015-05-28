@@ -126,25 +126,10 @@
   """,
  'expected_stderr': 
   """
-    Execute statement error at isc_dsql
     335544352 : no permission for UPDATE access to TABLE T_READ_ONLY_FOR_NON_SYS
-    Statement : select current_user, 'select_with_lock', id from t_read_only_for_non_sys for update with lock
-    Execute statement error at isc_dsql
     335544878 : concurrent transaction number is 806
-    Statement : select current_user, 'select_with_lock', id from t_read_only_for_non_sys for update with lock
   """,
-  'substitutions': [
-    ('=.*',''),
-    ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*',''),
-    ('unknown ISC error.*', ''),
-    ('Warning: ALL on ALL is not granted to.*', ''),
-    ('Data source.*',''),
-    ('TABLE T_READ_ONLY_FOR_NON_SYS',''),
-    ('concurrent transaction number is.*',''),
-    ('_prepare.*',''),
-    ('_fetch.*','')
-  ]
+  'substitutions':[('^((?!335544352|335544878).)*$',''), ('number is.*', '')]
 }
 ]
 }
