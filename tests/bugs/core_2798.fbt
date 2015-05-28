@@ -2,8 +2,8 @@
 'id': 'bugs.core_2798',
 'qmid': '',
 'tracker_id': 'CORE-2798',
-'title': 'Cannot remove user with dot in login',
-'description': 'Incomplete plan output (lack of view names) when selecting from views containing procedures inside',
+'title': 'Incomplete plan output (lack of view names) when selecting from views containing procedures inside',
+'description': '',
 'min_versions': '2.5.0',
 'versions': [
 {
