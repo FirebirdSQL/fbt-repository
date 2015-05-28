@@ -11,7 +11,7 @@
  'platform': 'All',
  'database': 'Restore',
  'backup_file': 'core2804-ods11.fbk',
- 'connection_character_set': 'UTF8',
+ 'connection_character_set': 'WIN1251',
  'test_type': 'ISQL',
  'test_script': 
   """
@@ -23,23 +23,21 @@
     -- comment on table test2 is _unicode_fss 'unicode_fss: <cyrillic text here encoded with UTF8>';
     -- commit;
 
-    -- Unfortunatelly, I don`t know how to extract and check data in fbt_run using WIN1251 charset:
-    -- it produces error 'assert connection_character_set in CHARACTER_SETS', so use only UTF8
-
     set blob all;
     set list on;
-    select r.rdb$description from rdb$relations r where r.rdb$relation_name in ( upper('test1'), upper('test2') )
+    select r.rdb$description as descr_blob_id
+    from rdb$relations r where r.rdb$relation_name in ( upper('test1'), upper('test2') )
     order by r.rdb$relation_name;
   """,
  'expected_stdout': 
   """
-    RDB$DESCRIPTION                 0:3
+    DESCR_BLOB_ID                   0:3
     win1251: Протокол собрания об уплотнении квартир дома
 
-    RDB$DESCRIPTION                 0:6
+    DESCR_BLOB_ID                   0:6
     unicode_fss: Протокол собрания о помощи детям Германии  
   """,
-  'substitutions': [('RDB\$DESCRIPTION.*','')]
+  'substitutions': [('DESCR_BLOB_ID.*','')]
 }
 ]
 }
