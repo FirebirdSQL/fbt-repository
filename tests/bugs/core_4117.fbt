@@ -72,7 +72,8 @@ recreate table test1 (id int not null, c computed by (id * 10));
     -EX_BAD_COMPUTED_FIELD_VALUE
     -20
     -At trigger 'TEST2_BU' line: 3, col: 7
-  """
+  """,
+  'substitutions':[('line: [0-9]+, col: [0-9]+','')]
 }
 ]
 }
