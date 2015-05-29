@@ -15,13 +15,8 @@
 runProgram('isql',['-x',dsn,'-user',user_name,'-pass',user_password])
 """,
  'expected_stdout': """
-SET SQL DIALECT 3;
-
-/* CREATE DATABASE 'XXX' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE */
-
-
 """,
- 'substitutions': [("CREATE DATABASE '.*' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE","CREATE DATABASE '' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE")]
+ 'substitutions':[('^((?!Database:|User:).)*$','')]
 },
 {
  'firebird_version': '3.0',
@@ -32,13 +27,8 @@ SET SQL DIALECT 3;
 runProgram('isql',['-x',dsn,'-user',user_name,'-pass',user_password])
 """,
  'expected_stdout': """
-SET SQL DIALECT 3;
-
-/* CREATE DATABASE 'XXX' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE; */
-
-COMMIT WORK;
 """,
- 'substitutions': [("CREATE DATABASE '.*' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE","CREATE DATABASE '' PAGE_SIZE 4096 DEFAULT CHARACTER SET NONE")]
+ 'substitutions':[('^((?!Database:|User:).)*$','')]
 }
 ]
 }
