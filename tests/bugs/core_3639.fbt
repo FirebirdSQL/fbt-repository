@@ -36,6 +36,34 @@
  'test_script': 
   """
     -- 1. Check ability to compile MERGE with 254 trivial `when` expressions:
+    --  Batch for generating SQL with MERGE and arbitrary number of WHEN sections:
+    --    @echo off
+    --    set sql=%~n0.sql
+    --    del %sql% 2>nul
+    --    set n=254
+    --    echo recreate table s(id int, x int); commit;>>%sql%
+    --    echo insert into s(id, x) select row_number()over(), rand()*1000000 from rdb$types; commit;>>%sql%
+    --    echo recreate table t(id int primary key, x int); commit;>>%sql%
+    --    
+    --    echo merge into t using s on s.id = t.id>>%sql%
+    --    for /l %%i in (1, 1, %n%) do (
+    --       echo when NOT matched and s.id = %%i then insert values(s.id, s.x^)>>%sql%
+    --    )
+    --    echo ;>>%sql%
+    --    
+    --    
+    --    echo merge into t using s on s.id = t.id>>%sql%
+    --    for /l %%i in (1, 1, %n%) do (
+    --       echo when matched and s.id = %%i then update set t.x = t.x + s.x>>%sql%
+    --    )
+    --    echo ;>>%sql%
+    --    
+    --    echo rollback;>>%sql%
+    --    echo set count on;>>%sql%
+    --    echo select * from t;>>%sql%
+    --    
+    --    isql localhost/3333:e30 -i %sql%
+
     merge into t using s on s.id = t.id
     when NOT matched and s.id = 1 then insert values(s.id, s.x)
     when NOT matched and s.id = 2 then insert values(s.id, s.x)
