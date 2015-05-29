@@ -116,7 +116,6 @@
     ('=.*',''),
     ('Statement failed, SQLSTATE.*',''),
     ('record not found for user:.*',''),
-    ('unknown ISC error.*', ''),
     ('Warning: ALL on ALL is not granted to.*', '')
   ]
 }
