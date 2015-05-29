@@ -2,7 +2,7 @@
 'id': 'bugs.core_3140',
 'qmid': None,
 'tracker_id': 'CORE-3140',
-'title': 'BAD PLAN with using LEFT OUTER JOIN in SUBSELECT',
+'title': 'Preserve comments for parameters after altering procedures',
 'description': '',
 'min_versions': '2.5.1',
 'versions': [
