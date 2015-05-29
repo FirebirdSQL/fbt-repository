@@ -60,6 +60,32 @@
       end
     end 
     ^
+
+    -- This should raise exception "attempted update of read-only column", sample has been taken from:
+    -- sql.ru/forum/actualutils.aspx?action=gotomsg&tid=1158905&msg=17704102 
+    execute block as
+    begin
+      for select x, y from t1 as cursor ce do ce.x = ce.y + 1;
+    end
+    ^
+
+    /********************
+    ### 29.05.2015. TODO ### UNCOMMENT LATER, AFTER FIX CORE-4819. CURRENTLY IT LEADS FB TO HANG / CRASH.
+    execute block returns(old_y int, new_y int) as
+    begin
+      for 
+          select x, y from t1 
+          as cursor ce 
+      do begin
+          old_y = ce.y;
+          execute procedure sp_test(ce.x) returning_values(ce.y);
+          new_y = ce.y;
+          suspend;
+      end
+    end
+    ^
+    ********************/    
+
     set term ;^
     commit;
     set  list off;
@@ -75,6 +101,11 @@
    T3_ID                           3
    T3_X                            10
    T3_Y                            33  
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    attempted update of read-only column
   """
 }
 ]
