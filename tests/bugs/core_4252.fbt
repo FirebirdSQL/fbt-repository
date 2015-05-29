@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_4255',
+'id': 'bugs.core_4252',
 'qmid': None,
-'tracker_id': 'CORE-4255',
+'tracker_id': 'CORE-4252',
 'title': 'Add table name to text of validation contraint error message, to help identify error context',
 'description': '',
 'min_versions': '2.5.3',
