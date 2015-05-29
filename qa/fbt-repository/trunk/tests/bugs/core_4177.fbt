@@ -48,6 +48,22 @@
     -- where not false and not false is not not not false;
     -- this also FAILS:
     -- where not false and not false is not distinct from not false;
+
+    --  TODO. Add also following(see issue in the ticket, 29-may-2015):
+    --    recreate table test1(id int, x boolean);
+    --    insert into test1 values(107, false);
+    --    insert into test1 values(109, false);
+    --    insert into test1 values(117, true );
+    --    insert into test1 values(121, true );
+    --    insert into test1 values(122, false);
+    --    insert into test1 values(128, true );
+    --    insert into test1 values(137, false);
+    --    insert into test1 values(144, false);
+    --    
+    --    select * from test1 where x between true and true;
+    --    select * from test1 where x between true and not false;
+    --    select * from test1 where x between not false and true;
+    --    select * from test1 where x between (not false) and (not false);
   """,
  'expected_stdout': 
   """
