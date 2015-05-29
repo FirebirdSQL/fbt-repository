@@ -17,17 +17,21 @@
  'test_type': 'ISQL',
  'test_script': 
   """
-    set list on; 
-    -- Output was checked on LI-T3.0.0.31749 (2.6.39-400.17.1.el6uek.x86_64) and WI-T3.0.0.31756 (Win XP):
+    set sqlda_display on;
+    set planonly;
     select row_number()over() rno, rank()over() rnk, dense_rank()over() drk 
     from rdb$database;
   """,
  'expected_stdout': 
   """
-    RNO                             1.000000000000000
-    RNK                             1.000000000000000
-    DRK                             1.000000000000000
-  """
+   01: sqltype: 480 DOUBLE    		 scale: 0 subtype: 0 len: 8
+     :  name: ROW_NUMBER  alias: RNO
+   02: sqltype: 480 DOUBLE    		 scale: 0 subtype: 0 len: 8
+     :  name: RANK  alias: RNK
+   03: sqltype: 480 DOUBLE    		 scale: 0 subtype: 0 len: 8
+     :  name: DENSE_RANK  alias: DRK
+  """,
+  'substitutions':[('^((?!sqltype:|name:).)*$','')]
 }
 ]
 }
