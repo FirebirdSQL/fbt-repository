@@ -16,14 +16,14 @@
  'test_type': 'ISQL',
  'test_script': 
   """
-    --drop user tmp$c4719;
-    --commit;
-    --create user tmp$c4719 password '123';
-    --commit;
+    drop user tmp$c4719;
+    commit;
+    create user tmp$c4719 password '123';
+    commit;
     revoke all on all from tmp$c4719;
     commit;
-    --drop user tmp$c4719;
-    --commit;
+    drop user tmp$c4719;
+    commit;
   """,
  'expected_stderr':
   """
