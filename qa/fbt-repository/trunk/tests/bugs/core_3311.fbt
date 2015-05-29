@@ -2,7 +2,7 @@
 'id': 'bugs.core_3311',
 'qmid': None,
 'tracker_id': 'CORE-3311',
-'title': 'Sub-optimal join plan when the slave table depends on the master one via the OR predicate',
+'title': 'Error "data type unknown" while preparing UPDATE/DELETE statements with the parameterized ROWS clause',
 'description': '',
 'min_versions': '2.5.1',
 'versions': [
