@@ -25,6 +25,10 @@
     );
     commit;
     insert into x(a,b,c) values ('f1',true, false);
+    insert into x(a,b,c) values ('f2',1=1, null is null);
+    insert into x(a,b,c) values ('f3', null is not null, null = null);
+    insert into x(a,b,c) values ('f4', null is not distinct from null, null and null and not null);
+    insert into x(a,b,c) values ('f5', true is not distinct from not false, not false is not distinct from not not true );
     set list on;
     select * from x;
   """,
@@ -34,6 +38,26 @@
     A                               f1
     B                               <true>
     C                               <false>
+    
+    ID                              2
+    A                               f2
+    B                               <true>
+    C                               <true>
+    
+    ID                              3
+    A                               f3
+    B                               <false>
+    C                               <null>
+    
+    ID                              4
+    A                               f4
+    B                               <true>
+    C                               <null>
+    
+    ID                              5
+    A                               f5
+    B                               <true>
+    C                               <true>
   """,
  'expected_stderr':
   """
