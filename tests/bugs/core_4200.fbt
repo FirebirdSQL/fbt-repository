@@ -1,8 +1,8 @@
 {
-'id': 'bugs.core_4201',
+'id': 'bugs.core_4200',
 'qmid': None,
-'tracker_id': 'CORE-4201',
-'title': 'Regression: Computed field returns null value inside BI trigger',
+'tracker_id': 'CORE-4200',
+'title': 'An uncommitted select of the pseudo table sec$users blocks new database connections',
 'description': '',
 'min_versions': '3.0',
 'versions': [
