@@ -9,23 +9,66 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
+ 'connection_character_set': 'UTF8',
  'init_script':
   """
   """,
  'test_type': 'ISQL',
  'test_script':
   """
-    recreate table test(s varchar(300) constraint test_unq unique using index test_unq); 
-    commit;
-    insert into test values( rpad('', 245, 'qwertyuioplkjhgfdsazxcvbnm') || '12345' );
-    insert into test values( rpad('', 245, 'qwertyuioplkjhgfdsazxcvbnm') || '12345' );
-    -- NB: textual key representation has a limit of 249 characters
+	recreate table test_none(s varchar(300) character set none constraint test_cset_none_unq unique using index test_cset_none_unq); 
+	commit;
+	insert into test_none values( rpad('', 245, 'qwertyuioplkjhgfdsazxcvbnm') || '12345' );
+	insert into test_none values( rpad('', 245, 'qwertyuioplkjhgfdsazxcvbnm') || '12345' );
+	commit;
+
+	recreate table test_utf8(s varchar(169) character set utf8 constraint test_cset_utf8_unq unique using index test_cset_utf8_unq); 
+	commit;
+
+	-- One byte per character (not so interesting, but error message should display ALL of them, from 1st to last):
+	insert into test_utf8 values( rpad('', 164, 'A') || '12345' );
+	insert into test_utf8 values( rpad('', 164, 'A') || '12345' );
+
+	-- Two bytes per character: character from latin-1 and letter from Serbian alphabet:
+	insert into test_utf8 values( rpad('', 164, 'Á') || '12345' );
+	insert into test_utf8 values( rpad('', 164, 'Á') || '12345' );
+	insert into test_utf8 values( rpad('', 164, 'Њ') || '12345' );
+	insert into test_utf8 values( rpad('', 164, 'Њ') || '12345' );
+
+	-- Three bytes per character: 'euro' currency sign and mathematical 'Sigma' sign (SUM):
+	insert into test_utf8 values( rpad('', 164, '€') || '12345' );
+	insert into test_utf8 values( rpad('', 164, '€') || '12345' );
+	insert into test_utf8 values( rpad('', 164, '∑') || '12345' );
+	insert into test_utf8 values( rpad('', 164, '∑') || '12345' );
+
+	-- NB: textual key representation has a limit of 249 _bytes_, so full key can be seen only for single-byte characters.
+	-- Multi-byte values will be printed shorter.
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = 23000
-    violation of PRIMARY or UNIQUE KEY constraint "TEST_UNQ" on table "TEST"
-    -Problematic key value is ("S" = 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuiopl1234...)
+	Statement failed, SQLSTATE = 23000
+	violation of PRIMARY or UNIQUE KEY constraint "TEST_CSET_NONE_UNQ" on table "TEST_NONE"
+	-Problematic key value is ("S" = 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuiopl1234...)
+
+	Statement failed, SQLSTATE = 23000
+	violation of PRIMARY or UNIQUE KEY constraint "TEST_CSET_UTF8_UNQ" on table "TEST_UTF8"
+	-Problematic key value is ("S" = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA12345')
+
+	Statement failed, SQLSTATE = 23000
+	violation of PRIMARY or UNIQUE KEY constraint "TEST_CSET_UTF8_UNQ" on table "TEST_UTF8"
+	-Problematic key value is ("S" = 'ÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁÁ...)
+
+	Statement failed, SQLSTATE = 23000
+	violation of PRIMARY or UNIQUE KEY constraint "TEST_CSET_UTF8_UNQ" on table "TEST_UTF8"
+	-Problematic key value is ("S" = 'ЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊЊ...)
+
+	Statement failed, SQLSTATE = 23000
+	violation of PRIMARY or UNIQUE KEY constraint "TEST_CSET_UTF8_UNQ" on table "TEST_UTF8"
+	-Problematic key value is ("S" = '€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€...)
+
+	Statement failed, SQLSTATE = 23000
+	violation of PRIMARY or UNIQUE KEY constraint "TEST_CSET_UTF8_UNQ" on table "TEST_UTF8"
+	-Problematic key value is ("S" = '∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑∑...)
   """
 }
 ]
