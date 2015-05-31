@@ -1,0 +1,48 @@
+{
+'id': 'bugs.core_4791',
+'qmid': None,
+'tracker_id': 'CORE-4791',
+'title': ' 	Make INSERTING/UPDATING/DELETING reserved words to fix ambiguity with boolean expresions',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create table test1(inserting int);
+    create table test2(updating int);
+    create table test3(deleting int);
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Token unknown - line 1, column 20
+    -inserting
+    
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Token unknown - line 1, column 20
+    -updating
+    
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Token unknown - line 1, column 20
+    -deleting
+  """,
+  'substitutions': [
+    ('line [0-9]+, column [0-9]+',''),
+  ]
+}
+]
+}
