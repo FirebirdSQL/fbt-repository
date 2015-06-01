@@ -1,0 +1,135 @@
+{
+'id': 'bugs.core_4806',
+'qmid': None,
+'tracker_id': 'CORE-4806',
+'title': 'Regression: generators can be seen/modified by unprivileged users',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set wng off;
+    recreate sequence g;
+    commit;
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop role stockmgr';
+    when any do begin end
+    end
+    ^ set term ;^
+    commit;
+    
+    create or alter user maverick password '123';
+    create or alter user big_brother password '456';
+    create or alter user Winston_Smith password '789';
+    create role stockmgr;
+    commit;
+    
+    revoke all on all from maverick;
+    revoke all on all from big_brother;
+    revoke all on all from Winston_Smith;
+    revoke all on all from stockmgr;
+    revoke all on all from public;
+    commit;
+    
+    grant usage on sequence g to big_brother;
+    grant usage on sequence g to role stockmgr;
+    grant stockmgr to Winston_Smith;
+    commit;
+    show grants;
+    
+    set list on;
+    
+    set term ^;
+    -- 1. Verify that user Big_Brother who was granted to use sequence CAN change it:
+    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
+    begin
+        execute statement 'select current_user, current_role, gen_id(g, -111) from rdb$database'
+        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+        as user 'Big_Brother' password '456'
+        into who_am_i, whats_my_role, gen_id_after_me;
+        suspend;
+    end
+    ^
+    
+    -- 2. Verify that user Winston_Smith who was granted to use ROLE 'stockmgr' CAN change sequence through that role:
+    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
+    begin
+        execute statement 'select current_user, current_role, gen_id(g, -222) from rdb$database'
+        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+        as user 'Winston_Smith' password '789' role 'stockmgr'
+        into who_am_i, whats_my_role, gen_id_after_me;
+        suspend;
+    end
+    ^
+    
+    -- 3. Ensure that user Winston_Smith will NOT see sequence value without specifying ROLE:
+    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
+    begin
+        execute statement 'select current_user, current_role, gen_id(g, 0) from rdb$database'
+        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+        as user 'Winston_Smith' password '789' -- role 'stockmgr'
+        into who_am_i, whats_my_role, gen_id_after_me;
+        suspend;
+    end
+    ^
+
+    -- 4. Verify that use 'maverick' who has no any rights will NOT see sequence value:
+    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
+    begin
+        execute statement 'select current_user, current_role, gen_id(g, 0) from rdb$database'
+        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+        as user 'maverick' password '123'
+        into who_am_i, whats_my_role, gen_id_after_me;
+        suspend;
+    end
+    ^
+    set term ;^
+    commit; 
+    drop user maverick;
+    drop user big_brother;
+    drop user Winston_Smith;
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    /* Grant permissions for this database */
+    GRANT STOCKMGR TO WINSTON_SMITH
+    GRANT USAGE ON SEQUENCE G TO USER BIG_BROTHER
+    GRANT USAGE ON SEQUENCE G TO ROLE STOCKMGR
+    
+    WHO_AM_I                        BIG_BROTHER
+    WHATS_MY_ROLE                   NONE
+    GEN_ID_AFTER_ME                 -111
+
+    WHO_AM_I                        WINSTON_SMITH
+    WHATS_MY_ROLE                   STOCKMGR
+    GEN_ID_AFTER_ME                 -333
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    Execute statement error at isc_dsql_prepare :
+    335544352 : no permission for USAGE access to GENERATOR G
+    Statement : select current_user, current_role, gen_id(g, 0) from rdb$database
+    Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+
+    Statement failed, SQLSTATE = 42000
+    Execute statement error at isc_dsql_prepare :
+    335544352 : no permission for USAGE access to GENERATOR G
+    Statement : select current_user, current_role, gen_id(g, 0) from rdb$database
+    Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+  """,
+  'substitutions': [ ('Data source : Firebird::localhost:.*','') ]
+}
+]
+}
