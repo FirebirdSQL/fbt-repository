@@ -28,108 +28,113 @@
     ^ set term ;^
     commit;
     
-    create or alter user maverick password '123';
-    create or alter user big_brother password '456';
-    create or alter user Winston_Smith password '789';
+    create or alter user Maverick password '123';
+    create or alter user Big_Brother password '456';
+    create or alter user Bill_Junior password '789';
     create role stockmgr;
     commit;
     
-    revoke all on all from maverick;
-    revoke all on all from big_brother;
-    revoke all on all from Winston_Smith;
+    revoke all on all from Maverick;
+    revoke all on all from Big_Brother;
+    revoke all on all from Bill_Junior;
     revoke all on all from stockmgr;
     revoke all on all from public;
     commit;
     
     grant usage on sequence g to big_brother;
     grant usage on sequence g to role stockmgr;
-    grant stockmgr to Winston_Smith;
+    grant stockmgr to Bill_Junior;
     commit;
     show grants;
     
     set list on;
-    
-    set term ^;
-    -- 1. Verify that user Big_Brother who was granted to use sequence CAN change it:
-    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
-    begin
-        execute statement 'select current_user, current_role, gen_id(g, -111) from rdb$database'
-        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
-        as user 'Big_Brother' password '456'
-        into who_am_i, whats_my_role, gen_id_after_me;
-        suspend;
-    end
-    ^
-    
-    -- 2. Verify that user Winston_Smith who was granted to use ROLE 'stockmgr' CAN change sequence through that role:
-    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
-    begin
-        execute statement 'select current_user, current_role, gen_id(g, -222) from rdb$database'
-        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
-        as user 'Winston_Smith' password '789' role 'stockmgr'
-        into who_am_i, whats_my_role, gen_id_after_me;
-        suspend;
-    end
-    ^
-    
-    -- 3. Ensure that user Winston_Smith will NOT see sequence value without specifying ROLE:
-    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
-    begin
-        execute statement 'select current_user, current_role, gen_id(g, 0) from rdb$database'
-        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
-        as user 'Winston_Smith' password '789' -- role 'stockmgr'
-        into who_am_i, whats_my_role, gen_id_after_me;
-        suspend;
-    end
-    ^
 
-    -- 4. Verify that use 'maverick' who has no any rights will NOT see sequence value:
-    execute block returns(who_am_i varchar(31), whats_my_role varchar(31), gen_id_after_me bigint) as
-    begin
-        execute statement 'select current_user, current_role, gen_id(g, 0) from rdb$database'
-        on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
-        as user 'maverick' password '123'
-        into who_am_i, whats_my_role, gen_id_after_me;
-        suspend;
-    end
-    ^
-    set term ;^
-    commit; 
-    drop user maverick;
-    drop user big_brother;
-    drop user Winston_Smith;
+    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'Big_Brother' password '456';
+    --connect '$(DATABASE_LOCATION)$(DATABASE_FILE)' user 'Big_Brother' password '456';
+    select current_user, current_role from rdb$database;
+    show sequ g;
+    select gen_id(g, -111) as new_gen from rdb$database;
     commit;
+
+    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'Bill_Junior' password '789' role 'STOCKMGR'; -- !! specify role in UPPER case !!
+    select current_user, current_role from rdb$database;
+    show sequ g;
+    select gen_id(g, -222) as new_gen from rdb$database;
+    commit;
+
+    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'Bill_Junior' password '789';
+    select current_user, current_role from rdb$database;
+    
+    -- 'show sequ' should produce error:
+    --    Statement failed, SQLSTATE = 28000
+    --    no permission for USAGE access to GENERATOR G
+    --    There is no generator G in this database
+    -- (for user 'Bill_Junior' who connects w/o ROLE and thus has NO rights to see that sequence)
+    show sequ g;
+    
+    -- 'select gen_id(...)' should produce error:
+    --    Statement failed, SQLSTATE = 28000
+    --    no permission for USAGE access to GENERATOR G
+    -- (for user 'Bill_Junior' who connects w/o ROLE and thus has NO rights to see that sequence)
+    select gen_id(g, -333) as new_gen from rdb$database;
+    commit;
+
+    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'maverick' password '123';
+    select current_user, current_role from rdb$database;
+
+
+    -- 'show sequ' should produce error:
+    --    Statement failed, SQLSTATE = 28000
+    --    no permission for USAGE access to GENERATOR G
+    --    There is no generator G in this database
+    -- (for user 'maverick' who has NO rights at all)
+    show sequ g;
+
+    -- 'select gen_id(...)' should produce error:
+    --    Statement failed, SQLSTATE = 28000
+    --    no permission for USAGE access to GENERATOR G
+    -- (for user 'maverick' who has NO rights at all)
+    select gen_id(g, -444) as new_gen from rdb$database;
   """,
  'expected_stdout':
   """
     /* Grant permissions for this database */
-    GRANT STOCKMGR TO WINSTON_SMITH
+    GRANT STOCKMGR TO BILL_JUNIOR
     GRANT USAGE ON SEQUENCE G TO USER BIG_BROTHER
     GRANT USAGE ON SEQUENCE G TO ROLE STOCKMGR
-    
-    WHO_AM_I                        BIG_BROTHER
-    WHATS_MY_ROLE                   NONE
-    GEN_ID_AFTER_ME                 -111
 
-    WHO_AM_I                        WINSTON_SMITH
-    WHATS_MY_ROLE                   STOCKMGR
-    GEN_ID_AFTER_ME                 -333
+    USER                            BIG_BROTHER
+    ROLE                            NONE
+    Generator G, current value: 0, initial value: 0, increment: 1
+    NEW_GEN                         -111
+
+    USER                            BILL_JUNIOR
+    ROLE                            STOCKMGR
+    Generator G, current value: -111, initial value: 0, increment: 1
+    NEW_GEN                         -333
+
+    USER                            BILL_JUNIOR
+    ROLE                            NONE
+
+    USER                            MAVERICK
+    ROLE                            NONE
   """,
  'expected_stderr':
   """
-    Statement failed, SQLSTATE = 42000
-    Execute statement error at isc_dsql_prepare :
-    335544352 : no permission for USAGE access to GENERATOR G
-    Statement : select current_user, current_role, gen_id(g, 0) from rdb$database
-    Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+    Statement failed, SQLSTATE = 28000
+    no permission for USAGE access to GENERATOR G
+    There is no generator G in this database
 
-    Statement failed, SQLSTATE = 42000
-    Execute statement error at isc_dsql_prepare :
-    335544352 : no permission for USAGE access to GENERATOR G
-    Statement : select current_user, current_role, gen_id(g, 0) from rdb$database
-    Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
-  """,
-  'substitutions': [ ('Data source : Firebird::localhost:.*','') ]
+    Statement failed, SQLSTATE = 28000
+    no permission for USAGE access to GENERATOR G
+    
+    Statement failed, SQLSTATE = 28000
+    no permission for USAGE access to GENERATOR G
+    There is no generator G in this database
+
+    Statement failed, SQLSTATE = 28000
+    no permission for USAGE access to GENERATOR G
+  """
 }
 ]
 }
