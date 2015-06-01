@@ -439,10 +439,18 @@ if .%overall%.==.0. (
   echo ###  A L L    O K  ###
   del fbt-run.30*.err
   del fbt-run.30*.log
-  del fbt-run.25.err
-  del fbt-run.25.log
-  del fbt-run.21.err
-  del fbt-run.21.log
+  if .%skip25%.==.0. (
+    del fbt-run.25.err
+    del fbt-run.25.log
+  ) else (
+    echo NB: SKIPPED test for 2.5
+  )
+  if .%skip25%.==.0. (
+    del fbt-run.21.err
+    del fbt-run.21.log
+  ) else (
+    echo NB: SKIPPED test for 2.1
+  )
   @rem Take a little pause (enough to see all thre results)
   ping -n 1 -w 500 1.1.1.1 1>nul 2>&1
 ) else (
