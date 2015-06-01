@@ -49,20 +49,20 @@
     
     set list on;
 
-    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'Big_Brother' password '456';
+    connect '$(DSN)' user 'Big_Brother' password '456';
     --connect '$(DATABASE_LOCATION)$(DATABASE_FILE)' user 'Big_Brother' password '456';
     select current_user, current_role from rdb$database;
     show sequ g;
     select gen_id(g, -111) as new_gen from rdb$database;
     commit;
 
-    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'Bill_Junior' password '789' role 'STOCKMGR'; -- !! specify role in UPPER case !!
+    connect '$(DSN)' user 'Bill_Junior' password '789' role 'STOCKMGR'; -- !! specify role in UPPER case !!
     select current_user, current_role from rdb$database;
     show sequ g;
     select gen_id(g, -222) as new_gen from rdb$database;
     commit;
 
-    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'Bill_Junior' password '789';
+    connect '$(DSN)' user 'Bill_Junior' password '789';
     select current_user, current_role from rdb$database;
     
     -- 'show sequ' should produce error:
@@ -79,7 +79,7 @@
     select gen_id(g, -333) as new_gen from rdb$database;
     commit;
 
-    connect '$(DATABASE_LOCATION)bugs.core_4806.fdb' user 'maverick' password '123';
+    connect '$(DSN)' user 'maverick' password '123';
     select current_user, current_role from rdb$database;
 
 
