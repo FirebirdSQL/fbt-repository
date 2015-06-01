@@ -445,7 +445,7 @@ if .%overall%.==.0. (
   ) else (
     echo NB: SKIPPED test for 2.5
   )
-  if .%skip25%.==.0. (
+  if .%skip21%.==.0. (
     del fbt-run.21.err
     del fbt-run.21.log
   ) else (
@@ -455,22 +455,26 @@ if .%overall%.==.0. (
   ping -n 1 -w 500 1.1.1.1 1>nul 2>&1
 ) else (
 
-  if .%e21size%. gtr .0. (
-    echo.
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err21: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-    type fbt-run.21.err
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err21: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-  ) else (
-    del fbt-run.21.err
+  if .%skip21%.==.0. (
+    if .%e21size%. gtr .0. (
+      echo.
+      echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err21: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+      type fbt-run.21.err
+      echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err21: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    ) else (
+      del fbt-run.21.err
+    )
   )
 
-  if .%e25size%. gtr .0. (
-    echo.
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-    type fbt-run.25.err
-    echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-  ) else (
-    del fbt-run.25.err
+  if .%skip25%.==.0. (
+    if .%e25size%. gtr .0. (
+      echo.
+      echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+      type fbt-run.25.err
+      echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, err25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+    ) else (
+      del fbt-run.25.err
+    )
   )
 
   if .%err30sS%. gtr .0. (
@@ -505,8 +509,12 @@ if .%overall%.==.0. (
   echo.
   echo Check results in files fbt_check_this.***.log
   echo -----------------------------------------------
-  fbt_view -d %~dp0fbt-run.21.trf 1>fbt_check_this.21.log 2>&1
-  fbt_view -d %~dp0fbt-run.25.trf 1>fbt_check_this.25.log 2>&1
+  if .%skip21%.==.0. (
+    fbt_view -d %~dp0fbt-run.21.trf 1>fbt_check_this.21.log 2>&1
+  )
+  if .%skip25%.==.0. (
+    fbt_view -d %~dp0fbt-run.25.trf 1>fbt_check_this.25.log 2>&1
+  )
   fbt_view -d %~dp0fbt-run.30sS.trf 1>fbt_check_this.30sS.log 2>&1
   fbt_view -d %~dp0fbt-run.30Cs.trf 1>fbt_check_this.30Cs.log 2>&1
   fbt_view -d %~dp0fbt-run.30sC.trf 1>fbt_check_this.30sC.log 2>&1
