@@ -123,7 +123,7 @@
     show grants;
     commit;
 
-    connect '$(DSN)' user 'sysdba' password 'masterke';
+    connect '$(DSN)' user 'sysdba' password 'masterkey';
     drop user ozzy_osbourne;
     commit;
 
