@@ -1,7 +1,7 @@
 {
-'id': 'bugs.core_4852',
+'id': 'bugs.core_4582',
 'qmid': '',
-'tracker_id': 'CORE-4852',
+'tracker_id': 'CORE-4582',
 'title': 'Within linger period one can not change some database properties',
 'description': 'Confirmed on WI-T3.0.0.31374 Beta 1: running GFIX -buffers N has NO affect if this is done within linger period',
 'min_versions': '3.0',
