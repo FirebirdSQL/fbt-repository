@@ -1,67 +1,11 @@
 {
 'id': 'functional.database.create_02',
-'qmid': 'functional.database.create.create_database_03',
+'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE - non sysdba user',
 'description': '',
-'min_versions': None,
+'min_versions': '2.1.7',
 'versions': [
-{
- 'firebird_version': '1.0',
- 'platform': 'All',
- 'user_name': 'test',
- 'user_password': 'test',
- 'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """        Owner: TEST
-PAGE_SIZE 4096
-Number of DB pages allocated = 142
-Sweep interval = 20000
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5""",
- 'resources': ['test_user'],
- 'substitutions': [('^Forced Writes are.*','')]
-},
-{
- 'firebird_version': '1.0.3',
- 'platform': 'All',
- 'user_name': 'test',
- 'user_password': 'test',
- 'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """        Owner: TEST
-PAGE_SIZE 4096
-Number of DB pages allocated = 142
-Sweep interval = 20000
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-Default Character set: NONE""",
- 'resources': ['test_user'],
- 'substitutions': [('^Forced Writes are.*','')]
-},
-{
- 'firebird_version': '1.5',
- 'platform': 'All',
- 'user_name': 'test',
- 'user_password': 'test',
- 'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """        Owner: TEST
-PAGE_SIZE 4096
-Number of DB pages allocated = 146
-Sweep interval = 20000
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-Default Character set: NONE""",
- 'resources': ['test_user'],
- 'substitutions': [('^Forced Writes are.*',''),('^ODS.*',''),('^Number of DB pages.*','')]
-},
 {
  'firebird_version': '2.1',
  'platform': 'All',
@@ -107,49 +51,44 @@ Default Character set: NONE
  'substitutions': [('^Forced Writes are.*',''),('^Number of DB pages.*',''),('^Transaction.*','')]
 },
 {
- 'firebird_version': '2.0',
- 'platform': 'All',
- 'user_name': 'test',
- 'user_password': 'test',
- 'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """Owner: TEST
-PAGE_SIZE 4096
-Number of DB pages allocated = 155
-Sweep interval = 20000
-
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 6
-ODS = 11.0
-Default Character set: NONE
-""",
- 'resources': ['test_user'],
- 'substitutions': [('^Forced Writes are.*','')]
-},
-{
  'firebird_version': '3.0',
  'platform': 'All',
- 'user_name': 'test',
- 'user_password': 'test',
- 'init_script':'grant create database to test_user;',
+ 'init_script':
+  """
+  """,
  'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """        Owner: TEST
-PAGE_SIZE 4096
-Number of DB pages allocated = 228
-Sweep interval = 20000
-Forced Writes are ON
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-ODS = 12.0
-Default Character set: NONE
-""",
- 'resources': ['test_user'],
- 'substitutions': [('^Forced Writes are.*',''),('^Number of DB pages.*',''),('^Transaction.*','')]
+ 'test_script':
+  """
+    set wng off;
+    create or alter user ozzy password 'osb' revoke admin role;
+    commit;
+    revoke all on all from ozzy;
+    commit;
+    grant create database to ozzy;
+    grant drop database to ozzy;
+    commit;
+    
+    create database '$(DATABASE_LOCATION)tmp.ozzy$db$987456321.tmp' user 'ozzy' password 'osb';
+    
+    set list on;
+    select
+         a.mon$user "Who am I ?"
+        ,iif( m.mon$database_name containing 'tmp.ozzy$db$987456321.tmp' , 'YES', 'NO! ' || m.mon$database_name) "Am I on just created DB ?"
+    from mon$database m, mon$attachments a where a.mon$attachment_id = current_connection;
+    commit;
+    
+    drop database;
+    connect '$(DSN)' user 'sysdba' password 'masterkey';
+    revoke create database from ozzy;
+    revoke drop database from ozzy;
+    drop user ozzy;
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    Who am I ?                      OZZY
+    Am I on just created DB ?       YES
+  """
 }
 ]
 }
