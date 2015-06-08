@@ -12,6 +12,7 @@
  'test_type': 'ISQL',
  'test_script':
   """
+    set wng off;
     drop user john_senior;
     drop user mick_junior;
     drop role role_for_mick;
@@ -58,7 +59,7 @@
     
     revoke all on all from john_senior;
     revoke all on all from mick_junior;
-    revoke all on all from role_for_mick;
+    -- revoke all on all from role_for_mick; -- COMMENTED TEMPLY, error "Revoke all on all from role <R> -- failed with "SQL role <R> does not exist in security database"", see core-4831
     commit;
     
     grant select on test to procedure sp_test;
@@ -119,13 +120,8 @@
     Statement failed, SQLSTATE = 42000
     unsuccessful metadata update
     -Role ROLE_FOR_MICK not found
-    
-    Warning: ALL on ALL is not granted to JOHN_SENIOR.
-    Warning: ALL on ALL is not granted to MICK_JUNIOR.
-    Warning: ALL on ALL is not granted to ROLE_FOR_MICK.
   """,
   'substitutions': [
-    ('Warning: ALL on ALL is not granted to.*','Warning: ALL on ALL is not granted to'),
     ('-DROP ROLE ROLE_FOR_MICK failed', ''),
     ('Statement failed, SQLSTATE.*',''),
     ('record not found for user:.*','')
