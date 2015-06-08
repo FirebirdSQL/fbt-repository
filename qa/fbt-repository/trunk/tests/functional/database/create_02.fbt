@@ -68,7 +68,7 @@ Default Character set: NONE
     grant drop database to ozzy;
     commit;
     
-    create database '$(DATABASE_LOCATION)tmp.ozzy$db$987456321.tmp' user 'ozzy' password 'osb';
+    create database '$(DATABASE_LOCATION)tmp.ozzy$db$987456321.tmp' user 'OZZY' password 'osb';
     
     set list on;
     select
