@@ -4,7 +4,7 @@
 'tracker_id': 'CORE-1810',
 'title': "Usernames with '.' character",
 'description': '',
-'min_versions': '',
+'min_versions': '2.1.7',
 'versions': [
 {
  'firebird_version': '2.1',
@@ -46,19 +46,19 @@ JOHN.SMITH
     commit;
     insert into test values(1, 100, 200, 300);
     commit;
-    drop user "mick.adams";
+    drop user "$.$";
     commit;
-    create role "table.scanner";
+    create role "#.#";
     commit;
-    create user "mick.adams" password '123';
+    create user "$.$" password '123';
     commit;              
 
-    revoke all on all from "mick.adams";
-    grant "table.scanner" to "mick.adams";
-    grant select on test to "table.scanner";
+    revoke all on all from "$.$";
+    grant "#.#" to "$.$";
+    grant select on test to "#.#";
     commit;
 
-    connect '$(DSN)' user "mick.adams" password '123' role "table.scanner";
+    connect '$(DSN)' user "$.$" password '123' role "#.#";
     commit;
 
     select current_user, current_role, a.mon$remote_protocol
@@ -69,13 +69,13 @@ JOHN.SMITH
 
     connect '$(DSN)' user 'SYSDBA' password 'masterkey';
     commit;
-    drop user "mick.adams";
+    drop user "$.$";
     commit;
   """,
  'expected_stdout':
   """
-    USER                            MICK.ADAMS
-    ROLE                            table.scanner
+    USER                            $.$
+    ROLE                            #.#
     MON$REMOTE_PROTOCOL             TCPv4
     ID                              1
     X                               100
