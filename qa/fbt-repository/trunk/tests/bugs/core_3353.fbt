@@ -50,10 +50,10 @@
   """,
  'expected_stdout':
   """
-    01: sqltype: 520 BLOB	  Nullable scale: 0 subtype: 1 len: 8
-    01: sqltype: 520 BLOB	  Nullable scale: 0 subtype: 1 len: 8
+    01: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 3 UNICODE_FSS
+    01: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 3 UNICODE_FSS
   """,
-  'substitutions':[('^((?!sqltype).)*$','')]
+  'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
 ]
 }
