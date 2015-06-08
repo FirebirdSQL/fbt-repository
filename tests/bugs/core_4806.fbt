@@ -37,7 +37,7 @@
     revoke all on all from Maverick;
     revoke all on all from Big_Brother;
     revoke all on all from Bill_Junior;
-    revoke all on all from stockmgr;
+    --revoke all on all from stockmgr; -- COMMENTED TEMPLY, error "Revoke all on all from role <R> -- failed with "SQL role <R> does not exist in security database"", see core-4831
     revoke all on all from public;
     commit;
     
@@ -49,20 +49,19 @@
     
     set list on;
 
-    connect '$(DSN)' user 'Big_Brother' password '456';
-    --connect '$(DATABASE_LOCATION)$(DATABASE_FILE)' user 'Big_Brother' password '456';
+    connect '$(DSN)' user 'BIG_BROTHER' password '456';
     select current_user, current_role from rdb$database;
     show sequ g;
     select gen_id(g, -111) as new_gen from rdb$database;
     commit;
 
-    connect '$(DSN)' user 'Bill_Junior' password '789' role 'STOCKMGR'; -- !! specify role in UPPER case !!
+    connect '$(DSN)' user 'BILL_JUNIOR' password '789' role 'STOCKMGR'; -- !! specify role in UPPER case !!
     select current_user, current_role from rdb$database;
     show sequ g;
     select gen_id(g, -222) as new_gen from rdb$database;
     commit;
 
-    connect '$(DSN)' user 'Bill_Junior' password '789';
+    connect '$(DSN)' user 'BILL_JUNIOR' password '789';
     select current_user, current_role from rdb$database;
     
     -- 'show sequ' should produce error:
@@ -79,7 +78,7 @@
     select gen_id(g, -333) as new_gen from rdb$database;
     commit;
 
-    connect '$(DSN)' user 'maverick' password '123';
+    connect '$(DSN)' user 'MAVERICK' password '123';
     select current_user, current_role from rdb$database;
 
 
