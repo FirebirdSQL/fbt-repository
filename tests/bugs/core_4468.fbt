@@ -19,9 +19,8 @@
     -- 'find/delete record error' - for Legacy_UserManager
     -- 'delete record error' = for Srp
     -- This is minor bug in Legacy_UserManager but it will be remain 'as is', see letter from Alex 03-jun-2015 19:51.
-
     recreate view v_users as
-    select current_user who_am_i, current_role whats_my_role, u.sec$user_name non_sysdba_user_name, u.sec$admin is_non_sysdba_admin
+    select current_user who_am_i, current_role whats_my_role, u.sec$user_name non_sysdba_user_name, u.sec$admin non_sysdba_has_admin_role
     from rdb$database
     left join sec$users u on u.sec$user_name in ( upper('ozzy_osbourne'), upper('bon_scott') );
   """,
@@ -50,7 +49,7 @@
     -- `role 'RDB$ADMIN'` in order to connect as ADMIN.
     -- But with RDB$ADMIN only he can create objects in THAT database (tables etc), but not other USERS!
     -- Thats why he should also be granted with admin role in 'CREATE USER ...' - see above.
-    connect '$(DSN)' user 'ozzy_osbourne' password '123' role 'RDB$ADMIN';
+    connect '$(DSN)' user 'OZZY_OSBOURNE' password '123' role 'RDB$ADMIN';
     commit;
 
     -- Users are stored in Security DB,  *not* in "this" database!
@@ -107,6 +106,9 @@
     commit;
 
     -- And after previous action he can not drop himself because now he is NOT member of admin role:
+    -- Statement failed, SQLSTATE = 28000
+    -- find/delete record error
+    -- -no permission for DELETE access to TABLE PLG$VIEW_USERS
     drop user ozzy_osbourne;
     commit;
     
@@ -114,7 +116,7 @@
     commit;
 
     -- Trying reconnect with role RDB$ADMIN:
-    connect '$(DSN)' user 'ozzy_osbourne' password '123' role 'RDB$ADMIN';
+    connect '$(DSN)' user 'OZZY_OSBOURNE' password '123' role 'RDB$ADMIN';
     commit;
 
     select 'step-8' msg, v.* from v_users v;
@@ -123,7 +125,7 @@
     show grants;
     commit;
 
-    connect '$(DSN)' user 'sysdba' password 'masterkey';
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
     drop user ozzy_osbourne;
     commit;
 
@@ -136,7 +138,7 @@
     WHO_AM_I                        SYSDBA
     WHATS_MY_ROLE                   NONE
     NON_SYSDBA_USER_NAME            <null>
-    IS_NON_SYSDBA_ADMIN             <null>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <null>
     
     
     Records affected: 1
@@ -145,22 +147,22 @@
     WHO_AM_I                        SYSDBA
     WHATS_MY_ROLE                   NONE
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <true>
-    
+    NON_SYSDBA_HAS_ADMIN_ROLE       <true>
     
     Records affected: 1
+    
     
     MSG                             step-2
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <true>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <true>
     
     MSG                             step-2
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            BON_SCOTT                                                                                    
-    IS_NON_SYSDBA_ADMIN             <false>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <false>
     
     
     Records affected: 2
@@ -172,13 +174,13 @@
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <true>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <true>
     
     MSG                             step-3
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            BON_SCOTT                                                                                    
-    IS_NON_SYSDBA_ADMIN             <true>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <true>
     
     
     Records affected: 2
@@ -191,13 +193,13 @@
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <true>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <true>
     
     MSG                             step-4
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            BON_SCOTT                                                                                    
-    IS_NON_SYSDBA_ADMIN             <false>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <false>
     
     
     Records affected: 2
@@ -209,7 +211,7 @@
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <true>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <true>
     
     
     Records affected: 1
@@ -221,7 +223,7 @@
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <false>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <false>
     
     
     Records affected: 1
@@ -230,7 +232,7 @@
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <false>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <false>
     
     
     Records affected: 1
@@ -239,7 +241,7 @@
     WHO_AM_I                        OZZY_OSBOURNE
     WHATS_MY_ROLE                   RDB$ADMIN
     NON_SYSDBA_USER_NAME            OZZY_OSBOURNE                                                                                
-    IS_NON_SYSDBA_ADMIN             <false>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <false>
     
     
     Records affected: 1
@@ -251,7 +253,7 @@
     WHO_AM_I                        SYSDBA
     WHATS_MY_ROLE                   NONE
     NON_SYSDBA_USER_NAME            <null>
-    IS_NON_SYSDBA_ADMIN             <null>
+    NON_SYSDBA_HAS_ADMIN_ROLE       <null>
     
     
     Records affected: 1
@@ -262,7 +264,7 @@
     unsuccessful metadata update
     -REVOKE failed
     -OZZY_OSBOURNE is not grantor of Role on RDB$ADMIN to OZZY_OSBOURNE.
-    
+
     Statement failed, SQLSTATE = 28000
     find/delete record error
     -no permission for DELETE access to TABLE PLG$VIEW_USERS
