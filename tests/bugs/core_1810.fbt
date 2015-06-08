@@ -7,7 +7,7 @@
 'min_versions': '',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '2.1',
  'platform': 'All',
  'user_name': 'john.smith',
  'user_password': 'john',
@@ -29,6 +29,63 @@ JOHN.SMITH
 
 """,
  'resources': ['dotname']
+},
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    set list on;
+    set wng off;
+    recreate table test(id int, x int, y int, z int);
+    commit;
+    insert into test values(1, 100, 200, 300);
+    commit;
+    drop user "mick.adams";
+    commit;
+    create role "table.scanner";
+    commit;
+    create user "mick.adams" password '123';
+    commit;              
+
+    revoke all on all from "mick.adams";
+    grant "table.scanner" to "mick.adams";
+    grant select on test to "table.scanner";
+    commit;
+
+    connect '$(DSN)' user "mick.adams" password '123' role "table.scanner";
+    commit;
+
+    select current_user, current_role, a.mon$remote_protocol
+    from rdb$database m join mon$attachments a on a.mon$attachment_id = current_connection;
+
+    select * from test;
+    commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+    commit;
+    drop user "mick.adams";
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    USER                            MICK.ADAMS
+    ROLE                            table.scanner
+    MON$REMOTE_PROTOCOL             TCPv4
+    ID                              1
+    X                               100
+    Y                               200
+    Z                               300
+  """,
+  'substitutions': [
+    ('Statement failed, SQLSTATE.*',''),
+    ('record not found for user:.*','')
+  ]
 }
 ]
 }
