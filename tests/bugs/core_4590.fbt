@@ -26,9 +26,9 @@
   """,
  'expected_stdout':
   """
-    01: sqltype: 580 INT64	 Nullable scale: 0 subtype: 0 len: 8
-    02: sqltype: 580 INT64	 Nullable scale: 0 subtype: 0 len: 8
-    03: sqltype: 580 INT64	 Nullable scale: 0 subtype: 0 len: 8
+    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    02: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
   """,
   'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
