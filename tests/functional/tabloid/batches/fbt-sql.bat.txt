@@ -40,6 +40,7 @@ echo Count total number of files, patterh: %fbtpatt% . . .
 set total_cnt=0
 for /f %%a in ('dir /a-d-s-h /b /s %fbtpatt% ^| find /v /c ""') do set total_cnt=%%a
 if .%total_cnt%.==.0. goto err_patt
+echo total files to be tested: %total_cnt%
 
 set fbt2run=
 set find_what=%~dp0
@@ -266,6 +267,11 @@ goto end
   echo.>>%sql%
   echo -- %msg%>>%sql%
   del resutls.trf 2>nul
+
+  @rem ##################################################################
+  @rem ###    R U N N I N G    T E S T  --   F B T _ R U N . E X E    ###
+  @rem ##################################################################
+
   cmd /c %fbt_run% 1>tmp-fbt-run.log 2>tmp-fbt-run.err
 
   set run_res=0
@@ -275,7 +281,7 @@ goto end
   for /f "usebackq" %%A in ('tmp-fbt-run.err') do set err_size=%%~zA
   if .%err_size%.==.. set err_size=0
   if %err_size% gtr 0 (
-   set run_res=1
+    set run_res=1
   ) else (
     for /f "usebackq" %%A in ('tmp-fbt-run.log') do set log_size=%%~zA
   )
@@ -428,7 +434,7 @@ goto:eof
   echo create or alter view v_fbt_sql as >>%sql%
   echo with >>%sql%
   echo c1 as ( >>%sql%
-  echo     select fbt_name, time30_sS, time30_sC, time30_Cs >>%sql%
+  echo     select fbt_name, time25_Cs,time25_sC, time30_sS, time30_sC, time30_Cs >>%sql%
   echo     from( >>%sql%
   echo         select >>%sql%
   echo             r.fbt_name >>%sql%
@@ -447,7 +453,7 @@ goto:eof
   echo     ,time25_Cs,time25_sC >>%sql%
   echo     ,time30_sS,time30_sC,time30_Cs >>%sql%
   echo     ,minvalue(time25_Cs,time25_sC) time25_min >>%sql%
-  echo     ,maxvalue(time25_Cs,time25_sC) time25_min >>%sql%
+  echo     ,maxvalue(time25_Cs,time25_sC) time25_max >>%sql%
   echo     ,minvalue(time30_sS,time30_sC,time30_Cs) time30_min >>%sql%
   echo     ,maxvalue(time30_sS,time30_sC,time30_Cs) time30_max >>%sql%
   echo   from c1 >>%sql%
@@ -476,19 +482,19 @@ goto:eof
   echo     ,time30_min,time30_max >>%sql%
   echo     ,diff30_percent >>%sql%
   echo     ,time25_vs_time30>>%sql%
-  echo     ,arch30_winner >>%sql%
-  echo     ,arch30_looser >>%sql%
-  echo     ,count(iif(arch30_winner='sS30',1,null))over() sS30_winner_cnt >>%sql%
-  echo     ,count(iif(arch30_winner='sC30',1,null))over() sC30_winner_cnt >>%sql%
-  echo     ,count(iif(arch30_winner='Cs30',1,null))over() Cs30_winner_cnt >>%sql%
-  echo     ,count(iif(arch30_looser='sS30',1,null))over() sS30_looser_cnt >>%sql%
-  echo     ,count(iif(arch30_looser='sC30',1,null))over() sC30_looser_cnt >>%sql%
-  echo     ,count(iif(arch30_looser='Cs30',1,null))over() Cs30_looser_cnt >>%sql%
+  @rem echo     ,count(iif(arch30_winner='sS30',1,null))over() sS30_winner_cnt >>%sql%
+  @rem echo     ,count(iif(arch30_winner='sC30',1,null))over() sC30_winner_cnt >>%sql%
+  @rem echo     ,count(iif(arch30_winner='Cs30',1,null))over() Cs30_winner_cnt >>%sql%
+  @rem echo     ,count(iif(arch30_looser='sS30',1,null))over() sS30_looser_cnt >>%sql%
+  @rem echo     ,count(iif(arch30_looser='sC30',1,null))over() sC30_looser_cnt >>%sql%
+  @rem echo     ,count(iif(arch30_looser='Cs30',1,null))over() Cs30_looser_cnt >>%sql%
   echo     ,sum(time25_Cs)over() Cs25_total_time >>%sql%
   echo     ,sum(time25_sC)over() sC25_total_time >>%sql%
   echo     ,sum(time30_Cs)over() Cs30_total_time >>%sql%
   echo     ,sum(time30_sC)over() sC30_total_time >>%sql%
   echo     ,sum(time30_sS)over() sS30_total_time >>%sql%
+  echo     ,arch30_winner >>%sql%
+  echo     ,arch30_looser >>%sql%
   echo   from c3 >>%sql%
   echo ) >>%sql%
   echo select * from c4 >>%sql%
