@@ -45,22 +45,25 @@
         ,rank()over()       rnk_ovr_n64
         ,dense_rank()over() drn_ovr_n64
     from test;
+    -- NB: seems strange for what charset is mentioned for NUMERIC types. 
+    -- Added token for ignoring this into 'substitutions' block, see below.
   """,
  'expected_stdout':
   """
-    01: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
-    02: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
-    03: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
-    04: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
-    01: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
-    02: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
-    03: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
-    04: sqltype: 580 INT64     Nullable scale: 0 subtype: 0 len: 8
-    05: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
-    06: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
-    07: sqltype: 580 INT64              scale: 0 subtype: 0 len: 8
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    02: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    04: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    02: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    04: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    05: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    06: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    07: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8 charset: 0 NONE
   """,
-  'substitutions':[('^((?!sqltype).)*$',''), ('[\t]','    ')]
+  'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' '),('charset:.*','')]
 }
 ]
 }
