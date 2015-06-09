@@ -61,7 +61,7 @@
     as
         -- ############################################
         -- ############    T H R E S H O L D   ########
-        declare max_diff_threshold numeric(10,4) = 1.8; 
+        declare max_diff_threshold numeric(10,4) = 1.85; 
         -- ############################################
         declare ratio_select_vs_count_1e1 numeric(10,4);
         declare ratio_select_vs_count_1e2 numeric(10,4);
@@ -150,16 +150,16 @@
         if (ratio_select_vs_count_1e1 > max_diff_threshold) then
             ratio_for_1e1 = 'Regression: ratio = '||ratio_select_vs_count_1e1||' > '||max_diff_threshold;
     
-        if (ratio_select_vs_count_1e1 > max_diff_threshold) then
+        if (ratio_select_vs_count_1e2 > max_diff_threshold) then
             ratio_for_1e2 = 'Regression: ratio = '||ratio_select_vs_count_1e2||' > '||max_diff_threshold;
     
-        if (ratio_select_vs_count_1e1 > max_diff_threshold) then
+        if (ratio_select_vs_count_1e3 > max_diff_threshold) then
             ratio_for_1e3 = 'Regression: ratio = '||ratio_select_vs_count_1e3||' > '||max_diff_threshold;
     
-        if (ratio_select_vs_count_1e1 > max_diff_threshold) then
+        if (ratio_select_vs_count_1e4 > max_diff_threshold) then
             ratio_for_1e4 = 'Regression: ratio = '||ratio_select_vs_count_1e4||' > '||max_diff_threshold;
     
-        if (ratio_select_vs_count_1e1 > max_diff_threshold) then
+        if (ratio_select_vs_count_1e5 > max_diff_threshold) then
             ratio_for_1e5 = 'Regression: ratio = '||ratio_select_vs_count_1e5||' > '||max_diff_threshold;
     
         
@@ -170,11 +170,11 @@
   """,
  'expected_stdout': 
   """
-    RATIO_FOR_1E1                   Acceptable, <= 1.8000
-    RATIO_FOR_1E2                   Acceptable, <= 1.8000
-    RATIO_FOR_1E3                   Acceptable, <= 1.8000
-    RATIO_FOR_1E4                   Acceptable, <= 1.8000
-    RATIO_FOR_1E5                   Acceptable, <= 1.8000
+    RATIO_FOR_1E1                   Acceptable, <= 1.8500
+    RATIO_FOR_1E2                   Acceptable, <= 1.8500
+    RATIO_FOR_1E3                   Acceptable, <= 1.8500
+    RATIO_FOR_1E4                   Acceptable, <= 1.8500
+    RATIO_FOR_1E5                   Acceptable, <= 1.8500
   """
 }
 ]
