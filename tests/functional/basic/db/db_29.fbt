@@ -10121,8 +10121,9 @@ RDB$DEBUG_INFO                  <null>
   """,
  'expected_stdout': 
   """
-RDB$TRIGGER_NAME                RDB$TRIGGER_1
-RDB$RELATION_NAME               RDB$USER_PRIVILEGES
+
+RDB$TRIGGER_NAME                RDB$TRIGGER_1                                                                                
+RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -10140,8 +10141,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_10
-RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_10                                                                               
+RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -10295,8 +10296,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_11
-RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_11                                                                               
+RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                6
 RDB$TRIGGER_SOURCE              <null>
@@ -10418,8 +10419,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_12
-RDB$RELATION_NAME               RDB$REF_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_12                                                                               
+RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                1
 RDB$TRIGGER_SOURCE              <null>
@@ -10474,8 +10475,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_13
-RDB$RELATION_NAME               RDB$REF_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_13                                                                               
+RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -10495,8 +10496,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_14
-RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_14                                                                               
+RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -10516,8 +10517,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_15
-RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_15                                                                               
+RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -10547,8 +10548,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_16
-RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_16                                                                               
+RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                6
 RDB$TRIGGER_SOURCE              <null>
@@ -10620,8 +10621,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_17
-RDB$RELATION_NAME               RDB$INDEX_SEGMENTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_17                                                                               
+RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -10651,8 +10652,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_18
-RDB$RELATION_NAME               RDB$INDEX_SEGMENTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_18                                                                               
+RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -10696,8 +10697,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_19
-RDB$RELATION_NAME               RDB$INDICES
+RDB$TRIGGER_NAME                RDB$TRIGGER_19                                                                               
+RDB$RELATION_NAME               RDB$INDICES                                                                                  
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -10727,8 +10728,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_2
-RDB$RELATION_NAME               RDB$TRIGGERS
+RDB$TRIGGER_NAME                RDB$TRIGGER_2                                                                                
+RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -10751,8 +10752,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_20
-RDB$RELATION_NAME               RDB$INDICES
+RDB$TRIGGER_NAME                RDB$TRIGGER_20                                                                               
+RDB$RELATION_NAME               RDB$INDICES                                                                                  
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -10882,8 +10883,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_21
-RDB$RELATION_NAME               RDB$TRIGGERS
+RDB$TRIGGER_NAME                RDB$TRIGGER_21                                                                               
+RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -10922,8 +10923,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_22
-RDB$RELATION_NAME               RDB$TRIGGERS
+RDB$TRIGGER_NAME                RDB$TRIGGER_22                                                                               
+RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -11002,8 +11003,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_23
-RDB$RELATION_NAME               RDB$RELATION_FIELDS
+RDB$TRIGGER_NAME                RDB$TRIGGER_23                                                                               
+RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -11128,8 +11129,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_24
-RDB$RELATION_NAME               RDB$RELATION_FIELDS
+RDB$TRIGGER_NAME                RDB$TRIGGER_24                                                                               
+RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -11191,8 +11192,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_25
-RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_25                                                                               
+RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -11212,8 +11213,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_26
-RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_26                                                                               
+RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                1
 RDB$TRIGGER_SOURCE              <null>
@@ -11292,8 +11293,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_27
-RDB$RELATION_NAME               RDB$RELATION_FIELDS
+RDB$TRIGGER_NAME                RDB$TRIGGER_27                                                                               
+RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                6
 RDB$TRIGGER_SOURCE              <null>
@@ -11337,8 +11338,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_3
-RDB$RELATION_NAME               RDB$TRIGGERS
+RDB$TRIGGER_NAME                RDB$TRIGGER_3                                                                                
+RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -11361,8 +11362,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_31
-RDB$RELATION_NAME               RDB$USER_PRIVILEGES
+RDB$TRIGGER_NAME                RDB$TRIGGER_31                                                                               
+RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -11377,16 +11378,13 @@ RDB$TRIGGER_BLR                 c:1e5
         	         blr_and,
         	            blr_neq,
         	               blr_field, 1, 11, 'R','D','B','$','G','R','A','N','T','O','R',
-        	               blr_upcase,
-        	                  blr_user_name,
+        	               blr_user_name,
         	            blr_and,
         	               blr_neq,
-        	                  blr_upcase,
-        	                     blr_user_name,
+        	                  blr_user_name,
         	                  blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	               blr_neq,
-        	                  blr_upcase,
-        	                     blr_current_role,
+        	                  blr_current_role,
         	                  blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	      blr_begin,
         	         blr_for,
@@ -11404,8 +11402,7 @@ RDB$TRIGGER_BLR                 c:1e5
         	                        blr_field, 3, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
         	                     blr_neq,
         	                        blr_field, 3, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                        blr_upcase,
-        	                           blr_user_name,
+        	                        blr_user_name,
         	                  blr_leave, 0,
         	                  blr_end,
         	               blr_end,
@@ -11423,8 +11420,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_32
-RDB$RELATION_NAME               RDB$USER_PRIVILEGES
+RDB$TRIGGER_NAME                RDB$TRIGGER_32                                                                               
+RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -11439,16 +11436,13 @@ RDB$TRIGGER_BLR                 c:1e6
         	         blr_and,
         	            blr_neq,
         	               blr_field, 1, 11, 'R','D','B','$','G','R','A','N','T','O','R',
-        	               blr_upcase,
-        	                  blr_user_name,
+        	               blr_user_name,
         	            blr_and,
         	               blr_neq,
-        	                  blr_upcase,
-        	                     blr_user_name,
+        	                  blr_user_name,
         	                  blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	               blr_neq,
-        	                  blr_upcase,
-        	                     blr_current_role,
+        	                  blr_current_role,
         	                  blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	      blr_begin,
         	         blr_for,
@@ -11466,8 +11460,7 @@ RDB$TRIGGER_BLR                 c:1e6
         	                        blr_field, 3, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
         	                     blr_neq,
         	                        blr_field, 3, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                        blr_upcase,
-        	                           blr_user_name,
+        	                        blr_user_name,
         	                  blr_leave, 0,
         	                  blr_end,
         	               blr_end,
@@ -11485,8 +11478,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_33
-RDB$RELATION_NAME               RDB$USER_PRIVILEGES
+RDB$TRIGGER_NAME                RDB$TRIGGER_33                                                                               
+RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                1
 RDB$TRIGGER_SOURCE              <null>
@@ -11501,16 +11494,13 @@ RDB$TRIGGER_BLR                 c:1e7
         	         blr_and,
         	            blr_neq,
         	               blr_field, 1, 11, 'R','D','B','$','G','R','A','N','T','O','R',
-        	               blr_upcase,
-        	                  blr_user_name,
+        	               blr_user_name,
         	            blr_and,
         	               blr_neq,
-        	                  blr_upcase,
-        	                     blr_user_name,
+        	                  blr_user_name,
         	                  blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	               blr_neq,
-        	                  blr_upcase,
-        	                     blr_current_role,
+        	                  blr_current_role,
         	                  blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	      blr_begin,
         	         blr_for,
@@ -11528,8 +11518,7 @@ RDB$TRIGGER_BLR                 c:1e7
         	                        blr_field, 3, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
         	                     blr_neq,
         	                        blr_field, 3, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                        blr_upcase,
-        	                           blr_user_name,
+        	                        blr_user_name,
         	                  blr_leave, 0,
         	                  blr_end,
         	               blr_end,
@@ -11547,8 +11536,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_34
-RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_34                                                                               
+RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                6
 RDB$TRIGGER_SOURCE              <null>
@@ -11596,8 +11585,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_35
-RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
+RDB$TRIGGER_NAME                RDB$TRIGGER_35                                                                               
+RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                6
 RDB$TRIGGER_SOURCE              <null>
@@ -11636,8 +11625,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_36
-RDB$RELATION_NAME               RDB$FIELDS
+RDB$TRIGGER_NAME                RDB$TRIGGER_36                                                                               
+RDB$RELATION_NAME               RDB$FIELDS                                                                                   
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                3
 RDB$TRIGGER_SOURCE              <null>
@@ -11704,8 +11693,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_8
-RDB$RELATION_NAME               RDB$USER_PRIVILEGES
+RDB$TRIGGER_NAME                RDB$TRIGGER_8                                                                                
+RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                5
 RDB$TRIGGER_SOURCE              <null>
@@ -11765,8 +11754,8 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
 
-RDB$TRIGGER_NAME                RDB$TRIGGER_9
-RDB$RELATION_NAME               RDB$USER_PRIVILEGES
+RDB$TRIGGER_NAME                RDB$TRIGGER_9                                                                                
+RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
 RDB$TRIGGER_SEQUENCE            0
 RDB$TRIGGER_TYPE                1
 RDB$TRIGGER_SOURCE              <null>
@@ -11868,56 +11857,10 @@ RDB$TRIGGER_BLR                 c:2
         	      blr_leave, 0,
         	      blr_end,
         	   blr_if,
-        	      blr_or,
-        	         blr_eql,
-        	            blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	            blr_literal, blr_long, 0, 0,0,0,0,
-        	         blr_or,
-        	            blr_eql,
-        	               blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	               blr_literal, blr_long, 0, 3,0,0,0,
-        	            blr_or,
-        	               blr_eql,
-        	                  blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                  blr_literal, blr_long, 0, 4,0,0,0,
-        	               blr_or,
-        	                  blr_eql,
-        	                     blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                     blr_literal, blr_long, 0, 6,0,0,0,
-        	                  blr_or,
-        	                     blr_eql,
-        	                        blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                        blr_literal, blr_long, 0, 7,0,0,0,
-        	                     blr_or,
-        	                        blr_eql,
-        	                           blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                           blr_literal, blr_long, 0, 8,0,0,0,
-        	                        blr_or,
-        	                           blr_eql,
-        	                              blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                              blr_literal, blr_long, 0, 9,0,0,0,
-        	                           blr_or,
-        	                              blr_eql,
-        	                                 blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                                 blr_literal, blr_long, 0, 10,0,0,0,
-        	                              blr_or,
-        	                                 blr_eql,
-        	                                    blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                                    blr_literal, blr_long, 0, 11,0,0,0,
-        	                                 blr_eql,
-        	                                    blr_field, 1, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
-        	                                    blr_literal, blr_long, 0, 12,0,0,0,
-        	      blr_assignment,
-        	         blr_upcase,
-        	            blr_field, 1, 8, 'R','D','B','$','U','S','E','R',
-        	         blr_field, 1, 8, 'R','D','B','$','U','S','E','R',
-        	      blr_end,
-        	   blr_if,
         	      blr_missing,
         	         blr_field, 1, 11, 'R','D','B','$','G','R','A','N','T','O','R',
         	      blr_assignment,
-        	         blr_upcase,
-        	            blr_user_name,
+        	         blr_user_name,
         	         blr_field, 1, 11, 'R','D','B','$','G','R','A','N','T','O','R',
         	      blr_end,
         	   blr_if,
@@ -11939,8 +11882,7 @@ RDB$TRIGGER_BLR                 c:2
         	                     blr_and,
         	                        blr_eql,
         	                           blr_field, 6, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                           blr_upcase,
-        	                              blr_user_name,
+        	                           blr_user_name,
         	                        blr_and,
         	                           blr_eql,
         	                              blr_field, 6, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
@@ -11950,20 +11892,17 @@ RDB$TRIGGER_BLR                 c:2
         	                              blr_field, 1, 8, 'R','D','B','$','U','S','E','R',
         	                     blr_or,
         	                        blr_eql,
-        	                           blr_upcase,
-        	                              blr_user_name,
+        	                           blr_user_name,
         	                           blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	                        blr_eql,
-        	                           blr_upcase,
-        	                              blr_current_role,
+        	                           blr_current_role,
         	                           blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	                  blr_begin,
         	                     blr_end,
         	                  blr_if,
         	                     blr_neq,
         	                        blr_field, 6, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                        blr_upcase,
-        	                           blr_user_name,
+        	                        blr_user_name,
         	                     blr_begin,
         	                        blr_if,
         	                           blr_not,
@@ -12048,13 +11987,10 @@ RDB$TRIGGER_BLR                 c:2
         	                                          blr_field, 6, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
         	                                       blr_and,
         	                                          blr_neq,
-        	                                             blr_upcase,
-        	                                                blr_user_name,
+        	                                             blr_user_name,
         	                                             blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
-        	
-        	                                     blr_neq,
-        	                                             blr_upcase,
-        	                                                blr_current_role,
+        	                                          blr_neq,
+        	                                             blr_current_role,
         	                                             blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	                                    blr_begin,
         	                                       blr_if,
@@ -12081,7 +12017,8 @@ RDB$TRIGGER_BLR                 c:2
         	                                                                     blr_field, 6, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
         	                                                                  blr_and,
         	                                                                     blr_eql,
-        	                                                                        blr_field, 11, 13, 'R','D','B','$','U','S','E','R','_','T','Y','P','E',
+        	                                                                        blr_field, 11, 13, 'R','D','B','$','U','S','E
+        	','R','_','T','Y','P','E',
         	                                                                        blr_literal, blr_long, 0, 8,0,0,0,
         	                                                                     blr_and,
         	                                                                        blr_neq,
@@ -12122,12 +12059,10 @@ RDB$TRIGGER_BLR                 c:2
         	                                          blr_field, 6, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
         	                                       blr_and,
         	                                          blr_neq,
-        	                                             blr_upcase,
-        	                                                blr_user_name,
+        	                                             blr_user_name,
         	                                             blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	                                          blr_neq,
-        	                                             blr_upcase,
-        	                                                blr_current_role,
+        	                                             blr_current_role,
         	                                             blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	                                    blr_begin,
         	                                       blr_if,
@@ -12250,16 +12185,13 @@ RDB$TRIGGER_BLR                 c:2
         	                  blr_and,
         	                     blr_neq,
         	                        blr_field, 18, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                        blr_upcase,
-        	                           blr_user_name,
+        	                        blr_user_name,
         	                     blr_and,
         	                        blr_neq,
-        	                           blr_upcase,
-        	                              blr_user_name,
+        	                           blr_user_name,
         	                           blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	                        blr_neq,
-        	                           blr_upcase,
-        	                              blr_current_role,
+        	                           blr_current_role,
         	                           blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	                  blr_if,
         	                     blr_not,
@@ -12277,8 +12209,7 @@ RDB$TRIGGER_BLR                 c:2
         	                                          blr_literal, blr_long, 0, 5,0,0,0,
         	                                       blr_and,
         	                                          blr_eql,
-        	                                             blr_field, 19, 13, 'R','D','B','$','P','R','I','V','I','L','E','G','
-        	E',
+        	                                             blr_field, 19, 13, 'R','D','B','$','P','R','I','V','I','L','E','G','E',
         	                                             blr_field, 1, 13, 'R','D','B','$','P','R','I','V','I','L','E','G','E',
         	                                          blr_and,
         	                                             blr_eql,
@@ -12319,7 +12250,8 @@ RDB$TRIGGER_BLR                 c:2
         	                     blr_not,
         	                        blr_starting,
         	                           blr_field, 18, 18, 'R','D','B','$','S','E','C','U','R','I','T','Y','_','C','L','A','S','S',
-        	                           blr_cast, blr_varying2, 3,0, 31,0,
+        	                           blr_cast,
+        	blr_varying2, 3,0, 31,0,
         	                              blr_literal, blr_text2, 1,0, 4,0, 'S','Q','L','$',
         	                     blr_leave, 3,
         	                     blr_end,
@@ -12344,16 +12276,13 @@ RDB$TRIGGER_BLR                 c:2
         	                     blr_and,
         	                        blr_neq,
         	                           blr_field, 26, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                           blr_upcase,
-        	                              blr_user_name,
+        	                           blr_user_name,
         	                        blr_and,
         	                           blr_neq,
-        	                              blr_upcase,
-        	                                 blr_user_name,
+        	                              blr_user_name,
         	                              blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	                           blr_neq,
-        	                              blr_upcase,
-        	                                 blr_current_role,
+        	                              blr_current_role,
         	                              blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	                     blr_if,
         	                        blr_not,
@@ -12434,16 +12363,13 @@ RDB$TRIGGER_BLR                 c:2
         	                        blr_and,
         	                           blr_neq,
         	                              blr_field, 22, 14, 'R','D','B','$','O','W','N','E','R','_','N','A','M','E',
-        	                              blr_upcase,
-        	                                 blr_user_name,
+        	                              blr_user_name,
         	                           blr_and,
         	                              blr_neq,
-        	                                 blr_upcase,
-        	                                    blr_user_name,
+        	                                 blr_user_name,
         	                                 blr_literal, blr_text, 6,0, 'S','Y','S','D','B','A',
         	                              blr_neq,
-        	                                 blr_upcase,
-        	                                    blr_current_role,
+        	                                 blr_current_role,
         	                                 blr_literal, blr_text, 9,0, 'R','D','B','$','A','D','M','I','N',
         	                        blr_if,
         	                           blr_not,
