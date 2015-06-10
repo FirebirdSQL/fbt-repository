@@ -16,84 +16,48 @@
   """,
  'test_script': 
   """
+    set wng off;
+    set list on;
+
     recreate table t(id int, who_am_i varchar(31) default current_user, whats_my_role varchar(31) default current_role); 
     commit;
     insert into t(id) values(0); 
     commit;
 
-    drop role "##";
-    commit;
-
-    drop user "#";
-
     create user "#" password '#'; 
-    commit;
-    revoke all on all from "#";
-    commit;
-    
     create role "##"; 
-    commit;
-    revoke all on all from role "##";
     commit;
 
     grant "##" to "#"; 
     commit;
 
-    grant select,insert,update,delete on t to role "##";
+    grant select, insert, update, delete on t to role "##";
     commit;
 
-    set transaction read committed;
+    connect '$(DSN)' user "#" password '#' role "##";
+    insert into t(id) values(1);
+    insert into t(id) values(2);
+    update t set id = -id where id = 1;
+    delete from t where id = 0;
 
-    set list on;
-
-    set term ^;
-    execute block returns( id int, who_am_i varchar(31), whats_my_role varchar(31) ) as
-      declare v_dbname type of column mon$database.mon$database_name;
-      declare v_usr varchar(31) = '#';
-      declare v_pwd varchar(8) = '#';
-      declare v_role varchar(8) = '##';
-    begin
-      v_dbname = 'localhost:' || rdb$get_context('SYSTEM','DB_NAME');
-
-      execute statement ('insert into t(id) values(:x)') ( x := 1 )
-      with autonomous transaction
-      on external v_dbname
-      as user v_usr password v_pwd 
-      role v_role
-      ;
-
-      for select id, who_am_i, whats_my_role from t into id, who_am_i, whats_my_role do suspend;
-    end
-    ^
-    set term ;^
+    select * from t order by id;
     commit;
-    drop user "#";
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
     drop role "##";
+    drop user "#";
     commit;
   """,
  'expected_stdout':
   """
-    ID                              0
-    WHO_AM_I                        SYSDBA
-    WHATS_MY_ROLE                   NONE
-    
-    ID                              1
+    ID                              -1
     WHO_AM_I                        #
     WHATS_MY_ROLE                   ##
-  """,
- 'expected_stderr':
+
+    ID                              2
+    WHO_AM_I                        #
+    WHATS_MY_ROLE                   ##
   """
-    Statement failed, SQLSTATE = 42000
-    unsuccessful metadata update
-    -Role ## not found
-
-    Statement failed, SQLSTATE = HY000
-    record not found for user: #
-
-    Warning: ALL on ALL is not granted to #.
-    Warning: ALL on ALL is not granted to ##.
-  """,
-  'substitutions': [('-DROP ROLE ## failed','')]
 }
 ]
 }
