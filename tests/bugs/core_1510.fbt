@@ -43,13 +43,11 @@
     set sqlda_display;
     select 2*COALESCE(NULL,NULL) from RDB$DATABASE;
     select 2*IIF(NULL is NULL, NULL, NULL) from RDB$DATABASE;
-    -- NB: seems strange for what charset is mentioned for NUMERIC types. 
-    -- Added token for ignoring this into 'substitutions' block, see below.
   """,
  'expected_stdout':
   """
-    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
-    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
+    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
   """,
   'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' '),('charset:.*','')]
 }
