@@ -1423,17 +1423,17 @@ Dynamic SQL Error
     BC                              -1
     
     INPUT message field count: 3
-    01: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4 charset: 0 NONE
+    01: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4
       :  name:   alias:
       : table:   owner:
-    02: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4 charset: 0 NONE
+    02: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4
       :  name:   alias:
       : table:   owner:
-    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
       :  name:   alias:
       : table:   owner:
     OUTPUT message field count: 1
-    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
       :  name: COALESCE  alias: COALESCE
       : table:   owner:
   """,
