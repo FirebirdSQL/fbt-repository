@@ -21,21 +21,19 @@
     set planonly;
     select row_number()over() rno, rank()over() rnk, dense_rank()over() drk 
     from rdb$database;
-    -- NB-1: on dialect-3 output is:
+    -- NB: on dialect-3 output is:
     -- sqltype: 580 INT64 ...
-    -- NB-2: seems strange for what charset is mentioned for NUMERIC types. 
-    -- Added token for ignoring this into 'substitutions' block, see below.
   """,
  'expected_stdout': 
   """
-    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
       :  name: ROW_NUMBER  alias: RNO
-    02: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    02: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
       :  name: RANK  alias: RNK
-    03: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8 charset: 0 NONE
+    03: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
       :  name: DENSE_RANK  alias: DRK
   """,
-  'substitutions':[('^((?!sqltype:|name:).)*$',''),('[ ]+',' '),('[\t]*',' '),('charset:.*','')]
+  'substitutions':[('^((?!sqltype:|name:).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
 ]
 }
