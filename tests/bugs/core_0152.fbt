@@ -36,16 +36,14 @@ OUTPUT SQLDA version: 1 sqln: 20 sqld: 1
     set sqlda_display;
     set list on;
     select current_timestamp - current_timestamp dts_diff from rdb$database;
-    -- NB: seems strange for what charset is mentioned for NUMERIC types. 
-    -- Added token for ignoring this into 'substitutions' block, see below.
   """,
  'expected_stdout': 
   """
-    01: sqltype: 580 INT64 scale: -9 subtype: 1 len: 8 charset: 0 NONE
+    01: sqltype: 580 INT64 scale: -9 subtype: 1 len: 8
     :  name: SUBTRACT  alias: DTS_DIFF
     DTS_DIFF 0.000000000
   """,
-  'substitutions': [('^((?!sqltype|DTS_DIFF).)*$',''),('[ ]+',' '),('[\t]*',' '),('charset:.*','')]
+  'substitutions': [('^((?!sqltype|DTS_DIFF).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
 ]
 }
