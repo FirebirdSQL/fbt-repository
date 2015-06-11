@@ -28,10 +28,11 @@
       tf2 time,
       tf3 timestamp,
       boo boolean,
-      tx1 char(10) character set utf8, 
+      tx1 char character set utf8, 
       tx2 varchar(10) character set iso8859_1,
-      tx3 nchar(10),
+      tx3 nchar,
       -- doesn`t compile: tx4 nvarchar(10),
+      tx4 national character varying(32760),
       tb1 blob sub_type 1 character set win1251,
       tb2 blob sub_type 0
     );
@@ -53,11 +54,12 @@
     08: sqltype: 560 TIME Nullable scale: 0 subtype: 0 len: 4
     09: sqltype: 510 TIMESTAMP Nullable scale: 0 subtype: 0 len: 8
     10: sqltype: 32764 BOOLEAN Nullable scale: 0 subtype: 0 len: 1
-    11: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 40 charset: 4 UTF8
+    11: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 4 charset: 4 UTF8
     12: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 10 charset: 21 ISO8859_1
-    13: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 10 charset: 21 ISO8859_1
-    14: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 52 WIN1251
-    15: sqltype: 520 BLOB Nullable scale: 0 subtype: 0 len: 8
+    13: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 1 charset: 21 ISO8859_1
+    14: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 32760 charset: 21 ISO8859_1
+    15: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 52 WIN1251
+    16: sqltype: 520 BLOB Nullable scale: 0 subtype: 0 len: 8
   """,
   'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
