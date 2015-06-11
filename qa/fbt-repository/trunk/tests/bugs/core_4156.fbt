@@ -57,7 +57,7 @@
     01: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 80 charset: 0 NONE
     02: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 80 charset: 0 NONE
     03: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 255 charset: 0 NONE
-    01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4 charset: 0 NONE
+    01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
   """,
   'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
