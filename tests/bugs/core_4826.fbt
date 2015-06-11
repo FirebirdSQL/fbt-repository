@@ -16,7 +16,7 @@
   """,
  'test_script': 
   """
-    -- Before WI-T3.0.0.31876 charsets were diapleyd for field of ANY type, not only for text.
+    -- Before WI-T3.0.0.31876 charsets were displeyd for field of ANY type, not only for text.
     recreate table test1(
       id1 smallint,
       id2 int,
