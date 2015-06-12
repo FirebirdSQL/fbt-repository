@@ -1,0 +1,172 @@
+{
+'id': 'bugs.core_4811',
+'qmid': None,
+'tracker_id': 'CORE-4811',
+'title': 'Make user names behave according to SQL identifiers rules',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    set wng off;
+    set list on;
+    create or alter procedure sp_check_actual_role as begin end;
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop role Boss';
+        when any do begin end
+    end ^
+    set term ;^
+    commit;
+    
+    recreate exception ex_have_no_role 'You''ve specified role: >@1< -- but your actual role is NONE.';
+    
+    set term ^;
+    create or alter procedure sp_check_actual_role(
+        a_probe_role varchar(31)
+    ) returns(
+        checking varchar(80),
+        result varchar(31)
+    ) as
+    begin
+        if ( upper(current_role) = 'NONE' )
+        then
+            exception ex_have_no_role using ( a_probe_role );
+    
+        checking = 'role: >' || a_probe_role || '< - '
+                   || trim(
+                           iif( a_probe_role containing '''', 'in apostrophes',
+                               iif( a_probe_role containing '"', 'in double quotes', 'without delimiters' )
+                              )
+                          )
+                   || ', ' || iif( upper(a_probe_role) = a_probe_role, 'UPPER case', 'case Match' )
+        ;
+        result = current_role;
+        suspend;
+    end
+    ^
+    set term ;^
+    commit;
+    
+    create or alter user John password '1';
+    revoke all on all from John;
+    create role Boss;
+    grant Boss to John;
+    grant usage on exception ex_have_no_role to John;
+    grant execute on procedure sp_check_actual_role to John;
+    --show grants;
+    commit;
+    
+    -------------------------------------------------------
+    
+    connect '$(DSN)' user 'John' password '1'; -- fails
+    select 'user: >''John''< - in apostrophes, case Match' checking, current_user as result from rdb$database;
+    commit;
+    
+    connect '$(DSN)' user 'JOHN' password '1'; -- passes
+    select 'user: >''JOHN''< - in apostrophes, UPPER case' checking, current_user as result from rdb$database;
+    commit;
+    
+    connect '$(DSN)' user John password '1'; -- passes
+    select 'user: >John< - without delimiters, case Match' checking, current_user as result from rdb$database;
+    commit;
+    
+    connect '$(DSN)' user JOHN password '1'; -- passes
+    select 'user: >JOHN< - without delimiters, UPPER case' checking, current_user as result from rdb$database;
+    commit;
+    
+    connect '$(DSN)' user "John" password '1'; -- fails
+    select 'user: >"John"< - in double quotes, case Match' checking, current_user as result from rdb$database;
+    commit;
+    
+    connect '$(DSN)' user "JOHN" password '1'; -- passes
+    select 'user: >"JOHN" - in double quotes, UPPER case' checking, current_user as result from rdb$database;
+    commit;
+    
+    --------------------------------------------------------
+    
+    connect '$(DSN)' user 'JOHN' password '1' role 'Boss';
+    select * from sp_check_actual_role( '''Boss''' );
+    commit;
+    
+    connect '$(DSN)' user 'JOHN' password '1' role 'BOSS';
+    select * from sp_check_actual_role( '''BOSS''' );
+    commit;
+    
+    connect '$(DSN)' user 'JOHN' password '1' role Boss;
+    select * from sp_check_actual_role( 'Boss' );
+    commit;
+    
+    connect '$(DSN)' user 'JOHN' password '1' role BOSS;
+    select * from sp_check_actual_role( 'BOSS' );
+    commit;
+    
+    connect '$(DSN)' user 'JOHN' password '1' role "Boss";
+    select * from sp_check_actual_role( '"Boss"' );
+    commit;
+    
+    connect '$(DSN)' user 'JOHN' password '1' role "BOSS";
+    select * from sp_check_actual_role( '"BOSS"' );
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    CHECKING                        user: >'JOHN'< - in apostrophes, UPPER case
+    RESULT                          JOHN
+    
+    CHECKING                        user: >John< - without delimiters, case Match
+    RESULT                          JOHN
+    
+    CHECKING                        user: >JOHN< - without delimiters, UPPER case
+    RESULT                          JOHN
+    
+    CHECKING                        user: >"JOHN" - in double quotes, UPPER case
+    RESULT                          JOHN
+    
+    CHECKING                        role: >'BOSS'< - in apostrophes, UPPER case
+    RESULT                          BOSS
+    
+    CHECKING                        role: >Boss< - without delimiters, case Match
+    RESULT                          BOSS
+    
+    CHECKING                        role: >BOSS< - without delimiters, UPPER case
+    RESULT                          BOSS
+    
+    CHECKING                        role: >"BOSS"< - in double quotes, UPPER case
+    RESULT                          BOSS
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 28000
+    Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
+
+    Statement failed, SQLSTATE = 28000
+    Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
+
+    Statement failed, SQLSTATE = 42000
+    exception 21
+    -EX_HAVE_NO_ROLE
+    -You've specified role: >'Boss'< -- but your actual role is NONE.
+    -At procedure 'SP_CHECK_ACTUAL_ROLE' line: 10, col: 9
+
+    Statement failed, SQLSTATE = 42000
+    exception 21
+    -EX_HAVE_NO_ROLE
+    -You've specified role: >"Boss"< -- but your actual role is NONE.
+    -At procedure 'SP_CHECK_ACTUAL_ROLE' line: 10, col: 9
+  """,
+  'substitutions':[
+      ('line: [0-9]+, col: [0-9]+',''),('Use CONNECT or CREATE DATABASE.*',''), ('exception [0-9]+','exception')
+  ]
+}
+]
+}
