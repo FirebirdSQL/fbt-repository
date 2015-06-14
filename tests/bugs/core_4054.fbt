@@ -78,6 +78,9 @@
     ^
     set term ;^
     commit;
+    -- Do not forget about cleanup - remember that other tests can query sec$users or run `show users`!
+    drop user tmp$c4054;
+    commit;
   """,
  'expected_stdout':
   """
