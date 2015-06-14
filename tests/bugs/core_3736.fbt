@@ -106,6 +106,10 @@
     ^
     set term ;^
     rollback;
+    -- Do not forget about cleanup - remember that other tests can query sec$users or run `show users`!
+    drop user tmp$c3736_ro;
+    drop user tmp$c3736_ud;
+    commit;
   """,
  'expected_stdout': 
   """
