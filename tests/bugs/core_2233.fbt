@@ -111,6 +111,9 @@
     ^
     set term ;^
     commit;
+    drop user smith;
+    drop user brown;
+    commit;
   """,
  'expected_stdout': 
   """
