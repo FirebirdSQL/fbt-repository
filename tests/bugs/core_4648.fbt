@@ -12,24 +12,24 @@
  'init_script':
   """
     set wng off;
-    create or alter user u4648 password '123' revoke admin role;
+    create or alter user tmp$c4648 password '123' revoke admin role;
     commit;
-    revoke all on all from u4648;
+    revoke all on all from tmp$c4648;
     -- 'create ... grant admin role' or 'grant rdb$admin' are NOT neccessary 
     -- for enabling to creating database by non-sysdba user:
-    grant create database to u4648;
+    grant create database to user tmp$c4648;
     commit;
   """,
  'test_type': 'Python',
  'test_script': """import os
 
 print ('Starting backup...')
-fbk = os.path.join(context['temp_directory'],'backup.fbk')
+fbk = os.path.join(context['temp_directory'],'tmp4648.fbk')
 fdn = 'localhost:'+os.path.join(context['temp_directory'],'tmp4648.tmp')
 runProgram('gbak',['-b','-user',user_name,'-password',user_password,dsn,fbk])
 print ('Backup finished.')
 print ('Starting restore using NON sysdba user account...')
-runProgram('gbak',['-rep','-user','u4648','-password','123',fbk,fdn])
+runProgram('gbak',['-rep','-user','TMP$C4648','-password','123',fbk,fdn])
 print ('Restore using NON sysdba user account finished.')
 if os.path.isfile(fbk):
     print ('Delete backup file...')
@@ -49,9 +49,14 @@ script = '''
     drop database;
 '''
 print ('Starting ISQL using NON sysdba user account...')
-runProgram('isql',[fdn,'-q','-user','u4648','-pas','123'],script)
+runProgram('isql',[fdn,'-q','-user','tmp$c4648','-pas','123'],script)
 print ('ISQL using NON sysdba user account finished.')
-runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],'''drop user u4648;commit;''')
+
+script='''revoke create database from user tmp$c4648;
+drop user tmp$c4648;
+commit;
+'''
+runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],script)
   """,
  'expected_stdout': 
   """
@@ -62,10 +67,10 @@ runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],'''drop
     Delete backup file...
     Backup file deleted.
     Starting ISQL using NON sysdba user account...
-    Who am I:                       U4648
+    Who am I:                       TMP$C4648
     Used protocol:                  TCPv4
     Connected to restored DB ?      YES
-    Owner of DB is:                 U4648
+    Owner of DB is:                 TMP$C4648
     ISQL using NON sysdba user account finished.
   """
 },
