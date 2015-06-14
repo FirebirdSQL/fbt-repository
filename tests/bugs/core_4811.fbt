@@ -117,6 +117,11 @@
     connect '$(DSN)' user 'JOHN' password '1' role "BOSS";
     select * from sp_check_actual_role( '"BOSS"' );
     commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+    -- Do not forget about cleanup - remember that other tests can query sec$users or run `show users`!
+    drop user John;
+    commit;
   """,
  'expected_stdout':
   """
