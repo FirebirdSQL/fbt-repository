@@ -90,6 +90,10 @@
     
     select current_user as who_am_i, id as mine_id, f01 as mine_f01
     from autoid_test;
+    commit;
+    -- Do not forget about cleanup - remember that other tests can query sec$users or run `show users`!
+    drop user tmp$core4161;
+    commit;
   """,
  'expected_stdout': 
   """
