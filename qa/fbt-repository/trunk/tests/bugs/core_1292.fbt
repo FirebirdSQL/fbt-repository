@@ -134,6 +134,9 @@ show table t;
         order by priv
     )
     group by usr_name, grantor, can_grant, tab_name,usr_type,obj_type;  
+    commit;
+    drop user Nebuchadnezzar2_King_of_Babylon;
+    commit;
   """,
  'expected_stdout': 
   """
