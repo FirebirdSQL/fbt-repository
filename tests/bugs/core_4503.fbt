@@ -1,0 +1,51 @@
+{
+'id': 'bugs.core_4503',
+'qmid': '',
+'tracker_id': 'CORE-4503',
+'title': 'ISQL command SHOW USERS display only me',
+'description': '',
+'min_versions': None,
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create or alter user bill password '123';
+    create or alter user john password '456';
+    create or alter user mick password '789';
+    create or alter user boss password '000';
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': """db_conn.close()
+con_0a = kdb.connect(dsn=dsn.encode(),user='SYSDBA',password='masterkey')
+con_0b = kdb.connect(dsn=dsn.encode(),user='SYSDBA',password='masterkey')
+con_1a = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
+con_1b = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
+con_1c = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
+con_1d = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
+con_1e = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
+con_2a = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
+con_2b = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
+con_2c = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
+con_2d = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
+con_3a = kdb.connect(dsn=dsn.encode(),user='MICK',password='789')
+script = '''show users;
+drop user bill;
+drop user john;
+drop user mick;
+drop user boss;
+'''
+runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],script)
+""",
+ 'expected_stdout':
+  """
+    Users in the database
+    5  BILL                                0  BOSS
+    4  JOHN                                1  MICK
+    3 #SYSDBA
+  """
+}
+]
+}
