@@ -15,6 +15,11 @@
     create or alter user john password '456';
     create or alter user mick password '789';
     create or alter user boss password '000';
+
+    -- do NOT remove or change name 'test' - it is used in several old tests, see resources/test_user.fbr:
+    -- core_1083.fbt core_1845.fbt core_1148.fbt core_2729.fbt -- all of them can create user 'TEST' and do not remove it.
+    create or alter user test password 'test';
+    drop user test; -- immediatelly remove this name
     commit;
   """,
  'test_type': 'Python',
@@ -45,7 +50,9 @@ runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],script)
     5  BILL                                0  BOSS
     4  JOHN                                1  MICK
     3 #SYSDBA
-  """
+  """,
+  'substitutions':[
+  ]
 }
 ]
 }
