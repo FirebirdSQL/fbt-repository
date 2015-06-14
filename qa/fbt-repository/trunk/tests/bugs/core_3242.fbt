@@ -107,6 +107,8 @@
     ^
     set term ;^
     commit;
+    drop user tmp$c3242;
+    commit;
   """,
  'expected_stdout': 
   """
