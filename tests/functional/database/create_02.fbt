@@ -60,15 +60,26 @@ Default Character set: NONE
  'test_script':
   """
     set wng off;
+    set bail on;
     create or alter user ozzy password 'osb' revoke admin role;
     commit;
     revoke all on all from ozzy;
     commit;
-    grant create database to ozzy;
-    grant drop database to ozzy;
+
+    --  ::: NB ::: do NOT miss specification of 'USER' or 'ROLE' clause in
+    --  GRANT | REVOKE CREATE DATABASE, between `to` and login! Otherwise:
+    --    Statement failed, SQLSTATE = 0A000
+    --    unsuccessful metadata update
+    --    -GRANT failed
+    --    -feature is not supported
+    --    -Only grants to USER or ROLE are supported for CREATE DATABASE
+    grant create database to USER ozzy;
+    --                       ^^^^
+    grant drop database to USER ozzy;
+    --                     ^^^^
     commit;
     
-    create database '$(DATABASE_LOCATION)tmp.ozzy$db$987456321.tmp' user 'OZZY' password 'osb';
+    create database 'localhost:$(DATABASE_LOCATION)tmp.ozzy$db$987456321.tmp' user 'OZZY' password 'osb';
     
     set list on;
     select
@@ -78,9 +89,9 @@ Default Character set: NONE
     commit;
     
     drop database;
-    connect '$(DSN)' user 'sysdba' password 'masterkey';
-    revoke create database from ozzy;
-    revoke drop database from ozzy;
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+    revoke create database from user ozzy;
+    revoke drop database from user ozzy;
     drop user ozzy;
     commit;
   """,
