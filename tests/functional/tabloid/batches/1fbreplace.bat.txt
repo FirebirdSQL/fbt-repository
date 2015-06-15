@@ -50,6 +50,7 @@ del %log% 2>nul
 @rem #############################################################################################################
 for /d %%s in ( %FB_SERVICES% ) do (
   echo %%s
+  echo.>>%log%
   sc query FirebirdServer%%s | findstr /i /c:"STOPPED" 1>nul 2>&1
   if errorlevel 1 (
     set msg=Stopping service FirebirdServer%%s
@@ -59,9 +60,10 @@ for /d %%s in ( %FB_SERVICES% ) do (
     set cmd_run=sc stop FirebirdServer%%s
     echo !cmd_run!
     echo !cmd_run!>>%log%
-    sc stop FirebirdServer%%s >>%log%
+    sc stop FirebirdServer%%s 1>>%log% 2>&1
     echo Wait a few seconds. . .
-    ping -n 1 -w 1500 1.1.1.1 1>nul 2>&1
+    ping -n 3 127.0.0.1 1>nul
+    :: became broken 10.06.2015 (instant reply instead of wait), the reason not found: ping -n 1 -w 2000 1.1.1.1 1>nul 2>&1
     echo Check that service is really stopped:>>%log%
     set cmd_run=sc query FirebirdServer%%s
     echo !cmd_run!
@@ -74,16 +76,17 @@ for /d %%s in ( %FB_SERVICES% ) do (
       echo !msg!>>%log%
       exit
     ) else (
-      set msg=Service has been successfully stopped.
+      set msg=Service FirebirdServer%%s has been successfully stopped.
       echo !msg!
+      echo.>>%log%
       echo !msg!>>%log%
     )
   ) else (
-    sc query FirebirdServer%%s>>%log%
     set msg=Service already has been stopped.
     echo !msg!
     echo !msg!>>%log%
   )
+  sc query FirebirdServer%%s>>%log%
 )
 
 @rem ########################################################################################################
@@ -120,7 +123,7 @@ for /d %%i in ( %FB_SERVICES% ) do (
 
   echo Done.
   echo !time! Done.>>%log%
-  dir !archname! | findstr /i /c:!archname! 1>%~n0.err 2>&1
+  dir /-c !archname! | findstr /i /c:!archname! 1>%~n0.err 2>&1
   type %~n0.err>>%log%
   type %~n0.err
 
@@ -134,8 +137,8 @@ for /d %%i in ( %FB_SERVICES% ) do (
     for /f "usebackq" %%A in ('%~n0.err') do set errsize=%%~zA
     if .!errsize!.==.. set errsize=0
     if !errsize! gtr 0 (
-       echo dir !fn!>>%log%
-       dir !fn! | findstr /i /c:fbclient.dll>>%log%
+       echo dir /-c !fn!>>%log%
+       dir /-c !fn! | findstr /i /c:fbclient.dll>>%log%
        set msg=File !fn! can not be deleted. Batch terminated.
        echo !msg!
        echo !msg!>>%log%
@@ -384,7 +387,7 @@ if errorlevel 1 (
   echo At least one error occured, replacement is INCOMPLETE. 
   echo You can restore previous FB instances from backups:
 
-  dir tmp.%~n0.backup.*.7z | findstr /c:".7z"
+  dir /-c tmp.%~n0.backup.*.7z | findstr /c:".7z"
 
   echo FAILED commands:
   type %~n0.err
