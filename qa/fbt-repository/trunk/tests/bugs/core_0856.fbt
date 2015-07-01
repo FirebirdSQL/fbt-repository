@@ -41,15 +41,18 @@ quit
 """
 runProgram('gsec',['-user',user_name,'-pas',user_password],commands)
 ''',
- 'expected_stdout': """     user name                    uid   gid admin     full name
-------------------------------------------------------------------------------------------------
-BLNKNMS                             0     0           X Y Z
+ 'expected_stdout':
+  """
      user name                    uid   gid admin     full name
-------------------------------------------------------------------------------------------------
-BLNKNMS                             0     0
-""",
- 'expected_stderr': """GSEC> GSEC> GSEC> GSEC> GSEC> GSEC>  
-"""
+     BLNKNMS                             0     0           X Y Z
+     user name                    uid   gid admin     full name
+     BLNKNMS                             0     0
+  """,
+  'substitutions': [
+     ('GSEC>.*',''),
+     ('-.*',''),
+     ('.*gsec is deprecated.*','')
+  ]
 }
 ]
 }
