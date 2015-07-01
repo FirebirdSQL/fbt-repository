@@ -94,6 +94,14 @@
     --    no permission for USAGE access to GENERATOR G
     -- (for user 'maverick' who has NO rights at all)
     select gen_id(g, -444) as new_gen from rdb$database;
+
+    commit;
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+
+    drop user Maverick;
+    drop user Big_Brother;
+    drop user Bill_Junior;
+    commit;
   """,
  'expected_stdout':
   """
