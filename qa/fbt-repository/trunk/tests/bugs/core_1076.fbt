@@ -48,12 +48,16 @@ delete TEST1076
 quit
 """
 runProgram('gsec',['-user',user_name,'-pas',user_password],commands)''',
- 'expected_stdout': """     user name                    uid   gid admin     full name
-------------------------------------------------------------------------------------------------
-TEST1076                            0     0           123456789012345678901234567890az 123456789012345678901234567890az 123456789012345678901234567890az
-""",
- 'expected_stderr': """GSEC> GSEC> GSEC> GSEC>
-"""
+ 'expected_stdout':
+  """
+       user name                    uid   gid admin     full name
+       TEST1076                            0     0           123456789012345678901234567890az 123456789012345678901234567890az 123456789012345678901234567890az
+  """,
+ 'substitutions': [
+     ('GSEC>.*',''),
+     ('-.*',''),
+     ('.*gsec is deprecated.*','')
+  ]
 }
 ]
 }
