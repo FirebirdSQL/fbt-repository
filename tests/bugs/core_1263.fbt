@@ -64,15 +64,19 @@ add BADPARAM -trusted
 quit
 """
 runProgram('gsec',['-user',user_name,'-pas',user_password],commands)''',
- 'expected_stderr': """GSEC> invalid switch specified in interactive mode
-GSEC> invalid switch specified in interactive mode
-GSEC> invalid switch specified in interactive mode
-GSEC> invalid switch specified in interactive mode
-GSEC> invalid switch specified in interactive mode
-GSEC> invalid switch specified
-error in switch specifications
-GSEC>""",
- 'substitutions': [('GSEC> Invalid switch specified*','GSEC> invalid switch specified'),('GSEC> invalid switch specified*','GSEC> invalid switch specified'),('error in switch specifications*',''),('in interactive mode*','')]
+ 'expected_stderr':
+  """
+    GSEC> invalid switch specified in interactive mode
+    GSEC> invalid switch specified in interactive mode
+    GSEC> invalid switch specified in interactive mode
+    GSEC> invalid switch specified in interactive mode
+    GSEC> invalid switch specified in interactive mode
+    GSEC> invalid switch specified
+  """,
+ 'substitutions': [
+   ('^((?!invalid switch specified).)*$',''),
+   ('invalid switch specified.*','invalid switch specified')
+ ]
 }
 ]
 }
