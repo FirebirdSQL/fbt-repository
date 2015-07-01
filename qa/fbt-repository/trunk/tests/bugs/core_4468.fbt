@@ -266,11 +266,11 @@
     -OZZY_OSBOURNE is not grantor of Role on RDB$ADMIN to OZZY_OSBOURNE.
 
     Statement failed, SQLSTATE = 28000
-    find/delete record error
+    delete record error
     -no permission for DELETE access to TABLE PLG$VIEW_USERS
   """,
  'substitutions':[
-   ('find/delete record.*','delete record'),
+   ('.*delete record.*','delete record'),
    ('TABLE PLG\$VIEW_USERS','TABLE PLG'), 
    ('TABLE PLG\$SRP_VIEW', 'TABLE PLG')
  ]
