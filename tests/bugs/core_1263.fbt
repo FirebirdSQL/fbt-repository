@@ -75,7 +75,8 @@ runProgram('gsec',['-user',user_name,'-pas',user_password],commands)''',
   """,
  'substitutions': [
    ('^((?!invalid switch specified).)*$',''),
-   ('invalid switch specified.*','invalid switch specified')
+   ('invalid switch specified.*','invalid switch specified'),
+   ('.*gsec is deprecated.*','')
  ]
 }
 ]
