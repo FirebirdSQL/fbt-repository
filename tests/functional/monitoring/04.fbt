@@ -3,7 +3,7 @@
 'qmid': 'functional.monitoring.monitoring_04',
 'tracker_id': '',
 'title': '',
-'description': '',
+'description': 'SYSDBA must see all attachments and their transactions, non-privileged user - only those which was of his login.',
 'min_versions': None,
 'versions': [
 {
@@ -26,6 +26,96 @@ print (c1.fetchall())
 [('SYSDBA', 2), ('TEST', 2)]
 """,
  'resources': ['test_user']
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create or alter user u01 password '123';
+    create or alter user u02 password '456';
+    commit;
+    create or alter view v_who as
+    select
+        current_user as who_am_i,
+        a.mon$user who_else,
+        dense_rank()over(partition by a.mon$user order by t.mon$transaction_id) tid_rown,
+        decode( t.mon$isolation_mode, 0,'CONSISTENCY', 1,'SNAPSHOT', 2, 'RC REC_VERS', 3, 'RC NO_REC_VERS' ) as til
+    from mon$transactions t join mon$attachments a using(mon$attachment_id)
+    where a.mon$attachment_id <> current_connection
+    order by a.mon$user;
+    commit;
+    grant select on v_who to u01;
+    grant select on v_who to u02;
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': """con_1 = kdb.connect(dsn=dsn.encode(),user=user_name.encode(),password=user_password.encode())
+con_2 = kdb.connect(dsn=dsn.encode(),user='U01',password='123')
+con_3 = kdb.connect(dsn=dsn.encode(),user='U01',password='123')
+con_4 = kdb.connect(dsn=dsn.encode(),user='U02',password='456')
+con_5 = kdb.connect(dsn=dsn.encode(),user='U02',password='456')
+
+con_1.begin()
+con_2.begin()
+con_3.begin()
+con_4.begin()
+con_5.begin()
+
+runProgram('isql',[dsn,'-pag','99999','-q','-user','U01','-password','123'],'''
+  set list on;
+  set width who_am_i 12;
+  set width who_else 12;
+  set width til 20;
+  select 1 as step, v.* from v_who v;
+  commit;
+
+  connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+  select 2 as step, v.* from v_who v;
+  commit;
+  drop user u01;
+  drop user u02;
+  commit;
+''')
+""",
+ 'expected_stdout':
+  """
+    STEP                            1
+    WHO_AM_I                        U01
+    WHO_ELSE                        U01
+    TID_ROWN                        1
+    TIL                             RC REC_VERS
+    STEP                            1
+    WHO_AM_I                        U01
+    WHO_ELSE                        U01
+    TID_ROWN                        2
+    TIL                             RC REC_VERS
+    STEP                            2
+    WHO_AM_I                        SYSDBA
+    WHO_ELSE                        SYSDBA
+    TID_ROWN                        1
+    TIL                             RC REC_VERS
+    STEP                            2
+    WHO_AM_I                        SYSDBA
+    WHO_ELSE                        U01
+    TID_ROWN                        1
+    TIL                             RC REC_VERS
+    STEP                            2
+    WHO_AM_I                        SYSDBA
+    WHO_ELSE                        U01
+    TID_ROWN                        2
+    TIL                             RC REC_VERS
+    STEP                            2
+    WHO_AM_I                        SYSDBA
+    WHO_ELSE                        U02
+    TID_ROWN                        1
+    TIL                             RC REC_VERS
+    STEP                            2
+    WHO_AM_I                        SYSDBA
+    WHO_ELSE                        U02
+    TID_ROWN                        2
+    TIL                             RC REC_VERS
+  """
 }
 ]
 }
