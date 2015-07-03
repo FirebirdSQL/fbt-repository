@@ -39,6 +39,7 @@ display BLNKNMS
 delete BLNKNMS
 quit
 """
+db_conn.close()
 runProgram('gsec',['-user',user_name,'-pas',user_password],commands)
 ''',
  'expected_stdout':
