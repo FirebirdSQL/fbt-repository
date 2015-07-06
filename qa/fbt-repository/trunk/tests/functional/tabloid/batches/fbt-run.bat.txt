@@ -121,17 +121,24 @@ goto run21
   echo %msg%
   echo %msg%>>fbt-run.21.log
 
+  set pbak=%path%
+  set path=%fb21home%;%path%
+  @rem echo Temply changed path: %path%>>fbt-run.21.log
+
   @rem This temp database can remain from previous launch fbt-run if it was ebnormally ends.
   @rem One need to remove it otherwise fbt_run will raise exception 'file exists' when try to create
   @rem again temp database with the SAME name:
 
   del .\tmp\%cdprefix%.%fbt_name%.fdb 2>nul
 
-  @rem #####################################################
-  @rem ########     L A U N C H   F B T _ R U N   ##########
-  @rem #####################################################
+  @rem ####################################################################
+  @rem ########     L A U N C H   F B T _ R U N   f o r   2.1    ##########
+  @rem ####################################################################
   cmd /c %fbt_run% 1>>fbt-run.21.log 2>fbt-run.21.err
   copy %~dp0results.trf fbt-run.21.trf 1>nul
+
+  set path=%pbak%
+  @rem echo Restored path: %path%>>fbt-run.21.log
 
   findstr /B /I "Nothing to run" fbt-run.21.log 1>nul 2>&1
   if errorlevel 1 goto chkr21
@@ -172,17 +179,24 @@ goto run21
   echo %msg%
   echo %msg%>>fbt-run.25.log
 
+  set pbak=%path%
+  set path=%fb25home%;%path%
+  @rem echo Temply changed path: %path%>>fbt-run.25.log
+
   @rem This temp database can remain from previous launch fbt-run if it was ebnormally ends.
   @rem One need to remove it otherwise fbt_run will raise exception 'file exists' when try to create
   @rem again temp database with the SAME name:
 
   del .\tmp\%cdprefix%.%fbt_name%.fdb 2>nul
 
-  @rem #####################################################
-  @rem ########     L A U N C H   F B T _ R U N   ##########
-  @rem #####################################################
+  @rem ####################################################################
+  @rem ########     L A U N C H   F B T _ R U N   f o r   2.5    ##########
+  @rem ####################################################################
   cmd /c %fbt_run% 1>>fbt-run.25.log 2>fbt-run.25.err
   copy %~dp0results.trf fbt-run.25.trf 1>nul
+
+  set path=%pbak%
+  @rem echo Restored path: %path%>>fbt-run.25.log
 
   findstr /B /I "Nothing to run" fbt-run.25.log 1>nul 2>&1
   if errorlevel 1 goto chkr25
@@ -222,17 +236,24 @@ goto run21
   echo %msg%
   echo %msg%>>fbt-run.30sS.log
 
+  set pbak=%path%
+  set path=%fb30sShome%;%path%
+  @rem echo Temply changed path: %path%>>fbt-run.30sS.log
+
   @rem This temp database can remain from previous launch fbt-run if it was ebnormally ends.
   @rem One need to remove it otherwise fbt_run will raise exception 'file exists' when try to create
   @rem again temp database with the SAME name:
 
   del .\tmp\%cdprefix%.%fbt_name%.fdb 2>nul
 
-  @rem #####################################################
-  @rem ########     L A U N C H   F B T _ R U N   ##########
-  @rem #####################################################
+  @rem #######################################################################
+  @rem ########     L A U N C H   F B T _ R U N   f o r   3.0 SS    ##########
+  @rem #######################################################################
   cmd /c %fbt_run% 1>>fbt-run.30sS.log 2>fbt-run.30sS.err
   copy %~dp0results.trf fbt-run.30sS.trf 1>nul
+
+  set path=%pbak%
+  @rem echo Restored path: %path%>>fbt-run.30sS.log
 
   findstr /B /I "Nothing to run" fbt-run.30sS.log 1>nul 2>&1
   if errorlevel 1 goto chkr30sS
@@ -275,17 +296,24 @@ goto run21
   echo %msg%
   echo %msg%>>fbt-run.30Cs.log
 
+  set pbak=%path%
+  set path=%fb30Cshome%;%path%
+  @rem echo Temply changed path: %path%>>fbt-run.30Cs.log
+
   @rem This temp database can remain from previous launch fbt-run if it was ebnormally ends.
   @rem One need to remove it otherwise fbt_run will raise exception 'file exists' when try to create
   @rem again temp database with the SAME name:
 
   del .\tmp\%cdprefix%.%fbt_name%.fdb 2>nul
 
-  @rem #####################################################
-  @rem ########     L A U N C H   F B T _ R U N   ##########
-  @rem #####################################################
+  @rem #######################################################################
+  @rem ########     L A U N C H   F B T _ R U N   f o r   3.0 Cs    ##########
+  @rem #######################################################################
   cmd /c %fbt_run% 1>>fbt-run.30Cs.log 2>fbt-run.30Cs.err
   copy %~dp0results.trf fbt-run.30Cs.trf 1>nul
+
+  set path=%pbak%
+  @rem echo Restored path: %path%>>fbt-run.30Cs.log
 
   findstr /B /I "Nothing to run" fbt-run.30Cs.log 1>nul 2>&1
   if errorlevel 1 goto chkr30Cs
@@ -328,17 +356,24 @@ goto run21
   echo %msg%
   echo %msg%>>fbt-run.30sC.log
 
+  set pbak=%path%
+  set path=%fb30sChome%;%path%
+  @rem echo Temply changed path: %path%>>fbt-run.30sC.log
+
   @rem This temp database can remain from previous launch fbt-run if it was ebnormally ends.
   @rem One need to remove it otherwise fbt_run will raise exception 'file exists' when try to create
   @rem again temp database with the SAME name:
 
   del .\tmp\%cdprefix%.%fbt_name%.fdb 2>nul
 
-  @rem #####################################################
-  @rem ########     L A U N C H   F B T _ R U N   ##########
-  @rem #####################################################
+  @rem #######################################################################
+  @rem ########     L A U N C H   F B T _ R U N   f o r   3.0 SC    ##########
+  @rem #######################################################################
   cmd /c %fbt_run% 1>>fbt-run.30sC.log 2>fbt-run.30sC.err
   copy %~dp0results.trf fbt-run.30sC.trf 1>nul
+
+  set path=%pbak%
+  @rem echo Restored path: %path%>>fbt-run.30sC.log
 
   findstr /B /I "Nothing to run" fbt-run.30sC.log 1>nul 2>&1
   if errorlevel 1 goto chkr30sC
