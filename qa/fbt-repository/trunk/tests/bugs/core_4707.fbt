@@ -27,7 +27,7 @@
     recreate table test3(id int);
     commit;
     
-    insert into test1(id, s) select gen_id(g,1), rpad('', 1000, gen_id(g,0) ) from rdb$types rows 200;
+    insert into test1(id, s) select gen_id(g,1), rpad('', 1000, gen_id(g,0) ) from rdb$types rows 100;
     insert into test2(id, s) select id, s from test1;
     commit;
     
@@ -40,7 +40,9 @@
  'test_script':"""
     delete from test1 rows 1;
     insert into test3(id) values(1);
-    shell fbsvcmgr.exe localhost:service_mgr user SYSDBA password masterkey action_validate dbname $(DATABASE_LOCATION)bugs.core_4707.fdb val_lock_timeout 1;
+    --set list on; select mon$server_pid from mon$attachments rows 1;
+    --shell path;
+    shell fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_validate dbname $(DATABASE_LOCATION)bugs.core_4707.fdb val_lock_timeout 1;
     --runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
   """,
  'expected_stdout':
