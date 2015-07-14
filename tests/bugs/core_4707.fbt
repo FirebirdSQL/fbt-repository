@@ -36,37 +36,21 @@
     create index test2_t on test2 computed by(t);
     commit;
   """,
- 'test_type': 'ISQL',
- 'test_script':"""
-    delete from test1 rows 1;
-    insert into test3(id) values(1);
-    --set list on; select mon$server_pid from mon$attachments rows 1;
-    --shell path;
-    shell fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_validate dbname $(DATABASE_LOCATION)bugs.core_4707.fdb val_lock_timeout 1;
-    --runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
-  """,
+ 'test_type': 'Python',
+ 'test_script': '''c = db_conn.cursor()
+c.execute("""delete from test1 rows 1""")
+c.execute("""insert into test3 values(1)""")
+runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','-z'])
+runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','info_server_version','info_svr_db_info'])
+runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb'])
+#runProgram('C:/MIX/firebird/fb25sS/bin/fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
+''',
  'expected_stdout':
   """
-    08:37:01.14 Validation started
-    08:37:01.15 Relation 128 (TEST1)
-    08:37:02.15 Acquire relation lock failed
-    08:37:02.15 Relation 128 (TEST1) : 1 ERRORS found
-    08:37:02.15 Relation 129 (TEST2)
-    08:37:02.15   process pointer page    0 of    1
-    08:37:02.15 Index 1 (TEST2_PK)
-    08:37:02.15 Index 2 (TEST2_S)
-    08:37:02.15 Index 3 (TEST2_C)
-    08:37:02.15 Index 4 (TEST2_T)
-    08:37:02.17 Relation 129 (TEST2) is ok
-    08:37:02.17 Relation 130 (TEST3)
-    08:37:03.17 Acquire relation lock failed
-    08:37:03.17 Relation 130 (TEST3) : 1 ERRORS found
-    08:37:03.17 Validation finished
   """,
-  'substitutions':[
-    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
-    ('Relation [0-9]{3,4}','Relation')
-  ]
+ 'expected_stderr':
+  """
+  """
 }
 ]
 }
