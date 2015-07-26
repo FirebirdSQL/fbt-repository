@@ -1,0 +1,214 @@
+{
+'id': 'bugs.core_3413',
+'qmid': None,
+'tracker_id': 'CORE-3413',
+'title': "Improve diagnostics of internal trace errors",
+'description': """###   W A R N I N G   ###
+1) This test uses async. calls of external routine (fbsvcmgr) with opening it in separate command window,
+   see: subprocess.call('start /min cmd /c ...', shell=True).
+2) It was encountered that launching trace session by FBSVCMGR requires 1-2 seconds to be finished,
+   so this test intentionally uses delay (see calls `time.sleep()`).
+3) Format of `database` section differ in 2.5 vs 3.0, so two separate sections have been created here for each FB version.
+4) Correct work was checked on: WI-V2.5.5.26916 (SS, SC) and WI-V3.0.0.31948 (SS, SC, CS)
+""",
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'Windows',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """import os
+import subprocess
+import time
+
+db_conn.close()
+# format in 3.0 differ: database=%[\\\\\\\\/]bugs.core_3413.fdb
+txt = '''<database %[\\\\\\\\/]bugs.core_3413.fdb>
+  enabled = true
+  time_threshold = 0
+
+  # Value for this parameter was intentionally choosen *** INVALID ***
+  log_statement_finish = foo
+
+</database>
+'''
+trccfg=open( os.path.join(context['temp_directory'],'tmp_trace.cfg'), 'w')
+trccfg.write(txt)
+trccfg.close()
+trclog=open( os.path.join(context['temp_directory'],'tmp_trace.log'), 'w')
+trclog.close()
+trclst=open( os.path.join(context['temp_directory'],'tmp_trace.lst'), 'w')
+trclst.close()
+
+trc_launch='"fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_trace_start trc_cfg %s 1>%s 2>&1"' % (trccfg.name, trclog.name )
+subprocess.call('start /min cmd /c %s' % trc_launch, shell=True)
+time.sleep(3)
+
+sqltxt='''
+set list on;
+select 1 as c from rdb$database;
+'''
+
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password],sqltxt)
+
+# Wait! Trace session is initialized not instantly!
+time.sleep(2)
+
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+svc_launch='"fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_trace_list 1>%s 2>&1"' % trclst.name
+subprocess.call('cmd /c %s' % svc_launch)
+
+trcssn=0
+with open( trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+
+# Output log of trace for comparing it with expected result.
+# ::: NB ::: Content if trace log is converted to UPPER case in order to reduce change of mismatching with
+# updated trace output in some future versions:
+
+with open( trclog.name,'r') as f:
+    for line in f:
+        print(line.upper())
+
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+runProgram('fbsvcmgr', ['localhost:service_mgr','user','SYSDBA','password','masterkey','action_trace_stop','trc_id',trcssn])
+
+time.sleep(2)
+
+# Repeat: check that this trace session really have been terminated:
+runProgram('fbsvcmgr', ['localhost:service_mgr','user','SYSDBA','password','masterkey','action_trace_list'])
+
+
+if os.path.isfile(trccfg.name):
+    os.remove(trccfg.name)
+if os.path.isfile(trclst.name):
+    os.remove(trclst.name)
+if os.path.isfile(trclog.name):
+    os.remove(trclog.name)
+  """,
+ 'expected_stdout': 
+  """
+    ERROR CREATING TRACE SESSION FOR DATABASE:
+    ERROR WHILE PARSING TRACE CONFIGURATION
+    LINE 6, ELEMENT "LOG_STATEMENT_FINISH": "FOO" IS NOT A VALID BOOLEAN VALUE
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[
+      ('^((?!ERROR|ELEMENT|BUGS.CORE_3008.FDB).)*$',''),
+      ('ERROR CREATING TRACE SESSION FOR DATABASE.*','ERROR CREATING TRACE SESSION FOR DATABASE'),
+      ('.*ELEMENT "LOG_STATEMENT_FINISH": "FOO" IS NOT A VALID.*','ELEMENT "LOG_STATEMENT_FINISH": "FOO" IS NOT A VALID')
+  ]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'Windows',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """import os
+import subprocess
+import time
+
+db_conn.close()
+txt = '''database=%[\\\\\\\\/]bugs.core_3413.fdb
+{
+  enabled = true
+  time_threshold = 0
+
+  # Value for this parameter was intentionally choosen *** INVALID ***
+  log_statement_finish = foo
+
+}
+'''
+trccfg=open( os.path.join(context['temp_directory'],'tmp_trace.cfg'), 'w')
+trccfg.write(txt)
+trccfg.close()
+trclog=open( os.path.join(context['temp_directory'],'tmp_trace.log'), 'w')
+trclog.close()
+trclst=open( os.path.join(context['temp_directory'],'tmp_trace.lst'), 'w')
+trclst.close()
+
+trc_launch='"fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_trace_start trc_cfg %s 1>%s 2>&1"' % (trccfg.name, trclog.name )
+subprocess.call('start /min cmd /c %s' % trc_launch, shell=True)
+time.sleep(3)
+
+sqltxt='''
+set list on;
+select 1 as c from rdb$database;
+'''
+
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password],sqltxt)
+
+# Wait! Trace session is initialized not instantly!
+time.sleep(2)
+
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+svc_launch='"fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_trace_list 1>%s 2>&1"' % trclst.name
+subprocess.call('cmd /c %s' % svc_launch)
+
+trcssn=0
+with open( trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+
+# Output log of trace for comparing it with expected result.
+# ::: NB ::: Content if trace log is converted to UPPER case in order to reduce change of mismatching with
+# updated trace output in some future versions:
+
+with open( trclog.name,'r') as f:
+    for line in f:
+        print(line.upper())
+
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+runProgram('fbsvcmgr', ['localhost:service_mgr','user','SYSDBA','password','masterkey','action_trace_stop','trc_id',trcssn])
+
+time.sleep(2)
+
+# Repeat: check that this trace session really have been terminated:
+runProgram('fbsvcmgr', ['localhost:service_mgr','user','SYSDBA','password','masterkey','action_trace_list'])
+
+if os.path.isfile(trccfg.name):
+    os.remove(trccfg.name)
+if os.path.isfile(trclst.name):
+    os.remove(trclst.name)
+if os.path.isfile(trclog.name):
+    os.remove(trclog.name)
+  """,
+ 'expected_stdout': 
+  """
+    ERROR CREATING TRACE SESSION FOR DATABASE:
+    ERROR WHILE PARSING TRACE CONFIGURATION
+    LINE 6, ELEMENT "LOG_STATEMENT_FINISH": "FOO" IS NOT A VALID BOOLEAN VALUE
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[
+      ('^((?!ERROR|ELEMENT|BUGS.CORE_3008.FDB).)*$',''),
+      ('ERROR CREATING TRACE SESSION FOR DATABASE.*','ERROR CREATING TRACE SESSION FOR DATABASE'),
+      ('.*ELEMENT "LOG_STATEMENT_FINISH": "FOO" IS NOT A VALID.*','ELEMENT "LOG_STATEMENT_FINISH": "FOO" IS NOT A VALID')
+  ]
+}
+]
+}
