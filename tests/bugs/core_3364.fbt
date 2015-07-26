@@ -13,7 +13,6 @@
  'init_script':
   """
     set term ^;
-
     create or alter procedure sp_test(a_n smallint) returns(n_fact bigint) as
     begin
         n_fact = iif(a_n > 0, a_n, 0);
