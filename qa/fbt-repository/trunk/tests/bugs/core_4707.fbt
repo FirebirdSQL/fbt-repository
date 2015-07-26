@@ -36,14 +36,21 @@
     create index test2_t on test2 computed by(t);
     commit;
   """,
- 'test_type': 'ISQL',
- 'test_script':"""
-    delete from test1 rows 1;
-    insert into test3(id) values(1);
-    --set list on; select mon$server_pid from mon$attachments rows 1;
-    --shell path;
-    shell fbsvcmgr localhost:service_mgr user SYSDBA password masterkey action_validate dbname $(DATABASE_LOCATION)bugs.core_4707.fdb val_lock_timeout 1;
-    --runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
+ 'test_type': 'Python',
+ 'test_script':"""c=db_conn.cursor()
+
+dml='delete from test1'
+c.execute(dml)
+dml='insert into test3(id) values(%s)'
+c.execute(dml % '1')
+
+#try:
+#   c.execute("delete from test1")
+#   c.execute("insert into test3(id) values(1)")
+#except Exception, e:
+#   print (e[0])
+
+runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
   """,
  'expected_stdout':
   """
@@ -67,6 +74,24 @@
     ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
     ('Relation [0-9]{3,4}','Relation')
   ]
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""print("To be implemented later: runtime error in Python process when it works with fbclient 3.0")
+# Console output when using fbclient-3:
+# Exception WindowsError: 'exception: access violation reading 0x00000010' in <bound method PreparedStatement.__del__ of <
+# fdb.fbcore.PreparedStatement object at 0x023C0630>> ignored
+# -- and if repeat launch fbt_run after this, Python process is crashed after ~30 seconds with creating dumps.
+  """,
+ 'expected_stdout':
+  """
+  """
 }
 ]
 }
