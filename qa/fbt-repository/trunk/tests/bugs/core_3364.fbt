@@ -23,8 +23,7 @@
           a_n = a_n -1;
         end
         suspend;
-    end
-    ^
+    end ^
     set term ;^
     commit;
   """,
