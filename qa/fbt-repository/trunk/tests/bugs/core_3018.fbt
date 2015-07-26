@@ -1,0 +1,40 @@
+{
+'id': 'bugs.core_3018',
+'qmid': None,
+'tracker_id': 'CORE-3018',
+'title': 'RECREATE, ALTER and CREATE OR ALTER SEQUENCE/GENERATOR statements',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create sequence g1 start with 9223372036854775807 increment by -2147483647;
+    show sequence g1;
+    alter sequence g1 restart with -9223372036854775808;
+    show sequence g1;
+    alter sequence g1 increment by 2147483647;
+    show sequence g1;
+    recreate sequence g1 start with -9223372036854775808 increment by -2147483647;
+    show sequence g1;
+    recreate sequence g1 start with -1;
+    show sequence g1;
+    recreate sequence g1 increment by -2;
+    show sequence g1;
+  """,
+ 'expected_stdout': 
+  """
+    Generator G1, current value: 9223372036854775807, initial value: 9223372036854775807, increment: -2147483647
+    Generator G1, current value: -9223372036854775808, initial value: 9223372036854775807, increment: -2147483647
+    Generator G1, current value: -9223372036854775808, initial value: 9223372036854775807, increment: 2147483647
+    Generator G1, current value: -9223372036854775808, initial value: -9223372036854775808, increment: -2147483647
+    Generator G1, current value: -1, initial value: -1, increment: 1
+    Generator G1, current value: 0, initial value: 0, increment: -2
+  """
+}
+]
+}
