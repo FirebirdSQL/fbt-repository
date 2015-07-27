@@ -1,0 +1,233 @@
+{
+'id': 'bugs.core_3323',
+'qmid': None,
+'tracker_id': 'CORE-3323',
+'title': 'Ability to cancel waiting in lock manager',
+'description': """###   W A R N I N G   ###
+1) This test opens two separate window with ISQL in async. mode: subprocess.call('start /min ...', shell=True).
+   First ISQL will run script with execute block that has:
+     1.1) 'outer' code which update record (direct UPDATE statement)
+     1.2) EXECUTE BLOCK and ES/EDS inside it using OTHER user name than 'outer' code, so new attachment will be created.
+     1.3) This ES/EDS will hang in waiting because it attempts to update the same row as 'outer' code.
+   Second ISQL has task to kill 1st one and run command 'DELETE FROM MON$ATTACHMENT WHERE ...' 
+2) Instead of infinite wait, transaction is launched with 'LOCK TIMEOUT <n>' clause, where <n> is about few seconds.
+3) After 1st ISQL will start (in separate window) this script make small delay (1 second) in order to be sure that
+   establishing of all connection actions in this ISQL is completed. DO NOT REMOVE THIS DELAY!
+4) After 2nd ISQL will issue 'DELETE FROM MON$ATTACHMENTS', 1st session immediatelly finished (EB produces exception).
+   Despite this, ISQL-2 will reconnect and run 'checking query' to be sure that there is no more hanged attachment.
+   In 2.5.0 deleting from mon$att has no effect and checking reconnect + select will show this attachment as alive.
+   This mean that ISQL-1 window finishes *AFTER* ISQL-2, so we have to delay enough time (<n> + 1 or +2 seconds)
+   until both sessions will close for sure. DO NOT REMOVE THIS DELAY!
+   In 2.5.1 and above command 'DELETE FROM MON$ATTACHMENTS' works OK, so ISQL-1 will be closed immediately and AFTER
+   this window with ISQL-2 also will be closed. 
+5) Test creates following files in its TMP folder:
+   tmp_3323_hang.sql & tmp_3323_hang.log -- script for ISQL-1 and log of its work
+   tmp_3323_kill.sql & tmp_3323_kill.log -- script for ISQL-2 and log of its work
+   After both ISQL windows will finish, test opens LOG files of their work and fills STDOUT with UPPERCASed-content of these logs.
+   Expected STDOUT is filtered, but it is checked for the presence of `335544856 : CONNECTION SHUTDOWN` exception.
+6) Correct work was checked on: WI-V2.5.0.26074 (CS); WI-V2.5.5.26916 (CS, SC); WI-V3.0.0.31948 (CS, SC, SS).
+   All FB instances are 32 bits, on host with Windows XP, P-IV 2.4 GHz
+""",
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'Windows',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+import os
+import subprocess
+import time
+
+db_conn.close()
+init_ddl='''
+    drop user TMP$C3323A;
+    drop user TMP$C3323B;
+    commit;
+
+    create user TMP$C3323A password '123';
+    create user TMP$C3323B password '456';
+    commit;
+
+    recreate table test(id int);
+    commit;
+    insert into test values(1);
+    commit;
+
+    grant select,update on test to tmp$c3323a;
+    grant select,update on test to tmp$c3323b;
+    commit;
+    show database;
+'''
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password],init_ddl)
+
+#sys.stdout.flush()
+#os._exit(0)
+
+lock_sql='''
+    set list on;
+    commit;
+
+    -- This lock timeout should be NOT LESS than artificial delay in the script `kill_sql`, see above:
+    set transaction lock timeout 4; -- ####### I N S T E A D     O F     I N F I N I T E    W A I T   #######
+
+    update test set id = -id;
+    select current_timestamp,'starting EB with lock-conflict' as "Point_A:" --------------  t i m e s t a m p   [ A ]
+    from rdb$database; 
+
+    set term ^;
+    execute block as
+    begin
+        -- This statement will for sure finish with exception, but
+        -- in 2.5.0 it will be 'lock-conflict' (and this was WRONG),
+        -- while on 2.5.1 and above it should be 'connection shutdown'.
+        execute statement 'update test set id = -id'
+            on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+            as user 'TMP$C3323B' password '456';
+    end
+    ^
+    set term ;^
+
+    select current_timestamp, 'finished EB with lock-conflict' as "Point_B" --------------  t i m e s t a m p   [ B ]
+    from rdb$database;
+
+    select * from test;
+    rollback;
+'''
+
+hang_sql=open( os.path.join(context['temp_directory'],'tmp_3323_hang.sql'), 'w')
+hang_sql.write(lock_sql)
+hang_sql.close()
+
+hang_log=open( os.path.join(context['temp_directory'],'tmp_3323_hang.log'), 'w')
+hang_log.write('')
+hang_log.close()
+
+isql_launch='"isql $(DSN) -user SYSDBA -pas masterkey -n -i %s 1>%s 2>&1"' % (hang_sql.name, hang_log.name)
+
+# Launch program in separate (new) window via START command:
+subprocess.call('start /min cmd /c %s' % isql_launch, shell=True)
+
+time.sleep(1)
+
+script='''
+    set list on;
+    select current_timestamp,'starting kill hanged connection' as "point_C:" ------------------  t i m e s t a m p   [ C ]
+    from rdb$database; 
+    set count on;
+    set list on;
+    set echo on;
+
+    delete from mon$attachments where mon$user = 'TMP$C3323B' returning current_timestamp, current_connection, mon$attachment_id;
+    commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+
+    select current_timestamp, current_connection, a.* from mon$attachments a where a.mon$user = 'TMP$C3323B';
+
+    set echo off;
+    set count off
+    commit;
+
+    select current_timestamp,'finished kill hanged connection' as "point_D:"  -----------------  t i m e s t a m p   [ D ]
+    from rdb$database;
+    drop user tmp$c3323a;
+    drop user tmp$c3323b;
+    commit;
+    -- #############################  A C H T U N G   #########################
+    -- Following must be always TRUE in order this test work logically correct:
+    -- timestamp values [A], [B], [C] and [D] have to satisfy to this inequality:
+    --
+    --                         [ A ]  <  [ C ]  <  [ D ]  < [ B ]
+    --                           ^         ^         ^        ^
+    --                           |         |         |        |
+    --                           |         |         |        +--- exit from EB with exception in hang_sql, see tmp_3323_hang.log 
+    --                           |         |         |        
+    --                           |         |         +--- finish kill_sql with issuing `SELECT from mon$att` to check that no hanged connection there
+    --                           |         |         
+    --                           |         +--- start kill_sql with issuing `DELETE FROM MON$ATT`, see log in tmp_3323_kill.log
+    --                           |         
+    --                           +--- start of script hang_sql, see log in tmp_3323_hang.log 
+    --                          
+    -- ########################################################################
+'''
+kill_sql=open( os.path.join(context['temp_directory'],'tmp_3323_kill.sql'), 'w')
+kill_sql.write(script)
+kill_sql.close()
+
+kill_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), 'w')
+kill_log.write('')
+kill_log.close()
+
+isql_launch='"isql $(DSN) -user SYSDBA -pas masterkey -n -i %s 1>%s 2>&1"' % (kill_sql.name, kill_log.name)
+
+# Launch program in separate (new) window via START command:
+subprocess.call('start /min cmd /c %s' % isql_launch, shell=True)
+
+# Make delay at least on 6 seconds after that point.
+# Otherwise temp database will not be removed and we get:
+# Exception AttributeError: "'Connection' object has no attribute '_Connection__ic'"
+# in <bound method Connection.__del__ of <fdb.fbcore.Connection object at 0x023E4850>> ignored
+# Test cleanup: Exception raised while dropping database.
+
+time.sleep(6)
+
+#clean_up='''
+#    drop user TMP$C3323A;
+#    drop user TMP$C3323B;
+#    commit;
+#'''
+#runProgram('isql',[dsn,'-user',user_name,'-pas',user_password],clean_up)
+
+with open( kill_log.name,'r') as f:
+    print(f.read().upper())
+f.close()
+
+with open( hang_log.name,'r') as f:
+    print(f.read().upper())
+f.close()
+
+##################
+# Following messages:
+# 335544510 : lock time-out on wait transaction
+# 335544336 : deadlock
+# 335544451 : update conflicts with concurrent update
+# 335544878 : concurrent transaction number is 27
+# -- were in the output from hang_log only in FB 2.5.0 (checked on WI-V2.5.0.26074 - official release).
+# FB 2.5.1 and above should be able to kill this hanged attachment, so insted of this lines we MUST get:
+# 335544856 : connection shutdown
+# (and check of expected_stdout will be exactly on presense of THIS line)
+# Furthermore, result of `delete from mon$attachments` should be successful and following 
+# commit + select * from mon$att should return 'records affected: 0'
+##################
+  """,
+ 'expected_stdout':
+  """
+DELETE FROM MON$ATTACHMENTS WHERE MON$USER = 'TMP$C3323B' RETURNING CURRENT_TIMESTAMP, CURRENT_CONNECTION, MON$ATTACHMENT_ID;
+MON$ATTACHMENT_ID               7
+SELECT CURRENT_TIMESTAMP, CURRENT_CONNECTION, A.* FROM MON$ATTACHMENTS A WHERE A.MON$USER = 'TMP$C3323B';
+RECORDS AFFECTED: 0
+
+STATEMENT FAILED, SQLSTATE = 42000
+EXECUTE STATEMENT ERROR AT ISC_DSQL_EXECUTE2 :
+335544856 : CONNECTION SHUTDOWN
+STATEMENT : UPDATE TEST SET ID = -ID
+DATA SOURCE : FIREBIRD::LOCALHOST
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[
+      ('^((?!STATEMENT|TIME-OUT|DEADLOCK|CONCURRENT|CONNECTION_SHUTDOWN|DATA SOURCE|MON\$ATTACHMENT.*|AFFECTED).)*$',''),
+      ('DATA SOURCE[ ]*:[ ]*FIREBIRD::.*','DATA SOURCE : FIREBIRD::'),
+      ('MON\$ATTACHMENT_ID[ ]+[0-9].*','MON\$ATTACHMENT_ID'),
+      ('Statement failed, SQLSTATE = HY000',''),
+      ('record not found for user:.*','')
+  ]
+}
+]
+}
