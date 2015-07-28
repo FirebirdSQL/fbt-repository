@@ -156,6 +156,12 @@ runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','maste
 
 # Now we have to wait until ISQL window will be closed due to finish of `tmp_4707_hang.sql`:
 time.sleep(5)
+
+# cleanup:
+if os.path.isfile(hang_sql.name):
+    os.remove(hang_sql.name)
+if os.path.isfile(hang_log.name):
+    os.remove(hang_log.name)
   """,
  'expected_stdout':
   """
