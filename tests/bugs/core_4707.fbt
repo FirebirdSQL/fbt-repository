@@ -37,18 +37,13 @@
     commit;
   """,
  'test_type': 'Python',
- 'test_script':"""c=db_conn.cursor()
+ 'test_script':"""\
+c=db_conn.cursor()
 
 dml='delete from test1'
 c.execute(dml)
 dml='insert into test3(id) values(%s)'
 c.execute(dml % '1')
-
-#try:
-#   c.execute("delete from test1")
-#   c.execute("insert into test3(id) values(1)")
-#except Exception, e:
-#   print (e[0])
 
 runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
   """,
@@ -77,21 +72,113 @@ runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','maste
 },
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'page_size': '4096',
  'init_script': 
   """
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop sequence g';
+    when any do begin end
+    end^
+    set term ;^
+    commit;
+    create sequence g;
+    commit;
+    recreate table test1(id int, s varchar(1000));
+    recreate table test2(id int primary key using index test2_pk, s varchar(1000), t computed by (s) );
+    recreate table test3(id int);
+    commit;
+    
+    insert into test1(id, s) select gen_id(g,1), rpad('', 1000, gen_id(g,0) ) from rdb$types rows 100;
+    insert into test2(id, s) select id, s from test1;
+    commit;
+    
+    create index test2_s on test2(s);
+    create index test2_c on test2 computed by(s);
+    create index test2_t on test2 computed by(t);
+    commit;
   """,
  'test_type': 'Python',
- 'test_script':"""print("To be implemented later: runtime error in Python process when it works with fbclient 3.0")
-# Console output when using fbclient-3:
-# Exception WindowsError: 'exception: access violation reading 0x00000010' in <bound method PreparedStatement.__del__ of <
-# fdb.fbcore.PreparedStatement object at 0x023C0630>> ignored
-# -- and if repeat launch fbt_run after this, Python process is crashed after ~30 seconds with creating dumps.
+ 'test_script':"""\
+import os
+import subprocess
+import time
+
+db_conn.close()
+
+# Following script will hang for sevral seconds (see 'lock timeout' argument - and this will serve as pause
+# during which we can launch fbsvcmgr to validate database:
+lock_sql='''
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop role tmp$r4707';
+      when any do begin end
+    end ^
+    set term ;^
+    commit;
+
+    set transaction lock timeout 5;
+
+    delete from test1;
+    insert into test3(id) values(1);
+    set term ^;
+    execute block as
+    begin
+      execute statement 'update test1 set id=-id'
+      on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+      as user 'SYSDBA' password 'masterkey'
+         role 'TMP$R4707' -- this will force to create new attachment
+      ;
+      when any do begin end
+    end ^
+    set term ;^
+'''
+
+hang_sql=open( os.path.join(context['temp_directory'],'tmp_4707_hang.sql'), 'w')
+hang_sql.write(lock_sql)
+hang_sql.close()
+
+hang_log=open( os.path.join(context['temp_directory'],'tmp_4707_hang.log'), 'w')
+hang_log.write('')
+hang_log.close()
+
+isql_launch='"isql $(DSN) -user SYSDBA -pas masterkey -n -i %s 1>%s 2>&1"' % (hang_sql.name, hang_log.name)
+
+# Launch program in separate (new) window via START command:
+subprocess.call('start /min cmd /c %s' % isql_launch, shell=True)
+
+time.sleep(1)
+
+runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
+
+# Now we have to wait until ISQL window will be closed due to finish of `tmp_4707_hang.sql`:
+time.sleep(5)
   """,
  'expected_stdout':
   """
-  """
+    08:37:01.14 Validation started
+    08:37:01.15 Relation 128 (TEST1)
+    08:37:02.15 Acquire relation lock failed
+    08:37:02.15 Relation 128 (TEST1) : 1 ERRORS found
+    08:37:02.15 Relation 129 (TEST2)
+    08:37:02.15   process pointer page    0 of    1
+    08:37:02.15 Index 1 (TEST2_PK)
+    08:37:02.15 Index 2 (TEST2_S)
+    08:37:02.15 Index 3 (TEST2_C)
+    08:37:02.15 Index 4 (TEST2_T)
+    08:37:02.17 Relation 129 (TEST2) is ok
+    08:37:02.17 Relation 130 (TEST3)
+    08:37:03.17 Acquire relation lock failed
+    08:37:03.17 Relation 130 (TEST3) : 1 ERRORS found
+    08:37:03.17 Validation finished
+  """,
+  'substitutions':[
+    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
+    ('Relation [0-9]{3,4}','Relation')
+  ]
 }
 ]
 }
