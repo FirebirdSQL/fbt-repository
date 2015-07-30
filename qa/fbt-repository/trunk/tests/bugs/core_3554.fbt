@@ -20,6 +20,21 @@
     -- so its length becomes zero as a result of conversion into USHORT (unsigned 16-bit integer) which represents
     -- the supported SQL text length."
     -- Test was made only for 3.0 because 2.5 allows to pass in ES much longer string than 32K.
+
+    -- 30.07.2015: at least since build #31948 first ES (which passes literal of length = 32766 bytes) no more fails.
+    -- Previous expected std_err:
+    -- Statement failed, SQLSTATE = 42000
+    -- Dynamic SQL Error
+    -- -SQL error code = -104
+    -- -String literal with 32766 bytes exceeds the maximum length of 32765 bytes
+    -- has been removed.
+    -- Also, std_err has been changed for 2nd ES (which passes empty literal). Was:
+    -- Statement failed, SQLSTATE = 42000
+    -- Execute statement error at isc_dsql_prepare :
+    -- 335544608 : Unexpected end of command
+    -- Statement : 
+    -- Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+
     set list on;
     set term ^;
     execute block returns(n int) as
@@ -45,20 +60,24 @@
     end
     ^
   """,
+ 'expected_stdout': 
+  """
+    N                               32739
+  """,
  'expected_stderr': 
   """
     Statement failed, SQLSTATE = 42000
-    Dynamic SQL Error
-    -SQL error code = -104
-    -String literal with 32766 bytes exceeds the maximum length of 32765 bytes
-    
-    Statement failed, SQLSTATE = 42000
     Execute statement error at isc_dsql_prepare :
-    335544608 : Unexpected end of command
+    335544569 : Dynamic SQL Error
+    335544436 : SQL error code = -104
+    335544851 : Unexpected end of command - line 1, column 1
     Statement : 
-    Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+    Data source : Firebird::localhost:C:\MIX\firebird\QA\fbt-repo\tmp\E30.FDB
   """,
-  'substitutions': [('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:')]
+  'substitutions': [
+      ('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:'),
+      ('.*Unexpected end of command.*','.*Unexpected end of command')
+  ]
 }
 ]
 }
