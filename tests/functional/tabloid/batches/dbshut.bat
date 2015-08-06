@@ -648,15 +648,15 @@ goto:eof
   echo.
   echo 1) test FB 2.5 Classic with opening 20 ISQL sessions: 
   echo.
-  echo    %~nx0 cs25 20 ^| mtee /t %~n0_cs25_att20.log
+  echo    %~nx0 cs25 20 2^>^&1 ^| mtee /t %~n0_cs25_att20.log
   echo.
   echo 2) test FB 3.0 SuperClassic with opening 35 ISQL sessions:
   echo.
-  echo    %~nx0 ss30 35 ^| mtee /t %~n0_sc30_att35.log
+  echo    %~nx0 ss30 35 2^>^&1 ^| mtee /t %~n0_sc30_att35.log
   echo.
   echo 3) test FB 3.0 Super with opening 40 ISQL sessions:   
   echo.
-  echo    %~nx0 ss30 40 ^| mtee /t %~n0_ss30_att40.log
+  echo    %~nx0 ss30 40 2^>^&1 ^| mtee /t %~n0_ss30_att40.log
   echo.
   echo ------------------------------------------------
   echo.
