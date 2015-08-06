@@ -54,7 +54,7 @@ echo Number of ISQL sessions: %worker_num%
 echo.
 echo Configurated parameters:
 echo.
-findstr /i /r /c:"^[^#;fb]" %~n0.conf
+findstr /i /r /c:"^[^#]" %~n0.conf | findstr /v "home port"
 echo.
 
 set fbvers=0
@@ -501,7 +501,7 @@ del %stopfile% 2>nul
   echo.
   echo Configurated parameters:
   echo.
-  findstr /i /r /c:"^[^#;fb]" %~n0.conf
+  findstr /i /r /c:"^[^#]" %~n0.conf | findstr /v "home port"
   echo.
 ) >>%stopfile%
 
