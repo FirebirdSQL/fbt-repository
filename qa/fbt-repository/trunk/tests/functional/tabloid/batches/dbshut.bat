@@ -123,6 +123,10 @@ set bye_bye_msg=BYE_BYE_FROM_WORKER_BAT
 set dbpath=%~dp0
 set dbname=%~n0_test_fdb.tmp
 
+@rem max_key_length = floor( (page_size / 4 - 9) / N )
+@rem N = number of bytes per one character
+set /a max_key_len = %page_size% / 4 - 9 - 1
+
 set fbsvcrun=%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user %usr% password %pwd%
 set authinfo=-user %usr% -password %pwd%
 echo fbsvcrun=^>%fbsvcrun%^<
@@ -233,7 +237,9 @@ if .%fbvers%.==.25. (
 	  echo     echo     declare v_cnt int;
 	  echo     echo     declare v_min int = %worker_num%; -- this is command-line argument for %~nx0
 	  echo     echo     declare v_lim int = %limit_dml_rows%; -- this is from CONFIG file for %~nx0
+	  echo     echo     declare v_txt varchar(%max_key_len% ^);
 	  echo     echo begin
+	  echo     echo     v_txt = rpad('', %max_key_len%, uuid_to_char(gen_uuid(^)^) ^);
 	  echo     echo     select count( id ^) from test where id ^^^< 0 into v_cnt;
 	  echo     echo     if ( v_cnt ^^^>= v_min ^) then
 	  echo     echo         begin
@@ -242,14 +248,20 @@ if .%fbvers%.==.25. (
 	  echo     echo             while ( v_lim ^^^> 0 ^) do
 	  echo     echo             begin
 	  echo     echo                 -- insert into test( id ^) values( gen_id(g, 1^) ^);
-	  echo     echo                 insert into fix(id, x, y, z, d, s ^)
+	  echo     echo                 insert into fix(id, x, y, z, d, s, t ^)
 	  echo     echo                 values( 
 	  echo     echo                         gen_id( g, 1^) -- id
-	  echo     echo                         ,rand(^) * 10000    -- x
-	  echo     echo                         ,rand(^) * 10000    -- y
+	  echo     echo                         ,rand(^) * 100    -- x
+	  echo     echo                         ,rand(^) * 1000    -- y
 	  echo     echo                         ,rand(^) * 10000    -- z
 	  echo     echo                         ,dateadd( cast(rand(^)*1000000 as int^) second to timestamp '01.01.2000 00:00:00'^)
-	  echo     echo                         ,rpad('', 1 + rand(^)*49, uuid_to_char(gen_uuid(^)^) ^)  -- s
+    if %add_same_text% EQU 0 (
+  	  echo     echo                         ,rpad('', 1 + rand(^)*49, uuid_to_char(gen_uuid(^)^) ^)  -- s
+  	  echo     echo                         ,rpad('', %max_key_len%, uuid_to_char(gen_uuid(^)^) ^)  -- t
+    ) else (
+  	  echo     echo                         ,left( :v_txt, 49 ^) -- s
+  	  echo     echo                         ,:v_txt             -- t
+    )
 	  echo     echo                 ^); 
 	  echo     echo                 v_lim = v_lim - 1;
 	  echo     echo             end
@@ -297,12 +309,11 @@ if .%fw_on%.==.0. (
   %fbhome%\gfix %authinfo% -w async %dbpath%%dbname%
 )
 
-
 (
   echo set bail on;
   echo create sequence g;
   echo create table test( id int primary key ^); 
-  echo create table fix(id int constraint fix_pk primary key, x int, y int, z int, d timestamp, s varchar(50^) ^);
+  echo create table fix(id int constraint fix_pk primary key, x int, y int, z int, d timestamp, s varchar(50^), t varchar(%max_key_len%^) ^);
   if /i .%loading_mode%.==.tiny. (
     echo commit;
   ) else if /i .%loading_mode%.==.small. (
@@ -315,14 +326,14 @@ if .%fw_on%.==.0. (
     echo create index fix_idx_04 on fix( s ^);
     echo create descending index fix_idx_05 on fix( id ^);
   ) else if /i .%loading_mode%.==.heavy. (
-    echo create index fix_idx_01 on fix( y ^);
+    echo create index fix_idx_01 on fix( x ^);
     echo create descending index fix_idx_02 on fix( y ^);
     echo create index fix_idx_03 on fix( d ^);
     echo create index fix_idx_04 on fix( s ^);
     echo create descending index fix_idx_05 on fix( id ^);
     echo create descending index fix_idx_06 on fix( z ^);
     echo create descending index fix_idx_07 on fix( d ^);
-    echo create descending index fix_idx_08 on fix( s ^);
+    echo create descending index fix_idx_08 on fix( t ^);
   )
   echo commit;
   echo set echo on;
@@ -338,6 +349,7 @@ set run_cmd="%fbhome%\isql -q localhost/%fbport%:%dbpath%%dbname% -i %tmpfile% %
 echo run_cmd=%run_cmd%
 cmd /c %run_cmd%
 @if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+
 
 %fbhome%\gstat -h %dbpath%%dbname% %authinfo% | findstr /i /c:"page size" /c:"attributes"
 
@@ -371,6 +383,7 @@ for /l %%i in (1, 1, %worker_num%) do (
   ping -n 1 -w %subseq_isql_delay% 1.1.1.1 1>nul 2>&1
 )
 
+::echo DEBUG exit && exit
 
 
 :: ---------------------------------------------------------
@@ -524,7 +537,7 @@ del %stopfile% 2>nul
 ) >>%stopfile%
 
 echo Command on shutdown database was given at %shut_beg% >> %stopfile%
-echo Control from shutdown process was back at %shut_beg% >> %stopfile%
+echo Control from shutdown process was back at %shut_end% >> %stopfile%
 echo.>> %stopfile%
 echo %msg%: >> %stopfile%
 echo.>> %stopfile%
