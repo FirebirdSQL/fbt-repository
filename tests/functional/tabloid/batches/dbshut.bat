@@ -123,6 +123,9 @@ set bye_bye_msg=BYE_BYE_FROM_WORKER_BAT
 set dbpath=%~dp0
 set dbname=%~n0_test_fdb.tmp
 
+set fbsvcrun=%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user %usr% password %pwd%
+set authinfo=-user %usr% -password %pwd%
+echo fbsvcrun=^>%fbsvcrun%^<
 
 ::---------------------------------------------------------
 (
@@ -155,13 +158,13 @@ if .%fbvers%.==.25. (
   echo @echo off
   echo @rem Generated auto, do not edit. This batch is called from %~dp0%~nx0
   echo @rem This batch should be called like this:
-  echo @rem %auxbat% ^| %fbhome%\isql -b -n -q 1^>^>%%log%% 2^>^>%%err%%
+  echo @rem %auxbat% ^| %fbhome%\isql %authinfo% -b -n -q 1^>^>%%log%% 2^>^>%%err%%
   echo setlocal enabledelayedexpansion enableextensions
   echo set this_id=%%1
   echo set this_log=%%2
 
 
-  echo echo connect 'localhost/%fbport%:%dbpath%%dbname%' user 'SYSDBA' password 'masterkey';
+  echo echo connect 'localhost/%fbport%:%dbpath%%dbname%' user '%usr%' password '%pwd%';
 
   echo echo set echo on;
   echo echo show database;
@@ -284,16 +287,22 @@ if .%fbvers%.==.25. (
 :: Creating database and starting TRACE
 
 del %dbpath%%dbname% 2>nul
-echo create database 'localhost/%fbport%:%dbpath%%dbname%' page_size %page_size%; create table test(id int primary key^); create sequence g; show version; | %fbhome%\isql -q
+
+set run_cmd="echo create database 'localhost/%fbport%:%dbpath%%dbname%' user '%usr%' password '%pwd%' page_size %page_size%; | %fbhome%\isql -q"
+echo run_cmd=%run_cmd%
+cmd /c %run_cmd%
+@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
 
 if .%fw_on%.==.0. (
-  %fbhome%\gfix -w async %dbpath%%dbname% -user sysdba -password masterkey
+  %fbhome%\gfix %authinfo% -w async %dbpath%%dbname%
 )
 
 
 (
-  echo recreate table fix(id int constraint fix_pk primary key, x int, y int, z int, d timestamp, s varchar(50^) ^);
-
+  echo set bail on;
+  echo create sequence g;
+  echo create table test( id int primary key ^); 
+  echo create table fix(id int constraint fix_pk primary key, x int, y int, z int, d timestamp, s varchar(50^) ^);
   if /i .%loading_mode%.==.tiny. (
     echo commit;
   ) else if /i .%loading_mode%.==.small. (
@@ -324,12 +333,16 @@ if .%fw_on%.==.0. (
 echo.
 echo Creating table to be processed:
 echo.
-%fbhome%\isql -q localhost/%fbport%:%dbpath%%dbname% -i %tmpfile%
 
-%fbhome%\gstat -h %dbpath%%dbname% -user sysdba -password masterkey | findstr /i /c:"page size" /c:"attributes"
+set run_cmd="%fbhome%\isql -q localhost/%fbport%:%dbpath%%dbname% -i %tmpfile% %authinfo%"
+echo run_cmd=%run_cmd%
+cmd /c %run_cmd%
+@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+
+%fbhome%\gstat -h %dbpath%%dbname% %authinfo% | findstr /i /c:"page size" /c:"attributes"
 
 (
-  set trccmd=%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user sysdba password masterkey action_trace_start trc_cfg %trccfg% 1^>%trclog% 2^>^&1
+  set trccmd=%fbsvcrun% action_trace_start trc_cfg %trccfg% 1^>%trclog% 2^>^&1
   @echo Starting trace: !trccmd!
   start /min cmd /c !trccmd!
 )
@@ -346,10 +359,10 @@ for /l %%i in (1, 1, %worker_num%) do (
   set wlog=%tmpdir%\%~n0-!k:~1,3!.log
   
   @rem set wcmd=%~dp0%auxbat% %%i !wlog! ^| %fbhome%\isql -b -q -n -pag 999 1^>!wlog! 2^>^&1
-
   @rem set run_isql=%fbc%\isql %dbconn% -now -q -n -pag 9999 -i %sql% %dbauth% 2^>^&1 1^>^>%log% ^| mtee /t/+ %err% ^>nul
   @rem set wcmd=%~dp0%auxbat% %%i !wlog! ^| %fbhome%\isql -b -q -n -pag 999 2^>^&1 1^>!wlog! ^| mtee /t ^>nul
-  set wcmd=%~dp0%auxbat% %%i !wlog! ^| %fbhome%\isql -b -q -n -pag 999 2^>^&1 ^| mtee /t !wlog! ^>nul
+
+  set wcmd=%~dp0%auxbat% %%i !wlog! ^| %fbhome%\isql -b -q -n -pag 999 %authinfo% 2^>^&1 ^| mtee /t !wlog! ^>nul
 
   if .%%i.==.1. ( echo !time! - launch ISQL session # %%i: !wcmd! ) else ( echo !time! - launch ISQL session # %%i)
   start /min cmd /c !wcmd!
@@ -401,7 +414,7 @@ ping -n 1 -w %shut_delay% 1.1.1.1.>nul
 echo.
 echo %time% - get server version and fb_info:
 echo on
-%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user sysdba password masterkey info_server_version info_svr_db_info
+%fbsvcrun% info_server_version info_svr_db_info
 @echo off
 
 :: ---------------------------------------------------------
@@ -411,17 +424,22 @@ echo on
 set shut_beg=%time%
 echo.
 echo %time% - start shutdown, point just before run it:
-@echo on
-%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user sysdba password masterkey action_properties dbname %dbpath%%dbname% prp_shutdown_mode prp_sm_full prp_force_shutdown 0
-@echo off
+
+@rem ### NOTE ### It was detected on Cs 2.5.5 that under heavy workload attach to services could be denied with error
+@rem "Connecttion rejected by remote interface". Thus we do such attempt with checking of its errorlevel:
+set run_cmd="%fbsvcrun% action_properties dbname %dbpath%%dbname% prp_shutdown_mode prp_sm_full prp_force_shutdown 0"
+echo run_cmd=%run_cmd%
+cmd /c %run_cmd%
+@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+
 set shut_end=%time%
 echo.
 echo %time% - return from shutdown process.
 echo.
 
-for /f "tokens=1-3" %%i in ('%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user sysdba password masterkey action_trace_list ^| findstr "Session"') do (
+for /f "tokens=1-3" %%i in ('%fbsvcrun% action_trace_list ^| findstr "Session"') do (
   echo Trace ID to be stopped: %%k
-  %fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user sysdba password masterkey action_trace_stop trc_id %%k
+  %fbsvcrun% action_trace_stop trc_id %%k
 )
 
 @echo Wait %flush_log_delay% ms for FBSVCMGR will flush all its log on disk. . .
@@ -518,25 +536,26 @@ echo Details of ISQL sessions see in %tmpdir%\*.log >> %stopfile%
 del %tmpfile% 2>nul
 
 
-%fbhome%\gstat localhost/%fbport%:%dbpath%%dbname% -user sysdba -password masterkey -h | findstr /i "%dbname% Attributes"
+%fbhome%\gstat localhost/%fbport%:%dbpath%%dbname% %authinfo% -h | findstr /i "%dbname% Attributes"
 
 ::------------------------------------------------------------------------
 
 :: Return to ONLINE and run validation:
 
 echo %time% - before return database to online mode
-@rem ::: CAN HANG, do NOT use it! ::: %fbhome%\gfix %dbpath%%dbname% -user sysdba -password masterkey -online
-@echo on
-%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user sysdba password masterkey action_properties dbname %dbpath%%dbname% prp_db_online
-@echo off
+@rem ::: CAN HANG, do NOT use it! ::: %fbhome%\gfix %dbpath%%dbname% %authinfo% -online
+
+set run_cmd="%fbsvcrun% action_properties dbname %dbpath%%dbname% prp_db_online"
+echo run_cmd=%run_cmd%
+cmd /c %run_cmd%
+@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+
 echo %time% - after return database to online mode
 
-@rem %fbhome%\gfix localhost/%fbport%:%dbpath%%dbname% -user sysdba -password masterkey -online
-echo show sequ;|%fbhome%\isql localhost/%fbport%:%dbpath%%dbname%
+echo show sequ;|%fbhome%\isql localhost/%fbport%:%dbpath%%dbname% %authinfo%
 echo.
 echo %time% - run validation of database:
-%fbhome%\fbsvcmgr.exe localhost/%fbport%:service_mgr user sysdba password masterke ^
-    action_validate dbname %dbpath%%dbname%
+%fbsvcrun% action_validate dbname %dbpath%%dbname%
 
 del %trccfg% 2>nul
 
@@ -669,4 +688,18 @@ goto:eof
   echo.
   pause
   goto end
+
+:exc_handler 
+  @echo off
+  echo.
+  echo.
+  echo ############################################
+  echo ###  R U N T I M E    E X C E P T I O N  ###
+  echo ############################################
+  echo.
+  echo Command: %1 -- finished with errorlevel = %2
+  echo.
+  echo Press any key to TERMINATE this batch. . .
+  pause>nul
+  EXIT
 :end
