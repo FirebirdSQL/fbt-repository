@@ -422,7 +422,7 @@ for /l %%i in (1, 1, %worker_num%) do (
 echo.
 echo %time% - delay %shut_delay% ms before starting to SHUTDOWN database - let ISQLs work for a while. . .
 echo.
-ping -n 1 -w %shut_delay% 1.1.1.1.>nul
+ping -n 1 -w %shut_delay% 1.1.1.1>nul
 
 echo.
 echo %time% - get server version and fb_info:
