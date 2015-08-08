@@ -182,7 +182,7 @@ if .%fbvers%.==.25. (
 	  echo     echo -- ^^^!time^^^! - take pause %check_delay_ms% ms. . .
 	  echo     echo set echo off;
 	  echo.
-	  echo     ping -n 1 -w %check_delay_ms% 1.1.1.1 ^>nul ^|^| time /t ^>nul
+	  echo     ping -n 1 -w %check_delay_ms% %ip4test% ^>nul ^|^| time /t ^>nul
 	  echo.
 	  echo     echo set echo on;
 	  echo     echo -- ^^^!time^^^! - yep, I'm here and check again who has came to us. . .
@@ -380,7 +380,7 @@ for /l %%i in (1, 1, %worker_num%) do (
   start /min cmd /c !wcmd!
 
   @rem Add small delay before opening subsequent ISQL - avoid to establish too much connections at the same moment
-  ping -n 1 -w %subseq_isql_delay% 1.1.1.1 1>nul 2>&1
+  ping -n 1 -w %subseq_isql_delay% %ip4test% 1>nul 2>&1
 )
 
 ::echo DEBUG exit && exit
@@ -396,7 +396,7 @@ for /l %%i in (1, 1, %worker_num%) do (
   echo.
   echo %time% - delay %check_delay_ms% ms before checking that all ISQLs did begin their DML
   echo.
-  ping -n 1 -w %check_delay_ms% 1.1.1.1>nul
+  ping -n 1 -w %check_delay_ms% %ip4test%>nul
   set repeat=0
   for /l %%i in (1, 1, %worker_num%) do (
     set /a k=1000+%%i
@@ -422,7 +422,7 @@ for /l %%i in (1, 1, %worker_num%) do (
 echo.
 echo %time% - delay %shut_delay% ms before starting to SHUTDOWN database - let ISQLs work for a while. . .
 echo.
-ping -n 1 -w %shut_delay% 1.1.1.1>nul
+ping -n 1 -w %shut_delay% %ip4test%>nul
 
 echo.
 echo %time% - get server version and fb_info:
@@ -456,7 +456,7 @@ for /f "tokens=1-3" %%i in ('%fbsvcrun% action_trace_list ^| findstr "Session"')
 )
 
 @echo Wait %flush_log_delay% ms for FBSVCMGR will flush all its log on disk. . .
-ping -n 1 -w %flush_log_delay% 1.1.1.1>nul
+ping -n 1 -w %flush_log_delay% %ip4test%>nul
 
 ::---------------------------------------------------------------------
 
