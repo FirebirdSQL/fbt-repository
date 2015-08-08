@@ -6,8 +6,9 @@
 
 @rem Batch for investigating of SHUTDOWN process features when
 @rem database is subject to DML workload of different level.
-@rem 
-@rem Run this batch to get requirements and syntax if usage with examples.
+@rem ----------------------------------------------------------
+@rem Run this batch without input arhuments to get requirements
+@rem and syntax if usage with examples.
 
 setlocal enabledelayedexpansion enableextensions
 
