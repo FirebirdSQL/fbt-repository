@@ -56,8 +56,8 @@ zf.close()
 runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password,'-i', os.path.join(context['temp_directory'],'core_4880_fnc.tmp ') ])
 runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password,'-i', os.path.join(context['temp_directory'],'core_4880_pkg.tmp ') ])
 
-os.remove( os.path.join(context['temp_directory'],'core_4880_fnc.tmp ') )
-os.remove( os.path.join(context['temp_directory'],'core_4880_pkg.tmp ') )
+os.remove( os.path.join(context['temp_directory'],'core_4880_fnc.tmp') )
+os.remove( os.path.join(context['temp_directory'],'core_4880_pkg.tmp') )
 
 script="""set list on; 
 set term ^;
