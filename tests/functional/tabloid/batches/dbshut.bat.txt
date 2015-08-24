@@ -6,9 +6,8 @@
 
 @rem Batch for investigating of SHUTDOWN process features when
 @rem database is subject to DML workload of different level.
-@rem ----------------------------------------------------------
-@rem Run this batch without input arhuments to get requirements
-@rem and syntax if usage with examples.
+@rem 
+@rem Run this batch to get requirements and syntax if usage with examples.
 
 setlocal enabledelayedexpansion enableextensions
 
@@ -48,12 +47,57 @@ if /i .%fbarch%.==.SS30. (
   set fbport=%fb25sCport%
 )
 
+for /F "tokens=1" %%u in ("dml_work_time_%loading_mode%") do (
+    set dml_workload_time=!%%u!
+)
+
+@echo Detecting ability to make pauses less than 1 second using ping -w %ip4test%
+::set t1= 8:09:08.95
+::set t2= 8:09:09.01
+
+set t1=%time%
+ping -n 1 -w 1000 %ip4test% >nul
+set t2=%time%
+set tdiff=0
+call :timediff %t1% %t2% tdiff
+
+@rem @echo Timestamps for analyzing: t1=%t1%, t2=%t2%, tdiff=!tdiff!
+
+if .!tdiff!. equ .0. (
+  @echo DHCP service not running on this host.
+  @echo Will use ping 127.0.0.1 instead of %ip4test%,
+  @echo precision will be in whole seconds rather than ms.
+  set /a chk_start_delay=%chk_start_delay% / 1000
+  set /a dml_workload_time=%dml_workload_time% / 1000
+  set /a flush_log_delay=%flush_log_delay% / 1000
+
+  if .!chk_start_delay!. equ .0. set chk_start_delay=1
+  if .!dml_workload_time!. equ .0. set dml_workload_time=1
+  if .!flush_log_delay!. equ .0. set flush_log_delay=1
+
+  set sleep_in_ms=0
+  set sleep_unit=sec
+) else (
+  @echo OK, can use ping -w %ip4test% for making more pauses in ms.
+  set sleep_in_ms=1
+  set sleep_unit=ms
+)
+
+for /F "tokens=1" %%u in ("idx_field_len_%loading_mode%") do (
+    set idx_field_length=!%%u!
+)
+
+@echo off
 echo Runtime parameters:
 echo.
 echo Used FB home: %fbhome%, port: %fbport%
 echo Number of ISQL sessions: %worker_num%
-echo.
-echo Configurated parameters:
+echo Time precision for making pauses: 1 !sleep_unit!
+echo Working time before shutdown starts: !dml_workload_time! !sleep_unit!
+echo Length of indexed text field: !idx_field_length!
+echo.                                    
+
+echo Configured parameters:
 echo.
 findstr /i /r /c:"^[^#]" %~n0.conf | findstr /v "home port"
 echo.
@@ -75,6 +119,9 @@ del %tmpdir%\%~n0-*.log 2>nul
 
 set tmpfile=%~n0_tmp.tmp
 del %tmpfile% 2>nul
+
+set tmpfile2=%~n0_tmp2.tmp
+del %tmpfile2% 2>nul
 
 mtee /? 1>%tmpfile%
 findstr /i /c "usage" %tmpfile% 1>nul 2>&1
@@ -118,47 +165,68 @@ del %trcevn% 2>nul
 
 set dml_run_msg=START_DML
 set shut_point1=FIRST_POINT_OF_SHUTDOWN
-set bye_bye_msg=BYE_BYE_FROM_WORKER_BAT
-::bye-bye from %auxbat%
 
 set dbpath=%~dp0
 set dbname=%~n0_test_fdb.tmp
 
-@rem max_key_length = floor( (page_size / 4 - 9) / N )
-@rem N = number of bytes per one character
-set /a max_key_len = %page_size% / 4 - 9 - 1
+set bye_bye_msg=Statement failed
+:: set bye_bye_msg=BYE_BYE_FROM_WORKER_BAT
+:: set bye_bye_msg=database %dbpath%%dbname% shutdown
+
+::---------------------------------------------------------
+
+:: Creating database
+
+del %dbpath%%dbname% 2>nul
+
+set run_cmd="echo create database 'localhost/%fbport%:%dbpath%%dbname%' user '%usr%' password '%pwd%' page_size %page_size%; | %fbhome%\isql -q"
+echo run_cmd=%run_cmd%
+cmd /c %run_cmd%
+@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+
+if .%fw_on%.==.0. (
+  %fbhome%\gfix %authinfo% -w async %dbpath%%dbname%
+)
+
+
+(
+  echo set bail on;
+  echo create sequence g;
+  echo create table test( id int primary key ^); 
+  echo create table fix(
+  echo    id int constraint fix_pk primary key
+  echo    ,fld_%loading_mode% varchar(!idx_field_length!^)
+  echo    ^);
+  echo create index fix_fld_%loading_mode%_!idx_field_length! on fix( fld_%loading_mode% ^);
+  echo commit;
+  echo set echo on;
+  echo show table fix; 
+  echo show index;
+) >%tmpfile%
+
+echo.
+echo Creating table to be processed:
+echo.
+
+type %tmpfile%
+
+set run_cmd="%fbhome%\isql -q localhost/%fbport%:%dbpath%%dbname% -i %tmpfile% %authinfo%"
+echo run_cmd=%run_cmd%
+cmd /c %run_cmd%
+@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+
+%fbhome%\gstat -h %dbpath%%dbname% %authinfo% | findstr /i /c:"page size" /c:"attributes"
+
 
 set fbsvcrun=%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user %usr% password %pwd%
 set authinfo=-user %usr% -password %pwd%
 echo fbsvcrun=^>%fbsvcrun%^<
 
 ::---------------------------------------------------------
-(
-if .%fbvers%.==.25. (
-  echo ^<database %%[\\/]%dbname% ^>
-) else (
-  echo database = %%[\\/]%dbname%
-  echo {
-)
-echo    enabled %equ_delimeter% true
-echo    log_errors %equ_delimeter% true
-echo    log_connections %equ_delimeter% true
-echo    log_transactions %equ_delimeter% true
-echo    log_statement_prepare %equ_delimeter% true
-echo    log_statement_start %equ_delimeter% true
-echo    log_statement_finish %equ_delimeter% true
-echo    log_statement_free %equ_delimeter% true
-if .%fbvers%.==.25. (
-  echo ^</database^>
-) else (
-  echo }
-)
-) > %trccfg%
-
-::---------------------------------------------------------
 
 ::echo on
 :: Generate statements in %auxbat%
+
 (
   echo @echo off
   echo @rem Generated auto, do not edit. This batch is called from %~dp0%~nx0
@@ -178,12 +246,18 @@ if .%fbvers%.==.25. (
 
   echo :m1
 	  echo.
-	  echo     echo -- Pause on each iter before checking that all attachments are here: %check_delay_ms% ms - is taken from CONFIG file for to %~nx0
+	  echo     echo -- Pause on each iter before repeating check that all sessions ready to start DML:
+	  echo     echo -- %chk_start_delay% %sleep_unit% (taken from CONFIG file for to %~nx0^)
 	  echo     echo set echo on;
-	  echo     echo -- ^^^!time^^^! - take pause %check_delay_ms% ms. . .
+	  echo     echo -- ^^^!time^^^! - take pause %chk_start_delay% %sleep_unit%. . .
 	  echo     echo set echo off;
 	  echo.
-	  echo     ping -n 1 -w %check_delay_ms% %ip4test% ^>nul ^|^| time /t ^>nul
+	  if .!sleep_in_ms!.==.1. (
+  	    echo     ping -n 1 -w !chk_start_delay! %ip4test% ^>nul ^|^| time /t ^>nul
+	  ) else (
+	    set /a sleep_sec=!chk_start_delay! + 1
+  	    echo     ping -n !sleep_sec! localhost ^>nul ^|^| time /t ^>nul
+	  )
 	  echo.
 	  echo     echo set echo on;
 	  echo     echo -- ^^^!time^^^! - yep, I'm here and check again who has came to us. . .
@@ -238,9 +312,9 @@ if .%fbvers%.==.25. (
 	  echo     echo     declare v_cnt int;
 	  echo     echo     declare v_min int = %worker_num%; -- this is command-line argument for %~nx0
 	  echo     echo     declare v_lim int = %limit_dml_rows%; -- this is from CONFIG file for %~nx0
-	  echo     echo     declare v_txt varchar(%max_key_len% ^);
+	  echo     echo     declare v_txt varchar(!idx_field_length! ^);
 	  echo     echo begin
-	  echo     echo     v_txt = rpad('', %max_key_len%, uuid_to_char(gen_uuid(^)^) ^);
+	  echo     echo     v_txt = rpad('', !idx_field_length!, uuid_to_char(gen_uuid(^)^) ^);
 	  echo     echo     select count( id ^) from test where id ^^^< 0 into v_cnt;
 	  echo     echo     if ( v_cnt ^^^>= v_min ^) then
 	  echo     echo         begin
@@ -248,20 +322,15 @@ if .%fbvers%.==.25. (
 	  echo     echo             suspend;
 	  echo     echo             while ( v_lim ^^^> 0 ^) do
 	  echo     echo             begin
-	  echo     echo                 -- insert into test( id ^) values( gen_id(g, 1^) ^);
-	  echo     echo                 insert into fix(id, x, y, z, d, s, t ^)
+	  echo     echo                 insert into fix(id, fld_%loading_mode% ^)
 	  echo     echo                 values( 
-	  echo     echo                         gen_id( g, 1^) -- id
-	  echo     echo                         ,rand(^) * 100    -- x
-	  echo     echo                         ,rand(^) * 1000    -- y
-	  echo     echo                         ,rand(^) * 10000    -- z
-	  echo     echo                         ,dateadd( cast(rand(^)*1000000 as int^) second to timestamp '01.01.2000 00:00:00'^)
-    if %add_same_text% EQU 0 (
-  	  echo     echo                         ,rpad('', 1 + rand(^)*49, uuid_to_char(gen_uuid(^)^) ^)  -- s
-  	  echo     echo                         ,rpad('', %max_key_len%, uuid_to_char(gen_uuid(^)^) ^)  -- t
+	  echo     echo                         gen_id( g, 1^)
+    if %add_same_text_value% EQU 0 (
+          @rem Text fields are filled with totally different values:
+          echo     echo                         ,rpad('', 1 + rand(^) * (!idx_field_length! - 1^), uuid_to_char(gen_uuid(^)^) ^)
     ) else (
-  	  echo     echo                         ,left( :v_txt, 49 ^) -- s
-  	  echo     echo                         ,:v_txt             -- t
+          @rem Text fields are filled with the SAME value = :v_txt
+  	  echo     echo                         ,left( :v_txt, !idx_field_length! ^)
     )
 	  echo     echo                 ^); 
 	  echo     echo                 v_lim = v_lim - 1;
@@ -297,62 +366,30 @@ if .%fbvers%.==.25. (
 
 ::---------------------------------------------------------
 
-:: Creating database and starting TRACE
-
-del %dbpath%%dbname% 2>nul
-
-set run_cmd="echo create database 'localhost/%fbport%:%dbpath%%dbname%' user '%usr%' password '%pwd%' page_size %page_size%; | %fbhome%\isql -q"
-echo run_cmd=%run_cmd%
-cmd /c %run_cmd%
-@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
-
-if .%fw_on%.==.0. (
-  %fbhome%\gfix %authinfo% -w async %dbpath%%dbname%
-)
+:: Preparing trace config and starting trace
 
 (
-  echo set bail on;
-  echo create sequence g;
-  echo create table test( id int primary key ^); 
-  echo create table fix(id int constraint fix_pk primary key, x int, y int, z int, d timestamp, s varchar(50^), t varchar(%max_key_len%^) ^);
-  if /i .%loading_mode%.==.tiny. (
-    echo commit;
-  ) else if /i .%loading_mode%.==.small. (
-    echo create index fix_idx_01 on fix( x ^);
-    echo create descending index fix_idx_02 on fix( y ^);
-  ) else if /i .%loading_mode%.==.middle. (
-    echo create index fix_idx_01 on fix( x ^);
-    echo create descending index fix_idx_02 on fix( y ^);
-    echo create index fix_idx_03 on fix( d ^);
-    echo create index fix_idx_04 on fix( s ^);
-    echo create descending index fix_idx_05 on fix( id ^);
-  ) else if /i .%loading_mode%.==.heavy. (
-    echo create index fix_idx_01 on fix( x ^);
-    echo create descending index fix_idx_02 on fix( y ^);
-    echo create index fix_idx_03 on fix( d ^);
-    echo create index fix_idx_04 on fix( s ^);
-    echo create descending index fix_idx_05 on fix( id ^);
-    echo create descending index fix_idx_06 on fix( z ^);
-    echo create descending index fix_idx_07 on fix( d ^);
-    echo create descending index fix_idx_08 on fix( t ^);
-  )
-  echo commit;
-  echo set echo on;
-  echo show table fix; 
-  echo show index;
-) >%tmpfile%
-
-echo.
-echo Creating table to be processed:
-echo.
-
-set run_cmd="%fbhome%\isql -q localhost/%fbport%:%dbpath%%dbname% -i %tmpfile% %authinfo%"
-echo run_cmd=%run_cmd%
-cmd /c %run_cmd%
-@if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
-
-
-%fbhome%\gstat -h %dbpath%%dbname% %authinfo% | findstr /i /c:"page size" /c:"attributes"
+    if .%fbvers%.==.25. (
+      echo ^<database %%[\\/]%dbname% ^>
+    ) else (
+      echo database = %%[\\/]%dbname%
+      echo {
+    )
+    echo    enabled %equ_delimeter% true
+    echo    log_errors %equ_delimeter% true
+    echo    log_connections %equ_delimeter% true
+    echo    log_transactions %equ_delimeter% true
+    echo    log_statement_prepare %equ_delimeter% true
+    echo    log_statement_start %equ_delimeter% true
+    echo    log_statement_finish %equ_delimeter% true
+    echo    log_statement_free %equ_delimeter% true
+    echo    max_sql_length = 2048
+    if .%fbvers%.==.25. (
+      echo ^</database^>
+    ) else (
+      echo }
+    )
+) > %trccfg%
 
 (
   set trccmd=%fbsvcrun% action_trace_start trc_cfg %trccfg% 1^>%trclog% 2^>^&1
@@ -379,13 +416,10 @@ for /l %%i in (1, 1, %worker_num%) do (
 
   if .%%i.==.1. ( echo !time! - launch ISQL session # %%i: !wcmd! ) else ( echo !time! - launch ISQL session # %%i)
   start /min cmd /c !wcmd!
-
-  @rem Add small delay before opening subsequent ISQL - avoid to establish too much connections at the same moment
-  ping -n 1 -w %subseq_isql_delay% %ip4test% 1>nul 2>&1
+  
 )
 
-::echo DEBUG exit && exit
-
+::echo DEBUG exit && goto end
 
 :: ---------------------------------------------------------
 
@@ -393,20 +427,28 @@ for /l %%i in (1, 1, %worker_num%) do (
 @rem 1) does exist (i.e. has been created in previous loop using start /min cmd /c ...)
 @rem 2) does contain string '%dml_run_msg%'
 
+set i=1
 :chk_all_dml_start
   echo.
-  echo %time% - delay %check_delay_ms% ms before checking that all ISQLs did begin their DML
+  echo %time% - iter !i!: delay %chk_start_delay% %sleep_unit% before checking that all ISQLs did begin their DML
   echo.
-  ping -n 1 -w %check_delay_ms% %ip4test%>nul
+  set /a i=!i!+1
+  if .!sleep_in_ms!.==.1. (
+    ping -n 1 -w !chk_start_delay! %ip4test% >nul
+  ) else (
+    set /a sleep_sec=!chk_start_delay! + 1
+    ping -n !sleep_sec! localhost >nul
+  )
+
   set repeat=0
   for /l %%i in (1, 1, %worker_num%) do (
     set /a k=1000+%%i
     set wlog=%tmpdir%\%~n0-!k:~1,3!.log
     findstr "%dml_run_msg%" !wlog! 1>nul
     if errorlevel 1 (
-      echo Not all of ISQL logs have required message about readiness to do their work. 
-      echo Required string not found in !wlog!
-      echo !time! - continue this checking after some pause.
+      echo !time! Not all of ISQL logs have required message about readiness to do their work. 
+      echo Required string: "%dml_run_msg%" -- not found in !wlog!
+      echo Will repeat this checking after %chk_start_delay% %sleep_unit%
       set repeat=1
       goto out_of_loop
     )
@@ -414,16 +456,23 @@ for /l %%i in (1, 1, %worker_num%) do (
 
 :out_of_loop
   if .%repeat%.==.1. (
-    echo !time! - out from checking loop, repeat=!repeat! - need to wait for rest ISQL sessions be ready.
+    echo !time! - out from checking loop, MUST WAIT still more for rest ISQL sessions be ready.
     goto chk_all_dml_start
   ) else (
+    echo #########################################################################################
     echo !time! - all ISQL sessions have started their work. Now we can run shutdown process.
+    echo #########################################################################################
   )
 
 echo.
-echo %time% - delay %shut_delay% ms before starting to SHUTDOWN database - let ISQLs work for a while. . .
+echo %time% - delay %dml_workload_time% %sleep_unit% before starting SHUTDOWN process - let ISQLs work for a while. . .
 echo.
-ping -n 1 -w %shut_delay% %ip4test%>nul
+if .!sleep_in_ms!.==.1. (
+  ping -n 1 -w !dml_workload_time! %ip4test% > nul
+) else (
+  set /a sleep_sec=!dml_workload_time! + 1
+  ping -n !sleep_sec! localhost > nul
+)
 
 echo.
 echo %time% - get server version and fb_info:
@@ -443,8 +492,10 @@ echo %time% - start shutdown, point just before run it:
 @rem "Connecttion rejected by remote interface". Thus we do such attempt with checking of its errorlevel:
 set run_cmd="%fbsvcrun% action_properties dbname %dbpath%%dbname% prp_shutdown_mode prp_sm_full prp_force_shutdown 0"
 echo run_cmd=%run_cmd%
+@echo on
 cmd /c %run_cmd%
 @if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
+@echo off
 
 set shut_end=%time%
 echo.
@@ -456,8 +507,13 @@ for /f "tokens=1-3" %%i in ('%fbsvcrun% action_trace_list ^| findstr "Session"')
   %fbsvcrun% action_trace_stop trc_id %%k
 )
 
-@echo Wait %flush_log_delay% ms for FBSVCMGR will flush all its log on disk. . .
-ping -n 1 -w %flush_log_delay% %ip4test%>nul
+@echo Wait %flush_log_delay% %sleep_unit% for FBSVCMGR will flush all its log on disk. . .
+if .!sleep_in_ms!.==.1. (
+  ping -n 1 -w !flush_log_delay! %ip4test% > nul
+) else (
+  set /a sleep_sec=!flush_log_delay! + 1
+  ping -n !sleep_sec! localhost > nul
+)
 
 ::---------------------------------------------------------------------
 
@@ -482,10 +538,10 @@ set k=1
 if %shutdn_1st_row% GTR 0 (
   echo Trace log after line %shutdn_1st_row% with statements that can be considered as activity:
   echo ------------------------------------------------------------------------------
-  for /f "tokens=1-8 delims=:" %%a in ('type %trclog% ^| findstr /n /i "ATTACH_DATABASE START_TRANSACTION COMMIT_TRANSACTION PREPARE_STATEMENT EXECUTE_STATEMENT_START EXECUTE_STATEMENT_FINISH CLOSE_CURSOR FREE_STATEMENT"  ^| findstr /i /v "FAILED"') do (
+  for /f "tokens=1-9 delims=:" %%a in ('type %trclog% ^| findstr /n /i "ATTACH_DATABASE START_TRANSACTION COMMIT_TRANSACTION PREPARE_STATEMENT EXECUTE_STATEMENT_START EXECUTE_STATEMENT_FINISH CLOSE_CURSOR FREE_STATEMENT"  ^| findstr /i /v "FAILED"') do (
     set /a row=%%a
     if !row! GTR %shutdn_1st_row% (
-        set line=%%a: %%b %%b %%d %%e %%f %%g %%h
+        set line=%%a: %%b %%c %%d %%e %%f %%g %%h %%i
         echo !line!>>%trcevn%
         if !k! LSS 3 (
           echo !line! 
@@ -506,49 +562,67 @@ if %shutdn_1st_row% GTR 0 (
 
 ::---------------------------------------------------------------------
 
-:: Extract timestamps of actual QUIT events from ISQL sessions (using prefixes that were added by `mtee` utility):
-
-for /f %%a in ('dir /ON /b %tmpdir%\%~n0-???.log') do (
-  for /f "tokens=*" %%i in ('findstr /i /c:"%bye_bye_msg%" %tmpdir%\%%a') do (
-    set line=%%i
-    echo !line:~0,12! %%a>>%stopfile%
-    @rem set line=!line:SQL^> =!
-    @rem echo !line:~3,11! %%a>>%stopfile%
-  )
-)
-@rem Result: %stopfile% contains moments of '%bye_bye_msg%' from ISQL logs. Output it in ordered view:
-
-set msg=Check timestamps when ISQL sessions were actually finishing
-echo.
-@echo %msg% in %stopfile%
-echo.
-type %stopfile% | sort > %tmpfile%
-
 del %stopfile% 2>nul
+del %tmpfile% 2>nul
+del %tmpfile2% 2>nul
+
+::---------------------------------------------------------------------
+
 (
   echo Runtime parameters:
   echo.
   echo Used FB home: %fbhome%, port: %fbport%
   echo Number of ISQL sessions: %worker_num%
+  echo Time precision for making pauses: 1 !sleep_unit!
+  echo Working time before shutdown starts: !dml_workload_time! !sleep_unit!
+  echo Length of indexed text field: !idx_field_length!
   echo.
-  echo Configurated parameters:
+  echo Configured parameters:
   echo.
   findstr /i /r /c:"^[^#]" %~n0.conf | findstr /v "home port"
   echo.
+
 ) >>%stopfile%
 
-echo Command on shutdown database was given at %shut_beg% >> %stopfile%
-echo Control from shutdown process was back at %shut_end% >> %stopfile%
-echo.>> %stopfile%
-echo %msg%: >> %stopfile%
-echo.>> %stopfile%
+set tdiff=-1
+call :timediff %shut_beg% %shut_end% tdiff
+
+(
+  echo Command on shutdown database was given at %shut_beg% 
+  echo Control from shutdown process was back at %shut_end%
+  echo Shutdown process took !tdiff! seconds.
+  echo.
+)  >> %tmpfile%
+
+type %tmpfile%
+
 type %tmpfile% >> %stopfile%
-echo.>> %stopfile%
-echo Details of ISQL sessions see in %tmpdir%\*.log >> %stopfile%
-
-
 del %tmpfile% 2>nul
 
+
+:: Extract timestamps of last events in ISQL sessions:
+set msg=Check timestamps when ISQL sessions were actually finishing
+echo.
+@echo %msg% in %stopfile%
+echo.
+del %tmpfile2% 2>nul
+for /f %%a in ('dir /ON /b %tmpdir%\%~n0-???.log') do (
+  for /f "tokens=*" %%i in ('findstr /i /c:"%bye_bye_msg%" %tmpdir%\%%a') do (
+    set line=%%i
+    echo !line:~0,12! %%a>>%tmpfile2%
+    @rem set line=!line:SQL^> =!
+    @rem echo !line:~3,11! %%a>>%tmpfile2%
+  )
+)
+@rem Result: %tmpfile2% contains moments of '%bye_bye_msg%' from ISQL logs. Output it in ordered view:
+@echo on
+type %tmpfile2% | sort > %tmpfile%
+@del %tmpfile2% 2>nul
+@echo off
+
+echo %msg%: >> %stopfile%
+type %tmpfile% >> %stopfile%
+del %tmpfile% 2>nul
 
 %fbhome%\gstat localhost/%fbport%:%dbpath%%dbname% %authinfo% -h | findstr /i "%dbname% Attributes"
 
@@ -556,7 +630,7 @@ del %tmpfile% 2>nul
 
 :: Return to ONLINE and run validation:
 
-echo %time% - before return database to online mode
+echo %time% - point before return database to ONLINE
 @rem ::: CAN HANG, do NOT use it! ::: %fbhome%\gfix %dbpath%%dbname% %authinfo% -online
 
 set run_cmd="%fbsvcrun% action_properties dbname %dbpath%%dbname% prp_db_online"
@@ -564,7 +638,7 @@ echo run_cmd=%run_cmd%
 cmd /c %run_cmd%
 @if errorlevel 1 call :exc_handler %run_cmd% %errorlevel%
 
-echo %time% - after return database to online mode
+echo %time% - point after return database to ONLINE
 
 echo show sequ;|%fbhome%\isql localhost/%fbport%:%dbpath%%dbname% %authinfo%
 echo.
@@ -596,7 +670,6 @@ if %fbcc% GTR 0 echo Found message "internal Firebird consistency check" in %fbc
 goto end
 
 :readcfg
-
 set cfg=%1
 for /F "tokens=*" %%a in ('findstr /i /r /c:"^[ 	]*[a-z,0-9]" %cfg%') do (
   if "%%a" neq "" (
@@ -618,6 +691,11 @@ for /F "tokens=*" %%a in ('findstr /i /r /c:"^[ 	]*[a-z,0-9]" %cfg%') do (
           @rem _NAME_ and _VALUE_ of parameter (both can be with leading and trailing whitespaces):
           set par=%%i
           set val=%%j
+          @rem echo par=!par! val=!val!
+          set isExpr=0
+          echo !val! | findstr /c:"((" | findstr /c:"))" 1>nul
+          if not errorlevel 1 set isExpr=1
+          @rem echo isExpr=!isExpr!
 
           @rem -----------------------------------
           @rem When "delims=" clause is NOT specified then default delimeters are TAB and SPACE.
@@ -625,12 +703,15 @@ for /F "tokens=*" %%a in ('findstr /i /r /c:"^[ 	]*[a-z,0-9]" %cfg%') do (
           @rem Similarly for _VALUE_ of parameter:
           @rem -----------------------------------
           for /F "tokens=1" %%p in ("!par!") do (
-            @rem echo param=^|%%i^|, name w/o white-spaces=^|%%p^|
             for /F "tokens=1" %%u in ("!val!") do (
-              set %%p=%%u
-              @rem echo param=^|%%p^|, value w/o white-spaces=^|%%u^|
+              if .!isExpr!.==.0. (
+                set %%p=%%u
+              ) else (
+                set /a %%p=%%u
+              )
             )
           )
+          @rem echo result: val=!val!
         )
       )
 
@@ -716,4 +797,25 @@ goto:eof
   echo Press any key to TERMINATE this batch. . .
   pause>nul
   EXIT
+
+:timediff
+  @rem takes THRE arguments: time1, time2 and placeholder for storing difference from time1 to time2 in seconds.
+  setlocal
+  @rem Add '0' to value of hours, otherwise can not calculate expressions with modulo:
+  for /f "delims= " %%x in ("%~1") do set t1=0%%x
+  for /f "delims= " %%x in ("%~2") do set t2=0%%x
+  @rem echo t1=%~1
+  @rem echo t2=%~2
+  @rem Evaluate seconds from midnight. Need doing this using modulo, otherwise get arith.
+  @rem runtime error when number of hours/minutes/seconds is 8 or 9, i.e.:  8:08:09.01 or 9:09:09.01 etc.
+  for /f "tokens=1-8 delims=:.,^" %%a in ("%~1:%~2") do (
+    set /a t1s=(100%%a %% 100^) * 3600 + (100%%b %% 100^) * 60 + (100%%c %% 100^)
+    set /a t2s=(100%%e %% 100^) * 3600 + (100%%f %% 100^) * 60 + (100%%g %% 100^)
+  )
+  set /a tdiff=!t2s! - !t1s!
+  @rem echo t1s=!t1s! t2s=!t2s! tdiff=!tdiff!
+  if .!t2s!. LSS .!t1s!. set /a tdiff=!tdiff!+86400
+  endlocal&set "%~3=%tdiff%"
+goto:eof
+
 :end
