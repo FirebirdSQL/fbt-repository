@@ -13,6 +13,9 @@ setlocal enabledelayedexpansion enableextensions
 
 set path=%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\system32\WBEM
 
+set isc_user=
+set isc_password=
+
 if .%1.==.. goto syntax
 set fbarch=%1
 
@@ -177,6 +180,8 @@ set bye_bye_msg=Statement failed
 
 :: Creating database
 
+set authinfo=-user %usr% -password %pwd%
+
 del %dbpath%%dbname% 2>nul
 
 set run_cmd="echo create database 'localhost/%fbport%:%dbpath%%dbname%' user '%usr%' password '%pwd%' page_size %page_size%; | %fbhome%\isql -q"
@@ -217,9 +222,7 @@ cmd /c %run_cmd%
 
 %fbhome%\gstat -h %dbpath%%dbname% %authinfo% | findstr /i /c:"page size" /c:"attributes"
 
-
 set fbsvcrun=%fbhome%\fbsvcmgr localhost/%fbport%:service_mgr user %usr% password %pwd%
-set authinfo=-user %usr% -password %pwd%
 echo fbsvcrun=^>%fbsvcrun%^<
 
 ::---------------------------------------------------------
