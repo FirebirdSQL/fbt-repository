@@ -72,7 +72,7 @@ runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','maste
 },
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'page_size': '4096',
  'init_script': 
   """
@@ -104,6 +104,7 @@ runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','maste
  'test_script':"""\
 import os
 import subprocess
+from subprocess import Popen
 import time
 
 db_conn.close()
@@ -145,23 +146,50 @@ hang_log=open( os.path.join(context['temp_directory'],'tmp_4707_hang.log'), 'w')
 hang_log.write('')
 hang_log.close()
 
-isql_launch='"isql $(DSN) -user SYSDBA -pas masterkey -n -i %s 1>%s 2>&1"' % (hang_sql.name, hang_log.name)
+hang_log=open(hang_log.name, "w")
 
-# Launch program in separate (new) window via START command:
-subprocess.call('start /min cmd /c %s' % isql_launch, shell=True)
 
+################ ##############################################################################
+# Make asynchronous call of ISQL which will stay several seconds in pause due to row-level lock
+# #############################################################################################
+
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
+
+# Here we should wait while ISQL will establish its connect (in separate child window, call asynchronous) and 
+# stay in pause:
 time.sleep(1)
 
-runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
+svc_log=open( os.path.join(context['temp_directory'],'tmp_4707_svc.log'), 'w')
+svc_log.write('')
+svc_log.close()
 
-# Now we have to wait until ISQL window will be closed due to finish of `tmp_4707_hang.sql`:
-time.sleep(5)
+#############################################################################################
+# Make SYNC. call of fbsvcmgr in order to validate database which has locks on some relations
+#############################################################################################
+
+svc_log=open(svc_log.name, "w")
+subprocess.call(['fbsvcmgr', 'localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'],stdout=svc_log, stderr=subprocess.STDOUT)
+svc_log.close()
+
+p_hang.terminate()
+hang_log.close()
+
+with open( svc_log.name,'r') as f:
+    print(f.read())
+f.close()
 
 # cleanup:
+# NOTE: here we must wit a little in order all file handles be really closed by OS!
+# Otherwise will get error of accessing file ('Windows 32' etc):
+time.sleep(1)
 if os.path.isfile(hang_sql.name):
     os.remove(hang_sql.name)
 if os.path.isfile(hang_log.name):
     os.remove(hang_log.name)
+if os.path.isfile(svc_log.name):
+    os.remove(svc_log.name)
+
   """,
  'expected_stdout':
   """
