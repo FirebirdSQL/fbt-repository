@@ -9,6 +9,8 @@ setlocal enabledelayedexpansion enableextensions
 @rem In that case one may always to sit in the folder with .fbt files
 @rem (e.g. fbt-repo\tests\bugs\) and run all necessary tests only by pressing
 @rem [ ENTER ] key on selected .fbt
+@rem My setting for running test against all FB instances in Far Manager "File associations":
+@rem C:\MIX\firebird\QA\fbt-repo\fbt-run.bat !.! 2>&1 | mtee C:\MIX\firebird\QA\fbt-repo\mtee.log
 
 if "%1"=="" (
   echo Arg #1 is mandatory - name of .fbt file
@@ -440,14 +442,19 @@ goto run21
   )
 
 echo.
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log21: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-type fbt-run.21.log
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log21: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-echo.
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-type fbt-run.25.log
-echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
-echo.
+if .%skip21%.==.0. (
+  echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log21: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  type fbt-run.21.log
+  echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log21: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  echo.
+)
+
+if .%skip25%.==.0. (
+  echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log25: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  type fbt-run.25.log
+  echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log25: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
+  echo.
+)
 echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPER: start  ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
 type fbt-run.30sS.log
 echo ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^| %fbt_name%, log30 SUPER: finish ^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|^|
