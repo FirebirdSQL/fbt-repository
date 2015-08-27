@@ -1,0 +1,208 @@
+{
+'id': 'bugs.core_4855',
+'qmid': None,
+'tracker_id': 'CORE-4855',
+'title': 'Online validation during DML activity in other connection leads to message "Error while trying to read from file" and "page in use during flush (210), file: cch.cpp line: 2672"',
+'description': 
+ """
+   In order to check ticket issues this test does following:
+   1. Change on test database FW to OFF - this will increase DML performance.
+   2. Create two tables: one for inserting rows ('test') and second to serve as 'signal' to stop DML:
+      inserts will be done until 2nd table (with name = 'stop') is empty.
+   3. Adds to SQL script DML (execute block) that will be used in ISQL session #1: it inserts rows 
+      into 'test' and checks after each inserting table 'stop' on presence there at least one row. 
+      This 'stop-row' will be inserted into 'stop' table in another ISQL session.
+   4. Launches ISQL connection #1 in separate (child) process. This ISQL will start 'heavy DML'.
+   5. Proceeds several online-validation actions by using synchronous call of 'FBSVCMGR action_validate'.
+      Adds result of each validation to log.
+   6. Launches ISQL connection #2 in separate (child) process and give to this session trivial job:
+      'insert into stop(id) values(1); commit;'. This will cause ISQL session #1 to stop its activity 
+      because it runs in transaction with TIL = RC.
+   7. Outputs log of ISQL-1 and online validation results.
+
+   Tested on WI-V3.0.0.32008 RC1, SS, SC and CS. Result: OK.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import subprocess
+from subprocess import Popen
+#import signal
+import time
+
+db_conn.close()
+
+
+#####################################################################
+# Move database to FW = OFF in order to increase speed of insertions and output its header info:
+
+fwoff_log=open( os.path.join(context['temp_directory'],'tmp_fw_off_4855.log'), 'w')
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
+                  "action_properties",\
+                  "prp_write_mode", "prp_wm_async",\
+                  "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb" ],\
+                  stdout=fwoff_log, stderr=subprocess.STDOUT)
+
+fwoff_log.seek(0,2)
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
+                 "action_db_stats", \
+                 "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb", "sts_hdr_pages"],\
+                 stdout=fwoff_log, stderr=subprocess.STDOUT)
+fwoff_log.close()
+
+#####################################################################
+# Preparing script for ISQL that will do 'heavy DML':
+
+sql_cmd='''
+recreate sequence g;
+recreate table test(id int, s varchar(1000) unique using index test_s_unq);
+recreate table stop(id int);
+commit; 
+set list on;
+set transaction read committed;
+set term ^;
+execute block returns( inserted_rows varchar(20) ) as
+begin
+  while ( not exists(select * from stop) ) do
+  begin
+    insert into test(id, s) values( gen_id(g,1), rpad('',1000, uuid_to_char(gen_uuid())) );
+  end
+  inserted_rows = iif( gen_id(g,0) > 0, 'OK, LOT OF.', 'FAIL: ZERO!');
+  suspend;
+end
+^
+set term ;^
+commit;
+'''
+
+f_heavy_dml_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_4855.sql'), 'w')
+f_heavy_dml_cmd.write(sql_cmd)
+f_heavy_dml_cmd.close()
+
+#####################################################################
+# Starting ISQL in separate process with doing 'heavy DML' (bulk-inserts)  until table 'stop' 
+# remains empty (this table will get one row in separate ISQL session, see below p_stopper):
+
+f_heavy_dml_log=open( os.path.join(context['temp_directory'],'tmp_isql_4855.log'), 'w')
+p_heavy_dml = Popen([ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_heavy_dml_cmd.name ], stdout=f_heavy_dml_log, stderr=subprocess.STDOUT)
+
+# Here we have to wait for sure that ISQL could establish its connect and starts DML 
+# before we will run online-validation:
+
+time.sleep(2)
+
+#####################################################################
+# Doing online-validation.
+# Use subprocess.call() with waiting in main thread for it will finish. 
+
+val_log=open( os.path.join(context['temp_directory'],'tmp_onval_4855.log'), 'w')
+
+val_log.write('Iteration #1:\\n')
+val_log.seek(0,2)
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
+                 "action_validate","val_lock_timeout","1", \
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],\
+                 stdout=val_log, stderr=subprocess.STDOUT)
+
+time.sleep(2)
+
+# Iteration #2:
+
+val_log.seek(0,2)
+val_log.write('\\n\\nIteration #2:\\n')
+val_log.seek(0,2)
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
+                 "action_validate","val_lock_timeout","1", \
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],\
+                 stdout=val_log, stderr=subprocess.STDOUT)
+'''
+time.sleep(2)
+
+val_log.seek(0,2)
+val_log.write('\\n\\nIteration #3:\\n')
+val_log.seek(0,2)
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
+                 "action_validate","val_lock_timeout","1", \
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],\
+                 stdout=val_log, stderr=subprocess.STDOUT)
+'''
+val_log.close()
+
+#####################################################################
+
+# Stopping ISQL that is doing now 'heavy DML' (bulk-inserts):
+
+f_stopper_cmd=open( os.path.join(context['temp_directory'],'tmp_stop_4855.sql'), 'w')
+f_stopper_cmd.write('insert into stop(id) values(1); commit;')
+f_stopper_cmd.close()
+
+p_stopper = subprocess.call([ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_stopper_cmd.name])
+
+# Stop working ISQL:
+p_heavy_dml.terminate()
+f_heavy_dml_log.close()
+
+with open( f_heavy_dml_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+with open( val_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+os.remove(fwoff_log.name)
+os.remove(f_stopper_cmd.name)
+os.remove(val_log.name)
+os.remove(f_heavy_dml_cmd.name)
+os.remove(f_heavy_dml_log.name)
+
+  """,
+ 'expected_stdout':
+  """
+INSERTED_ROWS                   OK, LOT OF.
+Iteration #1:
+21:16:28.31 Validation started
+21:16:28.31 Relation 128 (TEST)
+21:16:29.31 Acquire relation lock failed
+21:16:29.31 Relation 128 (TEST) : 1 ERRORS found
+21:16:30.04 Relation 129 (STOP)
+21:16:30.04   process pointer page    0 of    1
+21:16:30.04 Relation 129 (STOP) is ok
+21:16:30.04 Validation finished
+Iteration #2:
+21:16:32.46 Validation started
+21:16:32.46 Relation 128 (TEST)
+21:16:33.46 Acquire relation lock failed
+21:16:33.46 Relation 128 (TEST) : 1 ERRORS found
+21:16:35.09 Relation 129 (STOP)
+21:16:35.09   process pointer page    0 of    1
+21:16:35.09 Relation 129 (STOP) is ok
+21:16:35.09 Validation finished
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[
+    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
+    ('Relation [0-9]{3,4}','Relation')
+  ]
+}
+]
+}
