@@ -6,6 +6,7 @@
 
 @rem Batch for investigating of SHUTDOWN process features when
 @rem database is subject to DML workload of different level.
+@rem http://tracker.firebirdsql.org/browse/CORE-4914
 @rem 
 @rem Run this batch to get requirements and syntax if usage with examples.
 
@@ -25,6 +26,7 @@ if .%2.==.. set worker_num=1
 if not exist %~n0.conf goto noconf
 
 ::::::::::::::::::::::::  read fbt-run.conf  ::::::::::::::::::::::
+@echo Reading %~n0.conf. . .
 call :readcfg %~n0.conf
 :: Result:
 :: get values of all necessary env. variables (fbNNhome, fbNNport)
@@ -369,6 +371,17 @@ echo fbsvcrun=^>%fbsvcrun%^<
 
 ::---------------------------------------------------------
 
+echo.
+echo %time% - get server version and fb_info:
+echo on
+%fbsvcrun% info_server_version info_svr_db_info
+@echo off
+
+echo %time% - saving firebird.log BEFORE test start:
+echo on
+%fbsvcrun% action_get_fb_log 1>%~n0.fb-log-before-test.log 2>&1
+@echo off
+
 :: Preparing trace config and starting trace
 
 (
@@ -462,9 +475,9 @@ set i=1
     echo !time! - out from checking loop, MUST WAIT still more for rest ISQL sessions be ready.
     goto chk_all_dml_start
   ) else (
-    echo #########################################################################################
-    echo !time! - all ISQL sessions have started their work. Now we can run shutdown process.
-    echo #########################################################################################
+    echo #############################################################################################
+    echo !time! - all %worker_num% ISQL sessions have started their work. Now we can run shutdown process.
+    echo #############################################################################################
   )
 
 echo.
@@ -477,13 +490,13 @@ if .!sleep_in_ms!.==.1. (
   ping -n !sleep_sec! localhost > nul
 )
 
-echo.
-echo %time% - get server version and fb_info:
-echo on
-%fbsvcrun% info_server_version info_svr_db_info
-@echo off
-
 :: ---------------------------------------------------------
+
+echo.
+echo %time% - get db_info:
+echo on
+%fbsvcrun% info_svr_db_info
+@echo off
 
 :: Starting SHUTDOWN process
 
@@ -646,27 +659,38 @@ echo %time% - point after return database to ONLINE
 echo show sequ;|%fbhome%\isql localhost/%fbport%:%dbpath%%dbname% %authinfo%
 echo.
 echo %time% - run validation of database:
+@echo on
 %fbsvcrun% action_validate dbname %dbpath%%dbname%
-
+@echo off
 del %trccfg% 2>nul
 
 ::------------------------------------------------------------------------
-
-:: Counting number of logs which contain phrase about internal FB consist. check:
+@echo Counting number of logs which contain any of following:
+@echo "internal Firebird consistency check"
+@echo "database file appears corrupt"
 
 set /a fbcc=0
 for /f %%a in ('dir /b %tmpdir%\%~n0-???.log') do (
-  findstr /i /c:"internal Firebird consistency check" %tmpdir%\%%a >nul
-  if not errorlevel 1 (
-     @rem if !fbcc! GTR 0 del /q %%a
-     set /a fbcc=!fbcc!+1
-  ) else (
-     @rem del /q %%a
-  )
+   findstr /i /c:"internal Firebird consistency check" /c:"database file appears corrupt" %tmpdir%\%%a >nul
+   if not errorlevel 1 (
+      @rem if !fbcc! GTR 0 del /q %%a
+      set /a fbcc=!fbcc!+1
+   ) else (
+      @rem del /q %%a
+   )
 )
-if %fbcc% GTR 0 echo Found message "internal Firebird consistency check" in %fbcc% logs.
+if %fbcc% GTR 0 echo Found problem messages in %fbcc% logs.
 
 ::-------------------------------------------------------------------------
+
+echo %time% - saving firebird.log AFTER test finish:
+echo on
+%fbsvcrun% action_get_fb_log 1>%~n0.fb-log-after-test.log 2>&1
+@echo off
+fc.exe /n %~n0.fb-log-before-test.log %~n0.fb-log-after-test.log 1>%~n0.changes-in-firebird.log
+del %~n0.fb-log-before-test.log
+del %~n0.fb-log-after-test.log
+
 
 :: === F I N I S H  ===
 
