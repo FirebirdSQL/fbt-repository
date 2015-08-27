@@ -1,0 +1,222 @@
+{
+'id': 'bugs.core_4889',
+'qmid': None,
+'tracker_id': 'CORE-4889',
+'title': 'FBSVCMGR with `action_trace_start` prevents in 3.0 SuperServer from connecting using local protocol',
+'description': 
+ """
+   In order to check ticket issues this test does following:
+   1. Launches trace session via FBSVCMGR, in separate process (i.e. in  async. mode). Obtains launched trace session ID.
+   2. Launches ISQL connection that uses LOCAL protocol and tries to extract some data from mon$attachment.
+      This ISQL is launched also as separate process, its ID is marked here as 'p_isql'
+   3. If ISQL will hang, main thread uses p_isql.terminate() call to kill it. This was checked on emulating of 'heavy load'
+      by doing 'select count(*) from <huge_data_source>'. It works OK so this 'select' was disabled.
+   4. Wait several seconds and terminate p_isql and close log that received its output (stdout & stderr).
+   5. Launches NBACKUP that does backup of level 0. This program can work only by local protocol by design.
+   6. Wait several seconds, terminate process of NBACKUP (if it will not finish at this moment) and close its log (stdout & stderr).
+   8. Stops trace session that was launched at the beginning.
+   9. Ouput logs of ISQL and NBACKUP activity.
+
+   Tested on WI-V3.0.0.32008 RC1, SS, SC and CS. Result: OK.
+   PS.
+   Some useful links about terminating child process in Python and disable output buffering 
+   (did not needed for this test per se, but I leave them here for some future investigations):
+   http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+   http://stackoverflow.com/questions/4789837/how-to-terminate-a-python-subprocess-launched-with-shell-true
+
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'Windows',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import subprocess
+from subprocess import Popen
+#import signal
+import time
+
+db_conn.close()
+
+#####################################################################
+# Prepare config for trace session that will be launched by call of FBSVCMGR:
+
+txt = '''# Generated auto, do not edit!
+
+database= %[\\\\\\\\/]bugs.core_4889.fdb
+{
+  enabled = true
+  log_errors = true
+  log_connections = true
+  log_transactions = true
+  log_statement_prepare = true
+  log_statement_start = true
+  log_statement_finish = true
+  time_threshold = 0 
+}
+'''
+trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_4889.cfg'), 'w')
+trccfg.write(txt)
+trccfg.close()
+trclog=open( os.path.join(context['temp_directory'],'tmp_trace_4889.log'), 'w')
+trclog.close()
+trclst=open( os.path.join(context['temp_directory'],'tmp_trace_4889.lst'), 'w')
+trclst.close()
+
+#sys.stdout.flush()
+#os._exit(0)
+
+#####################################################################
+# Async. launch of trace session using FBSVCMGR action_trace_start:
+
+trclog=open(trclog.name, "w")
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_svcmgr = Popen(["fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey","action_trace_start","trc_cfg", trccfg.name], stdout=trclog, stderr=subprocess.STDOUT)
+
+# Wait! Trace session is initialized not instantly!
+time.sleep(2)
+
+#####################################################################
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+
+trclst=open(trclst.name, "w")
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey","action_trace_list"],stdout=trclst, stderr=subprocess.STDOUT)
+trclst.close()
+
+# Session ID: 5 
+#   user:   
+#   date:  2015-08-27 15:24:14 
+#   flags: active, trace 
+
+trcssn=0
+with open( trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+
+# Result: `trcssn` is ID of active trace session. 
+# We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
+
+#####################################################################
+# Preparing script for ISQL:
+
+sql_cmd='''
+set list on; 
+select 
+  a.mon$user as mon_user,
+  iif(a.mon$remote_protocol is null, 'internal', 'remote') as connection_protocol,
+  iif(a.mon$remote_process is null, 'embedded', 'remote') as connection_process,
+  a.mon$auth_method as auth_method -- should be: 'User name in DPB'
+from  mon$attachments a 
+where a.mon$attachment_id = current_connection; 
+commit; 
+-- this was added temply, 4debug: check that we really can kill process by issuing p_isql.terminate():
+-- select count(*) from rdb$types,rdb$types,rdb$types,rdb$types;
+'''
+
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_4889.sql'), 'w')
+f_isql_cmd.write(sql_cmd)
+f_isql_cmd.close()
+
+#####################################################################
+# Doing ISQL work using local protocol.
+
+# Async. launch ISQL process that will use connection by embedded (local) protocol and potentially can HANGS:
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_4889.log'), 'w')
+p_isql = Popen([ "isql" , "$(DATABASE_LOCATION)bugs.core_4889.fdb", "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_isql_cmd.name ], stdout=f_isql_log, stderr=subprocess.STDOUT)
+# leaved here 4debug only: TCP. p_isql = Popen([ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_isql_cmd.name ], stdout=f_isql_log, stderr=subprocess.STDOUT)
+
+# Here we have to wait for sure that ISQL could establish its connect before we will terminate its process 
+# (because it will hangs during firebird.conf 'DeadlockTimeout' seconds):
+time.sleep(2)
+
+p_isql.terminate()
+f_isql_log.close()
+
+#####################################################################
+# Doing one else work using local protocol: NBACKUP.
+
+this_fdb='$(DATABASE_LOCATION)bugs.core_4889.fdb'
+this_nbk='$(DATABASE_LOCATION)bugs.core_4889.nb0'
+if os.path.isfile(this_nbk):
+    os.remove(this_nbk)
+
+# Async. launch NBACKUP process that will use connection by embedded (local) protocol and potentially can HANGS:
+f_nbk_log=open( os.path.join(context['temp_directory'],'tmp_nbk_4889.log'), 'w')
+p_nbk=Popen([ "nbackup" , "-b", "0", this_fdb, this_nbk, "-user" , "SYSDBA" , "-password", "masterkey"], stdout=f_nbk_log, stderr=subprocess.STDOUT)
+
+# Here we have to wait for sure that NBACKUP could finish its work 
+# before we will terminate nbackup' process (if case when it hangs):
+time.sleep(2)
+
+p_nbk.terminate()
+f_nbk_log.close()
+
+#####################################################################
+# Stop trace session:
+
+trclst=open(trclst.name, "a")
+trclst.seek(0,2)
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey","action_trace_stop","trc_id",trcssn],stdout=trclst, stderr=subprocess.STDOUT)
+trclst.close()
+
+p_svcmgr.terminate()
+trclog.close()
+
+#####################################################################
+# Output logs of ISQL and NBACKUP activity:
+
+with open( f_isql_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+with open( f_nbk_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+# do NOT remove this pause otherwise log of trace will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+
+time.sleep(1)
+
+
+#####################################################################
+# Cleanup:
+
+os.remove(this_nbk)
+os.remove(f_nbk_log.name)
+os.remove(f_isql_log.name)
+os.remove(f_isql_cmd.name)
+os.remove(trccfg.name)
+os.remove(trclst.name)
+os.remove(trclog.name)
+  """,
+ 'expected_stdout':
+  """
+     MON_USER                        SYSDBA
+     CONNECTION_PROTOCOL             internal
+     CONNECTION_PROCESS              embedded
+     AUTH_METHOD                     User name in DPB
+     time elapsed  1 sec
+     page reads    224
+     page writes   224
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[('time elapsed.*','time elapsed'),('page reads.*','page reads'),('page writes.*','page writes') ]
+}
+]
+}
