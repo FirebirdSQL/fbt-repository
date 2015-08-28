@@ -1,0 +1,148 @@
+{
+'id': 'bugs.core_4864',
+'qmid': None,
+'tracker_id': 'CORE-4864',
+'title': ' CREATE DATABASE fail with ISQL',
+'description': 
+ """
+   Test obtains full path to $fb_home via FBSVCMGR info_get_env.
+   Then it makes copy of file 'databases.conf' that is in $fb_home directory because 
+   following lines will be added to that 'databases.conf':
+   ===
+   tmp_alias_4864 = ...
+   {
+     SecurityDatabase = tmp_alias_4864
+   }
+   ===
+   Then we run ISQL and give to it command to create database which definition 
+   should be taken from 'databases.conf', as it was explained in the ticket by Alex:
+   ===
+   create database 'tmp_alias_4864' user 'SYSDBA';
+   ===
+   Finally, mon$attachment is queried and some info is extracted from it in order
+   to be sure that we really got proper result.
+   .............................................
+   ::: NB :::
+   It is impossible to check ability to create new user in new database that was made by such way: 
+   plugin 'Srp' is required that currently is replaced before any test with 'Legacy' one.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import subprocess
+from subprocess import Popen
+#import signal
+import time
+import shutil
+
+db_conn.close()
+#info_get_env
+#info_get_env_lock
+f_svc_log=open( os.path.join(context['temp_directory'],'tmp_svc_4864.log'), 'w')
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
+                  "info_get_env"],\
+                  stdout=f_svc_log, stderr=subprocess.STDOUT)
+f_svc_log.close()
+
+# Result: f_svc_log contains line like this:
+# Server root: C:\1INSTALL\FIREBIRD\fb30sS\
+# NB: though it is unlikely, but path can contain spaces!
+
+fb_home=''
+with open( f_svc_log.name,'r') as f:
+    for line in f:
+        i=1
+        for word in line.split():
+            if i > 2:
+                fb_home = fb_home + word + ' '
+            i=i+1
+        break
+fb_home = fb_home.strip()
+
+# Resut: fb_home is full path to FB instance home (with trailing slash).
+
+shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
+
+tmp_fdb=os.path.join(context['temp_directory'],'tmp_4864.fdb')
+
+if os.path.isfile(tmp_fdb):
+  os.remove(tmp_fdb)
+
+f_dbconf=open(fb_home+'databases.conf','a')
+f_dbconf.seek(0, 2)
+f_dbconf.write("\\n\\n# Created temply by fbtest, CORE-4864. Should be removed auto.")
+f_dbconf.write("\\n\\ntmp_alias_4864 = " + tmp_fdb )
+f_dbconf.write("\\n{\\n  SecurityDatabase = tmp_alias_4864 \\n}\\n")
+f_dbconf.close()
+
+
+isql_script='''
+create database 'tmp_alias_4864' user 'SYSDBA';
+set list on;
+select
+   d.mon$sec_database
+  ,a.mon$attachment_name
+  ,a.mon$user
+  ,a.mon$remote_protocol
+  ,a.mon$remote_address
+  ,a.mon$remote_process
+  ,a.mon$auth_method
+from mon$database d cross join mon$attachments a
+where a.mon$attachment_id = current_connection;
+commit;
+drop database;
+quit;
+'''
+
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_create_4864.sql'), 'w')
+f_isql_cmd.write( isql_script )
+f_isql_cmd.close()
+
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_create_4864.log'), 'w')
+subprocess.call(["isql","-q","-i",f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
+f_isql_log.close()
+
+shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
+os.remove( fb_home+'databases.bak' )
+
+with open( f_isql_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+os.remove(f_isql_log.name)
+os.remove(f_isql_cmd.name)
+os.remove(f_svc_log.name)
+  """,
+ 'expected_stdout':
+  """
+    MON$SEC_DATABASE                Self   
+    MON$ATTACHMENT_NAME             tmp_alias_4864
+    MON$USER                        SYSDBA                                                                                       
+    MON$REMOTE_PROTOCOL             <null>
+    MON$REMOTE_ADDRESS              <null>
+    MON$REMOTE_PROCESS              <null>
+    MON$AUTH_METHOD                 User name in DPB
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
