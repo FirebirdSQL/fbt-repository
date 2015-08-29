@@ -121,21 +121,24 @@ lock_sql='''
     set term ;^
     commit;
 
-    set transaction lock timeout 5;
+    set transaction wait;
 
     delete from test1;
     insert into test3(id) values(1);
+    set list on;
+    select 'Starting EB with infinite pause.' as isql_msg from rdb$database;
     set term ^;
     execute block as
     begin
       execute statement 'update test1 set id=-id'
       on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
       as user 'SYSDBA' password 'masterkey'
-         role 'TMP$R4707' -- this will force to create new attachment
+         role 'TMP$R4707' -- this will force to create new attachment, and its Tx will be paused on INFINITE time.
       ;
       when any do begin end
     end ^
     set term ;^
+    select 'EB with pause finished.' as msg_2 from rdb$database;
 '''
 
 hang_sql=open( os.path.join(context['temp_directory'],'tmp_4707_hang.sql'), 'w')
@@ -152,13 +155,12 @@ hang_log=open(hang_log.name, "w")
 ################ ##############################################################################
 # Make asynchronous call of ISQL which will stay several seconds in pause due to row-level lock
 # #############################################################################################
-
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
 
 # Here we should wait while ISQL will establish its connect (in separate child window, call asynchronous) and 
 # stay in pause:
-time.sleep(1)
+time.sleep(2)
 
 svc_log=open( os.path.join(context['temp_directory'],'tmp_4707_svc.log'), 'w')
 svc_log.write('')
@@ -167,13 +169,19 @@ svc_log.close()
 #############################################################################################
 # Make SYNC. call of fbsvcmgr in order to validate database which has locks on some relations
 #############################################################################################
-
 svc_log=open(svc_log.name, "w")
 subprocess.call(['fbsvcmgr', 'localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'],stdout=svc_log, stderr=subprocess.STDOUT)
 svc_log.close()
 
+#######################################################
+# TERMINATE separate (child) process of ISQL that hangs
+#######################################################
 p_hang.terminate()
 hang_log.close()
+
+with open( hang_log.name,'r') as f:
+    print(f.read())
+f.close()
 
 with open( svc_log.name,'r') as f:
     print(f.read())
@@ -183,6 +191,7 @@ f.close()
 # NOTE: here we must wit a little in order all file handles be really closed by OS!
 # Otherwise will get error of accessing file ('Windows 32' etc):
 time.sleep(1)
+
 if os.path.isfile(hang_sql.name):
     os.remove(hang_sql.name)
 if os.path.isfile(hang_log.name):
@@ -193,6 +202,7 @@ if os.path.isfile(svc_log.name):
   """,
  'expected_stdout':
   """
+    ISQL_MSG                        Starting EB with infinite pause.
     08:37:01.14 Validation started
     08:37:01.15 Relation 128 (TEST1)
     08:37:02.15 Acquire relation lock failed
