@@ -105,9 +105,6 @@ hang_log.close()
 
 isql_launch='"isql $(DSN) -user SYSDBA -pas masterkey -n -i %s 1>%s 2>&1"' % (hang_sql.name, hang_log.name)
 
-# Launch program in separate (new) window via START command:
-# -- subprocess.call('start /min cmd /c %s' % isql_launch, shell=True)
-
 hang_log=open(hang_log.name, "w")
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
@@ -169,10 +166,6 @@ kill_sql.close()
 kill_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), 'w')
 kill_log.write('')
 kill_log.close()
-
-# -- isql_launch='"isql $(DSN) -user SYSDBA -pas masterkey -n -i %s 1>%s 2>&1"' % (kill_sql.name, kill_log.name)
-# -- Launch program in separate (new) window via START command:
-# -- subprocess.call('start /min cmd /c %s' % isql_launch, shell=True)
 
 kill_log=open(kill_log.name, "w")
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
