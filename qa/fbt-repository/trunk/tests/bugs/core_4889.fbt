@@ -148,14 +148,19 @@ f_isql_log.close()
 #####################################################################
 # Doing one else work using local protocol: NBACKUP.
 
-this_fdb='$(DATABASE_LOCATION)bugs.core_4889.fdb'
-this_nbk='$(DATABASE_LOCATION)bugs.core_4889.nb0'
-if os.path.isfile(this_nbk):
-    os.remove(this_nbk)
+n_prefix='$(DATABASE_LOCATION)bugs.core_4889'
+fdb_file=n_prefix+'.fdb'
+nbk_file=n_prefix+'.nb0'
+nbk_delta=n_prefix+'.delta'
+
+if os.path.isfile(nbk_file):
+    os.remove(nbk_file)
+if os.path.isfile(nbk_delta):
+    os.remove(nbk_delta)
 
 # Async. launch NBACKUP process that will use connection by embedded (local) protocol and potentially can HANGS:
 f_nbk_log=open( os.path.join(context['temp_directory'],'tmp_nbk_4889.log'), 'w')
-p_nbk=Popen([ "nbackup" , "-b", "0", this_fdb, this_nbk, "-user" , "SYSDBA" , "-password", "masterkey"], stdout=f_nbk_log, stderr=subprocess.STDOUT)
+p_nbk=Popen([ "nbackup" , "-b", "0", fdb_file, nbk_file, "-user" , "SYSDBA" , "-password", "masterkey"], stdout=f_nbk_log, stderr=subprocess.STDOUT)
 
 # Here we have to wait for sure that NBACKUP could finish its work 
 # before we will terminate nbackup' process (if case when it hangs):
@@ -195,13 +200,30 @@ time.sleep(1)
 #####################################################################
 # Cleanup:
 
-os.remove(this_nbk)
-os.remove(f_nbk_log.name)
-os.remove(f_isql_log.name)
-os.remove(f_isql_cmd.name)
-os.remove(trccfg.name)
-os.remove(trclst.name)
-os.remove(trclog.name)
+if os.path.isfile(nbk_file):
+    os.remove(nbk_file)
+
+if os.path.isfile(nbk_delta):
+    os.remove(nbk_delta)
+
+if os.path.isfile(f_nbk_log.name):
+    os.remove(f_nbk_log.name)
+
+if os.path.isfile(f_isql_log.name):
+    os.remove(f_isql_log.name)
+
+if os.path.isfile(f_isql_cmd.name):
+    os.remove(f_isql_cmd.name)
+
+if os.path.isfile(trccfg.name):
+    os.remove(trccfg.name)
+
+if os.path.isfile(trclst.name):
+    os.remove(trclst.name)
+
+if os.path.isfile(trclog.name):
+    os.remove(trclog.name)
+
   """,
  'expected_stdout':
   """
