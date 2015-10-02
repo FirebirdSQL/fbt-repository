@@ -175,7 +175,7 @@ FROM
   JOIN Table_100 t100 ON (t100.ID = t3K.ID)
   JOIN Table_10 t10 ON (t10.ID = t100.ID);
 """,
- 'expected_stdout': """PLAN JOIN (T10 NATURAL, T3K INDEX (PK_TABLE_3K), T100 INDEX (PK_TABLE_100))
+ 'expected_stdout': """PLAN JOIN (T10 NATURAL, T100 INDEX (PK_TABLE_100), T3K INDEX (PK_TABLE_3K))
 
                 COUNT
 =====================
