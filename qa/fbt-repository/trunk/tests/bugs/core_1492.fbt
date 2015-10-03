@@ -9,56 +9,31 @@
 {
  'firebird_version': '2.1',
  'platform': 'All',
- 'init_script': """create table t (b blob sub_type text);
-COMMIT;
-insert into t values (NULL);
-insert into t values ('test');
-COMMIT;""",
+ 'init_script':
+  """
+  """,
  'test_type': 'ISQL',
- 'test_script': """select coalesce(b, '') from t;
-""",
- 'expected_stdout': """
-         COALESCE
-=================
-              0:1
-==============================================================================
-COALESCE:
+ 'test_script':
+  """
+    recreate table t (id int primary key, b blob sub_type text );
+    commit;
 
-==============================================================================
-             80:1
-==============================================================================
-COALESCE:
-test
-==============================================================================
+    insert into t(id, b) values (1, NULL);
+    insert into t(id, b) values (2, 'QWER');
+    commit;
 
-"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'init_script': """create table t (b blob sub_type text);
-COMMIT;
-insert into t values (NULL);
-insert into t values ('test');
-COMMIT;""",
- 'test_type': 'ISQL',
- 'test_script': """select coalesce(b, '') from t;
-""",
- 'expected_stdout': """
-         COALESCE
-=================
-              0:1
-==============================================================================
-COALESCE:
-
-==============================================================================
-            80:ef
-==============================================================================
-COALESCE:
-test
-==============================================================================
-
-"""
+    set list on;
+    select coalesce(b, '') as b_blob
+    from t
+    order by id;
+  """,
+ 'expected_stdout':
+  """
+    B_BLOB                          0:1
+    B_BLOB                          82:1e0
+    QWER
+  """,
+  'substitutions':[('B_BLOB.*','B_BLOB')]
 }
 ]
 }
