@@ -11,7 +11,15 @@
  'platform': 'All',
  'init_script':
   """
-    recreate table att_log (att_id int, att_name varchar(50), att_user varchar(31), att_addr varchar(25), att_prot varchar(15), att_auth varchar(15), att_dts timestamp default 'now');
+    recreate table att_log (
+        att_id int,
+        att_name varchar(255),
+        att_user varchar(255),
+        att_addr varchar(255),
+        att_prot varchar(255),
+        att_auth varchar(255),
+        att_dts timestamp default 'now'
+    );
     
     commit;
     
@@ -28,7 +36,7 @@
           ,mon$remote_protocol
           ,mon$auth_method
       from mon$attachments
-      --where mon$attachment_id = current_connection
+      where mon$remote_protocol starting with upper('TCP') and mon$user = upper('SYSDBA')
       ;
     end
     ^
@@ -49,7 +57,7 @@ set list on;
 select 
     iif( att_id > 0, 1, 0) is_att_id_ok
    ,iif( att_name containing 'core_4928.fdb', 1, 0) is_att_name_ok
-   ,iif( att_user containing 'SYSDBA', 1, 0) is_att_user_ok
+   ,iif( att_user = upper('SYSDBA'), 1, 0) is_att_user_ok
    ,iif( att_addr is not null, 1, 0) is_att_addr_ok
    ,iif( upper(att_prot) starting with upper('TCP'), 1, 0) is_att_prot_ok
    ,iif( att_auth is not null, 1, 0) is_att_auth_ok
