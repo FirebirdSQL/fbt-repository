@@ -54,45 +54,20 @@ Default Character set: NONE
  'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """commit;
-create database /* waw */ '$(DATABASE_LOCATION)trucks';
-show database;
-drop database;""",
- 'expected_stdout': """        Owner: SYSDBA
-PAGE_SIZE 4096
-Number of DB pages allocated = 196
-Sweep interval = 20000
-Forced Writes are ON
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-ODS = 11.2
-Default Character set: NONE
-""",
- 'substitutions': [('Number of DB pages.*',''),('Forced Writes.*','')]
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': """commit;
-create database /* waw */ '$(DATABASE_LOCATION)trucks';
-show database;
-drop database;""",
- 'expected_stdout': """        Owner: SYSDBA
-PAGE_SIZE 4096
-Number of DB pages allocated = 228
-Sweep interval = 20000
-Forced Writes are ON
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-ODS = 12.0
-Default Character set: NONE
-""",
- 'substitutions': [('Number of DB pages.*',''),('Forced Writes.*','')]
+ 'test_script':
+  """
+    commit;
+    create database /* waw */ '$(DATABASE_LOCATION)trucks';
+    set list on;
+    select iif( m.mon$database_name containing 'trucks', 'OK', 'FAIL' ) as result
+    from mon$database m;
+    commit;
+    drop database;
+  """,
+ 'expected_stdout':
+  """
+    RESULT                          OK
+  """
 }
 ]
 }
