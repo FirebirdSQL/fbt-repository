@@ -40,31 +40,49 @@ TEST.F02        3       1001    0
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'Python',
- 'test_script': """dsn = "".join([context["server_location"],
+ 'test_script': """\
+dsn = "".join([context["server_location"],
                         context[db_path_property],
-                        "TEST.FDB"])
+                        "TMP_CREATE_DB_10.FDB"])
 
-file1 = "".join([context[db_path_property], "TEST.F00"])
-file2 = "".join([context[db_path_property], "TEST.F01"])
-file3 = "".join([context[db_path_property], "TEST.F02"])
+file1 = "".join([context[db_path_property], "TMP_CREATE_DB_10.F00"])
+file2 = "".join([context[db_path_property], "TMP_CREATE_DB_10.F01"])
+file3 = "".join([context[db_path_property], "TMP_CREATE_DB_10.F02"])
 
 createCommand = "CREATE DATABASE '%s' USER '%s' PASSWORD '%s' FILE '%s' STARTING AT PAGE 201 FILE '%s' STARTING AT PAGE 601 FILE '%s' STARTING AT PAGE 1001" % (dsn, user_name, user_password, file1, file2, file3)
 
 db_conn= kdb.create_database(createCommand, int(sql_dialect))
 
-cursor = db_conn.cursor()
-cursor.execute("SELECT cast(RDB$FILE_NAME as varchar(60)),RDB$FILE_SEQUENCE,RDB$FILE_START,RDB$FILE_LENGTH FROM RDB$FILES")
+sql='''
+set list on;
+select
+    cast(rdb$file_name as varchar(60)) db_file
+    ,rdb$file_sequence
+    ,rdb$file_start
+    ,rdb$file_length
+from rdb$files
+;
+'''
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password],sql)
 
-printData(cursor)
-
-db_conn.drop_database()""",
- 'expected_stdout': """CAST                                                         RDB$FILE_SEQUENCE RDB$FILE_START RDB$FILE_LENGTH
------------------------------------------------------------- ----------------- -------------- ---------------
-TEST.F00                           1                 229            372
-TEST.F01                           2                 601            400
-TEST.F02                           3                 1001           0
+db_conn.drop_database()
 """,
- 'substitutions': [('^.*TEST.F0','TEST.F0'),('[ ]+','	')]
+ 'expected_stdout':
+  """
+    TMP_CREATE_DB_10.F00
+    RDB$FILE_SEQUENCE     1
+    RDB$FILE_START        201
+    RDB$FILE_LENGTH       400
+    TMP_CREATE_DB_10.F01
+    RDB$FILE_SEQUENCE     2
+    RDB$FILE_START        601
+    RDB$FILE_LENGTH       400
+    TMP_CREATE_DB_10.F02
+    RDB$FILE_SEQUENCE     3
+    RDB$FILE_START        1001
+    RDB$FILE_LENGTH       0
+  """,
+ 'substitutions': [('^.*TMP_CREATE_DB_10.F0','TMP_CREATE_DB_10.F0'),('[ ]+','	')]
 }
 ]
 }
