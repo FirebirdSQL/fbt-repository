@@ -143,10 +143,10 @@ ORDER BY
       t53.id1
     from table_53 t53
     where t53.id1 = 30
-    order by t53.id2 asc -- <<< !!! <<<
+    order by t53.id2 asc
     ;
     -- Checked on WI-V3.0.0.32060:
-    -- PLAN (T53 INDEX (I_TABLE_53_ID1_ASC))
+    -- PLAN (T53 ORDER I_TABLE_53_ID1_ID2_ASC)
     -- Explained:
     --    Select Expression
     --        -> Filter
