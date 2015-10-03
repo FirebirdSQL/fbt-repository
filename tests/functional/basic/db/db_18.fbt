@@ -1603,13 +1603,14 @@ RDB$PAGE_NUMBER RDB$RELATION_ID RDB$PAGE_SEQUENCE RDB$PAGE_TYPE
  'test_script':
   """
     set list on;
+    set count on;
     select *
     from rdb$pages
     order by rdb$page_number;
   """,
  'expected_stdout': 
   """
-    RDB$PAGE_NUMBER                 3
+      RDB$PAGE_NUMBER                 3
     RDB$RELATION_ID                 0
     RDB$PAGE_SEQUENCE               0
     RDB$PAGE_TYPE                   4
@@ -1969,15 +1970,18 @@ RDB$PAGE_NUMBER RDB$RELATION_ID RDB$PAGE_SEQUENCE RDB$PAGE_TYPE
     RDB$PAGE_SEQUENCE               0
     RDB$PAGE_TYPE                   6
     
-    RDB$PAGE_NUMBER                 177
+    RDB$PAGE_NUMBER                 157
     RDB$RELATION_ID                 0
     RDB$PAGE_SEQUENCE               0
     RDB$PAGE_TYPE                   9
     
-    RDB$PAGE_NUMBER                 210
+    RDB$PAGE_NUMBER                 175
     RDB$RELATION_ID                 0
     RDB$PAGE_SEQUENCE               0
     RDB$PAGE_TYPE                   3
+    
+    
+    Records affected: 74
   """
 }
 ]
