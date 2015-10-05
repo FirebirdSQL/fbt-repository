@@ -17,7 +17,7 @@
   """
     create or alter trigger tr before any ddl statement as begin end; 
     show trigger tr; 
-    -- Confirmed excessive output in WI-T3.0.0.30809 Firebird 3.0 Alpha 2
+    -- Confirmed excessive output in WI-T3.0.0.30809 Firebird 3.0 Alpha 2. Was:
     -- TR, Sequence: 0, Type: BEFORE CREATE TABLE OR ALTER TABLE OR DROP TABLE OR ... OR <unknown>, Active // length = 967 characters.
   """,
  'expected_stdout': 
@@ -25,7 +25,7 @@
     TR, Sequence: 0, Type: BEFORE ANY DDL STATEMENT, Active
     as begin end
   """,
-  'substitutions':[('\+.*','')]
+  'substitutions':[('\+.*',''),('\=.*',''),('Trigger text.*','')]
 }
 ]
 }
