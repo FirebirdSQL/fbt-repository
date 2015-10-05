@@ -15,27 +15,34 @@ SHOW TRIGGER
 {
  'firebird_version': '1.0',
  'platform': 'All',
- 'init_script': """CREATE TABLE test( id INTEGER NOT NULL CONSTRAINT unq UNIQUE,
-                   text VARCHAR(32));
-SET TERM ^;
-CREATE TRIGGER tg FOR test BEFORE UPDATE
-AS
-BEGIN
-  new.id=1;
-END ^
-SET TERM ;^
-commit;""",
+ 'init_script': 
+  """
+    CREATE TABLE test( id INTEGER NOT NULL CONSTRAINT unq UNIQUE, text VARCHAR(32));
+    SET TERM ^;
+    CREATE TRIGGER tg FOR test BEFORE UPDATE
+    AS
+    BEGIN
+      new.id=1;
+    END ^
+    SET TERM ;^
+    commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """ALTER TRIGGER tg POSITION 20;
-SHOW TRIGGER tg;""",
- 'expected_stdout': """Triggers on Table TEST:
-TG, Sequence: 20, Type: BEFORE UPDATE, Active
-AS
-BEGIN
-  new.id=1;
-END
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-"""
+ 'test_script': 
+  """
+    ALTER TRIGGER tg POSITION 20;
+    SHOW TRIGGER tg;
+  """,
+ 'expected_stdout': 
+  """
+    Triggers on Table TEST:
+    TG, Sequence: 20, Type: BEFORE UPDATE, Active
+    AS
+    BEGIN
+      new.id=1;
+    END
+  """,
+  'substitutions':[('\+.*',''),('\=.*',''),('Trigger text.*','')]
 }
 ]
 }
