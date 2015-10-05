@@ -114,7 +114,7 @@
  'expected_stderr': 
   """
   """,
-  'substitutions': [('\+.*','')]
+  'substitutions': [('\+.*',''),('\=.*',''),('Trigger text.*','')]
 }
 ]
 }
