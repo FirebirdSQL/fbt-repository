@@ -20,7 +20,10 @@
       because it runs in transaction with TIL = RC.
    7. Outputs log of ISQL-1 and online validation results.
 
-   Tested on WI-V3.0.0.32008 RC1, SS, SC and CS. Result: OK.
+   Tested on WI-V3.0.0.32008, SS, SC and CS. Result: OK.
+   Updated since WI-V3.0.0.32064: reduced key-length from extremely huge (1000) to "normal" value 36, 
+   otherwise get 'Statement failed, SQLSTATE = 54000 / Implementation limit exceeded / -Maximum index level reached'.
+   (since CORE-4914 was fixed, see:  http://sourceforge.net/p/firebird/code/62266 )
  """,
 'min_versions': '3.0',
 'versions': [
@@ -65,7 +68,7 @@ fwoff_log.close()
 
 sql_cmd='''
 recreate sequence g;
-recreate table test(id int, s varchar(1000) unique using index test_s_unq);
+recreate table test(id int, s varchar( 36 ) unique using index test_s_unq);
 recreate table stop(id int);
 commit; 
 set list on;
@@ -75,7 +78,7 @@ execute block returns( inserted_rows varchar(20) ) as
 begin
   while ( not exists(select * from stop) ) do
   begin
-    insert into test(id, s) values( gen_id(g,1), rpad('',1000, uuid_to_char(gen_uuid())) );
+    insert into test(id, s) values( gen_id(g,1), rpad('', 36, uuid_to_char(gen_uuid())) );
   end
   inserted_rows = iif( gen_id(g,0) > 0, 'OK, LOT OF.', 'FAIL: ZERO!');
   suspend;
