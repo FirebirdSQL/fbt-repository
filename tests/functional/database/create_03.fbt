@@ -211,21 +211,17 @@ Transaction -.*""",'')]
  'platform': 'All',
  'page_size': '1024',
  'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """        Owner: SYSDBA
-PAGE_SIZE 4096
-Number of DB pages allocated = 228
-Sweep interval = 20000
-Forced Writes are ON
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-ODS = 12.0
-Default Character set: NONE
-""",
- 'substitutions': [('^Forced Writes are.*',''),("""
-Transaction -.*""",'')]
+ 'test_script':
+  """ 
+    set list on;
+    select mon$page_size as page_size from mon$database;
+  """,
+ 'expected_stdout': 
+  """        
+    PAGE_SIZE                       4096
+  """,
+  'substitutions': [ ('^((?!PAGE_SIZE).)*$','') ]
+
 }
 ]
 }
