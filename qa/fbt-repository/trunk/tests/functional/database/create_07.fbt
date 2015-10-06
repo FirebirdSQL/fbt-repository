@@ -151,20 +151,16 @@ Default Character set: NONE
  'platform': 'All',
  'page_size': '16384',
  'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
- 'expected_stdout': """        Owner: SYSDBA
-PAGE_SIZE 16384
-Number of DB pages allocated = 173
-Sweep interval = 20000
-Forced Writes are ON
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-ODS = 12.0
-Default Character set: NONE
-""",
- 'substitutions': [('^Forced Writes are.*',''),('^Transaction -.*',''),('^Number of DB pages allocated =.*','')]
+ 'test_script':
+  """ 
+    set list on;
+    select mon$page_size as page_size from mon$database;
+  """,
+ 'expected_stdout': 
+  """        
+    PAGE_SIZE                       16384
+  """,
+  'substitutions': [ ('^((?!PAGE_SIZE).)*$','') ]
 }
 ]
 }
