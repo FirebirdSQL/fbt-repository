@@ -75,6 +75,7 @@ PUBLIC                                                                          
  'test_script':
   """
     set list on;
+    set count on;
     select * from rdb$user_privileges order by rdb$user,rdb$grantor,rdb$relation_name,rdb$privilege;
   """,
  'expected_stdout': 
@@ -83,7 +84,277 @@ PUBLIC                                                                          
     RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   S     
     RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
     RDB$RELATION_NAME               RDB$FORMATS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 0
@@ -101,7 +372,160 @@ PUBLIC                                                                          
     RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   S     
     RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
     RDB$RELATION_NAME               RDB$ROLES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        PUBLIC                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 0
@@ -1242,12 +1666,462 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               MON$SEC_DATABASE                                                                             
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -1620,6 +2494,51 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$AUTH_METHOD                                                                              
@@ -1629,12 +2548,57 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 14
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -1692,6 +2656,51 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$CHARACTER_SET_ID                                                                         
@@ -1710,12 +2719,102 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$CLIENT_VERSION                                                                           
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -1800,12 +2899,102 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$DBKEY_LENGTH                                                                             
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -1824,6 +3013,51 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -1881,12 +3115,57 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 14
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -1923,6 +3202,96 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2007,6 +3376,51 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$FILE_FLAGS                                                                               
@@ -2079,6 +3493,51 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$FORMAT                                                                                   
@@ -2133,12 +3592,102 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 14
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2175,6 +3724,51 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2295,6 +3889,96 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$ISOLATION_MODE                                                                           
@@ -2319,6 +4003,51 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2454,6 +4183,51 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2628,12 +4402,57 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 14
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2664,12 +4483,57 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2688,6 +4552,186 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2832,6 +4876,51 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 14
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -2988,6 +5077,51 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$TRANSACTION_DESCRIPTION                                                                  
@@ -3015,12 +5149,102 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$TRIGGER_BLR                                                                              
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -3060,6 +5284,51 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$TYPE_NAME                                                                                
@@ -3075,6 +5344,51 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -3114,6 +5428,141 @@ PUBLIC                                                                          
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
     RDB$PRIVILEGE                   G     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               SEC$KEY                                                                                      
@@ -3129,6 +5578,96 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+    
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     SYSDBA                                                                                       
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
     
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     SYSDBA                                                                                       
@@ -3507,6 +6046,9 @@ PUBLIC                                                                          
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 17
+    
+    
+    Records affected: 663
   """
 }
 ]
