@@ -231,25 +231,42 @@ Transaction -.*""",'')]
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """CREATE SHADOW 1 MANUAL CONDITIONAL '$(DATABASE_LOCATION)TEST.SHD' FILE '$(DATABASE_LOCATION)TEST.S00' STARTING AT PAGE 1000;
-SHOW DATABASE;""",
- 'expected_stdout': """Database: localhost:c:\job\qa\fbtest-repo\tmp\functional.shadow.create_02.fdb
-        Owner: SYSDBA
- Shadow 1: "C:\JOB\QA\FBTEST-REPO\TMP\TEST.SHD" manual
-        file C:\JOB\QA\FBTEST-REPO\TMP\TEST.S00 starting 1000
-PAGE_SIZE 8192
-Number of DB pages allocated = 180
-Sweep interval = 20000
-Forced Writes are ON
-Transaction - oldest = 1
-Transaction - oldest active = 2
-Transaction - oldest snapshot = 2
-Transaction - Next = 5
-ODS = 12.0
-Default Character set: NONE
-""",
- 'substitutions': [('^.*TEST.','TEST.'),('^Forced Writes are.*',''),("""
-Transaction -.*""",'')]
+ 'test_script': 
+  """
+    create shadow 1 manual conditional '$(DATABASE_LOCATION)test.shd' file '$(DATABASE_LOCATION)test.s00' starting at page 1000;
+    commit;
+    set list on;
+    set count on;
+    select 
+        right(trim(rdb$file_name), char_length('test.s??')) as file_name
+       ,rdb$file_sequence as file_sequence
+       ,rdb$file_start as file_start
+       ,rdb$file_length as file_length
+       ,rdb$file_flags as file_flags
+       ,rdb$shadow_number as shadow_number
+    from rdb$files;
+  """,
+ 'expected_stdout': 
+  """
+    FILE_NAME                       TEST.SHD
+    FILE_SEQUENCE                   0
+    FILE_START                      0
+    FILE_LENGTH                     0
+    FILE_FLAGS                      5
+    SHADOW_NUMBER                   1
+
+    FILE_NAME                       TEST.S00
+    FILE_SEQUENCE                   1
+    FILE_START                      1000
+    FILE_LENGTH                     0
+    FILE_FLAGS                      5
+    SHADOW_NUMBER                   1
+
+    Records affected: 2
+ """,
+ 'expected_stderr':
+  """
+  """
 }
 ]
 }
