@@ -122,7 +122,7 @@
     where rdb$system_flag is distinct from 1 and rdb$trigger_source is not null;
     
     select rdb$package_name, rdb$package_body_source as source_blob
-    from rdb$packages where rdb$system_flag is distinct from 1;
+    from rdb$packages where rdb$system_flag is distinct from 1 and rdb$package_body_source is not null;
   """,
  'expected_stdout': 
   """
