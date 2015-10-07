@@ -774,6 +774,8 @@
 	drop user hacker;
 	commit;
 
+	-- 07.10.2015: added UPDATE sttm that set RDB$PACKAGE_BODY_SOURCE = null, see core-4544.
+
   """,
  'expected_stdout':
   """
@@ -782,7 +784,7 @@
 	-- gdscode list for blocked:    335544926
 
 	-- Executed with role: RDB$ADMIN. Expressions that passes WITHOUT errors:            
-	-- count_of_passed:             22
+	-- count_of_passed:             23
 	VULNERABLE_EXPR                 insert into RDB$BACKUP_HISTORY(RDB$BACKUP_ID , RDB$TIMESTAMP , RDB$BACKUP_LEVEL , RDB$GUID , RDB$SCN , RDB$FILE_NAME) values(null, null, null, null, null, null) returning rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$DB_CREATORS t  set t.RDB$USER = 'C'  rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$DB_CREATORS t  set t.RDB$USER = null  rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
@@ -792,6 +794,7 @@
 	VULNERABLE_EXPR                 delete from RDB$DB_CREATORS t  rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$FUNCTIONS t  set t.RDB$FUNCTION_SOURCE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$PACKAGES t  set t.RDB$PACKAGE_HEADER_SOURCE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
+        VULNERABLE_EXPR                 update RDB$PACKAGES t  set t.RDB$PACKAGE_BODY_SOURCE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$PROCEDURES t  set t.RDB$PROCEDURE_SOURCE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$RELATIONS t  set t.RDB$VIEW_SOURCE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
 	VULNERABLE_EXPR                 update RDB$TRIGGERS t  set t.RDB$TRIGGER_SOURCE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
