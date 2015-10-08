@@ -12,12 +12,14 @@
    3. If ISQL will hang, main thread uses p_isql.terminate() call to kill it. This was checked on emulating of 'heavy load'
       by doing 'select count(*) from <huge_data_source>'. It works OK so this 'select' was disabled.
    4. Wait several seconds and terminate p_isql and close log that received its output (stdout & stderr).
-   5. Launches NBACKUP that does backup of level 0. This program can work only by local protocol by design.
+   5. Launches 'fbsvcmgr action_nbak' that does incremental backup of level 0. 
+      This action will (and can) work only by local protocol by design.
    6. Wait several seconds, terminate process of NBACKUP (if it will not finish at this moment) and close its log (stdout & stderr).
    8. Stops trace session that was launched at the beginning.
    9. Ouput logs of ISQL and NBACKUP activity.
 
-   Tested on WI-V3.0.0.32008 RC1, SS, SC and CS. Result: OK.
+   Tested-1: WI-V3.0.0.32008 SS, SC and CS. Result: OK.
+   Tested-2: WI-V3.0.0.32067 SS, SC and CS. Result: OK // 08.10.2015.
    PS.
    Some useful links about terminating child process in Python and disable output buffering 
    (did not needed for this test per se, but I leave them here for some future investigations):
@@ -160,7 +162,16 @@ if os.path.isfile(nbk_delta):
 
 # Async. launch NBACKUP process that will use connection by embedded (local) protocol and potentially can HANGS:
 f_nbk_log=open( os.path.join(context['temp_directory'],'tmp_nbk_4889.log'), 'w')
-p_nbk=Popen([ "nbackup" , "-b", "0", fdb_file, nbk_file, "-user" , "SYSDBA" , "-password", "masterkey"], stdout=f_nbk_log, stderr=subprocess.STDOUT)
+
+# 08.10.2015: replaced invocation of nbackup with equiv call of fbsvcmgr. It seems that there are some troubles with nbackup on FB test host!
+# WAS: p_nbk=Popen([ "nbackup" , "-z", "-b", "0", fdb_file, nbk_file, "-user" , "SYSDBA" , "-password", "masterkey"], stdout=f_nbk_log, stderr=subprocess.STDOUT)
+
+p_nbk=Popen([ "fbsvcmgr" , "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey", \
+                           "action_nbak",        \
+                           "dbname", fdb_file,   \
+                           "nbk_file", nbk_file, \
+                           "nbk_level", "0" ],   \
+                           stdout=f_nbk_log, stderr=subprocess.STDOUT)
 
 # Here we have to wait for sure that NBACKUP could finish its work 
 # before we will terminate nbackup' process (if case when it hangs):
@@ -238,7 +249,11 @@ if os.path.isfile(trclog.name):
  'expected_stderr':
   """
   """,
-  'substitutions':[('time elapsed.*','time elapsed'),('page reads.*','page reads'),('page writes.*','page writes') ]
+  'substitutions':[
+      ('time elapsed.*','time elapsed'),
+      ('page reads.*','page reads'),
+      ('page writes.*','page writes') 
+  ]
 }
 ]
 }
