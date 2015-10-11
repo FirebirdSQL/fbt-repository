@@ -1,0 +1,131 @@
+{
+'id': 'bugs.core_4922',
+'qmid': None,
+'tracker_id': 'CORE-4922',
+'title': "Server ignores asynchronous (monitoring or cancellation) requests while preparing a query with lot of windowed functions",
+'description':
+ """
+    Preparing stage of query from aux. file ("core_4922.sql") will last lot of time even on power host.
+    We launch separate (child) process with ISQL and allow him to start preparing this query during several
+    seconds. Then we launch second child process with ISQL and try to kill first one.
+    Before this ticket was fixed it was NOT possible neither to cancel it by using MON$ATTACHMENTS nor even
+    query MON$ tables at all (until this 'complex query' preparing finish).
+
+    Checked on WI-V3.0.0.32081, SS / SC / CS. Result: all fine.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import subprocess
+from subprocess import Popen
+import time
+
+db_conn.close()
+
+hang_sql=open(os.path.join(context['files_location'],'core_4922.sql'),'r')
+hang_sql.close()
+
+hang_log=open( os.path.join(context['temp_directory'],'tmp_core_4922.log'), 'w')
+hang_log.write('')
+hang_log.close()
+
+hang_log=open(hang_log.name, "w")
+
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name], \
+                stdout=hang_log, stderr=subprocess.STDOUT \
+              )
+
+time.sleep(4)
+
+script=\
+'''
+   set list on;
+   set count on;
+   commit;
+
+   delete from mon$attachments
+   where
+       mon$attachment_id <> current_connection
+       and mon$system_flag is distinct from 1
+   returning
+     sign(mon$attachment_id) as deleted_mon_att_id,
+     mon$user as deleted_mon_user,
+     iif(mon$remote_protocol containing 'tcp', 'tcp', null) as deleted_mon_protocol,
+     iif(mon$remote_process containing 'isql', 'isql', null) as deleted_mon_process,
+     mon$system_flag as deleted_mon_sys_flag
+   ;
+'''
+
+kill_sql=open( os.path.join(context['temp_directory'],'tmp_kill_4922.sql'), 'w')
+kill_sql.write(script)
+kill_sql.close()
+
+
+kill_log=open( os.path.join(context['temp_directory'],'tmp_kill_4922.log'), 'w')
+kill_log.write('')
+kill_log.close()
+
+kill_log=open(kill_log.name, "w")
+
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_kill = Popen(["isql" , dsn, "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , kill_sql.name], \
+                stdout=kill_log, stderr=subprocess.STDOUT \
+              )
+
+# Make delay at least on 6 seconds after that point.
+# Otherwise temp database will not be removed and we get:
+# Exception AttributeError: "'Connection' object has no attribute '_Connection__ic'"
+# in <bound method Connection.__del__ of <fdb.fbcore.Connection object at 0x023E4850>> ignored
+# Test cleanup: Exception raised while dropping database.
+
+time.sleep(6)
+
+p_hang.terminate()
+hang_log.close()
+
+p_kill.terminate()
+kill_log.close()
+
+with open( hang_log.name,'r') as f:
+    print( f.read())
+f.close()
+
+with open( kill_log.name,'r') as f:
+    print( f.read() )
+f.close()
+
+# Wait again! Otherwise get Windows Error 32 (access denied) because log files are still opened.
+time.sleep(1)
+
+# do NOT! >>> os.remove(hang_sql.name)
+os.remove(kill_sql.name)
+os.remove(kill_log.name)
+os.remove(hang_log.name)
+  """,
+ 'expected_stdout': 
+  """
+    Statement failed, SQLSTATE = 08003
+    connection shutdown
+    DELETED_MON_ATT_ID              1
+    DELETED_MON_USER                SYSDBA
+    DELETED_MON_PROTOCOL            tcp
+    DELETED_MON_PROCESS             isql
+    DELETED_MON_SYS_FLAG            0
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [('.*line.*','')]
+}
+]
+}
