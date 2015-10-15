@@ -1,11 +1,11 @@
 {
-'id': 'bugs.core_4922',
+'id': 'bugs.core_4292',
 'qmid': None,
-'tracker_id': 'CORE-4922',
+'tracker_id': 'CORE-4292',
 'title': "Server ignores asynchronous (monitoring or cancellation) requests while preparing a query with lot of windowed functions",
 'description':
  """
-    Preparing stage of query from aux. file ("core_4922.sql") will last lot of time even on power host.
+    Preparing stage of query from aux. file ("core_4292.sql") will last lot of time even on power host.
     We launch separate (child) process with ISQL and allow him to start preparing this query during several
     seconds. Then we launch second child process with ISQL and try to kill first one.
     Before this ticket was fixed it was NOT possible neither to cancel it by using MON$ATTACHMENTS nor even
@@ -31,10 +31,10 @@ import time
 
 db_conn.close()
 
-hang_sql=open(os.path.join(context['files_location'],'core_4922.sql'),'r')
+hang_sql=open(os.path.join(context['files_location'],'core_4292.sql'),'r')
 hang_sql.close()
 
-hang_log=open( os.path.join(context['temp_directory'],'tmp_core_4922.log'), 'w')
+hang_log=open( os.path.join(context['temp_directory'],'tmp_core_4292.log'), 'w')
 hang_log.write('')
 hang_log.close()
 
@@ -66,12 +66,12 @@ script=\
    ;
 '''
 
-kill_sql=open( os.path.join(context['temp_directory'],'tmp_kill_4922.sql'), 'w')
+kill_sql=open( os.path.join(context['temp_directory'],'tmp_kill_4292.sql'), 'w')
 kill_sql.write(script)
 kill_sql.close()
 
 
-kill_log=open( os.path.join(context['temp_directory'],'tmp_kill_4922.log'), 'w')
+kill_log=open( os.path.join(context['temp_directory'],'tmp_kill_4292.log'), 'w')
 kill_log.write('')
 kill_log.close()
 
