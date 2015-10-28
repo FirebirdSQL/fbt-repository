@@ -61,8 +61,15 @@
     as
         -- ############################################
         -- ############    T H R E S H O L D   ########
-        declare max_diff_threshold numeric(10,4) = 1.85; 
+
+        -- Before 28.10.2015: 1.85 (changed after letter by dimitr). 
+        -- Probably random disturbance was caused by other (concurrent) processes on test host.
+        -- Check with new threshold was done on: WI-V2.5.5.26942 (SC) and WI-V3.0.0.32134 (CS/SC/SS).
+
+        declare max_diff_threshold numeric(10,4) = 3.00;  
+
         -- ############################################
+
         declare ratio_select_vs_count_1e1 numeric(10,4);
         declare ratio_select_vs_count_1e2 numeric(10,4);
         declare ratio_select_vs_count_1e3 numeric(10,4);
@@ -170,11 +177,11 @@
   """,
  'expected_stdout': 
   """
-    RATIO_FOR_1E1                   Acceptable, <= 1.8500
-    RATIO_FOR_1E2                   Acceptable, <= 1.8500
-    RATIO_FOR_1E3                   Acceptable, <= 1.8500
-    RATIO_FOR_1E4                   Acceptable, <= 1.8500
-    RATIO_FOR_1E5                   Acceptable, <= 1.8500
+    RATIO_FOR_1E1                   Acceptable, <= 3.0000
+    RATIO_FOR_1E2                   Acceptable, <= 3.0000
+    RATIO_FOR_1E3                   Acceptable, <= 3.0000
+    RATIO_FOR_1E4                   Acceptable, <= 3.0000
+    RATIO_FOR_1E5                   Acceptable, <= 3.0000
   """
 }
 ]
