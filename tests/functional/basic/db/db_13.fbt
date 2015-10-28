@@ -98,125 +98,123 @@ RDB$TRIGGER_NAME                               8               1
  'test_type': 'ISQL',
  'test_script':
   """
+    -- 28.10.2015. 
+    -- 1. Removed from comparison values of RDB$SECURITY_CLASS because its values often differ in 3.0 recent builds.
+    -- 2. Field rdb$description has been moved at the end of output (select) list.
     set blob all;
     set list on;
-    select *
-    from rdb$generators;
+    select
+         rdb$generator_id
+        ,rdb$generator_name
+        ,rdb$system_flag
+        ,rdb$initial_value
+        ,rdb$generator_increment
+        ,rdb$owner_name
+        ,rdb$description as gen_descr_blob_id
+    from rdb$generators g
+    order by g.rdb$generator_id;
   """,
  'expected_stdout': 
   """
-    RDB$GENERATOR_NAME              RDB$SECURITY_CLASS
+
     RDB$GENERATOR_ID                1
+    RDB$GENERATOR_NAME              RDB$SECURITY_CLASS                                                                           
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SECURITY_CLASS              SQL$150
-    RDB$OWNER_NAME                  SYSDBA
     RDB$INITIAL_VALUE               0
     RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              SQL$DEFAULT
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               <null>
+
     RDB$GENERATOR_ID                2
+    RDB$GENERATOR_NAME              SQL$DEFAULT                                                                                  
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SECURITY_CLASS              SQL$151
-    RDB$OWNER_NAME                  SYSDBA
     RDB$INITIAL_VALUE               0
     RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$PROCEDURES
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               <null>
+
     RDB$GENERATOR_ID                3
+    RDB$GENERATOR_NAME              RDB$PROCEDURES                                                                               
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:ef
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e0
     Procedure ID
-    RDB$SECURITY_CLASS              SQL$152
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$EXCEPTIONS
+
     RDB$GENERATOR_ID                4
+    RDB$GENERATOR_NAME              RDB$EXCEPTIONS                                                                               
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f0
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e1
     Exception ID
-    RDB$SECURITY_CLASS              SQL$153
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$CONSTRAINT_NAME
+
     RDB$GENERATOR_ID                5
+    RDB$GENERATOR_NAME              RDB$CONSTRAINT_NAME                                                                          
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f1
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e2
     Implicit constraint name
-    RDB$SECURITY_CLASS              SQL$154
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$FIELD_NAME
+
     RDB$GENERATOR_ID                6
+    RDB$GENERATOR_NAME              RDB$FIELD_NAME                                                                               
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f2
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e3
     Implicit domain name
-    RDB$SECURITY_CLASS              SQL$155
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$INDEX_NAME
+
     RDB$GENERATOR_ID                7
+    RDB$GENERATOR_NAME              RDB$INDEX_NAME                                                                               
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f3
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e4
     Implicit index name
-    RDB$SECURITY_CLASS              SQL$156
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$TRIGGER_NAME
+
     RDB$GENERATOR_ID                8
+    RDB$GENERATOR_NAME              RDB$TRIGGER_NAME                                                                             
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f4
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e5
     Implicit trigger name
-    RDB$SECURITY_CLASS              SQL$157
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$BACKUP_HISTORY
+
     RDB$GENERATOR_ID                9
+    RDB$GENERATOR_NAME              RDB$BACKUP_HISTORY                                                                           
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f5
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e6
     Nbackup technology
-    RDB$SECURITY_CLASS              SQL$158
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$FUNCTIONS
+
     RDB$GENERATOR_ID                10
+    RDB$GENERATOR_NAME              RDB$FUNCTIONS                                                                                
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f6
+    RDB$INITIAL_VALUE               0
+    RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e7
     Function ID
-    RDB$SECURITY_CLASS              SQL$159
-    RDB$OWNER_NAME                  SYSDBA
-    RDB$INITIAL_VALUE               0
-    RDB$GENERATOR_INCREMENT         0
-    
-    RDB$GENERATOR_NAME              RDB$GENERATOR_NAME
+
     RDB$GENERATOR_ID                11
+    RDB$GENERATOR_NAME              RDB$GENERATOR_NAME                                                                           
     RDB$SYSTEM_FLAG                 1
-    RDB$DESCRIPTION                 14:f7
-    Implicit generator name
-    RDB$SECURITY_CLASS              SQL$160
-    RDB$OWNER_NAME                  SYSDBA
     RDB$INITIAL_VALUE               0
     RDB$GENERATOR_INCREMENT         0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    GEN_DESCR_BLOB_ID               14:1e8
+    Implicit generator name
   """,
-  'substitutions': [
-    ('RDB\$DESCRIPTION.*',''),
-    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
-   ]
+  'substitutions': [ ('GEN_DESCR_BLOB_ID.*','') ]
 }
 ]
 }
