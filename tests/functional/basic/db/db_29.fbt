@@ -12446,7 +12446,10 @@ RDB$DEBUG_INFO                  <null>
 RDB$ENGINE_NAME                 <null>
 RDB$ENTRYPOINT                  <null>
   """,
-  'substitutions': [('RDB\$TRIGGER_BLR.*','')]
+  'substitutions': [
+      ('RDB\$TRIGGER_BLR.*','')
+     ,('RDB\$TRIGGER_NAME[\s]+RDB\$TRIGGER.*','RDB\$TRIGGER_NAME RDB\$TRIGGER')
+  ]
 }
 ]
 }
