@@ -28,7 +28,7 @@
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'page_size': '4096',
  'init_script':
   """
