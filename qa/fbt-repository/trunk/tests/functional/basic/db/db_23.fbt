@@ -3210,63 +3210,83 @@ RDB$RELATION_TYPE               3
  'test_type': 'ISQL',
  'test_script': 
   """
+    -- 28.10.2015.
+    -- 1. Removed from output BLOB IDs for fields rdb$security_class and rdb$default_class - they changes very often.
+    -- 2. Added blocks to 'substitution' section to:
+    -- 2.1  Suppress possible differences when check IDs of all BLOB fields.
+    -- 2.2. Ignore values of IDs in lines like "trigger_name: RDB$TRIGGER_**".
     set list on;
     set blob all;
     set count on;
-    select * 
+    select
+        rdb$relation_id
+        ,rdb$relation_name
+        ,rdb$system_flag
+        ,rdb$dbkey_length
+        ,rdb$format
+        ,rdb$field_id
+        ,rdb$flags
+        ,rdb$relation_type
+        ,rdb$owner_name
+        ,rdb$external_file
+        ,rdb$view_blr             as view_blr_blob_id
+        ,rdb$view_source          as view_src_blob_id
+        ,rdb$description          as descr_blob_id
+        ,rdb$runtime              as runtime_blob_id
+        ,rdb$external_description as ext_descr_blob_id
+        --,rdb$security_class
+        --,rdb$default_class
     from rdb$relations
-    order by rdb$relation_id;
+    order by rdb$relation_id;    
   """,
  'expected_stdout': 
   """
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
     RDB$RELATION_ID                 0
+    RDB$RELATION_NAME               RDB$PAGES                                                                                    
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    4
-    RDB$RELATION_NAME               RDB$PAGES                                                                                    
-    RDB$SECURITY_CLASS              SQL$364                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT1                                                                                 
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 1
+    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    5
-    RDB$RELATION_NAME               RDB$DATABASE                                                                                 
-    RDB$SECURITY_CLASS              SQL$365                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT2                                                                                 
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 2
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    30
-    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
-    RDB$SECURITY_CLASS              SQL$366                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e8
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e8
                 Field id: 0
                     name: RDB$FIELD_NAME
                 Field id: 1
@@ -3329,25 +3349,23 @@ RDB$RELATION_TYPE               3
                 Field id: 29
                     name: RDB$OWNER_NAME
                     trigger_name: RDB$TRIGGER_36
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT3                                                                                 
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 3
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    4
-    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
-    RDB$SECURITY_CLASS              SQL$367                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e5
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e5
                 Field id: 0
                     name: RDB$INDEX_NAME
                 Field id: 1
@@ -3358,25 +3376,23 @@ RDB$RELATION_TYPE               3
                     name: RDB$STATISTICS
                     trigger_name: RDB$TRIGGER_17
                     trigger_name: RDB$TRIGGER_18
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT4                                                                                 
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 4
+    RDB$RELATION_NAME               RDB$INDICES                                                                                  
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    13
-    RDB$RELATION_NAME               RDB$INDICES                                                                                  
-    RDB$SECURITY_CLASS              SQL$368                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e6
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e6
                 Field id: 0
                     name: RDB$INDEX_NAME
                 Field id: 1
@@ -3406,25 +3422,23 @@ RDB$RELATION_TYPE               3
                     name: RDB$STATISTICS
                     trigger_name: RDB$TRIGGER_19
                     trigger_name: RDB$TRIGGER_20
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT5                                                                                 
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 5
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    21
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
-    RDB$SECURITY_CLASS              SQL$369                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e7
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e7
                 Field id: 0
                     name: RDB$FIELD_NAME
                 Field id: 1
@@ -3471,133 +3485,119 @@ RDB$RELATION_TYPE               3
                     trigger_name: RDB$TRIGGER_23
                     trigger_name: RDB$TRIGGER_24
                     trigger_name: RDB$TRIGGER_27
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT6                                                                                 
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 6
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    17
-    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
-    RDB$SECURITY_CLASS              SQL$370                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT7                                                                                 
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 7
-    RDB$SYSTEM_FLAG                 1
-    RDB$DBKEY_LENGTH                8
-    RDB$FORMAT                      0
-    RDB$FIELD_ID                    6
     RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
-    RDB$SECURITY_CLASS              SQL$371                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT8                                                                                 
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
-    RDB$RELATION_ID                 8
-    RDB$SYSTEM_FLAG                 1
-    RDB$DBKEY_LENGTH                8
-    RDB$FORMAT                      0
-    RDB$FIELD_ID                    3
-    RDB$RELATION_NAME               RDB$FORMATS                                                                                  
-    RDB$SECURITY_CLASS              SQL$372                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT9                                                                                 
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
-    RDB$RELATION_ID                 9
-    RDB$SYSTEM_FLAG                 1
-    RDB$DBKEY_LENGTH                8
-    RDB$FORMAT                      0
-    RDB$FIELD_ID                    3
-    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
-    RDB$SECURITY_CLASS              SQL$373                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT10                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
-    RDB$RELATION_ID                 10
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               RDB$FILES                                                                                    
-    RDB$SECURITY_CLASS              SQL$374                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT11                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
+    RDB$RELATION_ID                 8
+    RDB$RELATION_NAME               RDB$FORMATS                                                                                  
+    RDB$SYSTEM_FLAG                 1
+    RDB$DBKEY_LENGTH                8
+    RDB$FORMAT                      0
+    RDB$FIELD_ID                    3
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
+    RDB$RELATION_ID                 9
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$SYSTEM_FLAG                 1
+    RDB$DBKEY_LENGTH                8
+    RDB$FORMAT                      0
+    RDB$FIELD_ID                    3
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
+    RDB$RELATION_ID                 10
+    RDB$RELATION_NAME               RDB$FILES                                                                                    
+    RDB$SYSTEM_FLAG                 1
+    RDB$DBKEY_LENGTH                8
+    RDB$FORMAT                      0
+    RDB$FIELD_ID                    6
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 11
+    RDB$RELATION_NAME               RDB$TYPES                                                                                    
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    5
-    RDB$RELATION_NAME               RDB$TYPES                                                                                    
-    RDB$SECURITY_CLASS              SQL$375                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT12                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 12
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    14
-    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
-    RDB$SECURITY_CLASS              SQL$376                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e1
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e1
                 Field id: 0
                     name: RDB$TRIGGER_NAME
                 Field id: 1
@@ -3631,115 +3631,103 @@ RDB$RELATION_TYPE               3
                     trigger_name: RDB$TRIGGER_21
                     trigger_name: RDB$TRIGGER_22
                     trigger_name: RDB$TRIGGER_3
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT13                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 13
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
-    RDB$SECURITY_CLASS              SQL$377                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT14                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 14
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    20
-    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
-    RDB$SECURITY_CLASS              SQL$378                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT15                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 15
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    22
-    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
-    RDB$SECURITY_CLASS              SQL$379                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT16                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 16
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    9
-    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
-    RDB$SECURITY_CLASS              SQL$380                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT17                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 17
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    3
-    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
-    RDB$SECURITY_CLASS              SQL$381                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT18                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 18
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    8
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
-    RDB$SECURITY_CLASS              SQL$382                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e0
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e0
                 Field id: 0
                     name: RDB$USER
                 Field id: 1
@@ -3762,79 +3750,71 @@ RDB$RELATION_TYPE               3
                     trigger_name: RDB$TRIGGER_33
                     trigger_name: RDB$TRIGGER_8
                     trigger_name: RDB$TRIGGER_9
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT19                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 19
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    4
-    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
-    RDB$SECURITY_CLASS              SQL$383                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT20                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 20
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    8
-    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
-    RDB$SECURITY_CLASS              SQL$384                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT21                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 21
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    4
-    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
-    RDB$SECURITY_CLASS              SQL$385                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT22                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 22
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
-    RDB$SECURITY_CLASS              SQL$386                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e2
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e2
                 Field id: 0
                     name: RDB$CONSTRAINT_NAME
                 Field id: 1
@@ -3860,25 +3840,23 @@ RDB$RELATION_TYPE               3
                     trigger_name: RDB$TRIGGER_25
                     trigger_name: RDB$TRIGGER_26
                     trigger_name: RDB$TRIGGER_34
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT23                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 23
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    5
-    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
-    RDB$SECURITY_CLASS              SQL$387                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e3
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e3
                 Field id: 0
                     name: RDB$CONSTRAINT_NAME
                 Field id: 1
@@ -3903,25 +3881,23 @@ RDB$RELATION_TYPE               3
                         blr_eoc
                     trigger_name: RDB$TRIGGER_12
                     trigger_name: RDB$TRIGGER_13
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT24                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 24
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    2
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
-    RDB$SECURITY_CLASS              SQL$388                                                                                      
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
     RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     6:1e4
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 6:1e4
                 Field id: 0
                     name: RDB$CONSTRAINT_NAME
                 Field id: 1
@@ -3930,469 +3906,419 @@ RDB$RELATION_TYPE               3
                     trigger_name: RDB$TRIGGER_15
                     trigger_name: RDB$TRIGGER_16
                     trigger_name: RDB$TRIGGER_35
-    
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT25                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 25
+    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               RDB$LOG_FILES                                                                                
-    RDB$SECURITY_CLASS              SQL$389                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT26                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 26
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    18
-    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
-    RDB$SECURITY_CLASS              SQL$390                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT27                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 27
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    15
-    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
-    RDB$SECURITY_CLASS              SQL$391                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT28                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 28
-    RDB$SYSTEM_FLAG                 1
-    RDB$DBKEY_LENGTH                8
-    RDB$FORMAT                      0
-    RDB$FIELD_ID                    11
     RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
-    RDB$SECURITY_CLASS              SQL$392                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT29                                                                                
-    RDB$FLAGS                       <null>
-    RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
-    RDB$RELATION_ID                 29
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    11
-    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
-    RDB$SECURITY_CLASS              SQL$393                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT30                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
+    RDB$RELATION_ID                 29
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$SYSTEM_FLAG                 1
+    RDB$DBKEY_LENGTH                8
+    RDB$FORMAT                      0
+    RDB$FIELD_ID                    11
+    RDB$FLAGS                       <null>
+    RDB$RELATION_TYPE               0
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 30
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    7
-    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
-    RDB$SECURITY_CLASS              SQL$394                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT31                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 31
+    RDB$RELATION_NAME               RDB$ROLES                                                                                    
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    5
-    RDB$RELATION_NAME               RDB$ROLES                                                                                    
-    RDB$SECURITY_CLASS              SQL$395                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT32                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 32
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
-    RDB$SECURITY_CLASS              SQL$396                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT33                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 33
+    RDB$RELATION_NAME               MON$DATABASE                                                                                 
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    22
-    RDB$RELATION_NAME               MON$DATABASE                                                                                 
-    RDB$SECURITY_CLASS              SQL$397                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT34                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 34
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    20
-    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                              
-    RDB$SECURITY_CLASS              SQL$398                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT35                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 35
+    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    13
-    RDB$RELATION_NAME               MON$TRANSACTIONS                                                                             
-    RDB$SECURITY_CLASS              SQL$399                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT36                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 36
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    8
-    RDB$RELATION_NAME               MON$STATEMENTS                                                                               
-    RDB$SECURITY_CLASS              SQL$400                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT37                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 37
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    10
-    RDB$RELATION_NAME               MON$CALL_STACK                                                                               
-    RDB$SECURITY_CLASS              SQL$401                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT38                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 38
+    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               MON$IO_STATS                                                                                 
-    RDB$SECURITY_CLASS              SQL$402                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT39                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 39
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    16
-    RDB$RELATION_NAME               MON$RECORD_STATS                                                                             
-    RDB$SECURITY_CLASS              SQL$403                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT40                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 40
+    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    4
-    RDB$RELATION_NAME               MON$CONTEXT_VARIABLES                                                                        
-    RDB$SECURITY_CLASS              SQL$404                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT41                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 41
+    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    6
-    RDB$RELATION_NAME               MON$MEMORY_USAGE                                                                             
-    RDB$SECURITY_CLASS              SQL$405                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT42                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 42
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    8
-    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
-    RDB$SECURITY_CLASS              SQL$406                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT43                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 43
+    RDB$RELATION_NAME               SEC$USERS                                                                                    
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    8
-    RDB$RELATION_NAME               SEC$USERS                                                                                    
-    RDB$SECURITY_CLASS              SQL$407                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT44                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 44
+    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    3
-    RDB$RELATION_NAME               SEC$USER_ATTRIBUTES                                                                          
-    RDB$SECURITY_CLASS              SQL$408                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT45                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 45
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    10
-    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
-    RDB$SECURITY_CLASS              SQL$409                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT46                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 46
+    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    8
-    RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                      
-    RDB$SECURITY_CLASS              SQL$410                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT47                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 47
+    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    2
-    RDB$RELATION_NAME               RDB$DB_CREATORS                                                                              
-    RDB$SECURITY_CLASS              SQL$411                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT48                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               0
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 48
+    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    2
-    RDB$RELATION_NAME               SEC$DB_CREATORS                                                                              
-    RDB$SECURITY_CLASS              SQL$412                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT49                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    RDB$VIEW_BLR                    <null>
-    RDB$VIEW_SOURCE                 <null>
-    RDB$DESCRIPTION                 <null>
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
     RDB$RELATION_ID                 49
+    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
     RDB$FIELD_ID                    4
-    RDB$RELATION_NAME               MON$TABLE_STATS                                                                              
-    RDB$SECURITY_CLASS              SQL$413                                                                                      
-    RDB$EXTERNAL_FILE               <null>
-    RDB$RUNTIME                     <null>
-    RDB$EXTERNAL_DESCRIPTION        <null>
-    RDB$OWNER_NAME                  SYSDBA                                                                                       
-    RDB$DEFAULT_CLASS               SQL$DEFAULT50                                                                                
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
-    
-    
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+    RDB$EXTERNAL_FILE               <null>
+    VIEW_BLR_BLOB_ID                <null>
+    VIEW_SRC_BLOB_ID                <null>
+    DESCR_BLOB_ID                   <null>
+    RUNTIME_BLOB_ID                 <null>
+    EXT_DESCR_BLOB_ID               <null>
+
+
     Records affected: 50
   """,
   'substitutions': [
-    ('RDB\$RUNTIME.*',''),
-    ('RDB\$SECURITY_CLASS.*','')
+     ('VIEW_BLR_BLOB_ID.*','')
+    ,('VIEW_SRC_BLOB_ID.*','')
+    ,('DESCR_BLOB_ID.*','')
+    ,('RUNTIME_BLOB_ID.*','')
+    ,('EXT_DESCR_BLOB_ID.*','')
+    ,('RDB\$TRIGGER_.*', '')
   ]
 }
 ]
