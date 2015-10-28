@@ -1342,7 +1342,10 @@ RDB$INDEX_43                    RDB$INDEX_NAME                                  
     RDB$STATISTICS                  <null>
     
     Records affected: 67
-  """
+  """,
+  'substitutions': [
+      ('RDB\$INDEX_NAME[\s]+RDB\$INDEX.*','RDB\$INDEX_NAME RDB\$INDEX')
+  ]
 }
 ]
 }
