@@ -3215,9 +3215,20 @@ RDB$RELATION_TYPE               3
     -- 2. Added blocks to 'substitution' section to:
     -- 2.1  Suppress possible differences when check IDs of all BLOB fields.
     -- 2.2. Ignore values of IDs in lines like "trigger_name: RDB$TRIGGER_**".
+    -- 3. Added query to select FIELDS list of table because main check does not use asterisk
+    -- and we have to know if DDL of table will have any changes in future.
+
     set list on;
     set blob all;
     set count on;
+
+    -- Query for check whether fields list of table was changed:
+    select rf.rdb$field_name
+    from rdb$relation_fields rf
+    where rf.rdb$relation_name = upper('rdb$relations')
+    order by rf.rdb$field_name;
+
+    -- Main test query:
     select
         rdb$relation_id
         ,rdb$relation_name
@@ -3241,6 +3252,27 @@ RDB$RELATION_TYPE               3
   """,
  'expected_stdout': 
   """
+    RDB$FIELD_NAME                  RDB$DBKEY_LENGTH                                                                             
+    RDB$FIELD_NAME                  RDB$DEFAULT_CLASS
+    RDB$FIELD_NAME                  RDB$DESCRIPTION
+    RDB$FIELD_NAME                  RDB$EXTERNAL_DESCRIPTION
+    RDB$FIELD_NAME                  RDB$EXTERNAL_FILE
+    RDB$FIELD_NAME                  RDB$FIELD_ID
+    RDB$FIELD_NAME                  RDB$FLAGS
+    RDB$FIELD_NAME                  RDB$FORMAT
+    RDB$FIELD_NAME                  RDB$OWNER_NAME
+    RDB$FIELD_NAME                  RDB$RELATION_ID
+    RDB$FIELD_NAME                  RDB$RELATION_NAME
+    RDB$FIELD_NAME                  RDB$RELATION_TYPE
+    RDB$FIELD_NAME                  RDB$RUNTIME
+    RDB$FIELD_NAME                  RDB$SECURITY_CLASS
+    RDB$FIELD_NAME                  RDB$SYSTEM_FLAG
+    RDB$FIELD_NAME                  RDB$VIEW_BLR
+    RDB$FIELD_NAME                  RDB$VIEW_SOURCE
+    
+    Records affected: 17
+
+
     RDB$RELATION_ID                 0
     RDB$RELATION_NAME               RDB$PAGES                                                                                    
     RDB$SYSTEM_FLAG                 1
