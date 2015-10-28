@@ -361,7 +361,10 @@ RDB$TRIGGER_33                                   0 no_write_user_priv
     RDB$TRIGGER_NAME                RDB$TRIGGER_9
     RDB$MESSAGE_NUMBER              5
     RDB$MESSAGE                     grant_nopriv_on_base
-  """
+  """,
+  'substitutions': [
+      ('RDB\$TRIGGER_NAME[\s]+RDB\$TRIGGER.*','RDB\$TRIGGER_NAME RDB\$TRIGGER')
+  ]
 }
 ]
 }
