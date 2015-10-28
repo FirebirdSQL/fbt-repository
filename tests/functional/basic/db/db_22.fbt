@@ -217,7 +217,11 @@
 
 
     Records affected: 27
-  """
+  """,
+  'substitutions': [
+      ('RDB\$CONSTRAINT_NAME[\s]+RDB\$INDEX.*','RDB\$CONSTRAINT_NAME RDB\$INDEX')
+     ,('RDB\$INDEX_NAME[\s]+RDB\$INDEX.*','RDB\$INDEX_NAME RDB\$INDEX')
+  ]
 }
 ]
 }
