@@ -233,7 +233,7 @@ Transaction -.*""",'')]
  'test_type': 'ISQL',
  'test_script': 
   """
-    create shadow 1 manual conditional '$(DATABASE_LOCATION)test.shd' file '$(DATABASE_LOCATION)test.s00' starting at page 1000;
+    create shadow 1 manual conditional '$(DATABASE_LOCATION)TEST.SHD' file '$(DATABASE_LOCATION)TEST.S00' starting at page 1000;
     commit;
     set list on;
     set count on;
