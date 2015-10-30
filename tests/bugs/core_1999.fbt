@@ -7,7 +7,7 @@
  """
    Database for this test was created beforehand and filled-up with all possible kind of objects:
    domain, table, view, standalone procedure & function, package, trigger, sequence, exception and role.
-   Then backup was created for this DB and it was packed into .zip archive - see files/core_1999.zip.
+   Then backup was created for this DB and it was packed into .zip archive - see files/core_1999*.zip.
    This test extract .fbk from .zip and does its restore and then - again backup, but with option 'res_stat tdrw'.
    Both processes are logged. Finally, we parse these logs by counting lines which contain NO statistics.
    Presence of statistics is determined by analyzing corresponding tokens of each line. Token which contains only
@@ -31,16 +31,16 @@ import subprocess
 
 db_conn.close()
 
-zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_1999.zip') )
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_1999_30.zip') )
 zf.extractall( context['temp_directory'] )
 zf.close()
 
-# Result: core_1999.fbk is extracted into context['temp_directory']
+# Result: core_1999_30.fbk is extracted into context['temp_directory']
 
-tmpres='$(DATABASE_LOCATION)tmp_core_1999.fdb'
-tmpbkp='$(DATABASE_LOCATION)tmp_core_1999.fbk'
+tmpres='$(DATABASE_LOCATION)tmp_core_1999_30.fdb'
+tmpbkp='$(DATABASE_LOCATION)tmp_core_1999_30.fbk'
 
-f_restore=open( os.path.join(context['temp_directory'],'tmp_restore_1999.log'), 'w')
+f_restore=open( os.path.join(context['temp_directory'],'tmp_restore_1999_30.log'), 'w')
 f_restore.close()
 fn_res=open(f_restore.name, "w")
 subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
@@ -52,9 +52,9 @@ subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","passw
                       stdout=fn_res, stderr=subprocess.STDOUT)
 fn_res.close()
 
-# Result: database file 'tmp_core_1999.fdb' should be created after this restoring, log in 'tmp_restore_1999.log'
+# Result: database file 'tmp_core_1999_30.fdb' should be created after this restoring, log in 'tmp_restore_1999_30.log'
 
-f_backup=open( os.path.join(context['temp_directory'],'tmp_backup_1999.log'), 'w')
+f_backup=open( os.path.join(context['temp_directory'],'tmp_backup_1999_30.log'), 'w')
 f_backup.close()
 fn_bkp=open(f_backup.name, "w")
 subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
@@ -64,7 +64,7 @@ subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","passw
                                   stdout=fn_bkp, stderr=subprocess.STDOUT)
 fn_bkp.close()
 
-# Result: backup file 'tmp_core_1999.fbk' should be replaced after this backup, log in 'tmp_backup_1999.log'
+# Result: backup file 'tmp_core_1999_30.fbk' should be replaced after this backup, log in 'tmp_backup_1999_30.log'
 
 
 # Sample of backup log with statistics:
