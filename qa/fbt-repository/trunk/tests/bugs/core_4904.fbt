@@ -1,0 +1,139 @@
+{
+'id': 'bugs.core_4904',
+'qmid': None,
+'tracker_id': 'CORE-4904',
+'title': 'Index corruption when add data in long-key-indexed field',
+'description': 
+ """
+   In order to check ticket issues this test does following:
+   1. Change on test database FW to OFF - this will increase DML performance.
+   2. Create table with indexed field of length = maximum that is allowed by 
+      current FB implementation (page_size / 4 - 9 bytes).
+   3. Try to insert enough number of records in this table - this should cause
+      runtime exception SQLSTATE = 54000, "Maximum index level reached"
+   4. Start validation of database: index should NOT be corrupted in its report.
+
+   Checked on WI-V3.0.0.32140 (CS, SC); WI-V3.0.0.32157 - official RC1 (SS)
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import subprocess
+import time
+
+db_conn.close()
+
+
+#####################################################################
+# Move database to FW = OFF in order to increase speed of insertions and output its header info:
+
+fwoff_log=open( os.path.join(context['temp_directory'],'tmp_fw_off_4904.log'), 'w')
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
+                  "action_properties",\
+                  "prp_write_mode", "prp_wm_async",\
+                  "dbname", "$(DATABASE_LOCATION)bugs.core_4904.fdb" ],\
+                  stdout=fwoff_log, stderr=subprocess.STDOUT)
+fwoff_log.close()
+
+#####################################################################
+# Preparing script for ISQL that will do inserts with long keys:
+
+sql_cmd='''\
+    recreate table test(s varchar(1015)); -- with THIS length of field following EB will get exception very fast.
+    create index test_s on test(s);
+    commit;
+    set term ^;
+    execute block as
+    begin
+      insert into test(s)
+      select rpad('', 1015, uuid_to_char(gen_uuid()) )
+      from rdb$types, rdb$types
+      rows 50000; -- this is extra-huge reserve; exception should raise when about 120-130 rows will be inserted.
+    end
+    ^
+    set term ;^
+    commit;
+'''
+
+f_long_keys_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_4904.sql'), 'w')
+f_long_keys_cmd.write(sql_cmd)
+f_long_keys_cmd.close()
+
+#####################################################################
+# Starting ISQL
+
+f_long_keys_log=open( os.path.join(context['temp_directory'],'tmp_isql_4904.log'), 'w')
+subprocess.call([ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_long_keys_cmd.name],\
+                stdout=f_long_keys_log, stderr=subprocess.STDOUT)
+f_long_keys_log.close()
+
+#####################################################################
+# Run validation after ISQL will finish (with runtime exception due to implementation limit exceeding):
+
+val_log=open( os.path.join(context['temp_directory'],'tmp_onval_4904.log'), 'w')
+
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
+                 "action_validate","val_lock_timeout","1", \
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4904.fdb"],\
+                 stdout=val_log, stderr=subprocess.STDOUT)
+
+val_log.close()
+time.sleep(2)
+
+#####################################################################
+# Output result of ISQL and online validation:
+with open( f_long_keys_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+with open( val_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+os.remove(fwoff_log.name)
+os.remove(val_log.name)
+os.remove(f_long_keys_cmd.name)
+os.remove(f_long_keys_log.name)
+
+  """,
+ 'expected_stdout':
+  """
+    Statement failed, SQLSTATE = 54000
+    Implementation limit exceeded
+    -Maximum index level reached
+
+    Validation started
+    Relation (TEST)
+    process pointer page    0 of    1
+    Index 1 (TEST_S)
+    Relation (TEST) is ok
+    Validation finished
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[
+    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
+    ('Relation [0-9]{3,4}','Relation'),
+    ('After line .*', '')
+  ]
+}
+]
+}
