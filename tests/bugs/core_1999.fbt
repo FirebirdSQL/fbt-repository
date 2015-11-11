@@ -7,15 +7,168 @@
  """
    Database for this test was created beforehand and filled-up with all possible kind of objects:
    domain, table, view, standalone procedure & function, package, trigger, sequence, exception and role.
-   Then backup was created for this DB and it was packed into .zip archive - see files/core_1999*.zip.
+   Then backup was created for this DB and it was packed into .zip archive - see files/core_1999_nn.zip.
    This test extract .fbk from .zip and does its restore and then - again backup, but with option 'res_stat tdrw'.
    Both processes are logged. Finally, we parse these logs by counting lines which contain NO statistics.
    Presence of statistics is determined by analyzing corresponding tokens of each line. Token which contains only
    digits (with exception of "dot" and "comma" characters) is considered as VALUE related to some statistics.
    Backup log should contain only single (1st) line w/o statistics, restore - 1st and last lines.
+   NB.
+   Utility fbsvcmgr in 2.5.5 was not able to produce output with statistics (i.e. "res_stat tdrw") until commit #62537
+   (see:  http://sourceforge.net/p/firebird/code/62537 ).
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.5',
 'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'Windows',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import time
+import zipfile
+import subprocess
+
+db_conn.close()
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_1999_25.zip') )
+zf.extractall( context['temp_directory'] )
+zf.close()
+
+# Result: core_1999.fbk is extracted into context['temp_directory']
+
+tmpres='$(DATABASE_LOCATION)tmp_core_1999_25.fdb'
+tmpbkp='$(DATABASE_LOCATION)tmp_core_1999_25.fbk'
+
+f_restore=open( os.path.join(context['temp_directory'],'tmp_restore_1999_25.log'), 'w')
+f_restore.close()
+fn_res=open(f_restore.name, "w")
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                                  "action_restore",\
+                                  "bkp_file",tmpbkp,"dbname",tmpres,\
+                                  "res_replace",\
+                                  "verbose",\
+                                  "res_stat","tdrw"],\
+                      stdout=fn_res, stderr=subprocess.STDOUT)
+fn_res.close()
+
+# Result: database file 'tmp_core_1999_25.fdb' should be created after this restoring, log in 'tmp_restore_1999_25.log'
+
+f_backup=open( os.path.join(context['temp_directory'],'tmp_backup_1999_25.log'), 'w')
+f_backup.close()
+fn_bkp=open(f_backup.name, "w")
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                                  "action_backup",\
+                                  "dbname",tmpres,"bkp_file",tmpbkp,\
+                                  "verbose","bkp_stat","tdrw"],\
+                                  stdout=fn_bkp, stderr=subprocess.STDOUT)
+fn_bkp.close()
+
+# Result: backup file 'tmp_core_1999_25.fbk' should be replaced after this backup, log in 'tmp_backup_1999_25.log'
+
+
+# Sample of backup log with statistics:
+# -------------------------------------
+# gbak: time     delta  reads  writes 
+# gbak:    0.019  0.019     43      0 readied database . . .fdb for backup
+# gbak:    0.019  0.000      0      0 creating file . . ..fbk
+# gbak:    0.020  0.000      0      0 starting transaction
+# gbak:    0.023  0.002     22      1 database . . .  has a page size of 4096 bytes.
+# gbak:    0.023  0.000      1      0 writing domains
+# gbak:    0.024  0.000      6      0     writing domain RDB$11
+# . . .
+# gbak:    0.847  0.109      2      0 closing file, committing, and finishing. 1105920 bytes written
+# gbak:    0.847  0.000    802      2 total statistics
+
+rows_without_stat=0
+with open(f_backup.name, 'r') as f:
+    for line in f:
+        tokens=line.split()
+        if not (\
+           tokens[1].replace('.','',1).replace(',','',1).isdigit() \
+           and \
+           tokens[2].replace('.','',1).replace(',','',1).isdigit() \
+           and \
+           tokens[3].replace('.','',1).replace(',','',1).isdigit() \
+           and \
+           tokens[4].replace('.','',1).replace(',','',1).isdigit() \
+           ):
+            rows_without_stat = rows_without_stat + 1
+f.close()
+print("bkp: rows_without_stat="+str(rows_without_stat))
+
+# Sample of restore log with statistics:
+# -------------------------------------
+# gbak: time     delta  reads  writes  
+# gbak:    0.000  0.000      0      0 opened file ....fbk 
+# gbak:    0.004  0.003      0      0 transportable backup -- data in XDR format 
+# gbak:    0.004  0.000      0      0 		backup file is compressed 
+# gbak:    0.004  0.000      0      0 backup version is 10 
+# gbak:    0.275  0.270      0    711 created database ....fdb, page_size 4096 bytes 
+# gbak:    0.277  0.002      0      2 started transaction 
+# gbak:    0.278  0.001      0      0 restoring domain RDB$11 
+# . . .
+# gbak:    1.987  0.000      0     31 fixing system generators 
+# gbak:    2.016  0.029      0     10 finishing, closing, and going home 
+# gbak:    2.017  0.000      0   1712 total statistics 
+# gbak:adjusting the ONLINE and FORCED WRITES flags 
+
+
+rows_without_stat=0
+with open(f_restore.name, 'r') as f:
+    for line in f:
+        tokens=line.split()
+        if not (\
+           tokens[1].replace('.','',1).replace(',','',1).isdigit() \
+           and \
+           tokens[2].replace('.','',1).replace(',','',1).isdigit() \
+           and \
+           tokens[3].replace('.','',1).replace(',','',1).isdigit() \
+           and \
+           tokens[4].replace('.','',1).replace(',','',1).isdigit() \
+           ):
+            rows_without_stat = rows_without_stat + 1
+f.close()
+print("res: rows_without_stat="+str(rows_without_stat))
+
+# Backup log should contain ONE row without statistics, in its header (1st line):
+# gbak: time     delta  reads  writes 
+
+# Restore log should contain also ONE rows without statistics, first and last:
+# gbak: time     delta  reads  writes  
+# ::: NB :::: 2.5 does NOT contain this: "gbak:adjusting the ONLINE and FORCED WRITES flags" - its only from 3.0 output!
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+        
+if os.path.isfile(tmpbkp):
+    os.remove(tmpbkp)
+if os.path.isfile(tmpres):
+    os.remove(tmpres)
+if os.path.isfile(f_backup.name):
+    os.remove(f_backup.name)
+if os.path.isfile(f_restore.name):
+    os.remove(f_restore.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    bkp: rows_without_stat=1
+    res: rows_without_stat=1
+  """,
+ 'expected_stderr': 
+  """
+  """
+},
+
 {
  'firebird_version': '3.0',
  'platform': 'Windows',
@@ -27,6 +180,7 @@
   """\
 import os
 import zipfile
+import time
 import subprocess
 
 db_conn.close()
@@ -138,7 +292,13 @@ print("res: rows_without_stat="+str(rows_without_stat))
 # gbak: time     delta  reads  writes  
 # gbak:adjusting the ONLINE and FORCED WRITES flags 
 
-        
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
 if os.path.isfile(tmpbkp):
     os.remove(tmpbkp)
 if os.path.isfile(tmpres):
@@ -147,6 +307,7 @@ if os.path.isfile(f_backup.name):
     os.remove(f_backup.name)
 if os.path.isfile(f_restore.name):
     os.remove(f_restore.name)
+
   """,
  'expected_stdout': 
   """
