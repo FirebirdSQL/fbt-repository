@@ -10,7 +10,7 @@
 'versions': [
 {
  'firebird_version': '2.5',
- 'platform': 'Windows',
+ 'platform': 'All',
  'init_script':
   """
   """,
