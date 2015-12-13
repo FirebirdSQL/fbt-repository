@@ -1,0 +1,51 @@
+{
+'id': 'functional.tabloid.join-transformation-001',
+'qmid': '',
+'tracker_id': '',
+'title': 'Check ability of outer join simplification.',
+'description': 'Use null-rejected predicate, trivial case.',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'join-transformations.fbk',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    execute procedure sp_fill( 50, 30 );
+    --                         ^    ^- probability of assign each field on each row to NULL (percent).
+    --                         +- number of rows in each of tables t1...t6
+
+    commit;
+    execute procedure sp_recalc_idx_stat;
+    commit;
+    
+    set list on;
+    select *
+    from sp_run(
+    'select t1.id, t2.id, t3.id, null, null, null
+    from t1
+    left join t2 on t1.x = t2.x
+    left join t3 on t2.y = t3.y
+    where t3.u > 0'
+    ,
+    'select t1.id, t2.id, t3.id, null, null, null
+    from t1
+    inner join t2 on t1.x = t2.x
+    inner join t3 on t2.y = t3.y
+    where t3.u > 0'
+    ,0
+    );
+  """,
+ 'expected_stdout': 
+  """
+    RESULT                          Passed.
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
