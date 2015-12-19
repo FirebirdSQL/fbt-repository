@@ -19,17 +19,17 @@ db_conn.close()
 fdb='$(DATABASE_LOCATION)bugs.core_3942.fdb'
 fbk = os.path.join(context['temp_directory'],'tmp.core_3942.fbk')
 runProgram('gbak',['-b','-user',user_name,'-password',user_password,dsn,fbk])
-print ('Trying to overwrite eisting database file using gbak -se...')
+print ('Trying to overwrite existing database file using gbak -se...')
 runProgram('gbak',['-c','-se','localhost:service_mgr','-user',user_name,'-password',user_password,fbk,fdb])
-print ('Trying to overwrite eisting database file using fbsvcmgr...')
+print ('Trying to overwrite existing database file using fbsvcmgr...')
 runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_restore','dbname',fdb,'bkp_file',fbk])
 if os.path.isfile(fbk):
     os.remove(fbk)
   """,
  'expected_stdout': 
   """
-    Trying to overwrite eisting database file using gbak -se...
-    Trying to overwrite eisting database file using fbsvcmgr...
+    Trying to overwrite existing database file using gbak -se...
+    Trying to overwrite existing database file using fbsvcmgr...
   """,
  'expected_stderr': 
   """
@@ -54,17 +54,17 @@ db_conn.close()
 fdb='$(DATABASE_LOCATION)bugs.core_3942.fdb'
 fbk = os.path.join(context['temp_directory'],'tmp.core_3942.fbk')
 runProgram('gbak',['-b','-user',user_name,'-password',user_password,dsn,fbk])
-print ('Trying to overwrite eisting database file using gbak -se...')
+print ('Trying to overwrite existing database file using gbak -se...')
 runProgram('gbak',['-c','-se','localhost:service_mgr','-user',user_name,'-password',user_password,fbk,fdb])
-print ('Trying to overwrite eisting database file using fbsvcmgr...')
+print ('Trying to overwrite existing database file using fbsvcmgr...')
 runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_restore','dbname',fdb,'bkp_file',fbk])
 if os.path.isfile(fbk):
     os.remove(fbk)
   """,
  'expected_stdout': 
   """
-    Trying to overwrite eisting database file using gbak -se...
-    Trying to overwrite eisting database file using fbsvcmgr...
+    Trying to overwrite existing database file using gbak -se...
+    Trying to overwrite existing database file using fbsvcmgr...
   """,
  'expected_stderr': 
   """
@@ -89,17 +89,17 @@ db_conn.close()
 fdb='$(DATABASE_LOCATION)bugs.core_3942.fdb'
 fbk = os.path.join(context['temp_directory'],'tmp.core_3942.fbk')
 runProgram('gbak',['-b','-user',user_name,'-password',user_password,dsn,fbk])
-print ('Trying to overwrite eisting database file using gbak -se...')
+print ('Trying to overwrite existing database file using gbak -se...')
 runProgram('gbak',['-c','-se','localhost:service_mgr','-user',user_name,'-password',user_password,fbk,fdb])
-print ('Trying to overwrite eisting database file using fbsvcmgr...')
+print ('Trying to overwrite existing database file using fbsvcmgr...')
 runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_restore','dbname',fdb,'bkp_file',fbk])
 if os.path.isfile(fbk):
     os.remove(fbk)
   """,
  'expected_stdout': 
   """
-    Trying to overwrite eisting database file using gbak -se...
-    Trying to overwrite eisting database file using fbsvcmgr...
+    Trying to overwrite existing database file using gbak -se...
+    Trying to overwrite existing database file using fbsvcmgr...
   """,
  'expected_stderr': 
   """
