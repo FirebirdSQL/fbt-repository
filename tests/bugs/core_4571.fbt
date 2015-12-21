@@ -1,0 +1,134 @@
+{
+'id': 'bugs.core_4571',
+'qmid': None,
+'tracker_id': 'CORE-4571',
+'title': "Can't select from table with ICU column when database (.FDB) is created on LINUX with icu 4.2.1 and then copied to WINDOWS",
+'description':
+ """
+   Database for this test was created beforehand on Linux host. 
+   It contains table WARES with following DDL:
+
+   ID                              BIGINT Not Null Identity (by default)
+   NUMB                            (DM_NUMS) VARCHAR(20) CHARACTER SET UTF8 Nullable
+                                 COLLATE NUMS_COLL
+   CONSTRAINT PK_WARES:
+     Primary key (ID)
+   CONSTRAINT WARES_NUMB_UNQ:
+     Unique key (NUMB) <<<<<<<<<<<< INDEX here on field with ICU collation.
+   
+   This table was filled-up with some data and then .fdb file was copied on Windows host. 
+   Connect to this database without repairing ICU and querying table WARES will produce error:
+   ===
+      SQL> select * from wares;
+      Statement failed, SQLSTATE = 22021
+      COLLATION NUMS_COLL for CHARACTER SET UTF8 is not installed 
+   ===
+
+   This test makes unzip of 'raw' .fdb and run fbsvcmgr with key 'rpr_icu' in order to fix ICU incompatibility.
+   Result of fbsvcmgr (STDOUT and STDERR) should be empty.
+   Than we run ISQL and query table with UTF8 data - several rows with varchar field which is filled by text
+   from Hungarian, Norwegian and Greek languages.
+
+   Linux ICU info:
+   $ rpm -qa | grep icu
+   icu4j-eclipse-4.2.1-5.el6.x86_64
+   libicu-4.2.1-9.1.el6_2.x86_64 
+
+   Checked on WI-V3.0.0.32239, OS = Windows XP. Database was created on LI-V3.0.0.32239.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'Windows',
+ 'connection_character_set': 'UTF8',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import time
+import zipfile
+import subprocess
+
+db_conn.close()
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_4571.zip') )
+zf.extractall( context['temp_directory'] )
+zf.close()
+
+# Result: file tmp_core_4571.fdb is extracted into context['temp_directory']
+
+tmpfdb='$(DATABASE_LOCATION)tmp_core_4571.fdb'
+
+svc_rpr=open( os.path.join(context['temp_directory'],'tmp_icu_repair_4571.log'), 'w')
+svc_rpr.close()
+fn_rpr=open(svc_rpr.name, "w")
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                                  "action_repair",\
+                                  "dbname",tmpfdb,\
+                                  "rpr_icu"],\
+                      stdout=fn_rpr, stderr=subprocess.STDOUT)
+fn_rpr.close()
+
+sqltxt='''set list on; select id, numb from wares order by numb;'''
+
+sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_4571.log'), 'w')
+sqllog.close()
+runProgram('isql',['localhost:'+tmpfdb,'-user',user_name,'-pas',user_password,'-q','-o',sqllog.name],sqltxt)
+
+with open( svc_rpr.name,'r') as f:
+  print(f.read())
+f.close()
+
+with open( sqllog.name,'r') as f:
+  print(f.read())
+f.close()
+
+# Checked result on Linux:
+# ID NUMB
+# == ===================
+#  3 bærende
+#  1 lengéscsillapító
+#  6 støtdemper
+#  2 viselő
+#  5 αμορτισέρ
+#  4 ρουλεμάν
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+if os.path.isfile(tmpfdb):
+  os.remove(tmpfdb)
+if os.path.isfile(svc_rpr.name):
+  os.remove(svc_rpr.name)
+if os.path.isfile(sqllog.name):
+  os.remove(sqllog.name)
+  """,
+ 'expected_stdout': 
+  """
+    ID                              3
+    NUMB                            bærende
+    ID                              1
+    NUMB                            lengéscsillapító
+    ID                              6
+    NUMB                            støtdemper
+    ID                              2
+    NUMB                            viselő
+    ID                              5
+    NUMB                            αμορτισέρ
+    ID                              4
+    NUMB                            ρουλεμάν  
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
