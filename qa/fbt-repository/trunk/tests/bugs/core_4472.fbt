@@ -1,0 +1,117 @@
+{
+'id': 'bugs.core_4472',
+'qmid': None,
+'tracker_id': 'CORE-4472',
+'title': 'Message "Modifying function <F> which is currently in use" when running script with AUTODDL=OFF and <F> is called from INTERNAL function declared in other unit',
+'description':
+ """
+   Test call delivering of firebird.log TWICE: before and after running ISQL.
+   Then we compare only size of obtained logs rather than content (differencs of size should be zero).
+   Result on WI-V3.0.0.32239, WI-V3.0.0.32239: Ok.
+
+   Result on WI-T3.0.0.30809 (Alpha2): 
+        Unexpected call to register plugin Remote, type 2 - ignored
+        Unexpected call to register plugin Loopback, type 2 - ignored
+        Unexpected call to register plugin Legacy_Auth, type 12 - ignored
+        Unexpected call to register plugin Srp, type 12 - ignored
+        Unexpected call to register plugin Win_Sspi, type 12 - ignored
+        Unexpected call to register plugin Arc4, type 16 - ignored
+        INET/inet_error: read errno = 10054
+        Modifying function FN_01 which is currently in use by active user requests
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'Windows',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import time
+import subprocess
+
+db_conn.close()
+
+fb_log_before=open( os.path.join(context['temp_directory'],'tmp_fb_log_4472_before.log'), 'w')
+fb_log_before.close()
+fn_log=open(fb_log_before.name, "w")
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey","action_get_fb_log"],\
+                       stdout=fn_log, stderr=subprocess.STDOUT)
+fn_log.close()
+
+sqltxt='''
+    set autoddl off;
+    commit;
+    set term ^;
+    create or alter function fn_01() returns int
+    as begin
+       return 1;
+    end
+    ^
+
+    create or alter procedure sp_01
+    as
+        declare function fn_internal_01 returns int as
+        begin
+          if ( fn_01() > 0 ) then return 1;
+          else return 0;
+        end
+    begin
+    end
+    ^
+    set term ;^
+    commit; 
+'''
+
+sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_4472.log'), 'w')
+sqllog.close()
+runProgram('isql',[ dsn, '-user',user_name,'-pas',user_password,'-q','-m','-o',sqllog.name],sqltxt)
+
+fb_log_after=open( os.path.join(context['temp_directory'],'tmp_fb_log_4472_after.log'), 'w')
+fb_log_after.close()
+fn_log=open(fb_log_after.name, "w")
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey","action_get_fb_log"],\
+                       stdout=fn_log, stderr=subprocess.STDOUT)
+fn_log.close()
+
+# This log should be EMPTY:
+with open( sqllog.name,'r') as f:
+  print(f.read())
+f.close()
+
+# This difference should be ZERO:
+fb_log_diff=os.path.getsize(fb_log_after.name)-os.path.getsize(fb_log_before.name)
+
+if fb_log_diff == 0:
+  print("OK: log was not changed.")
+else:
+  print("BAD: log was increased by "+str(fb_log_diff)+" bytes.")
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+if os.path.isfile(fb_log_before.name):
+  os.remove(fb_log_before.name)
+if os.path.isfile(fb_log_after.name):
+  os.remove(fb_log_after.name)
+if os.path.isfile(sqllog.name):
+  os.remove(sqllog.name)
+  """,
+ 'expected_stdout': 
+  """
+    OK: log was not changed.
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
