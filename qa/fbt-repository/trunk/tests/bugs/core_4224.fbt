@@ -1,0 +1,116 @@
+{
+'id': 'bugs.core_4224',
+'qmid': None,
+'tracker_id': 'CORE-4224',
+'title': 'Database replace through services API fails',
+'description':
+ """
+ """,
+'min_versions': '2.5.3',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'Windows',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import time
+import subprocess
+
+db_conn.close()
+
+tmpsrc='$(DATABASE_LOCATION)bugs.core_4224.fdb'
+tmpbkp='$(DATABASE_LOCATION)tmp_core_4224.fbk'
+
+log_backup=open( os.path.join(context['temp_directory'],'tmp_4224_backup.log'), 'w')
+log_backup.close()
+err_backup=open( os.path.join(context['temp_directory'],'tmp_4224_backup.err'), 'w')
+err_backup.close()
+
+fn_bkp_log=open(log_backup.name, "w")
+fn_bkp_err=open(err_backup.name, "w")
+
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                 "action_backup", "dbname", tmpsrc, "bkp_file", tmpbkp ],\
+                stdout=fn_bkp_log, stderr=fn_bkp_err)
+fn_bkp_log.close()
+fn_bkp_err.close()
+
+src_timestamp1 = -1
+if os.path.isfile(tmpsrc):
+  src_timestamp1 = os.path.getmtime(tmpsrc)
+
+log_restore=open( os.path.join(context['temp_directory'],'tmp_4224_restore.log'), 'w')
+err_restore=open( os.path.join(context['temp_directory'],'tmp_4224_restore.err'), 'w')
+log_restore.close()
+err_restore.close()
+
+fn_res_log=open(log_restore.name, "w")
+fn_res_err=open(err_restore.name, "w")
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                 "action_restore", "res_replace", "verbose", "bkp_file", tmpbkp, "dbname", tmpsrc ],\
+                stdout=fn_res_log, stderr=fn_res_err)
+fn_res_log.close()                   
+fn_res_err.close()                   
+
+src_timestamp2 = -2
+if os.path.isfile(tmpsrc):
+  src_timestamp2 = os.path.getmtime(tmpsrc)
+
+# Log ERRORS on BACKUP should be EMPTY:
+if os.path.getsize(err_backup.name) > 0:
+  with open( err_backup.name,'r') as f:
+    print("BACKUP STDERR: "+f.read())
+  f.close()
+
+# Log ERRORS on RESTORE should also be EMPTY:
+if os.path.getsize(err_restore.name) > 0:
+  with open( err_restore.name,'r') as f:
+    print("RESTORE STDERR: "+f.read())
+  f.close()
+
+# If restore will fail due to source database in use, its error logs will be like this:
+# RESTORE STDERR: could not drop database <...> (database might be in use)
+# -Exiting before completion due to errors
+# Problems on backup or restore. Timestamps difference is 0.0
+
+# Difference of timestamps should be positive number:
+src_timestamps_diff = src_timestamp2 - src_timestamp1
+
+if src_timestamps_diff > 0:
+  print("OK: 'fbsvcmgr action_restore res_replace' DID change database file.")
+else:
+  print("Problems on backup or restore. Timestamps difference is "+str(src_timestamps_diff))
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+if os.path.isfile(log_backup.name):
+  os.remove(log_backup.name)
+if os.path.isfile(err_backup.name):
+  os.remove(err_backup.name)
+if os.path.isfile(log_restore.name):
+  os.remove(log_restore.name)
+if os.path.isfile(err_restore.name):
+  os.remove(err_restore.name)
+if os.path.isfile(tmpbkp):
+  os.remove(tmpbkp)
+  """,
+ 'expected_stdout': 
+  """
+    OK: 'fbsvcmgr action_restore res_replace' DID change database file.
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
