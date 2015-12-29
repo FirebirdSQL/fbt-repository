@@ -1,0 +1,80 @@
+{
+'id': 'bugs.core_4218',
+'qmid': None,
+'tracker_id': 'CORE-4218',
+'title': "Add database owner to mon$database",
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import subprocess
+import time
+
+db_conn.close()
+
+create_user_ddl='''\
+create or alter user TMP_U4218 password '123' revoke admin role;
+grant create database to user TMP_U4218;
+'''
+
+runProgram('isql',['-user',user_name,'-pas',user_password,dsn],create_user_ddl)
+
+db_check='$(DATABASE_LOCATION)tmp.core_4218.fdb'
+
+if os.path.isfile(db_check):
+    os.remove(db_check)
+
+create_db_sql='''\
+create database 'localhost:$(DATABASE_LOCATION)tmp.core_4218.fdb' user 'TMP_U4218' password '123';
+set list on;
+select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
+commit;
+connect 'localhost:$(DATABASE_LOCATION)tmp.core_4218.fdb' user 'SYSDBA' password 'masterkey';
+select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
+commit;
+drop user TMP_U4218; 
+commit;
+drop database;
+quit;
+'''
+
+sqlddl=open( os.path.join(context['temp_directory'],'tmp_create_db_4218.sql'), 'w')
+sqlddl.write(create_db_sql)
+sqlddl.close()
+
+sqllog=open( os.path.join(context['temp_directory'],'tmp_create_db_4218.log'), 'w')
+subprocess.call(["isql", "-q", "-i", sqlddl.name],stdout=sqllog, stderr=subprocess.STDOUT)
+sqllog.close()
+
+with open(sqllog.name) as f:
+  print( f.read() )
+f.close()
+
+time.sleep(1)
+
+if os.path.isfile(sqlddl.name):
+    os.remove(sqlddl.name)
+if os.path.isfile(sqllog.name):
+    os.remove(sqllog.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    WHO_AM_I                        TMP_U4218
+    WHO_IS_OWNER                    TMP_U4218
+    WHO_AM_I                        SYSDBA
+    WHO_IS_OWNER                    TMP_U4218
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
