@@ -41,6 +41,8 @@ select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
 commit;
 drop user TMP_U4218; 
 commit;
+revoke create database from user TMP_U4218;
+commit;
 drop database;
 quit;
 '''
