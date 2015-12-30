@@ -1,0 +1,240 @@
+{
+'id': 'bugs.core_4135',
+'qmid': None,
+'tracker_id': 'CORE-4135',
+'title': "In SS sweep blocks establishment of concurrent attachments",
+'description':
+ """
+   Test uses existing database which has:
+     1. Empty table test(s01 varchar(100) , s02 varchar(100) , s03 varchar(100) );
+     2. Database-level trigger on CONNECT event;
+     3. Log table with DDL identical to mon$attachments, it's filled by CONNECT trigger.
+   This database is extracted from .zip file.
+   Then we insert rows into 'test' table and create indices on its fields.
+   After this we delete just inserted rows and make commit thus providing lot of job to GC.
+   When we call on next step sweep, it will take more than 15-20 seconds (at least on host
+   with common PC characteristics: P-IV 3.0 GHz, SATA, and with FB DefaultDBCachePage =2048).
+   We launch SWEEP by async. call of FBSVCMGR and save current timestamp in 't1' variable.
+   We allow sweep to work about 1 second and then run loop with launching ISQL attachments,
+   all of them - also in async. mode.
+   Each ISQL connect will add one row to the log-table ('mon_attachments') by ON-CONNECT 
+   trigger - and we'll query later its data: how many ISQL did establish connections while
+   sweep worked.
+   After loop we wait several seconds in order to be sure that all ISQL are loaded.
+   Then we save new value of current timestamp in 't2' variable.
+   After this we call FBSVCMGR with arguments to make SHUTDOWN of database, thus killing all
+   existing attachments (SWEEP will be interrupted in that case). This is done in SYNC mode,
+   Then we return database to ONLINE state and make single ISQL connect with '-nod' switch.
+   This (last) attachment to database will query data of Log table 'mon_attachments' and check
+   that number of ISQL sessions which ACTUALLY etsablished attachment is equal to 'planned'
+   number, i.e. which we have launched in the loop.
+
+   Checked on WI-V3.0.0.32253, SS/SC/CS. On any architecture this test run about 15 seconds.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import subprocess
+from subprocess import Popen
+import zipfile
+import time
+import datetime
+from datetime import datetime
+
+db_conn.close()
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_4135.zip') )
+zf.extractall( context['temp_directory'] )
+zf.close()
+
+# Result: file tmp_core_4135.fdb is extracted into context['temp_directory']
+
+db_file="$(DATABASE_LOCATION)tmp_core_4135.fdb"
+
+sql_data='''\
+set echo on;
+set term ^;
+execute block as
+  declare n int = 15000;
+begin
+  while (n>0) do
+    insert into test(s01, s02, s03)
+    values( rpad('', 100, uuid_to_char(gen_uuid()) ),
+            rpad('', 100, uuid_to_char(gen_uuid()) ),
+            rpad('', 100, uuid_to_char(gen_uuid()) )
+          ) returning :n-1 into n;
+end^
+set term ;^
+commit;
+create index test_a on test(s01,s02,s03);
+create index test_b on test(s02,s03,s01);
+create index test_c on test(s03,s02,s01);
+create index test_d on test(s01,s03,s02);
+create index test_e on test(s02,s01,s03);
+create index test_f on test(s03,s01,s02);
+commit;
+set count on;
+delete from test;
+delete from connects_log;
+commit;
+'''
+
+sql_data_cmd=open( os.path.join(context['temp_directory'],'tmp_data_4135.sql'), 'w')
+sql_data_cmd.write(sql_data)
+sql_data_cmd.close()
+
+sql_data_log=open( os.path.join(context['temp_directory'],'tmp_data_4135.log'), 'w')
+subprocess.call(["isql", db_file, "-user","SYSDBA","-password","masterkey","-i",sql_data_cmd.name],\
+                stdout=sql_data_log, stderr=subprocess.STDOUT)
+sql_data_log.close()
+
+
+# Now we run SWEEP in child process (asynchronous) and while it will in work - try to establish several attachments.
+##################
+fbsvc_log=open( os.path.join(context['temp_directory'],'tmp_svc_4135.log'), 'w')
+fbsvc_log.write("Starting sweep")
+fbsvc_log.seek(0,2)
+p_sweep=subprocess.Popen([ "fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                           "action_repair", "dbname", db_file, "rpr_sweep_db"],\
+                           stdout=fbsvc_log, stderr=subprocess.STDOUT
+                        )
+
+time.sleep(1)
+
+# Save current timestamp: this is point BEFORE we try to establish attachmentas using several ISQL sessions:
+t1 = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+
+# Try to establish several attachments to database while sweep is in work:
+
+planned_attachments = 10
+
+sqlatt=open( os.path.join(context['temp_directory'],'tmp_att_4135.sql'), 'w')
+sqlatt.write('set list on; select current_connection, m.* from mon$attachments m order by m.mon$attachment_id; quit;')
+sqlatt.close()
+
+f_list=[]
+p_list=[]
+for i in range(0, planned_attachments):
+    sqllog=open( os.path.join(context['temp_directory'],'tmp_att_4135_'+str(i)+'.log'), 'w')
+    f_list.append(sqllog)
+
+for i in range(len(f_list)):
+    p_isql=Popen( [ "isql" , "localhost:"+db_file, "-user" , "SYSDBA" , "-password", "masterkey", "-i", sqlatt.name ], \
+                  stdout=f_list[i], stderr=subprocess.STDOUT \
+                )
+    p_list.append(p_isql)
+
+# Here we have to wait a little in order to all ISQL will establish their attachments:
+time.sleep(3)
+
+# Save current timestamp: we assume that now ALL isql sessions already FINISHED to establish attachment (or the whole job and quited):
+t2 = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+
+# Move database to shutdown in order to stop sweep:
+
+dbshut_log=open( os.path.join(context['temp_directory'],'tmp_sht_4135.log'), 'w')
+dbshut_log.write("Call DB shutdown")
+dbshut_log.seek(0,2)
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                 "action_properties", "dbname", db_file, "prp_shutdown_mode", "prp_sm_full", "prp_force_shutdown", "0"],\
+                stdout=dbshut_log, stderr=subprocess.STDOUT)
+
+dbshut_log.seek(0,2)
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                 "action_db_stats", "dbname", db_file, "sts_hdr_pages"],\
+                stdout=dbshut_log, stderr=subprocess.STDOUT)
+
+# Kill all child ISQL processes:
+for i in range(len(f_list)):
+  p_list[i].terminate()
+  f_list[i].close()
+
+p_sweep.terminate()
+
+# Return database online in order to check number of attachments that were established while sweep was in work:
+
+dbshut_log.seek(0,2)
+dbshut_log.write("Return DB to online")
+dbshut_log.seek(0,2)
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                 "action_properties", "dbname", db_file, "prp_db_online"],\
+                stdout=dbshut_log, stderr=subprocess.STDOUT)
+
+dbshut_log.seek(0,2)
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
+                 "action_db_stats", "dbname", db_file, "sts_hdr_pages"],\
+                stdout=dbshut_log, stderr=subprocess.STDOUT)
+
+dbshut_log.close()
+fbsvc_log.close()
+
+# Check: number of ISQL attachments between t1 and t2 must be equal to 'planned_attachments'
+
+# SuperServer has two system attachments with mon$user='Garbage Collector' and 'Cache Writer',
+# we have to SKIP them from counting:
+
+sql_data='''\
+set list on;
+select iif( cnt = %s, 
+            'OK, number of attachments is equal to expected value.', 
+            'Wrong: '||cnt||' attachments could be done instead of expected '||%s 
+          ) as check_num_of_attachments
+from (
+   select 
+       count( nullif(mon_system_flag,1) )  as cnt
+   from mon_attach_data d
+   where 
+       d.mon_timestamp between '%s' and '%s' 
+       and d.mon_remote_protocol is not null 
+       and mon_remote_address is not null 
+       and mon_remote_process containing 'isql'
+);
+commit;
+drop database;
+'''
+
+sqlchk=open( os.path.join(context['temp_directory'],'tmp_chk_4135.sql'), 'w')
+sqlchk.write(sql_data % (planned_attachments, planned_attachments, t1, t2) )
+sqlchk.close()
+
+sqllog=open( os.path.join(context['temp_directory'],'tmp_chk_4135.log'), 'w')
+subprocess.call( [ "isql" , "localhost:"+db_file, "-nod", "-user" , "SYSDBA" , "-password", "masterkey", "-i", sqlchk.name ], \
+                  stdout=sqllog, stderr=subprocess.STDOUT
+               )
+sqllog.close()
+
+with open(sqllog.name) as f:
+  print( f.read() )
+f.close()
+
+time.sleep(1)
+
+for i in range(len(f_list)):
+  os.remove(f_list[i].name)
+
+os.remove(dbshut_log.name)
+os.remove(fbsvc_log.name)
+os.remove(sqllog.name)
+os.remove(sql_data_log.name)
+os.remove(sql_data_cmd.name)
+os.remove(sqlchk.name)
+os.remove(sqlatt.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    CHECK_NUM_OF_ATTACHMENTS        OK, number of attachments is equal to expected value.
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
