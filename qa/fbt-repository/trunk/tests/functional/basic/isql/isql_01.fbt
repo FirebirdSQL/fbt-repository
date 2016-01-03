@@ -249,7 +249,9 @@ Transaction -.*""",'')]
     Database: localhost:c:\job\qa\fbtest-repo\tmp\functional.basic.isql.isql_01.fdb
     Owner: SYSDBA
     PAGE_SIZE 8192
-    Number of DB pages allocated = 180111
+    Number of DB pages allocated
+    Number of DB pages used
+    Number of DB pages free
     Sweep interval = 11120000
     Forced Writes are ON
     Transaction - oldest = 1
@@ -262,7 +264,9 @@ Transaction -.*""",'')]
  'substitutions': [ 
      ('Owner.*', 'Owner'), 
      ('PAGE_SIZE.*', 'PAGE_SIZE'), 
-     ('Number of DB pages.*', 'Number of DB pages'), 
+     ('Number of DB pages allocated.*', 'Number of DB pages allocated'), 
+     ('Number of DB pages used.*', 'Number of DB pages used'), 
+     ('Number of DB pages free.*', 'Number of DB pages free'), 
      ('Sweep.*', 'Sweep'), 
      ('Forced Writes.*', 'Forced Writes'), 
      ('Transaction -.*',''),
