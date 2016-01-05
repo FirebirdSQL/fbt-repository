@@ -3,35 +3,111 @@
 'qmid': 'bugs.core_1148',
 'tracker_id': 'CORE-1148',
 'title': 'Every user can view server log using services API',
-'description': 'Ordinary user has access to server log, which is minor security problem.',
-'min_versions': None,
+'description':
+ """
+   Instead of usage 'resource:test_user' (as it was before) we create every time this test run  user TMP$C1148
+   and make test connect to database as this user in order to check ability to connect and get engine version.
+   Then we parse engine version (is it 2.5 or 3.0 ?) and construct command to obtain Firebird log using FBSVCMGR
+   (switches differ for 2.5 and 3.0! For 2.5 it must be: "action_get_ib_log", for 3.0: "action_get_fb_log").
+   After that we try to extract firebird log using fbsvcmgr and this command is EXPECTED return error, so we log
+   this message to separate file (and STDOUT is redirected to /dev/null).
+   Finally, we check content of 1st and 2nd files and remove temply created user.
+ """,
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.0.2',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'Python',
- 'test_script': """from fdb import services
-con = services.connect(host='localhost', user=user_name.encode(), password=user_password.encode())
-try:
-   con.get_log()
-   print ('sucess')
-except Exception, e:
-   print (e[0])
-con = services.connect(host='localhost', user='TEST', password='test')
-try:
-   con.get_log()
-   print ('sucess')
-except Exception, e:
-   print (e[0])
+ 'test_script': 
+  """
 
+# Refactored 05-JAN-2016: removed dependency on recource 'test_user' because this lead to:
+# UNTESTED: bugs.core_2729
+# Add new user
+# Unexpected stderr stream received from GSEC.
+# (i.e. test remained in state "Untested" because of internal error in gsec while creating user 'test' from resource).
+# Checked on WI-V2.5.5.26952 (SC), WI-V3.0.0.32266 (SS/SC/CS).
 
-""",
- 'expected_stdout': """sucess
-Unable to perform the requested Service API action:
-- SQLCODE: -901
-- Unable to perform operation.  You must be either SYSDBA or owner of the database
-""",
- 'resources': ['test_user']
+import os
+import subprocess
+import time
+
+sql_create_user='''\
+  create user tmp$c1148 password 'QweRtyUi';
+  commit;
+  connect '%s' user 'TMP$C1148' password 'QweRtyUi';
+  set list on;
+  select current_user who_am_i, rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database;
+  quit;
+''' % dsn
+
+sqllog=open( os.path.join(context['temp_directory'],'tmp_user_1148.log'), 'w')
+sqllog.close()
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-m', '-o', sqllog.name], sql_create_user)
+
+with open( sqllog.name,'r') as f:
+    for line in f:
+        i=1
+        if 'ENGINE_VERSION' in line:
+            for word in line.split():
+                if i==2:
+                    engine=word
+                i=i+1
+            break
+f.close()
+
+fb_err=open( os.path.join(context['temp_directory'],'tmp_get_fb_err_1148.log'), 'w')
+fb_err.close()
+fn_err=open(fb_err.name, "w")
+
+if engine.startswith('2.5'):
+  get_firebird_log_key='action_get_ib_log'
+else:
+  get_firebird_log_key='action_get_fb_log'
+
+fn_nul = open(os.devnull, 'w')
+subprocess.call(["fbsvcmgr","localhost:service_mgr","user","TMP$C1148","password","QweRtyUi", get_firebird_log_key],\
+                       stdout=fn_nul, \
+                       stderr=fn_err \
+               )
+fn_nul.close()
+fn_err.close()
+
+# CLEANUP: drop user that was temp-ly created for this test:
+##########
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-m', '-o', sqllog.name], 'drop user tmp$c1148; commit;')
+
+# Check content of files: 1st shuld contain name of temply created user, 2nd should be with error during get FB log:
+
+with open( sqllog.name,'r') as f:
+  print(f.read())
+f.close()
+
+with open( fb_err.name,'r') as f:
+  print("STDERR: "+f.read())
+f.close()
+
+# Do not remove this pause: on Windows closing of handles can take some (small) time. 
+# Otherwise Windows(32) access error can raise here.
+time.sleep(1)
+
+if os.path.isfile(sqllog.name):
+    os.remove(sqllog.name)
+
+if os.path.isfile(fb_err.name):
+    os.remove(fb_err.name)  
+  """,
+ 'expected_stdout': 
+  """
+    WHO_AM_I                        TMP$C1148
+    ENGINE_VERSION                  3.0.0
+    STDERR: Unable to perform operation.  You must be either SYSDBA or owner of the database
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[('ENGINE_VERSION .*','ENGINE_VERSION')]
 }
 ]
 }
