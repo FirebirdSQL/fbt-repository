@@ -21,6 +21,7 @@
     -- Instead of checking explained plan text it is enough only to ensure that its 
     -- LENGTH is more than 32K and that text is not cuted off, i.e. it should end with
     -- phrase: Table "MON$STATEMENTS" Full Scan
+    -- Another sample of query that has long plan see in core_5061.fbt
     with recursive
     rx as (
       select 1 as i from rdb$database
