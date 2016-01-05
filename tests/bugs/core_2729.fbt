@@ -9,12 +9,22 @@
 {
  'firebird_version': '2.5.0',
  'platform': 'All',
- 'database_character_set': 'UTF8',
- 'connection_character_set': 'UTF8',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'test_script': 
   """
+    -- Refactored 05-JAN-2016: removed dependency on recource 'test_user' because this lead to:
+    -- UNTESTED: bugs.core_2729
+    -- Add new user
+    -- Unexpected stderr stream received from GSEC.
+    -- (i.e. test remained in state "Untested" because of internal error in gsec while creating user 'test' from resource).
+    -- Checked on WI-V2.5.5.26952 (SC), WI-V3.0.0.32266 (SS/SC/CS).
+
+    create user tmp$c2729a password 'QweRtyUi';
+    create user tmp$c2729b password 'AsdFghJk';
+    commit;
+
+    connect 'localhost:$(DATABASE_LOCATION)bugs.core_2729.fdb' user 'TMP$C2729A' password 'QweRtyUi';
+
     -- Updated code: made STDOUT insensible to the IDs of attaches
     set list on;
     set term ^;
@@ -38,7 +48,7 @@
         suspend;
         
         execute statement 'select current_user, current_connection from rdb$database'
-        as user 'test' password 'test'
+                          as user 'TMP$C2729B' password 'AsdFghJk'
         into :user_on_extds, :v_att_eds;
         
         same_attach = iif( v_att_ini = v_att_eds, 'Y', 'N');
@@ -48,18 +58,22 @@
     ^
     set term ;^
     commit;
+
+    connect 'localhost:$(DATABASE_LOCATION)bugs.core_2729.fdb' user 'SYSDBA' password 'masterkey';
+    drop user tmp$c2729a;
+    drop user tmp$c2729b;
+    commit;
   """,
  'expected_stdout': 
   """
-    USER_ON_START                   SYSDBA
-    USER_ON_EXTDS                   SYSDBA
+    USER_ON_START                   TMP$C2729A
+    USER_ON_EXTDS                   TMP$C2729A
     SAME_ATTACH                     Y
 
-    USER_ON_START                   SYSDBA
-    USER_ON_EXTDS                   TEST
+    USER_ON_START                   TMP$C2729A
+    USER_ON_EXTDS                   TMP$C2729B
     SAME_ATTACH                     N
-  """,
- 'resources': ['test_user']
+  """
 }
 ]
 }
