@@ -1,64 +1,137 @@
 {
 'id': 'bugs.core_1845',
-'qmid': None,
+'qmid': 'bugs.core_1845',
 'tracker_id': 'CORE-1845',
 'title': 'Some standard calls show server installation directory to regular users',
-'description': '',
-'min_versions': '',
+'description':
+ """
+   Instead of usage 'resource:test_user' (as it was before) we create every time this test run user TMP$C1845
+   and make test connect to database with login = this user in order to check ability to make attach.
+   Then we do subsequent run of FBSVCMGR utility with passing ONE of following options from 'Information requests' 
+   group:
+     info_server_version
+     info_implementation
+     info_user_dbpath
+     info_get_env
+     info_get_env_lock
+     info_get_env_msg
+     info_svr_db_info
+     info_version
+   NOTE: option 'info_capabilities' was introduces only in 3.0. Its output differs on Classic vs SS and SC.
+   Currently this option is NOT passed to fbsvcmgr.
+ """,
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.1.1',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'Python',
- 'test_script': """def printException(e):
-    for x in e.args:
-        print (x)
+ 'test_script': 
+  """
 
-# check with SYSDBA
+# Refactored 05-JAN-2016: removed dependency on recource 'test_user' because this lead to:
+# UNTESTED: bugs.core_1845
+# Add new user
+# Unexpected stderr stream received from GSEC.
+# (i.e. test remained in state "Untested" because of internal error in gsec while creating user 'test' from resource).
+# Checked on WI-V2.5.5.26952 (SC), WI-V3.0.0.32266 (SS/SC/CS).
 
-svc = kdb.services.connect(password=user_password)
-svc.get_home_directory()
-svc.get_message_file_directory()
-svc.get_lock_file_directory()
+import os
+import subprocess
+import time
 
-# check with regular user
+sql_create_user='''\
+  create user tmp$c1845 password 'QweRtyUi';
+  commit;
+  connect '%s' user 'TMP$C1845' password 'QweRtyUi';
+  set list on;
+  select current_user who_am_i from rdb$database;
+  quit;
+''' % dsn
 
-svc = kdb.services.connect(user='TEST',password='test')
+sqllog=open( os.path.join(context['temp_directory'],'tmp_user_1845.log'), 'w')
+sqllog.close()
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-m', '-o', sqllog.name], sql_create_user)
+
+#svc.get_home_directory()
+#svc.get_message_file_directory()
+#svc.get_lock_file_directory()
 
 
-try:
-    svc.get_home_directory()
-except Exception as e:
-    printException(e)
+fb_log=open( os.path.join(context['temp_directory'],'tmp_fbsvc_1845.log'), 'w')
+fb_log.close()
+fn_log=open(fb_log.name, "w")
 
-try:
-    svc.get_message_file_directory()
-except Exception as e:
-    printException(e)
+svc_list=["info_server_version","info_implementation","info_user_dbpath","info_get_env","info_get_env_lock","info_get_env_msg","info_svr_db_info","info_version"]
+#,"info_capabilities"
+for i in range(len(svc_list)):
+    fn_log.write("Check service '"+svc_list[i]+"':")
+    fn_log.write("\\n")
+    fn_log.seek(0,2)
+    subprocess.call(["fbsvcmgr","localhost:service_mgr","user","TMP$C1845","password","QweRtyUi", svc_list[i]],\
+                    stdout=fn_log, \
+                    stderr=fn_log \
+                   )
+    fn_log.write("\\n")
+fn_log.close()
 
-try:
-    svc.get_lock_file_directory()
-except Exception as e:
-    printException(e)
-""",
- 'expected_stdout': """Services/isc_service_query:
-- SQLCODE: -551
-- Service isc_info_svc_get_env requires SYSDBA permissions.  Reattach to the Service Manager using the SYSDBA account.
--551
-335544790
-Services/isc_service_query:
-- SQLCODE: -551
-- Service isc_info_svc_get_env requires SYSDBA permissions.  Reattach to the Service Manager using the SYSDBA account.
--551
-335544790
-Services/isc_service_query:
-- SQLCODE: -551
-- Service isc_info_svc_get_env requires SYSDBA permissions.  Reattach to the Service Manager using the SYSDBA account.
--551
-335544790
-""",
- 'resources': ['test_user']
+# CLEANUP: drop user that was temp-ly created for this test:
+##########
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-m', '-o', sqllog.name], 'drop user tmp$c1845; commit;')
+
+# Check content of files: 1st shuld contain name of temply created user, 2nd should be with error during get FB log:
+
+with open( sqllog.name,'r') as f:
+  print(f.read())
+f.close()
+
+# Print output of fbsvcmgr but: 1) remove exceessive whitespaces from lines; 2) transform text to uppercase
+# (in order to reduce possibility of mismatches in case of minor changes that can occur in future versions of fbsvcmgr)
+
+with open( fb_log.name,'r') as f:
+  for line in f:
+    print( ' '.join(line.split()).upper() )
+f.close()
+
+# Do not remove this pause: on Windows closing of handles can take some (small) time. 
+# Otherwise Windows(32) access error can raise here.
+time.sleep(1)
+
+if os.path.isfile(sqllog.name):
+    os.remove(sqllog.name)
+
+if os.path.isfile(fb_log.name):
+    os.remove(fb_log.name)  
+
+  """,
+ 'expected_stdout': 
+  """
+    WHO_AM_I                        TMP$C1845
+    CHECK SERVICE 'INFO_SERVER_VERSION':
+    SERVER VERSION: WI-V3.0.0.32266 FIREBIRD 3.0 RELEASE CANDIDATE 2
+    CHECK SERVICE 'INFO_IMPLEMENTATION':
+    SERVER IMPLEMENTATION: FIREBIRD/WINDOWS/INTEL/I386
+    CHECK SERVICE 'INFO_USER_DBPATH':
+    SERVICE ISC_INFO_SVC_USER_DBPATH REQUIRES SYSDBA PERMISSIONS. REATTACH TO THE SERVICE MANAGER USING THE SYSDBA ACCOUNT.
+    CHECK SERVICE 'INFO_GET_ENV':
+    SERVICE ISC_INFO_SVC_GET_ENV REQUIRES SYSDBA PERMISSIONS. REATTACH TO THE SERVICE MANAGER USING THE SYSDBA ACCOUNT.
+    CHECK SERVICE 'INFO_GET_ENV_LOCK':
+    SERVICE ISC_INFO_SVC_GET_ENV REQUIRES SYSDBA PERMISSIONS. REATTACH TO THE SERVICE MANAGER USING THE SYSDBA ACCOUNT.
+    CHECK SERVICE 'INFO_GET_ENV_MSG':
+    SERVICE ISC_INFO_SVC_GET_ENV REQUIRES SYSDBA PERMISSIONS. REATTACH TO THE SERVICE MANAGER USING THE SYSDBA ACCOUNT.
+    CHECK SERVICE 'INFO_SVR_DB_INFO':
+    SERVICE ISC_INFO_SVC_SVR_DB_INFO REQUIRES SYSDBA PERMISSIONS. REATTACH TO THE SERVICE MANAGER USING THE SYSDBA ACCOUNT.
+    CHECK SERVICE 'INFO_VERSION':
+    SERVICE MANAGER VERSION: 2
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[
+      ('SERVER VERSION:.*','SERVER VERSION:'),
+      ('SERVER IMPLEMENTATION:.*','SERVER IMPLEMENTATION:'),
+      ('SERVICE MANAGER VERSION:.*','SERVICE MANAGER VERSION:')
+  ]
 }
 ]
 }
