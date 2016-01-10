@@ -5,14 +5,14 @@
 'title': 'Error "no current record for fetch operation" after ALTER VIEW',
 'description':
  """
-   Confirmed error on: WI-V2.5.6.26962 (SC).
-   Origin value for 'min_versions' ('2.5.1') was replaced with 3.0 untill bug exists in 2.5.x.
-   Checked on WI-V3.0.0.32268 (SS, SC, CS); fdb version: 1.5
+   Confirmed error on: WI-V2.5.6.26962 (SC), fixed on: WI-V2.5.6.26963.
+   Checked on WI-V3.0.0.32268 (SS, SC, CS).
+   Checked on fdb version 1.5.
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.6',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'init_script':
   """
