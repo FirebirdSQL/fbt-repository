@@ -1,0 +1,255 @@
+{
+'id': 'bugs.core_2493',
+'qmid': '',
+'tracker_id': 'CORE-2493',
+'title': 'Append the IP address of the remote host to error messages in firebird.log for TCP connections',
+'description':
+ """
+   Following actions are performed by this test:
+   
+   1. Obtain current firebird.log and saves it to the file with name = 'tmp_2493_fblog_before.txt';
+   
+   2. Asynchronously launch ISQL in child process with request to return client IP address (via asking context variable)
+      and after this - do some 'heavy query' that for sure will take a lot of time and resources.
+      Output is redirected to file with name = 'tmp_2493_isql.log' and will be parsed further (we'll search for client IP there).
+   
+   3. Kill launched ISQL process after several seconds. At this point new message must appear in firebird.log and it MUST
+      be in format described in the ticket. Because this abend will be detected by SERVER, format of message will be like this:
+      (for TCPv4):  INET/inet_error: read errno = 10054, client host = prog1, address = 127.0.0.1/4076, user = john
+      (for TCPv6):  INET/inet_error: read errno = 10054, client host = prog2, address = fe80::c40e:21ec:b5c7:8963/56831, user = mick
+   
+   4. Wait several seconds and after it - obtain again firebird.log (new content) and save it in 'tmp_2493_fblog_after.txt'.
+   
+   5. Make file comparison by calling method from standard Python tool - difflib. Result of this comparison will be stored
+      in file with name 'tmp_2493_diff.txt'. This file will have several lines from which we are interested only for one which
+      STARTS with "+" (PLUS sign) and does contain phrase 'INET/INET_ERROR'. Diff-file must contain only ONE such line.
+   
+   6. Next we parse this line - split it on tokens. It must contain AT LEAST 14 tokens and we'll enumerate them starting from ZERO:
+      + INET inet_error read errno 10054 client host prog1 address 127.0.0.1 4417   user john ------- for IPv4
+      0  1       2       3    4      5     6     7     8       9       10      11     12   13
+      + INET inet_error read errno 10054 client host prog2 address x::y:z:u:v 56831 user mick ------- for IPv6
+
+   7. Then we check that parsed line has minimum 14 tokens and begin to handle them. 
+      Token N 3 ('read') is SKIPPED from analysis - see issue by dimitr in the tocket, 12/Jan/16 10:21 AM.
+      Tokens NN 4 ... 7 form 'constant' part of message and we DO verify that it actually present in the parsed string.
+      Token N 8 must contain name of HOST. It has to match to result of socket.gethostname(), comparing them case-insensitively.
+      Token N 10 concatenated with '/' concatenated with token N 11 has to match to the value that we got from ISQL when it asked
+      value of rdb$get_context('SYSTEM','CLIENT_ADDRESS') - we store this value in variable with name 'remote_ip'.
+      Also, token N 11 is value of PORT and it has to be positive integer. This is checked additionally using isdigit() call.
+      Token N 13 has to be equal to current OS user, comparing case-insens. This is done by call of getpass.getuser()
+
+   Checked on WI-V3.0.0.32272 x86 and amd64, OS = Windows XP and 8.1, TCPv4 and TCPv6; fdb version = 1.5, Python 2.7 and 3.4.
+   ### NB ###
+   First version of this test was iomplemented on Windows XP and Python 2.7.8, build 02-jul-2014 win32.
+   Unfortunatelly, on Python 3.4 + Win 8.1 it is unable to use socket.inet_pton() call -exception raises with text:
+   "AttributeError: 'module' object has no attribute 'inet_pton'".
+   For that reason it was decided do NOT use calls of socket.inet_pton() and operate only with remote_address that can be easy
+   received using built-in FB context variable. User-defined functions 'is_valid_ipv4' and 'is_valid_ipv6' are left here for
+   possible further usage in some other tests.
+ """   ,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import time
+import subprocess
+from subprocess import Popen
+import signal
+import difflib
+import re
+import socket
+import getpass
+
+
+def svc_get_fb_log( f_fb_log ):
+
+  import subprocess
+
+  subprocess.call([ "fbsvcmgr", \
+                    "localhost:service_mgr",\
+                    "user","SYSDBA","password","masterkey",\
+                    "action_get_fb_log" \
+                  ], \
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+# http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
+def is_valid_ipv4(address):
+    import socket
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+    except AttributeError:  # no inet_pton here, sorry
+        try:
+            socket.inet_aton(address)
+        except socket.error:
+            return False
+        return address.count('.') == 3
+    except socket.error:  # not a valid address
+        return False
+
+    return True
+
+def is_valid_ipv6(address):
+    import socket
+    try:
+        socket.inet_pton(socket.AF_INET6, address)
+    except socket.error:  # not a valid address
+        return False
+    return True
+
+
+db_conn.close()
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_2493_fblog_before.txt'), 'w')
+svc_get_fb_log( f_fblog_before )
+f_fblog_before.close()
+
+isql_txt='''\
+set list on; 
+set term ^;
+execute block returns(remote_ip varchar(255)) as
+begin
+    remote_ip = rdb$get_context('SYSTEM','CLIENT_ADDRESS');
+    suspend;
+end
+^
+set term ;^
+select count(*) from rdb$types,rdb$types,rdb$types,rdb$types;
+'''
+
+f_sql_txt=open( os.path.join(context['temp_directory'],'tmp_2493_isql.sql'), 'w')
+f_sql_txt.write(isql_txt)
+f_sql_txt.close()
+
+f_sql_log=open( os.path.join(context['temp_directory'],'tmp_2493_isql.log'), 'w')
+f_sql_err=open( os.path.join(context['temp_directory'],'tmp_2493_isql.err'), 'w')
+
+p_isql=Popen( [ "isql", dsn, "-user","SYSDBA","-password","masterkey", "-i", f_sql_txt.name ], \
+                          stdout=f_sql_log, stderr=f_sql_err
+                      )
+
+#child_pid = p_isql.pid
+
+time.sleep(1)
+
+p_isql.terminate()
+
+#os.kill(child_pid, signal.SIGTERM)
+
+f_sql_log.close()
+f_sql_err.close()
+
+time.sleep(1)
+
+mon_ip='_undefined_'
+with open( f_sql_log.name,'r') as f:
+    for line in f:
+        if line.startswith('REMOTE_IP'):
+            mon_ip=line.split()[1]
+            break
+f.close()
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_2493_fblog_after.txt'), 'w')
+svc_get_fb_log( f_fblog_after )
+f_fblog_after.close()
+
+time.sleep(1)
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2493_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+# Sample of comparison result (file tmp_2493_diff.txt):
+# --- 
+# +++ 
+# @@ -1 +1,4 @@
+# - + 
+# +CSPROG	Tue Jan 12 17:54:27 2016
+# +	INET/inet_error: read errno = 10054, client host = prog1, address = 127.0.0.1/4076, user = john
+# +     INET/inet_error: read errno = 10054, client host = prog2, address = fe80::c40e:21ec:b5c7:8963/56831, user = mick
+# +
+
+logged_err=0
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        i=1
+        if line.startswith('+') and 'INET/INET_ERROR' in line.upper():
+            #lst=line.replace(',',' ').replace('/',' ').replace('=',' ').replace(':',' ').split()
+            lst=line.replace(',',' ').replace('/',' ').replace('=',' ').split()
+            break
+f.close()
+
+# Tokens, numerated from zero (NB: leftmost is "PLUS" sign and has index = 0)
+# ---------------------------------------------------------------------------
+# + INET inet_error read errno 10054 client host prog1 address 127.0.0.1 4417   user john ------- for IPv4
+# 0  1       2       3    4      5     6     7     8       9       10      11     12   13
+# + INET inet_error read errno 10054 client host prog2 address x::y:z:u:v 56831 user mick ------- for IPv6
+
+if len(lst)<14:
+    print('Message with "inet_error" could be parsed only for '+str(len(lst))+' elements. Minimum required is 14.')
+else:
+
+    print('Fixed data: '+lst[4]+' '+lst[5]+' '+lst[6]+' '+lst[7])
+
+    # http://stackoverflow.com/questions/4271740/how-can-i-use-python-to-get-the-system-hostname
+    if lst[8].upper()==socket.gethostname().upper():
+        print('Remote host: valid, passed socket.gethostname()')
+    else:
+        print('Invalid host=|'+lst[8]+'|')
+
+    # does not work on Python 3.4! >>> if is_valid_ipv4(lst[10]) or is_valid_ipv6(lst[10]):
+    if lst[10]+'/'+lst[11] == mon_ip:
+        print("String IP/port: valid, equal to 'CLIENT_ADDRESS'")
+    else:
+        print('Invalid IP/port=|'+lst[10]+'/'+lst[11]+'|')
+
+    if lst[11].isdigit():
+        print('Port value: valid, positive integer.')
+    else:
+        print('Invalid port=|'+lst[11]+'|')
+
+    if lst[13].upper()==getpass.getuser().upper():
+        print('OS user: valid, passed getpass.getuser()')
+    else:
+        print('Invalid OS user=|'+lst[13]+'|')
+
+#############################################
+# Cleanup.
+os.remove(f_sql_txt.name)
+os.remove(f_sql_log.name)
+os.remove(f_sql_err.name)
+os.remove(f_fblog_before.name)
+os.remove(f_fblog_after.name)
+os.remove(f_diff_txt.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    Fixed data: errno 10054 client host
+    Remote host: valid, passed socket.gethostname()
+    String IP/port: valid, equal to 'CLIENT_ADDRESS'
+    Port value: valid, positive integer.
+    OS user: valid, passed getpass.getuser()
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
