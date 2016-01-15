@@ -217,7 +217,7 @@ else:
     if lst[10]+'/'+lst[11] == mon_ip:
         print("String IP/port: valid, equal to 'CLIENT_ADDRESS'")
     else:
-        print('Invalid IP/port=|'+lst[10]+'/'+lst[11]+'|')
+        print('Invalid IP/port=|'+lst[10]+'/'+lst[11]+'| - differ from mon_ip=|'+mon_ip+'|')
 
     if lst[11].isdigit():
         print('Port value: valid, positive integer.')
