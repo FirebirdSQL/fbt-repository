@@ -194,15 +194,22 @@
     select distinct msg 
     from
     (
-        select iif( detach_ms > 5000, 'TOO SLOW DETACH: ' || detach_ms || ' ms, runner: ' || rno, 'Detaches were fast.' ) as msg
-        --                        ^
-        --                        |
-        --                  ################################
-        --                  #   t h r e s h o l d,    m s  #
-        --                  ################################
+        select iif( detach_ms > max_detach_ms, 
+                    'Slow detaches > '|| max_detach_ms ||' ms detected: ' || detach_ms || ' ms, from ' || dts_before_detach || ' to '||dts_after_detach, 
+                    'All detaches not exceeded threshold' 
+                  ) as msg
         from (
-            select rno
-            ,datediff(millisecond from min(t0) to min(t1)) as detach_ms
+            select 
+                 rno
+                ,datediff(millisecond from min(t0) to min(t1)) as detach_ms
+                ,min(t0) as dts_before_detach
+                ,min(t1) as dts_after_detach
+                ,5000 as max_detach_ms
+            --                ^
+            --                |
+            --   ##############################
+            --   #   t h r e s h o l d,   ms  #
+            --   ##############################
             from (
                 select
                     rno,dts
@@ -362,16 +369,14 @@ runProgram('Python',[f_parallel_py.name])
 time.sleep(2)
 
 f_top_slow_sql=open( os.path.join(context['temp_directory'], 'tmp_5034_slowest_detaches.sql'), 'w')
-f_top_slow_sql.write('set count on; set heading off; select * from v_top10_slow;')
+f_top_slow_sql.write('drop user tmp$c5034; commit; set count on; set heading off; select * from v_top10_slow; commit;')
 f_top_slow_sql.close()
 
 f_top_slow_log=open( os.path.join(context['temp_directory'], 'tmp_5034_slowest_detaches.log'), 'w')
 subprocess.call( ["isql", db_dsn, "-user", "SYSDBA", "-password", "masterkey", "-nod", "-n", "-i", f_top_slow_sql.name], stdout=f_top_slow_log, stderr=subprocess.STDOUT)
 f_top_slow_log.close()
+
 time.sleep(1)
-
-subprocess.check_call( ["isql", dsn, "-user", "SYSDBA", "-password", "masterkey", "-nod", "-n", "-i", f_top_slow_sql.name] )
-
 os.remove(f_top_slow_sql.name)
 
 with open(f_top_slow_log.name) as f:
@@ -384,7 +389,7 @@ os.remove(f_parallel_py.name+'c')
   """,
  'expected_stdout': 
   """
-    Detaches were fast.
+    All detaches not exceeded threshold
     Records affected: 1
   """,
  'expected_stderr': 
