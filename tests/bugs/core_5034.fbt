@@ -247,17 +247,17 @@ dbfile='$(DATABASE_LOCATION)bugs.core_5034.fdb' # 'e30'
 db_dsn='localhost:'+dbfile
 
 if fb_arch=='Classic':
-    #  {20,20}=72"; {30,10}=52"; {30,15}=93"; {33,10}=91"; {35,5}=no-return-from-python!
-    planned_attachments=32
-    reconnect_count=10
+    #  {20,20}=72"; {32,10}=52" - but can hang!; {30,8)=46"; {30,15}=93"; {33,10}=91"; {35,5}=no-return-from-python!
+    planned_attachments=30
+    reconnect_count=8
 elif fb_arch=='SuperClassic':
     # {20,5}=21"; {30,20}=45"; {50,20}=70"
     planned_attachments=40
     reconnect_count=20
 else:
-    # SS: {30,10}=35"; {50,20}=54"; {40,30}=57"
-    planned_attachments=50
-    reconnect_count=20
+    # SS: {30,10}=35"; {50,20}=54"; {40,30}=57"; {75,30}=70"; {80,10}=42"
+    planned_attachments=80
+    reconnect_count=10
 
 
 db_conn.close()
