@@ -52,6 +52,12 @@
 {
  'firebird_version': '3.0',
  'platform': 'All',
+ 'init_script':
+  """
+    recreate table log(ip varchar(255));
+    create sequence g;
+    commit;
+  """,
  'test_type': 'Python',
  'test_script': 
   """\
@@ -111,16 +117,9 @@ svc_get_fb_log( f_fblog_before )
 f_fblog_before.close()
 
 isql_txt='''\
-set list on; 
-set term ^;
-execute block returns(remote_ip varchar(255)) as
-begin
-    remote_ip = rdb$get_context('SYSTEM','CLIENT_ADDRESS');
-    suspend;
-end
-^
-set term ;^
-select count(*) from rdb$types,rdb$types,rdb$types,rdb$types;
+insert into log(ip) values( rdb$get_context('SYSTEM','CLIENT_ADDRESS') );
+commit;
+select count(i) from (select gen_id(g,1) i from rdb$types a,rdb$types b,rdb$types c,rdb$types d);
 '''
 
 f_sql_txt=open( os.path.join(context['temp_directory'],'tmp_2493_isql.sql'), 'w')
@@ -133,27 +132,20 @@ f_sql_err=open( os.path.join(context['temp_directory'],'tmp_2493_isql.err'), 'w'
 p_isql=Popen( [ "isql", dsn, "-user","SYSDBA","-password","masterkey", "-i", f_sql_txt.name ], \
                           stdout=f_sql_log, stderr=f_sql_err
                       )
-
-#child_pid = p_isql.pid
-
-time.sleep(1)
+time.sleep(3)
 
 p_isql.terminate()
-
-#os.kill(child_pid, signal.SIGTERM)
 
 f_sql_log.close()
 f_sql_err.close()
 
 time.sleep(1)
 
-mon_ip='_undefined_'
-with open( f_sql_log.name,'r') as f:
-    for line in f:
-        if line.startswith('REMOTE_IP'):
-            mon_ip=line.split()[1]
-            break
-f.close()
+f_sql_txt=open( os.path.join(context['temp_directory'],'tmp_2493_isql.sql'), 'w')
+f_sql_txt.write("set heading off; select iif(gen_id(g,0) = 0, 'Trouble with subprocess: job was not started.', ip) as msg from log; quit;")
+f_sql_txt.close()
+
+mon_ip=subprocess.check_output( ['isql', dsn,'-user',user_name,'-pass',user_password, '-i', f_sql_txt.name ]).split()[0]
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_2493_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
@@ -185,6 +177,7 @@ f_diff_txt.close()
 # +     INET/inet_error: read errno = 10054, client host = prog2, address = fe80::c40e:21ec:b5c7:8963/56831, user = mick
 # +
 
+lst=[]
 logged_err=0
 with open( f_diff_txt.name,'r') as f:
     for line in f:
