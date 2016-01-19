@@ -266,8 +266,8 @@ Transaction -.*""",'')]
     Transaction - oldest active = 2
     Transaction - oldest snapshot = 2
     Transaction - Next = 5
-    Database not encrypted
     ODS = 12.0
+    Database not encrypted
     Default Character set: NONE
   """,
  'substitutions': [ 
