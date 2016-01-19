@@ -248,7 +248,11 @@ Transaction -.*""",'')]
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'SHOW DATABASE;',
+ 'test_script': 
+  """
+     -- 19.01.2016: added line  "Database not encrypted", see  http://sourceforge.net/p/firebird/code/62825
+     SHOW DATABASE;
+  """,
  'expected_stdout': 
   """
     Owner: SYSDBA
@@ -262,6 +266,7 @@ Transaction -.*""",'')]
     Transaction - oldest active = 2
     Transaction - oldest snapshot = 2
     Transaction - Next = 5
+    Database not encrypted
     ODS = 12.0
     Default Character set: NONE
   """,
