@@ -171,7 +171,7 @@ if os.path.isfile(trclog.name):
   """,
   'substitutions': [
     ( '^((?!SERVICE [0-9A-F]{8}).)*$', '' ),
-    ( 'SERVICE_MGR, \(SERVICE [0-9A-F]{8}, SYSDBA.*', 'SERVICE_MGR, \(SERVICE [0-9A-F]{8}, SYSDBA' )
+    ( 'SERVICE_MGR, \(SERVICE [0-9A-F]+, SYSDBA.*', 'SERVICE_MGR, \(SERVICE [0-9A-F]{8}, SYSDBA' )
   ]
 
 }
