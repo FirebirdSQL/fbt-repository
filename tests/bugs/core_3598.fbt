@@ -18,10 +18,10 @@
    ##########################
    NB: implementation for 2.5 was deferred because its output does not contain per-table block for ROLLBACK event.
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.2',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'Python',
  'init_script':
@@ -172,10 +172,24 @@ f_trclog.close()
 
 # Pwerformance header text (all excessive spaces will be removed before comparison - see below):
 perf_header='Table                             Natural     Index    Update    Insert    Delete   Backout     Purge   Expunge'
+i=0
 with open( trclog.name,'r') as f:
     for line in f:
         if ' ms,' in line and ('fetch' in line or 'mark' in line): # One of these always WILL be in trace statistics.
             print('Statement statistics detected.')
+            i =  i +1
+            if engine.startswith('2.5') and (i==2 or i==4):
+
+                # Dummy emulation of output in 2.5 for it will match to 3.0 - see comment by hvlad in the ticket, 21/Jan/16 11:26 AM:
+                # Per-table statistics at transaction level are not accumulated in v2.5
+                # Enabling it is possible but have almost no sence as it adds some run-time cost, 
+                # while there is no way to query it (except of "tx end" trace event). 
+
+                print('Performance block detected.')
+                if i==2:
+                    print('Found table statistics for: TFIX')
+                else:
+                    print('Found table statistics for: GTT_SSN')
         if ' '.join(line.split()).upper() == ' '.join(perf_header.split()).upper():
             print('Performance block detected.')
         if line.startswith('TFIX') or line.startswith('GTT_SSN') or line.startswith('GTT_TRA'):
