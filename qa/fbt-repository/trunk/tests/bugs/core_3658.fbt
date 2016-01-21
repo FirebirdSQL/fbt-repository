@@ -1,0 +1,179 @@
+{
+'id': 'bugs.core_3658',
+'qmid': None,
+'tracker_id': 'CORE-3658',
+'title': "FBSVCMGR connects to server as OS user name rather than value of ISC_USER environment variable",
+'description': """
+  ###   W A R N I N G   ###
+  1) This test uses asynchronous call of external routine (fbsvcmgr) using subprocess.Popen unit,
+     see: subprocess.call(["fbsvcmgr", ... ], stdout=...)
+  2) It was encountered that FBSVCMGR do NOT wait for OS completes writing of its output on disk,
+     (see CORE-4896), thus forced to use delays (see calls `time.sleep()`).
+  3) Correct work was checked on:  WI-V2.5.6.26963; WI-V3.0.0.32281 (SS/SC/CS).
+""",
+'min_versions': '2.5.2',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import subprocess
+from subprocess import Popen
+import time
+
+db_conn.close()
+
+#####################################################
+# Obtain engine version, 2.5 or 3.0, for make trace config in appropriate format:
+
+sqltxt='''set list on;select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database;'''
+sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_3598.log'), 'w')
+sqllog.close()
+runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-o',sqllog.name],sqltxt)
+with open( sqllog.name,'r') as f:
+    for line in f:
+        i=1
+        if 'ENGINE_VERSION' in line:
+            for word in line.split():
+                if i==2:
+                    engine=word
+                i=i+1
+            break
+f.close()
+
+
+txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
+<services>
+   enabled true
+   log_services true
+  log_errors true
+</services>
+'''
+
+# NOTES ABOUT TRACE CONFIG FOR 3.0:
+# 1) Header contain clauses in different format vs FB 2.5: its header's data must be enclosed with '{' '}';
+# 2) Name and value must be separated by EQUALITY sign ('=') in FB-3 trace.conf, otherwise we get runtime error:
+#    element "<. . .>" have no attribute value set
+txt30 = '''# Trace config, format for 2.5. Generated auto, do not edit!
+services 
+{
+  enabled = true
+  log_services = true
+  log_errors = true
+}
+'''
+
+trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_3658.cfg'), 'w')
+if engine.startswith('2.5'):
+    trccfg.write(txt25)
+else:
+    trccfg.write(txt30)
+trccfg.close()
+trccfg.close()
+
+trclog=open( os.path.join(context['temp_directory'],'tmp_trace_3658.log'), 'w')
+trclog.close()
+trclst=open( os.path.join(context['temp_directory'],'tmp_trace_3658.lst'), 'w')
+trclst.close()
+
+# ##############################################################
+# S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
+# ##############################################################
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+fn_log=open(trclog.name, "w")
+p = Popen(["fbsvcmgr" , "localhost:service_mgr" , "action_trace_start" , "trc_cfg" , trccfg.name], stdout=fn_log, stderr=subprocess.STDOUT)
+time.sleep(2)
+
+# ####################################################
+# G E T  A C T I V E   T R A C E   S E S S I O N   I D
+# ####################################################
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+
+fn_lst=open(trclst.name, "w")
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_list"], stdout=fn_lst, stderr=subprocess.STDOUT)
+fn_lst.close()
+
+# !!! DO NOT REMOVE THIS LINE !!!
+time.sleep(2)
+
+trcssn=0
+with open( trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+f.close()
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+
+# ####################################################
+# S E N D   R E Q U E S T    T R A C E   T O   S T O P
+# ####################################################
+fn_nul = open(os.devnull, 'w')
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_stop","trc_id", trcssn], stdout=fn_nul)
+fn_nul.close()
+
+# Doc about Popen.terminate():
+# https://docs.python.org/2/library/subprocess.html
+# Stop the child. On Posix OSs the method sends SIGTERM to the child.
+# On Windows the Win32 API function TerminateProcess() is called to stop the child.
+
+# Doc about Win API TerminateProcess() function:
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms686714%28v=vs.85%29.aspx
+# The terminated process cannot exit until all pending I/O has been completed or canceled.
+# TerminateProcess is ____asynchronous____; it initiates termination and returns immediately.
+#                         ^^^^^^^^^^^^
+p.terminate()
+fn_log.close()
+
+# Do not remove this line.
+time.sleep(2)
+
+# Output log of trace for comparing it with expected.
+# ::: NB ::: Content if trace log is converted to UPPER case in order to reduce change of mismatching with
+# updated trace output in some future versions:
+
+with open( trclog.name,'r') as f:
+    print(f.read().upper())
+f.close()
+
+if os.path.isfile(sqllog.name):
+    os.remove(sqllog.name)
+if os.path.isfile(trccfg.name):
+    os.remove(trccfg.name)
+if os.path.isfile(trclst.name):
+    os.remove(trclst.name)
+if os.path.isfile(trclog.name):
+    os.remove(trclog.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    SERVICE_MGR, (SERVICE 03AC7620, SYSDBA, TCPV4:192.0.0.1/1662, C:\MIX\FIREBIRD\FB30\FBSVCMGR.EXE:6624)
+    SERVICE_MGR, (SERVICE 03F393A0, SYSDBA, TCPV4:127.0.0.1/1664, C:\MIX\FIREBIRD\FB30\FBSVCMGR.EXE:6396)
+    SERVICE_MGR, (SERVICE 03C393A0, SYSDBA, TCPV4:127.0.0.1/1664, C:\MIX\FIREBIRD\FB30\FBSVCMGR.EXE:6396)
+    SERVICE_MGR, (SERVICE 03C393A0, SYSDBA, TCPV4:127.0.0.1/1664, C:\MIX\FIREBIRD\FB30\FBSVCMGR.EXE:6396)
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [
+    ( '^((?!SERVICE [0-9A-F]{8}).)*$', '' ),
+    ( 'SERVICE_MGR, \(SERVICE [0-9A-F]{8}, SYSDBA.*', 'SERVICE_MGR, \(SERVICE [0-9A-F]{8}, SYSDBA' )
+  ]
+
+}
+]
+}
