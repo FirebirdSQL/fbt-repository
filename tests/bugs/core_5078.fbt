@@ -1,0 +1,94 @@
+{
+'id': 'bugs.core_5078',
+'qmid': None,
+'tracker_id': 'CORE-5078',
+'title': '"Invalid BLOB ID" error',
+'description':
+ """
+   Confirmed, got exception during selecting data on Classic WI-V2.5.5.26952, x64.
+   STDERR:
+       Statement failed, SQLSTATE = 42000
+       invalid BLOB ID
+       -At procedure 'DO_CHANGETXSTATUS' line: 31, col: 21
+   Last record in STDOUT:
+       INFO                            inserting blob
+       UPDCNT                          51
+       TRANS                           1361600
+       SUBS                            2806
+       MSGTYPE                         2524
+       NOTIFYPARAMS                    1482
+ """,
+'min_versions': '2.5.6',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import subprocess
+from subprocess import Popen
+import zipfile
+import time
+
+db_conn.close()
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_5078.zip') )
+zf.extractall( context['temp_directory'] )
+zf.close()
+
+# Result: file tmp_core_5078.fbk is extracted into context['temp_directory']
+
+fbk=os.path.join(context['temp_directory'],'tmp_core_5078.fbk')
+fdb=os.path.join(context['temp_directory'],'tmp_core_5078.fdb')
+
+if os.path.isfile(fdb):
+    os.remove(fdb)
+
+# Restoring from .fbk:
+runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_restore','dbname',fdb,'bkp_file',fbk])
+
+f_sql=open( os.path.join(context['temp_directory'],'tmp_isql_5078.sql'), 'w')
+f_sql.write('set list on; select * from do_changeTxStatus;')
+f_sql.close()
+
+f_log = open(os.devnull, 'w')
+f_err = open( os.path.join(context['temp_directory'],'tmp_isql_5078.err'), 'w')
+
+subprocess.call( ["isql", 'localhost:'+fdb, "-user", "SYSDBA", "-password", "masterkey", "-i", f_sql.name],\
+                 stdout=f_log, \
+                 stderr=f_err \
+               )
+f_log.close()
+f_err.close()
+
+time.sleep(1)
+
+# This file should be EMPTY:
+###########################
+with open(f_err.name) as f:
+  print( f.read() )
+f.close()
+
+time.sleep(1)
+
+if os.path.isfile(fbk):
+    os.remove(fbk)
+if os.path.isfile(fdb):
+    os.remove(fdb)
+if os.path.isfile(f_err.name):
+    os.remove(f_err.name)
+if os.path.isfile(f_sql.name):
+    os.remove(f_sql.name)
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
