@@ -1,0 +1,170 @@
+{
+'id': 'bugs.core_3977',
+'qmid': None,
+'tracker_id': 'CORE-3977',
+'title': 'DELETE FROM MON$STATEMENTS does not interrupt a longish fetch',
+'description':
+ """
+ """,
+'min_versions': '2.5.3',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'init_script':
+  """
+    create sequence g;
+    commit;
+  """,
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+#import sys
+import subprocess
+from subprocess import Popen
+import time
+
+db_conn.close()
+
+##############################################
+# Script for ISQL that will do 'heavy select':
+
+sql_cmd='''
+alter sequence g restart with 0;
+commit;
+
+set term ^;
+execute block as
+    declare x int;
+begin
+    for 
+        execute statement ('select gen_id(g,1) from rdb$types,rdb$types,rdb$types')
+        on external 
+            rdb$get_context('SYSTEM','DB_NAME')
+            as user 'SYSDBA' password 'masterkey'
+        into x
+    do begin
+    end
+end
+^
+set term ;^
+'''
+
+f_query_to_be_killedcmd=open( os.path.join(context['temp_directory'],'tmp_isql_3977.sql'), 'w')
+f_query_to_be_killedcmd.write(sql_cmd)
+f_query_to_be_killedcmd.close()
+
+############################################################
+# Starting ISQL in separate process with doing 'heavy query'
+
+f_query_to_be_killedlog=open( os.path.join(context['temp_directory'],'tmp_isql_3977.log'), 'w')
+
+p_heavy_dml = Popen( [ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_query_to_be_killedcmd.name ], \
+                     stdout=f_query_to_be_killedlog, \
+                     stderr=subprocess.STDOUT \
+                   )
+
+# Here we have to wait for sure that ISQL could establish its connect and starts DML 
+# before we start DELETE FROM MON$ATTACHMENTS
+
+time.sleep(2)
+
+######################################
+# Run 2nd isql and issue there DELETE FROM MON$ATATSMENTS command. First ISQL process should be terminated for short time.
+
+f_delete_from_mon_sttm_sql=open( os.path.join(context['temp_directory'],'tmp_dels_3977.sql'), 'w')
+f_delete_from_mon_sttm_sql.write('commit; set list on; select * from mon$statements where mon$attachment_id != current_connection; set count on; delete from mon$statements where mon$attachment_id != current_connection; quit;')
+#f_delete_from_mon_sttm_sql.write('commit; set count on; delete from mon$statements where mon$attachment_id != current_connection; quit;')
+f_delete_from_mon_sttm_sql.close()
+
+f_delete_from_mon_sttm_log=open( os.path.join(context['temp_directory'],'tmp_dels_3977.log'), 'w')
+
+subprocess.call( ["isql", dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_delete_from_mon_sttm_sql.name ], \
+                     stdout=f_delete_from_mon_sttm_log, \
+                     stderr=subprocess.STDOUT \
+                   )
+
+f_delete_from_mon_sttm_log.close()
+
+p_heavy_dml.terminate()
+f_query_to_be_killedlog.close()
+
+#########################################
+# Run checking query: what is resuling value of sequence 'g' ? (it must be > 0 and < total number of records to be handled).
+
+sql_cmd='''
+--set echo on;
+set list on;
+set count on;
+select iif( current_gen > 0 and current_gen < total_rows, 
+            'OK: query was interrupted in the middle point.', 
+            'WRONG! Query to be interrupted ' 
+            || iif(current_gen <= 0, 'did not start.', 'already gone, current_gen = '||current_gen ) 
+          ) as result_msg
+from (
+    select gen_id(g,0) as current_gen, c.n * c.n * c.n as total_rows
+    from ( select (select count(*) from rdb$types) as n from rdb$database) c
+);
+'''
+
+f_check_result_cmd=open( os.path.join(context['temp_directory'],'tmp_chkr_3977.sql'), 'w')
+f_check_result_cmd.write(sql_cmd)
+f_check_result_cmd.close()
+
+f_check_result_log=open( os.path.join(context['temp_directory'],'tmp_chkr_3977.log'), 'w')
+
+subprocess.call( ["isql", dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_check_result_cmd.name ], \
+                     stdout=f_check_result_log, \
+                     stderr=subprocess.STDOUT \
+                   )
+
+f_check_result_log.close()
+
+with open(f_delete_from_mon_sttm_log.name) as f:
+  print( f.read() )
+f.close()
+
+with open(f_query_to_be_killedlog.name) as f:
+  print( f.read() )
+f.close()
+
+with open(f_check_result_log.name) as f:
+  print( f.read() )
+f.close()
+
+time.sleep(1)
+
+
+########################
+# Cleanup
+
+if os.path.isfile(f_query_to_be_killedcmd.name):
+    os.remove(f_query_to_be_killedcmd.name)
+if os.path.isfile(f_query_to_be_killedlog.name):
+    os.remove(f_query_to_be_killedlog.name)
+
+if os.path.isfile(f_delete_from_mon_sttm_sql.name):
+    os.remove(f_delete_from_mon_sttm_sql.name)
+if os.path.isfile(f_delete_from_mon_sttm_log.name):
+    os.remove(f_delete_from_mon_sttm_log.name)
+
+if os.path.isfile(f_check_result_cmd.name):
+    os.remove(f_check_result_cmd.name)
+if os.path.isfile(f_check_result_log.name):
+    os.remove(f_check_result_log.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    Records affected: 2
+    RESULT_MSG                      OK: query was interrupted in the middle point.
+    Records affected: 1
+  """,
+ 'expected_stderr': 
+  """
+  """,
+ 'substitutions':[('^((?!Records affected:|RESULT_MSG).)*$','')]
+}
+]
+}
