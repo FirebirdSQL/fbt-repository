@@ -25,6 +25,9 @@
     -- in the creating statement, so all his attempts to create/drop another user will be FAILED.
     -- Before snapshot 31807 3rd such fail lead FB to crash (AV).
 
+    -- Note-3. Since 3.0.0.32294 (was built 26-jan-2016) text of error message was chenged
+    -- See also: http://sourceforge.net/p/firebird/code/62852 (24-jan-2016)
+
     create or alter user boss password '123' grant admin role;
     commit;
     
@@ -43,10 +46,15 @@
     begin
         execute statement 'drop user mgr1'
         as user 'BOSS' password '123' role 'RDB$ADMIN';
-    end  -- this lead to 2nd "SQLSTATE = 28000 / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
+    end  
+    -- This lead to 2nd "SQLSTATE = 28000" with text:
+    -- before build 32136: "add record error / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
+    -- since  that  build: "find/delete record error / -no permission for DELETE access to TABLE"
     ^
     set term ;^
     commit; -- this lead to FB crash and message about AV apperaed in firebird.log (checked on WI-T3.0.0.31801)
+
+    rollback;
 
     drop user boss;
     commit; 
@@ -55,19 +63,10 @@
   """
     Statement failed, SQLSTATE = 28000
     add record error
-    -no permission for INSERT access to TABLE PLG$SRP_VIEW
-
+    -no permission for INSERT access to TABLE PLG
     Statement failed, SQLSTATE = 28000
-    add record error
-    -no permission for INSERT access to TABLE PLG$SRP_VIEW
-
-    Statement failed, SQLSTATE = 28000
-    add record error
-    -no permission for INSERT access to TABLE PLG$VIEW_USERS
-
-    Statement failed, SQLSTATE = 28000
-    add record error
-    -no permission for INSERT access to TABLE PLG$VIEW_USERS
+    find/delete record error
+    -no permission for DELETE access to TABLE PLG
   """,
   'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'), ('TABLE PLG\$SRP_VIEW', 'TABLE PLG') ]
 }
