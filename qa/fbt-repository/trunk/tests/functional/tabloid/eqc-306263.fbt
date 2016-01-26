@@ -109,7 +109,8 @@ runProgram('isql',[fbn,'-q','-user',user_name,'-password',user_password],script)
   """,
  'expected_stderr': 
   """
-  """
+  """,
+ 'substitutions': [('0.000000000000000.*','0.0000000000000000')]
 }
 ]
 }
