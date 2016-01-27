@@ -3,173 +3,645 @@
 'qmid': None,
 'tracker_id': 'CORE-2017',
 'title': 'I/O statistics for stored procedures are not accounted in monitoring tables',
-'description': '',
-'min_versions': '',
+'description':
+ """
+   Test uses .fbk of database that has all necessary tables and procedures for gathering MON$ info.
+   After restoring from that, we add several new objects:
+   1) table 'test' with long varchar indexed field, which will be filled up by several thousands rows;
+   2) procedure 'sp_test' which has input argument (type: varchar, possible values: 'ord' | 'nat') and
+      will handle (UPDATE) records from table 'test' either using PLAN ORDER or PLAN NATURAL;
+   3) aux. procedure sys_get_fb_arch for obtaining info about architecture of current FB instance;
+   4) view  'v_diff_stat_psql_vs_dsql' for extracting info about differences in MON$ tables that occured
+      on each run of 'sp_test' (it is called twice, with separate specifying input arg. = 'ord' and then - 'nat')
+   5) table 't_thresholds' with maximal values for how much mon$ statistics differ for procedural code vs DSQL.
+      This table contain different values depending on FB version (2.5 vs 3.0) and architecture (SS/SC/CS).
+      Thresholds are specified separately for reads, writes, fetches and marks. Also, used PLAN (order | natural)
+      is taken into account when thresholds are compared with actual mon$-counters difference.
+
+   Two measures are performed on main phase of test, and each of them contains :
+   1) 10 (ten) invocations of 'sp_test', 5 with input arg = 'ord' and 5 with input arg ='nat', with interleving
+      (i.e. call with arg='ord', then with arg='nat', then again with 'ord', then with 'nat', etc)
+   2) 10 (ten) direct UPDATE statements of table 'test', either with PLAN ORDER or PLAN NATURAL.
+   
+   Before and after each of these actions we call 'sp_gather_stat' thus accumulating mon$ statistics for each serie.
+   After all, we analyze gathered statistics (see references of 'v_agg_stat' view) and evaluate differences of mon$
+   counters, thus getting values of how much reads/writes/fetches and marks was spent for PSQL vs DSQL code.
+
+   Absolute values are not interesting (and they, of course, can change in the future), so next we evaluate difference
+   between them expressed in percents. Maximal values of these differences are stored in table 't_thresholds'.
+   Finally, we compare actual percents (with applying ABS()) with data from 't_thresholds': all thresholds must be GREATER
+   than actual differences that we've got for bot serie (i.e. for PSql and Dsql serie).
+   Futhermore, because Psql statistics should not be equal to zero, all differences should NOT be equal to -100, otherwise
+   this will mean that we have non-zero statistics only for Dsql serie.
+
+   Checked on: WI-V2.5.6.26965; WI-V3.0.0.32294 (all architectures).
+
+   ::: .A.C.H.T.U.N.G. ::: Note about SuperServer, 2.5.6 and 3.0, for 'writes' counter.
+   
+   Statistics for procedural code can differ from DSQL in HUGE degree, especially for 'writes' counter - up to THOUSANDS percents!
+   Samples can be seen in file 'differences-between-Psql-and-Dsql-in-2_5-and-3_0.zip' that is attached to ticket.
+ """,
+'min_versions': '2.5',
 'versions': [
 {
- 'firebird_version': '2.1.2',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': """create table T (C integer);
-commit;
+ 'database': 'Restore',
+ 'backup_file': 'mon-stat-gathering-2_5.fbk',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create or alter procedure sp_test returns(cnt int) as begin end;
+    recreate table test(
+        s varchar(1000),
+        x int
+    );
+    commit;
 
-set term ^ ;
+    insert into test(s)
+    select rpad('', 1000, uuid_to_char(gen_uuid()))
+    from rdb$types, rdb$types
+    rows 3000;
+    commit;
 
-execute block
-as
-declare i int = 0;
-begin
-  while (i < 100000) do
-  begin
-    insert into T values (:i);
-    i = i + 1;
-  end
-end ^
-commit ^
+    create index test_s on test(s);
+    commit;
 
-create procedure dummy
-returns (i bigint)
-as
-begin
- select count(*)
- from T
- into :i;
- suspend;
-end ^
+    set term ^;
+    create or alter procedure sp_test(a_mode varchar(3)) returns(cnt int) as
+        declare c_ord cursor for (select s from test order by s);
+        declare c_nat cursor for (select s from test);
+        declare v_s type of column test.s;
+    begin
+        cnt = 0;
+        if ( a_mode = 'ord') then
+          begin
+            open c_ord;
+            while (1=1) do
+            begin
+                fetch c_ord into v_s;
+                if (row_count = 0) then leave;
+                update test set x = rand()*1000 where current of c_ord;
+                cnt = cnt + 1;
+            end
+            close c_ord;
+          end
+        else
+          begin
+            open c_nat;
+            while (1=1) do
+            begin
+                fetch c_nat into v_s;
+                if (row_count = 0) then leave;
+                update test set s = uuid_to_char(gen_uuid()) where current of c_nat;
+                cnt = cnt + 1;
+            end
+            close c_nat;
+        end
+        suspend;
+    end
+    ^ -- sp_test
+    
+    create or alter procedure sys_get_fb_arch (
+         a_connect_with_usr varchar(31) default 'SYSDBA'
+        ,a_connect_with_pwd varchar(31) default 'masterkey'
+    ) returns(
+        fb_arch varchar(50)
+    ) as
+        declare cur_server_pid int;
+        declare ext_server_pid int;
+        declare att_protocol varchar(255);
+        declare v_test_sttm varchar(255);
+        declare v_fetches_beg bigint;
+        declare v_fetches_end bigint;
+    begin
+        
+        -- Aux SP for detect FB architecture.
 
-commit ^
-""",
- 'test_type': 'Python',
- 'test_script': """c = db_conn.cursor()
-c2 = db_conn.cursor()
-sql = "select * from dummy"
+        select a.mon$server_pid, a.mon$remote_protocol
+        from mon$attachments a
+        where a.mon$attachment_id = current_connection
+        into cur_server_pid, att_protocol;
 
-c2.execute(sql)
-for row in c2:
-  pass
-db_conn.commit()
-c2.execute("select MON$STATEMENT_ID,MON$STAT_ID,MON$SQL_TEXT from mon$statements where mon$sql_text starts with '%s'" % sql)
-#printData(c)
-row = c2.fetchone()
-#print (row)
-c2.execute("select MON$PAGE_READS,MON$PAGE_WRITES,MON$PAGE_FETCHES,MON$PAGE_MARKS from mon$io_stats where mon$stat_id = %i" % row[1])
-printData(c2)
+        if ( att_protocol is null ) then
+            fb_arch = 'Embedded';
+        else if ( upper(current_user) = upper('SYSDBA')
+                  and rdb$get_context('SYSTEM','ENGINE_VERSION') NOT starting with '2.5' 
+                  and exists(select * from mon$attachments a 
+                             where a.mon$remote_protocol is null
+                                   and upper(a.mon$user) in ( upper('Cache Writer'), upper('Garbage Collector'))
+                            ) 
+                ) then
+            fb_arch = 'SuperServer';
+        else
+            begin
+                v_test_sttm =
+                    'select a.mon$server_pid + 0*(select 1 from rdb$database)'
+                    ||' from mon$attachments a '
+                    ||' where a.mon$attachment_id = current_connection';
 
-""",
- 'expected_stdout': """MON$PAGE_READS       MON$PAGE_WRITES      MON$PAGE_FETCHES     MON$PAGE_MARKS
--------------------- -------------------- -------------------- --------------------
-1234                 0                    202472               0
-"""
-},
-{
- 'firebird_version': '2.5.1',
- 'platform': 'All',
- 'page_size': '4096',
- 'init_script': """create table T (C integer);
-commit;
+                select i.mon$page_fetches
+                from mon$io_stats i
+                where i.mon$stat_group = 0  -- db_level
+                into v_fetches_beg;
+            
+                execute statement v_test_sttm
+                on external
+                     'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+                as
+                     user a_connect_with_usr
+                     password a_connect_with_pwd
+                     role left('R' || replace(uuid_to_char(gen_uuid()),'-',''),31)
+                into ext_server_pid;
+            
+                in autonomous transaction do
+                select i.mon$page_fetches
+                from mon$io_stats i
+                where i.mon$stat_group = 0  -- db_level
+                into v_fetches_end;
+            
+                fb_arch = iif( cur_server_pid is distinct from ext_server_pid, 
+                               'Classic', 
+                               iif( v_fetches_beg is not distinct from v_fetches_end, 
+                                    'SuperClassic', 
+                                    'SuperServer'
+                                  ) 
+                             );
+            end
 
-set term ^ ;
+        fb_arch = fb_arch || ' ' || rdb$get_context('SYSTEM','ENGINE_VERSION');
 
-execute block
-as
-declare i int = 0;
-begin
-  while (i < 100000) do
-  begin
-    insert into T values (:i);
-    i = i + 1;
-  end
-end ^
-commit ^
+        suspend;
 
-create procedure dummy
-returns (i bigint)
-as
-begin
- select count(*)
- from T
- into :i;
- suspend;
-end ^
+    end 
 
-commit ^
-""",
- 'test_type': 'Python',
- 'test_script': """c = db_conn.cursor()
-c2 = db_conn.cursor()
-sql = "select * from dummy"
+    ^ -- sys_get_fb_arch
+    set term ;^
 
-c2.execute(sql)
-for row in c2:
-  pass
-db_conn.commit()
-c2.execute("select MON$STATEMENT_ID,MON$STAT_ID,MON$SQL_TEXT from mon$statements where mon$sql_text starts with '%s'" % sql)
-#printData(c)
-row = c2.fetchone()
-#print (row)
-c2.execute("select MON$PAGE_READS,MON$PAGE_WRITES,MON$PAGE_FETCHES,MON$PAGE_MARKS from mon$io_stats where mon$stat_id = %i" % row[1])
-printData(c2)
+    commit;
 
-""",
- 'expected_stdout': """MON$PAGE_READS       MON$PAGE_WRITES      MON$PAGE_FETCHES     MON$PAGE_MARKS
--------------------- -------------------- -------------------- --------------------
-1234                 0                    202472               0
-"""
-},
-{
- 'firebird_version': '2.5.3',
- 'platform': 'All',
- 'page_size': '4096',
- 'init_script': """create table T (C integer);
-commit;
+    recreate table t_thresholds(
+        fb_arch varchar(50)
+       ,handling varchar(10)
+       ,max_diff_reads_psql_vs_dsql int
+       ,max_diff_writes_psql_vs_dsql int
+       ,max_diff_fetches_psql_vs_dsql int
+       ,max_diff_marks_psql_vs_dsql int
+    );
 
-set term ^ ;
+    set term ^;
+    execute block as
+    begin
+       if ( rdb$get_context('SYSTEM','ENGINE_VERSION') NOT starting with '2.5' ) then
+         begin
+            -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            -- %%%   t h r e s h o l d s     f o r     F B   3.x   %%%
+            -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            insert into t_thresholds values (
+               'Classic', 'natural',  2,  2,  1,  1
+            );
+            insert into t_thresholds values (
+               'Classic', 'ordered',  10, 12,  3,  6 -- reads: diff 7.30%; writes: diff ~9% occured on Cs
+            );
 
-execute block
-as
-declare i int = 0;
-begin
-  while (i < 100000) do
-  begin
-    insert into T values (:i);
-    i = i + 1;
-  end
-end ^
-commit ^
+            insert into t_thresholds values (
+               'SuperClassic', 'natural',  2,  2,  1,  1
+            );
+            insert into t_thresholds values (
+               'SuperClassic', 'ordered', 10, 12,  3,  6 -- reads: diff 7.63%; writes: diff ~8.6% occured on sC
+            );
 
-create procedure dummy
-returns (i bigint)
-as
-begin
- select count(*)
- from T
- into :i;
- suspend;
-end ^
+            insert into t_thresholds values (
+               'SuperServer', 'natural',  5, 300,  3,  3
+            );
+            insert into t_thresholds values (
+               'SuperServer', 'ordered', 25, 1500, 12, 12 -- writes: diff 938% (!!) occured on SS
+            );
+         end
+       else
+         begin
+            -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            -- %%%   t h r e s h o l d s     f o r     F B   2.5.x %%%
+            -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            insert into t_thresholds values (
+               'Classic', 'natural',  2,  2,  1,  1
+            );
+            insert into t_thresholds values (
+               'Classic', 'ordered',  7,  7,  3,  6
+            );
 
-commit ^
-""",
- 'test_type': 'Python',
- 'test_script': """c = db_conn.cursor()
-c2 = db_conn.cursor()
-sql = "select * from dummy"
+            insert into t_thresholds values (
+               'SuperClassic', 'natural',  2,  2,  1,  1
+            );
+            insert into t_thresholds values (
+               'SuperClassic', 'ordered', 10, 10,  3,  6
+            );
 
-c2.execute(sql)
-for row in c2:
-  pass
-db_conn.commit()
-c2.execute("select MON$STATEMENT_ID,MON$STAT_ID,MON$SQL_TEXT from mon$statements where mon$sql_text starts with '%s'" % sql)
-#printData(c)
-row = c2.fetchone()
-#print (row)
-c2.execute("select 'OK' AS OK from mon$io_stats where MON$PAGE_READS>1200 and MON$PAGE_FETCHES>202400 and mon$stat_id = %i" % row[1])
-printData(c2)
+            insert into t_thresholds values (
+               'SuperServer', 'natural',  5,  1000,  5, 15 -- marks: diff > 10.1% occured on SS 2.5.6
+            );
+            insert into t_thresholds values (
+               'SuperServer', 'ordered', 50, 10000, 50, 50
+            );
+         end
+    end
+    ^
+    set term ;^
+    commit;
 
-""",
- 'expected_stdout': """OK
---
-OK
-"""
+
+    create or alter view v_diff_stat_psql_vs_dsql as
+    select
+         rdb$get_context('USER_SESSION','FB_ARCH') as fb_arch
+        ,handling
+        ,(psql_reads - dsql_reads) * 100.00 / nullif(dsql_reads,0) diff_reads_psql_vs_dsql
+        ,(psql_writes - dsql_writes) * 100.00 / nullif(dsql_writes,0) diff_writes_psql_vs_dsql
+        ,(psql_fetches - dsql_fetches) * 100.00 / nullif(dsql_fetches,0) diff_fetches_psql_vs_dsql
+        ,(psql_marks - dsql_marks) * 100.00 / nullif(dsql_marks,0) diff_marks_psql_vs_dsql
+    from (
+        select
+            handling
+            --,stat
+            ,max(iif(stat='psql', avg_reads, null)) as psql_reads
+            ,max(iif(stat='dsql', avg_reads, null)) as dsql_reads
+            ,max(iif(stat='psql', avg_writes, null)) as psql_writes
+            ,max(iif(stat='dsql', avg_writes, null)) as dsql_writes
+            ,max(iif(stat='psql', avg_fetches, null)) as psql_fetches
+            ,max(iif(stat='dsql', avg_fetches, null)) as dsql_fetches
+            ,max(iif(stat='psql', avg_marks, null)) as psql_marks
+            ,max(iif(stat='dsql', avg_marks, null)) as dsql_marks
+        from (
+            select
+                'ordered' as handling
+                ,'psql' as stat
+                ,avg(v.page_reads) avg_reads
+                ,avg(v.page_writes) avg_writes
+                ,avg(v.page_fetches) avg_fetches
+                ,avg(v.page_marks) avg_marks
+            from v_agg_stat v
+            where mod(v.rowset,2)=1 and v.rowset <=10
+            
+            union all
+            
+            select
+                'ordered' as handling
+                ,'dsql' as stat
+                ,avg(v.page_reads) avg_reads
+                ,avg(v.page_writes) avg_writes
+                ,avg(v.page_fetches) avg_fetches
+                ,avg(v.page_marks) avg_marks
+            from v_agg_stat v
+            where mod(v.rowset,2)=1 and v.rowset >10
+            
+            union all
+            
+            select
+                'natural' as handling
+                ,'psql' as stat
+                ,avg(v.page_reads) avg_reads
+                ,avg(v.page_writes) avg_writes
+                ,avg(v.page_fetches) avg_fetches
+                ,avg(v.page_marks) avg_marks
+            from v_agg_stat v
+            where mod(v.rowset,2)=0 and v.rowset <=10
+            
+            union all
+            
+            select
+                'natural' as handling
+                ,'dsql' as stat
+                ,avg(v.page_reads) avg_reads
+                ,avg(v.page_writes) avg_writes
+                ,avg(v.page_fetches) avg_fetches
+                ,avg(v.page_marks) avg_marks
+            from v_agg_stat v
+            where mod(v.rowset,2)=0 and v.rowset >10
+        )
+        group by handling
+    );
+    commit;
+
+    update test set x = rand()*1000, s = uuid_to_char(gen_uuid());
+    commit;
+
+    execute procedure sp_truncate_stat;
+    commit;
+
+    -- ################################################
+    -- Measure-1: gather statistics for procedural code
+    -- ################################################
+   
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('ord') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('nat') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('ord') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('nat') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('ord') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('nat') into c;
+    end ^
+    set term ^;
+
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('ord') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('nat') into c;
+    end ^
+    set term ^;
+
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('ord') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    set term ^;
+    execute block as
+        declare c int;
+    begin
+        select * from sp_test('nat') into c;
+    end ^
+    set term ^;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------
+
+
+    -- #####################################
+    -- Measure-2: gather statistics for DSQL
+    -- #####################################
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set x = rand()*1000 order by s;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set s = uuid_to_char(gen_uuid());
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set x = rand()*1000 order by s;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set s = uuid_to_char(gen_uuid());
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set x = rand()*1000 order by s;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set s = uuid_to_char(gen_uuid());
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set x = rand()*1000 order by s;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set s = uuid_to_char(gen_uuid());
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set x = rand()*1000 order by s;
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+    execute procedure sp_gather_stat;
+    commit;
+
+    update test set s = uuid_to_char(gen_uuid());
+    
+    execute procedure sp_gather_stat;
+    commit;
+    ---------------------------------------
+
+    set term ^;
+    execute block as
+    begin
+        rdb$set_context( 'USER_SESSION', 'FB_ARCH',  (select fb_arch from sys_get_fb_arch) );
+    end
+    ^
+    set term ;^
+
+    set width fb_arch 20;
+    -- left this only for DEBUG: select * from v_diff_stat_psql_vs_dsql v;
+    
+    set list on;
+    select
+        v.handling as "Records hangling"
+        ,iif( abs(v.diff_reads_psql_vs_dsql) <= t.max_diff_reads_psql_vs_dsql
+             ,'acceptable'
+             ,v.diff_reads_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_reads_psql_vs_dsql || '%'
+        ) as "diff,% reads proc vs DSQL"
+        ,iif( abs(v.diff_writes_psql_vs_dsql) <= t.max_diff_writes_psql_vs_dsql
+             ,'acceptable'
+             ,v.diff_writes_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_writes_psql_vs_dsql || '%'
+        ) as "diff,% writes proc vs DSQL"
+        ,iif( abs(v.diff_fetches_psql_vs_dsql) <= t.max_diff_fetches_psql_vs_dsql
+             ,'acceptable'
+             ,v.diff_fetches_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_fetches_psql_vs_dsql || '%'
+        ) as "diff,% fetches proc vs DSQL"
+        ,iif( abs(v.diff_marks_psql_vs_dsql) <= t.max_diff_marks_psql_vs_dsql
+             ,'acceptable'
+             ,v.diff_marks_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_marks_psql_vs_dsql || '%'
+        ) as "diff,% marks proc vs DSQL"
+    from v_diff_stat_psql_vs_dsql v
+    left join t_thresholds t on v.fb_arch starting with t.fb_arch and v.handling = t.handling
+    ;
+
+    select 
+        count(*) num_of_record_groups -- must be 2: for 'ordered' and 'natural'
+       ,count
+        (  
+          iif(
+                diff_reads_psql_vs_dsql is null or 
+                diff_writes_psql_vs_dsql is null or 
+                diff_fetches_psql_vs_dsql is null or 
+                diff_marks_psql_vs_dsql is null,
+                1,
+                null
+             )
+        ) as cnt_zero_dsql_stat -- must be zero
+       ,count
+        (  
+           iif( 
+                diff_reads_psql_vs_dsql = -100
+                or diff_writes_psql_vs_dsql = -100
+                or diff_fetches_psql_vs_dsql = -100
+                or diff_marks_psql_vs_dsql = -100,
+                1, 
+                null 
+              )
+        ) as cnt_zero_psql_stat -- must be zero
+    from v_diff_stat_psql_vs_dsql v
+    ;
+  """,
+ 'expected_stdout': 
+  """
+    Records hangling                natural
+    diff,% reads proc vs DSQL       acceptable
+    diff,% writes proc vs DSQL      acceptable
+    diff,% fetches proc vs DSQL     acceptable
+    diff,% marks proc vs DSQL       acceptable
+
+    Records hangling                ordered
+    diff,% reads proc vs DSQL       acceptable
+    diff,% writes proc vs DSQL      acceptable
+    diff,% fetches proc vs DSQL     acceptable
+    diff,% marks proc vs DSQL       acceptable
+
+    NUM_OF_RECORD_GROUPS            2
+    CNT_ZERO_DSQL_STAT              0
+    CNT_ZERO_PSQL_STAT              0
+  """
 }
 ]
 }
