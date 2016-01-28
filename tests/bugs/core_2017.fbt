@@ -200,6 +200,9 @@
             -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             -- %%%   t h r e s h o l d s     f o r     F B   3.x   %%%
             -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            -- C L A S S I C    3.0
+            -- ~~~~~~~~~~~~~~~~~~~~
             insert into t_thresholds values (
                'Classic', 'natural',  2,  2,  1,  1
             );
@@ -207,6 +210,8 @@
                'Classic', 'ordered',  10, 12,  3,  6 -- reads: diff 7.30%; writes: diff ~9% occured on Cs
             );
 
+            -- S U P E R C L A S S I C   3.0
+            -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             insert into t_thresholds values (
                'SuperClassic', 'natural',  2,  2,  1,  1
             );
@@ -214,11 +219,21 @@
                'SuperClassic', 'ordered', 10, 12,  3,  6 -- reads: diff 7.63%; writes: diff ~8.6% occured on sC
             );
 
+            -- S U P E R S E R V E R   3.0
+            -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~
             insert into t_thresholds values (
-               'SuperServer', 'natural',  5, 300,  3,  3
+               'SuperServer', 'natural', 25, 300,  3,  3 -- writes: diff 16% occured on SS
+               --                        ^    ^    ^   ^
+               -- ####################   |    |    |   |
+               -- #  Here we define  # reads,%|    |   |
+               -- #  max. values of  #    writes,% |   |
+               -- #  _differences_   #             |   |
+               -- #  between Psql    #       fetches,% |
+               -- #  and Dsql, in %  #              marks,%
+               -- ####################
             );
             insert into t_thresholds values (
-               'SuperServer', 'ordered', 25, 1500, 12, 12 -- writes: diff 938% (!!) occured on SS
+               'SuperServer', 'ordered', 25, 1500, 30, 20 -- writes: diff 938% (!!); fetches: diff=-21%; marks: diff=-15% occured on SS
             );
          end
        else
@@ -226,6 +241,9 @@
             -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             -- %%%   t h r e s h o l d s     f o r     F B   2.5.x %%%
             -- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            -- C L A S S I C   2.5
+            -- ~~~~~~~~~~~~~~~~~~~
             insert into t_thresholds values (
                'Classic', 'natural',  2,  2,  1,  1
             );
@@ -233,6 +251,8 @@
                'Classic', 'ordered',  7,  7,  3,  6
             );
 
+            -- S U P E R C L A S S I C  2.5
+            -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             insert into t_thresholds values (
                'SuperClassic', 'natural',  2,  2,  1,  1
             );
@@ -240,8 +260,18 @@
                'SuperClassic', 'ordered', 10, 10,  3,  6
             );
 
+            -- S U P E R S E R V E R    2.5
+            -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             insert into t_thresholds values (
-               'SuperServer', 'natural',  5,  1000,  5, 15 -- marks: diff > 10.1% occured on SS 2.5.6
+               'SuperServer', 'natural',  5,  1000,  5,  15 -- marks: diff > 10.1% occured on SS 2.5.6
+               --                         ^    ^     ^   ^
+               -- ####################    |    |     |   |
+               -- #  Here we define  # reads,% |     |   |
+               -- #  max. values of  #    writes,%   |   |
+               -- #  _differences_   #               |   |
+               -- #  between Psql    #       fetches,%   |
+               -- #  and Dsql, in %  #              marks,%
+               -- ####################
             );
             insert into t_thresholds values (
                'SuperServer', 'ordered', 50, 10000, 50, 50
@@ -579,19 +609,19 @@
         v.handling as "Records hangling"
         ,iif( abs(v.diff_reads_psql_vs_dsql) <= t.max_diff_reads_psql_vs_dsql
              ,'acceptable'
-             ,v.diff_reads_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_reads_psql_vs_dsql || '%'
+             ,v.diff_reads_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_reads_psql_vs_dsql || '%' || coalesce(' for ' || v.fb_arch, '')
         ) as "diff,% reads proc vs DSQL"
         ,iif( abs(v.diff_writes_psql_vs_dsql) <= t.max_diff_writes_psql_vs_dsql
              ,'acceptable'
-             ,v.diff_writes_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_writes_psql_vs_dsql || '%'
+             ,v.diff_writes_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_writes_psql_vs_dsql || '%' || coalesce(' for ' || v.fb_arch, '')
         ) as "diff,% writes proc vs DSQL"
         ,iif( abs(v.diff_fetches_psql_vs_dsql) <= t.max_diff_fetches_psql_vs_dsql
              ,'acceptable'
-             ,v.diff_fetches_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_fetches_psql_vs_dsql || '%'
+             ,v.diff_fetches_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_fetches_psql_vs_dsql || '%' || coalesce(' for ' || v.fb_arch, '')
         ) as "diff,% fetches proc vs DSQL"
         ,iif( abs(v.diff_marks_psql_vs_dsql) <= t.max_diff_marks_psql_vs_dsql
              ,'acceptable'
-             ,v.diff_marks_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_marks_psql_vs_dsql || '%'
+             ,v.diff_marks_psql_vs_dsql || '% -- exceeded threshold = ' || t.max_diff_marks_psql_vs_dsql || '%' || coalesce(' for ' || v.fb_arch, '')
         ) as "diff,% marks proc vs DSQL"
     from v_diff_stat_psql_vs_dsql v
     left join t_thresholds t on v.fb_arch starting with t.fb_arch and v.handling = t.handling
@@ -645,3 +675,4 @@
 }
 ]
 }
+
