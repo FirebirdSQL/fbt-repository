@@ -1,0 +1,136 @@
+{
+'id': 'bugs.core_2788',
+'qmid': None,
+'tracker_id': 'CORE-2788',
+'title': "isql extracts the array dimensions after the character set name",
+'description': 
+ """
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script':"""\
+import os
+import subprocess
+from subprocess import Popen
+
+sql_ddl='''\
+create domain dm_test as char(1) character set iso8859_1[1:2];
+create domain dm_test as char(1)[1:2] character set iso8859_1;
+commit;
+show domain dm_test;
+'''
+
+db_conn.close()
+
+f_init_sql = open( os.path.join(context['temp_directory'],'tmp_init_2788.sql'), 'w')
+f_init_sql.write(sql_ddl)
+f_init_sql.close()
+
+f_init_log = open( os.path.join(context['temp_directory'],'tmp_init_2788.log'), 'w')
+f_init_err = open( os.path.join(context['temp_directory'],'tmp_init_2788.err'), 'w')
+subprocess.call( ["isql", dsn, "-user", user_name, "-password", user_password, "-i", f_init_sql.name], \
+                 stdout = f_init_log, \
+                 stderr = f_init_err \
+               )
+# This file should be empty:
+f_init_log.close()
+
+# This file should contain error messages about 1st 'CREATE DOMAIN' statement that has syntax trouble:
+f_init_err.close()
+
+# This file should contain error messages about 1st 'CREATE DOMAIN' statement that has syntax trouble:
+with open( f_init_err.name,'r') as f:
+   print(f.read())
+f.close()
+
+
+f_xmeta_log = open( os.path.join(context['temp_directory'],'tmp_xmeta_2788.log'), 'w')
+f_xmeta_err = open( os.path.join(context['temp_directory'],'tmp_xmeta_2788.err'), 'w')
+subprocess.call( ["isql", dsn, "-x", "-user", user_name, "-password", user_password], stdout = f_xmeta_log, stderr = f_xmeta_err)
+
+# This file should contain metadata - domain definition:
+f_xmeta_log.close()
+
+# This file should be empty:
+f_xmeta_err.close()
+
+att1 = kdb.connect(dsn=dsn.encode(),user='SYSDBA',password='masterkey')
+cur1=att1.cursor()
+cur1.execute("drop domain dm_test")
+att1.commit()
+
+att1.close()
+
+# This shoudl issue "There is no domain DM_TEST in this database":
+runProgram('isql',[dsn, '-q','-user',user_name,'-pas',user_password],'show domain dm_test;')
+
+f_apply_log = open( os.path.join(context['temp_directory'],'tmp_apply_2788.log'), 'w')
+f_apply_err = open( os.path.join(context['temp_directory'],'tmp_apply_2788.err'), 'w')
+subprocess.call( ["isql", dsn, "-user", user_name, "-password", user_password, "-i", f_xmeta_log.name], \
+                 stdout = f_apply_log, \
+                 stderr = f_apply_err \
+               )
+# Both of these files should be empty:
+f_apply_log.close()
+f_apply_err.close()
+
+# This shoudl issue DDL of just created domain:
+runProgram('isql',[dsn, '-q','-user',user_name,'-pas',user_password],'show domain dm_test;')
+
+
+# No output should be here:
+with open( f_xmeta_err.name,'r') as f:
+   print(f.read())
+f.close()
+
+# No output should be here:
+with open( f_apply_log.name,'r') as f:
+   print(f.read())
+f.close()
+
+# No output should be here:
+with open( f_apply_err.name,'r') as f:
+   print(f.read())
+f.close()
+
+################################################
+# Cleanup
+
+f_list=[]
+f_list.append(f_init_sql)
+f_list.append(f_init_log)
+f_list.append(f_init_err)
+
+f_list.append(f_xmeta_log)
+f_list.append(f_xmeta_err)
+
+f_list.append(f_apply_log)
+f_list.append(f_apply_err)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout':
+  """
+     Statement failed, SQLSTATE = 42000
+     Dynamic SQL Error
+     -SQL error code = -104
+     -Token unknown - line 1, column 57
+     -[
+     DM_TEST                         ARRAY OF [2]
+     CHAR(1) CHARACTER SET ISO8859_1 Nullable
+  """,
+ 'expected_stderr':
+  """
+    There is no domain DM_TEST in this database
+  """,
+  'substitutions':[('- line .*',''),('At line .*','')]
+}
+]
+}
