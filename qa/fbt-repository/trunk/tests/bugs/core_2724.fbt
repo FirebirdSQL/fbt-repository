@@ -5,6 +5,12 @@
 'title': "Validate or transform string of DML queries so that engine internals doesn't receive malformed strings",
 'description': 
  """
+   Code from doc/sql.extensions/README.ddl_triggers.txt was taken as basis for this test
+   (see ticket issue: "This situation happened with DDL triggers ...").
+   Several DB objects are created here and their DDL contain unicode (Greek) text.
+   Attachment these issues these DDL intentionally is run with charset = NONE. 
+   This charset (NONE) should result in question marks after we finish DDL and want to query log table
+   that was filled by DDL trigger and contains issued DDL statements.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -175,22 +181,22 @@ for i in range(len(f_list)):
   """
     ID                              2
     CURRENT_CONNECTION_CSET         NONE                           
-    SQL_TEXT                        80:0
+    SQL_TEXT                        
     create domain dm_name varchar(50) check (value in ('??????????????????', '??????????', '????????????', '??????????????', '????????????????'))
-    RESULT_INFO                     80:2
+    RESULT_INFO                     
     Τα πάντα ήταν επιτυχής
     DDL_EVENT                       CREATE DOMAIN
     OBJECT_NAME                     DM_NAME
 
     ID                              3
     CURRENT_CONNECTION_CSET         NONE                           
-    SQL_TEXT                        80:3
+    SQL_TEXT                        
     recreate table t1 (
              saller_id integer  -- ?????????????????????????? ?????????????? // ID of saler
             ,customer_id integer  -- ?????????????????????????? ???????????? // ID of customer
             ,product_name dm_name
         )
-    RESULT_INFO                     80:5
+    RESULT_INFO                     
     Τα πάντα ήταν επιτυχής
     DDL_EVENT                       CREATE TABLE
     OBJECT_NAME                     T1  
@@ -206,20 +212,21 @@ for i in range(len(f_list)):
 
     ID                              7
     CURRENT_CONNECTION_CSET         UTF8                           
-    SQL_TEXT                        80:3
+    SQL_TEXT                        
     recreate table t1 (
              saller_id integer  -- αναγνωριστικό εμπόρου // ID of saler
             ,customer_id integer  -- αναγνωριστικό πελάτη // ID of customer
             ,product_name dm_name
         )
-    RESULT_INFO                     80:5
+    RESULT_INFO                     
     Τα πάντα ήταν επιτυχής
     DDL_EVENT                       CREATE TABLE
     OBJECT_NAME                     T1    
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[('SQL_TEXT .*','SQL_TEXT'), ('RESULT_INFO .*','RESULT_INFO'), ]
 }
 ]
 }
