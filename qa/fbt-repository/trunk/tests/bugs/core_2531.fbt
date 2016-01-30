@@ -86,7 +86,7 @@ f_mon_sql.write(f_sql_txt)
 f_mon_sql.close()
 
 f_mon_log = open( os.path.join( '%s', 'tmp_2531_w1252.log'), 'w')
-subprocess.call(["isql", dbnm, "-user", 'SYSDBA', "-password", "masterke", "-ch", "utf8", "-i", f_mon_sql.name], stdout = f_mon_log)
+subprocess.call(["isql", dbnm, "-user", 'SYSDBA', "-password", "masterkey", "-ch", "utf8", "-i", f_mon_sql.name], stdout = f_mon_log)
 f_mon_log.close()
 
 att1.commit()
