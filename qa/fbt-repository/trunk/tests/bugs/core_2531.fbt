@@ -1,0 +1,126 @@
+{
+'id': 'bugs.core_2531',
+'qmid': None,
+'tracker_id': 'CORE-2531',
+'title': 'The famous "cannot transliterate" error may be thrown when selecting data from the monitoring tables',
+'description': 
+ """
+   In order to check issues of ticket we have to create Python script which is encoded in non-ascii codepage and also
+   its codepage should be NON utf8 (choosed: Windows 1252). This is because all .fbt files have to be encoded only in UTF8,
+   so we can not put inside .fbt a statement which contains non-ascii SINGLE-BYTE characters.
+   
+   Character |å|, "LATIN SMALL LETTER A WITH RING ABOVE",  was selected in order to verify ticket issue, see:
+   http://www.fileformat.info/info/unicode/char/00e5/index.htm
+   
+   Temporary Python file ("tmp_2531_run.py") will contain encoding statement ('# coding: latin-1') followed by commands for:
+   1) make first attachment to database, by Python itself, with charset = Win1252, with preparing: "select 'gång' from rdb$database";
+      also, this attachments SAVES string of this query into table (NOTE: it works with charset = win1252);
+   2) make second attachment by ISQL, with charset = utf8, which will query mon$statements.mon$sql_text - this should return query
+      which has been prepared by first attachment. This query is compared to that which was stored into table by attachment-1,
+      and these rows should be equal: |select 'gång' from rdb$database|
+   
+   Confirmed wrong (incompleted) output of mon$sql_text on 2.1.0.17798 (but there is no "cannot transliterate" error):
+   ===
+        select 'gång: ' || current_timestamp from rdb$database                                                                                                                                                                                                                                                                          
+        select 'g   
+                 ^^^
+                  |
+                  +--- three white-spaces here (after 'g')
+   ===    
+   No such effect on builds >= 2.1.3.18185.
+ """,
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'connection_character_set': 'UTF8',
+ 'init_script': 
+  """
+     recreate table non_ascii(sql varchar(80) character set utf8);
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import time
+db_conn.close()
+import codecs
+
+#non_ascii_query="select 'gång' from rdb$database"
+non_ascii_query=u"select 'g\u00E5ng' from rdb$database"
+
+f_python_txt='''\
+# coding: latin-1
+import os
+import fdb
+import subprocess
+
+dbnm='%s'
+att1 = fdb.connect(dsn=dbnm, user='%s', password='%s', charset='win1252')
+
+cur1=att1.cursor()
+cur1.execute("recreate table non_ascii(sql varchar(255) character set win1252)")
+att1.commit()
+
+#txt="select 'g\u00E5ng' from rdb$database"
+txt="%s"
+
+cur1.execute( "insert into non_ascii(sql) values('%%s')"  %% txt.replace("'","''")  )
+att1.commit()
+
+cur1.prep(txt)
+
+f_mon_sql = open( os.path.join( '%s', 'tmp_2531_w1252.sql'), 'w')
+f_sql_txt="set heading off;  "\
+    +"select sql from non_ascii; "\
+    +"set list on; set blob all; "\
+    +"select s.mon$sql_text as sql_text_blob_id"\
+    +" from mon$statements s"\
+    +" where"\
+    +" s.mon$attachment_id<>current_connection"\
+    +"    and s.mon$sql_text is not null"\
+    +";"
+
+f_mon_sql.write(f_sql_txt)
+f_mon_sql.close()
+
+f_mon_log = open( os.path.join( '%s', 'tmp_2531_w1252.log'), 'w')
+subprocess.call(["isql", dbnm, "-user", 'SYSDBA', "-password", "masterke", "-ch", "utf8", "-i", f_mon_sql.name], stdout = f_mon_log)
+f_mon_log.close()
+
+att1.commit()
+att1.close()
+os.remove(f_mon_sql.name)
+
+''' % ( dsn.replace('\\\\', '\\\\\\\\'), user_name, user_password, non_ascii_query, context['temp_directory'].replace('\\\\', '\\\\\\\\'), context['temp_directory'].replace('\\\\', '\\\\\\\\') )
+
+#####################################################################
+### Create temporary Python script with code page = Windows-1252, ###
+### so |select 'gång' from rdb$database| will be written there in ###
+### single-byte encoding rather than in utf8.                     ### 
+####################################################################
+f_python_run=codecs.open( os.path.join(context['temp_directory'],'tmp_2531_run.py'), encoding='cp1252', mode='w')
+f_python_run.write(f_python_txt)
+f_python_run.close()
+
+runProgram('Python',[f_python_run.name])
+time.sleep(1)
+
+f_python_log=os.path.join( context['temp_directory'], 'tmp_2531_w1252.log')
+with open(f_python_log) as f:
+    print(f.read())
+f.close()
+
+os.remove(f_python_run.name)
+os.remove(f_python_log)
+  """,
+ 'expected_stdout':
+  """
+    select 'gång' from rdb$database                                                                                                                                                                                                                                 
+    select 'gång' from rdb$database  
+  """,
+  'substitutions':[('SQL_TEXT_BLOB_ID .*','')]
+}
+]
+}
