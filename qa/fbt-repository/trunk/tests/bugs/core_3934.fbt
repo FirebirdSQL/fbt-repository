@@ -1,0 +1,521 @@
+{
+'id': 'bugs.core_3934',
+'qmid': None,
+'tracker_id': 'CORE-3934',
+'title': "Value of log_sweep parameter in trace configuration is ignored by trace plugin (assumed always true)",
+'description': 
+ """
+   Test check TWO cases: 
+   1) whether log_sweep = true actually lead to logging of sweep events
+   2) whether log_sweep = fales actually prevents from logging of any sweep events (which is ticket issue).
+
+   First. we prepare database that eventually will be in such state when any subsequent attachment causes SWEEP in it.
+   This is done by setting small sweep_interval (100) and further running .sql (in separate child process) that starts 
+   transaction with locking 1st record from a table and then uses EB with ~150 autonomous transactions. 
+   After this EB finish, script runs another EB which tries to lock 1st record from table -  and here this script will 
+   hang infinitely because of WAIT transaction.
+   At this point we kill attachment to database by moving it to SHUTDOWN state and then returni to ONLINE.
+   Also, we make copy of that database to use it when trace disable logging of sweep -- see below notes for "case-2".
+   Then we prepare trace config that appropriate to engine version (2.5 vs 3.0) and start trace session.
+
+   On the first step ("case-1") this trace config will contain log_sweep = true.
+
+   After trace session will start, we have to DELAY further actions about 4..5 seconds - see 'min_delay_after_trace_start',
+   and then we can make single connect that will fire SWEEP because sdatabase now has (Next - OIT) > sweep_interval.
+   Trace will log following events related to sweep: SWEEP_START, SWEEP_PROGRESS (possible N times) and SWEEP_FINISH.
+   Also, trace log must contain transaction counters BEFORE and AFTER sweep.
+   After trace finishes, we print its log with filtering only rows that relates to interesting sweep events and Tx counters.
+
+   On the second step ("case-2") we prepare trace config with explicit DISABLING of sweep logging ('log_sweep = false).
+   We restore database from its copy (by trivial usage of file copy utility) and launch trace with new configuration.
+   Then we again do single connect and check that trace log does NOT contain now any info abouit sweep events.
+
+   Estimated time of running this test on all FB arch: about 30 seconds.
+   Checked on: WI-V2.5.6.26965 (SS/SC/CS), WI-V3.0.0.32300 (SS/SC/CS).
+ """,
+'min_versions': '2.5.2',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import time
+import subprocess
+from subprocess import Popen
+import shutil
+
+db_conn.close()
+
+#################### ::: NOTE :::  #######################
+# Increase value of 'min_delay_after_trace_start'      #
+# if test will fail with difference which means that     #
+# ALL needed rows that did not appear in actual stdout.  #
+# This mean that trace log remained EMPTY during test,   #
+# which in turn could occured because of too small delay #
+# between trace start and moment when single attachment  #
+# to 'ready-for-sweep' database was done.                #
+##########################################################
+min_delay_after_trace_start = 5
+
+# Minimal delay after we finish connection to database
+# (that fires SWEEP) and before issuing command to stop trace
+###############################
+min_delay_before_trace_stop = 2
+
+# Minimal delay for trace log be flushed on disk after
+# we issue command 'fbsvcmgr action_trace_stop':
+###############################
+min_delay_after_trace_stop = 1
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+def make_trace_config( engine, is_sweep_logged, trccfg_name ):
+
+    if is_sweep_logged.upper() == 'TRUE':
+        txt25 = '''
+        <database %[\\\\\\\\/]bugs.core_3934.fdb>
+          enabled true
+          time_threshold 0 
+          log_sweep true
+        </database>
+        '''
+    else:
+        txt25 = '''
+        <database %[\\\\\\\\/]bugs.core_3934.fdb>
+          enabled true
+          time_threshold 0 
+          log_connections true
+          log_transactions true
+          log_sweep false
+        </database>
+        '''
+
+    # NOTES ABOUT TRACE CONFIG FOR 3.0:
+    # 1) Header contains `database` clause in different format vs FB 2.5: its data must be enclosed with '{' '}'
+    # 2) Name and value must be separated by EQUALITY sign ('=') in FB-3 trace.conf, otherwise we get runtime error:
+    #    element "<. . .>" have no attribute value set
+    
+    if is_sweep_logged.upper() == 'TRUE':
+        txt30 = '''
+        database=%[\\\\\\\\/]bugs.core_3934.fdb
+        {
+          enabled = true
+          time_threshold = 0
+          log_sweep = true
+        }
+        '''
+    else:
+        txt30 = '''
+        database=%[\\\\\\\\/]bugs.core_3934.fdb
+        {
+          enabled = true
+          time_threshold = 0
+          log_connections = true
+          log_transactions = true
+          log_sweep = false
+        }
+        '''
+
+    trccfg=open( trccfg_name, 'w')
+    if engine.startswith('2.5'):
+        trccfg.write(txt25)
+    else:
+        trccfg.write(txt30)
+    trccfg.close()
+
+    return
+
+def stop_trace_session():
+
+    # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+    import os
+    import subprocess
+
+    f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_3934.lst'), 'w')
+    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_list"],\
+                     stdout=f_trclst, \
+                     stderr=subprocess.STDOUT
+                   )
+    f_trclst.close()
+    
+    trcssn=0
+    with open( f_trclst.name,'r') as f:
+        for line in f:
+            if 'Session ID' in line:
+                trcssn=line.split()[2]
+                break
+    f.close()
+    
+    # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+    f_trclst=open(f_trclst.name,'a')
+    f_trclst.seek(0,2)
+    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_stop", "trc_id",trcssn], \
+                     stdout=f_trclst, stderr=subprocess.STDOUT
+                   )
+    f_trclst.close()
+
+    os.remove(f_trclst.name)
+
+    return
+
+
+#################################################################################
+###                                                                           ###
+###                             P R E P A R E:                                ###
+###                                                                           ###
+### Assigning small value to sweep_interval; start SQL which add ~150 rows    ###
+### and hangs after adding final of them; mode database to shutdown and make  ###
+### copy of it; return database to online for making further connect which    ###
+### will fire SWEEP because database has Next - OIT > sweep_interval.         ###
+###                                                                           ###
+#################################################################################
+
+f_init_log = open( os.path.join(context['temp_directory'],'tmp_init_3934.log'), 'w')
+
+db_file="$(DATABASE_LOCATION)bugs.core_3934.fdb"
+bk_file="$(DATABASE_LOCATION)bugs.core_3934.bak"
+
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_sweep_interval", "100", \
+                  "dbname", db_file \
+                 ], \
+                 stdout = f_init_log, \
+                 stderr = subprocess.STDOUT \
+               )
+
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_write_mode", "prp_wm_async", \
+                  "dbname", db_file ],\
+                  stdout = f_init_log, \
+                  stderr = subprocess.STDOUT \
+               )
+
+f_work_sql=open( os.path.join(context['temp_directory'],'tmp_work_3934.sql'), 'w')
+
+sql_dml='''
+    set list on;
+    select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version 
+    from rdb$database;
+    commit;
+
+    recreate table test(s varchar(500) unique);
+    insert into test(s) values('LOCKED_FOR_PAUSE');
+    commit;
+
+    set transaction read committed WAIT;
+
+    update test set s = s where s = 'LOCKED_FOR_PAUSE';
+
+
+    set term ^;
+    execute block as
+      declare n int = 150;
+      declare v_role varchar(31);
+    begin
+      while (n > 0) do 
+          in autonomous transaction do 
+          insert into test(s) values( rpad('', 500, uuid_to_char(gen_uuid()) ) ) 
+          returning :n-1 into n;
+
+      v_role = left(replace( uuid_to_char(gen_uuid()), '-', ''), 31);
+      execute statement ('update test set s = s where s = ?') ('LOCKED_FOR_PAUSE')
+      on external 
+          'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+          as user 'SYSDBA' password 'masterkey' role v_role
+      with autonomous transaction;
+      
+    end
+    ^
+    set term ;^
+    set heading off;
+    select '-- shutdown me now --' from rdb$database;
+'''
+f_work_sql.write(sql_dml)
+f_work_sql.close()
+
+
+f_work_log=open( os.path.join(context['temp_directory'],'tmp_work_3934.log'), 'w')
+
+p_work_sql=\
+subprocess.Popen( ["isql", dsn, "-i", f_work_sql.name], \
+                  stdout = f_work_log, \
+                  stderr = subprocess.STDOUT \
+                )
+# Let ISQL to perform its DML action and stay then in infinite pause 
+# due to update-conclist in WAIT transaction:
+time.sleep(5)
+
+# Here we can invoke SHUTDOWN process in order to kill active Tx in ISQL and make this database 
+# be "ready" for auto-sweep firing when 1st attachment will occur after return it to ONLINE.
+
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0", \
+                  "dbname", db_file \
+                 ], \
+                 stdout = f_init_log, \
+                 stderr = subprocess.STDOUT \
+               )
+
+
+p_work_sql.terminate()
+f_work_log.close()
+
+# Return database to ONLINE state:
+##################################
+
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_db_online", \
+                  "dbname", db_file \
+                 ], \
+                 stdout = f_init_log, \
+                 stderr = subprocess.STDOUT \
+               )
+
+# Make copy of our database: we'll return to it after ensuring that trace _is_ filled
+# with info bout sweep autostart (i.e. when we go to part-2 and create trace config
+# then does NOT contain 'log_sweep = true' -- see below).
+
+shutil.copy2( db_file, bk_file )
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Obtain engine version, 2.5 or 3.0, for make trace config in appropriate format:
+###################################
+
+with open( f_work_log.name,'r') as f:
+    for line in f:
+        if 'ENGINE_VERSION' in line:
+            engine=line.split()[1]
+f.close()
+
+###############################################################################
+###                                                                         ###
+###             C A S E - 1:     l o g _ s w e e p   =   t r u e            ###
+###                                                                         ###
+###############################################################################
+
+# Make trace config with ENABLING sweep logging and syntax that appropriates current engine:
+
+trccfg_swp_enable=os.path.join(context['temp_directory'],'tmp_trace_3934_swp_enable.cfg')
+
+make_trace_config( engine, 'true', trccfg_swp_enable )
+
+f_trclog_swp_enable=open( os.path.join(context['temp_directory'],'tmp_trace_3934_swp_enable.log'), 'w')
+
+#####################################################
+# Starting trace session in new child process (async.):
+
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_trace=Popen( [ "fbsvcmgr", "localhost:service_mgr",\
+                 "action_trace_start",\
+                 "trc_cfg", trccfg_swp_enable \
+               ],\
+               stdout=f_trclog_swp_enable, \
+               stderr=subprocess.STDOUT \
+             )
+
+# Wait _AT_LEAST_ 4..5 seconds in 2.5 because trace session is initialized not instantly.
+# If this delay is less then 2 second then trace log will be EMPTY (got on 2.5 SS and Cs).
+time.sleep( min_delay_after_trace_start )
+
+####################################################
+# Make connection to database and immediatelly QUIT. 
+# SWEEP should be auto started after this:
+####################################################
+
+# This will fire SWEEP and this fact MUST be reflected in trace log:
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#runProgram('isql',[dsn, '-n', '-q'],'quit;')
+
+att1=kdb.connect(dsn=dsn,charset='utf8')
+att1.begin()
+att1.close()
+
+# do NOT remove this otherwise trace log can contain only message about its start before being closed!
+time.sleep(min_delay_before_trace_stop)
+
+#####################################################
+# Getting ID of launched trace session and STOP it:
+
+stop_trace_session()
+time.sleep(min_delay_after_trace_stop)
+
+# Terminate child process of launched trace session (though it should already be killed):
+p_trace.terminate()
+f_trclog_swp_enable.close()
+
+
+#############
+# O U T P U T
+#############
+
+# NOTE: message 'SWEEP_PROGRESS' can appear several times in trace log, 
+# so we need take in account only FIRST such text.
+was_progress_printed = 0
+
+with open( f_trclog_swp_enable.name,'r') as f:
+    for line in f:
+        if 'SWEEP_PROGRESS' in line.upper():
+            if was_progress_printed==0:
+                was_progress_printed=1
+                print(line.upper())
+        else:
+            print(line.upper())
+
+f.close()
+
+# Result: trace log __must__ contain info about SWEEP that fired due to connection.
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+# Move database to SHUTDOWN state in order to have ability to overwrite its file
+# (can still be opened in SS 3.0 due to linger!):
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0", \
+                  "dbname", db_file \
+                 ], \
+                 stdout = f_init_log, \
+                 stderr = subprocess.STDOUT \
+               )
+
+# Restore database for 2nd run, when SWEEP logging will be disabled:
+shutil.copy2( bk_file, db_file )
+os.remove(bk_file)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+
+###############################################################################
+###                                                                         ###
+###             C A S E - 2:     l o g _ s w e e p   =   f al s e           ###
+###                                                                         ###
+###############################################################################
+
+
+# Make trace config with DISABLING sweep logging and syntax that appropriates current engine:
+
+trccfg_swp_disable=os.path.join(context['temp_directory'],'tmp_trace_3934_swp_disable.cfg')
+make_trace_config( engine, 'false', trccfg_swp_disable )
+
+#####################################################
+# Starting trace session in new child process (async.):
+
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+
+f_trclog_swp_disable=open( os.path.join(context['temp_directory'],'tmp_trace_3934_swp_disable.log'), 'w')
+
+p_trace=Popen( ["fbsvcmgr", "localhost:service_mgr",\
+                "action_trace_start",\
+                 "trc_cfg", trccfg_swp_disable \
+               ],\
+               stdout=f_trclog_swp_disable, \
+               stderr=subprocess.STDOUT \
+             )
+
+# Wait _AT_LEAST_ 4..5 seconds in 2.5 because trace session is initialized not instantly.
+# If this delay is less then 2 second then trace log will be EMPTY (got on 2.5 SS and Cs).
+
+time.sleep( min_delay_after_trace_start )
+
+####################################################
+# Make connection to database and immediatelly QUIT. 
+# SWEEP should be auto started after this:
+####################################################
+
+# This will fire SWEEP, but now this must __NOT__ be reflected in trace log!
+#######################
+#runProgram('isql',[dsn, '-n', '-q'],'quit;')
+
+att2=kdb.connect(dsn=dsn,charset='utf8')
+att2.begin()
+att2.close()
+
+# do NOT remove this otherwise trace log can contain only message about its start before being closed!
+time.sleep(min_delay_before_trace_stop)
+
+#####################################################
+# Getting ID of launched trace session and STOP it:
+stop_trace_session()
+time.sleep(min_delay_after_trace_stop)
+
+
+# Terminate child process of launched trace session (though it should already be killed):
+p_trace.terminate()
+f_trclog_swp_disable.close()
+
+#############
+# O U T P U T
+#############
+
+# Although this log is not empty, it does not contain any info about sweep, 
+# thus further substitutions should filter out _ALL_ of messages from this log:
+
+with open( f_trclog_swp_disable.name,'r') as f:
+    for line in f:
+        print(line.upper())
+f.close()
+
+f_init_log.close()
+
+# Should be EMPTY:
+
+with open( f_init_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+time.sleep(1)
+
+###############################
+# Cleanup.
+
+f_list=[]
+f_list.append(f_init_log)
+f_list.append(f_work_sql)
+f_list.append(f_work_log)
+f_list.append(f_trclog_swp_enable)
+f_list.append(f_trclog_swp_disable)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+os.remove(trccfg_swp_enable)
+os.remove(trccfg_swp_disable)
+#   ,('.*,[\s]*[0-9]+[\s]+FETCH\(ES\),[\s]*[0-9]+[\s]+MARK\(S\)', 'FETCHES, MARKS')
+#    ('^((?!SWEEP_START|SWEEP_PROGRESS|SWEEP_FINISH|COUNTERS|OLDEST|NEXT|FETCH\(ES\)).)*$', '')
+
+  """,
+ 'expected_stdout':
+  """
+    2016-01-31T20:35:36.4400 (4752:00C421B8) SWEEP_START
+    TRANSACTION COUNTERS:
+    OLDEST INTERESTING          6
+    OLDEST ACTIVE             161
+    OLDEST SNAPSHOT           161
+    NEXT TRANSACTION          162
+    2016-01-31T20:35:36.4550 (4752:00C421B8) SWEEP_PROGRESS
+    2016-01-31T20:35:36.4550 (4752:00C421B8) SWEEP_FINISH
+    TRANSACTION COUNTERS:
+    OLDEST INTERESTING        162
+    OLDEST ACTIVE             161
+    OLDEST SNAPSHOT           161
+    NEXT TRANSACTION          163
+  """,
+ 'substitutions':[
+    ('^((?!SWEEP_START|SWEEP_PROGRESS|SWEEP_FINISH|COUNTERS|OLDEST|NEXT).)*$', '')
+   ,('.*[\s]+SWEEP_START', 'SWEEP_START')
+   ,('.*[\s]+SWEEP_PROGRESS', 'SWEEP_PROGRESS')
+   ,('.*[\s]+SWEEP_FINISH', 'SWEEP_FINISH')
+   ,('OLDEST INTERESTING[\s]+[0-9]+', 'OLDEST INTERESTING')
+   ,('OLDEST ACTIVE[\s]+[0-9]+', 'OLDEST ACTIVE')
+   ,('OLDEST SNAPSHOT[\s]+[0-9]+', 'OLDEST SNAPSHOT')
+   ,('NEXT TRANSACTION[\s]+[0-9]+', 'NEXT TRANSACTION')
+  ]
+}
+]
+}
