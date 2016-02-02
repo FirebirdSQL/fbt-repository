@@ -1,0 +1,106 @@
+{
+'id': 'bugs.core_4388',
+'qmid': None,
+'tracker_id': 'CORE-4388',
+'title': 'SELECT WITH LOCK may enter an infinite loop for a single record',
+'description': 
+ """
+   Caution: could not reproduce on neither WI-T3.0.0.30566 Firebird 3.0 Alpha 1 nor WI-T3.0.0.30809 Firebird 3.0 Alpha 2.
+   Any advice about how this test should be properly written will be appreciated.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create table test(id int primary key, x int);
+    commit;
+    insert into test values(1, 100);
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import subprocess
+from subprocess import Popen
+import time
+
+db_conn.close()
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+att1 = kdb.connect(dsn=dsn)
+
+# C:\Python27\Lib\site-packages\fdb\ibase.py 
+#tpb1 = ( [ fdb.isc_tpb_concurrency, fdb.isc_tpb_wait ] )
+
+# Start SNAPSHOT transaction (as in OLTP-EMUL):
+#att1.begin( tpb=tpb1 )
+
+cur1 = att1.cursor()
+
+# Delete record but not yet commit - it's a time 
+# to make another connection:
+cur1.execute("delete from test where id = 1")
+
+f_select_with_lock_sql = open( os.path.join(context['temp_directory'],'tmp_4388_select_with_lock.sql'), 'w')
+f_select_with_lock_sql.write('set list on; set echo on; select x from test where id = 1 with lock;')
+f_select_with_lock_sql.close()
+
+f_select_with_lock_log = open( os.path.join(context['temp_directory'],'tmp_4388_select_with_lock.log'), 'w')
+
+p_hanged_isql=\
+subprocess.Popen( ["isql", dsn, "-n", "-i", f_select_with_lock_sql.name ], \
+                 stdout = f_select_with_lock_log, \
+                 stderr = subprocess.STDOUT \
+               )
+f_select_with_lock_log.close()
+
+time.sleep(1)
+
+# Here we return to att1 and make COMMIT deleted record:
+att1.commit()
+att1.close()
+
+time.sleep(1)
+
+p_hanged_isql.terminate()
+f_select_with_lock_sql.close()
+
+with open(f_select_with_lock_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+###############################
+# Cleanup.
+
+f_list=[]
+f_list.append(f_select_with_lock_sql)
+f_list.append(f_select_with_lock_log)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout':
+  """
+    Statement failed, SQLSTATE = 40001
+    deadlock
+    -update conflicts with concurrent update
+    -concurrent transaction number is 8
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[
+      ('.* transaction number is [0-9]+', '.* transaction'),
+      ('After line [0-9]+ in file .*', '')
+  ]
+}
+]
+}
