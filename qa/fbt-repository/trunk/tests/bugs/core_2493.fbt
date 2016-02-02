@@ -30,7 +30,7 @@
       + INET inet_error read errno 10054 client host prog2 address x::y:z:u:v 56831 user mick ------- for IPv6
 
    7. Then we check that parsed line has minimum 14 tokens and begin to handle them. 
-      Token N 3 ('read') is SKIPPED from analysis - see issue by dimitr in the tocket, 12/Jan/16 10:21 AM.
+      Token N 3 ('read') is SKIPPED from analysis - see issue by dimitr in the ticket, 12/Jan/16 10:21 AM.
       Tokens NN 4 ... 7 form 'constant' part of message and we DO verify that it actually present in the parsed string.
       Token N 8 must contain name of HOST. It has to match to result of socket.gethostname(), comparing them case-insensitively.
       Token N 10 concatenated with '/' concatenated with token N 11 has to match to the value that we got from ISQL when it asked
@@ -40,7 +40,7 @@
 
    Checked on WI-V3.0.0.32272 x86 and amd64, OS = Windows XP and 8.1, TCPv4 and TCPv6; fdb version = 1.5, Python 2.7 and 3.4.
    ### NB ###
-   First version of this test was iomplemented on Windows XP and Python 2.7.8, build 02-jul-2014 win32.
+   First version of this test was implemented on Windows XP and Python 2.7.8, build 02-jul-2014 win32.
    Unfortunatelly, on Python 3.4 + Win 8.1 it is unable to use socket.inet_pton() call -exception raises with text:
    "AttributeError: 'module' object has no attribute 'inet_pton'".
    For that reason it was decided do NOT use calls of socket.inet_pton() and operate only with remote_address that can be easy
