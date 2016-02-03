@@ -1,0 +1,216 @@
+{
+'id': 'bugs.core_3328',
+'qmid': None,
+'tracker_id': 'CORE-3328',
+'title': 'Client writes error messages into firebird.log when database is shutted down',
+'description': 
+ """
+   Test retrieves FB engine versionin order to issue proper command option for getting firebird.log content
+   (in 2.5 this is 'action_get_ib_log' rather then expected 'action_get_fb_log' - note on letter 'i' instead 'f').
+   Initial content of firebird.log is saved into file, see var. 'f_fblog_before'.
+   Then it starts child process (ISQL) which does some "heavy DML" activity and allows this ISQL to do it several seconds.
+   After this, main thread calls FBSVCMGR with commands to move database to SHUTDOWN state and back to online.
+   This should terminate child ISQL and after small delay one may to query new content of firebird.log.
+   New firebird.log is saved into file, see var. 'f_fblog_after', so further its two versions can be compared.
+   Comparison is done by using standard Python package 'difflib'.
+   Difference between old and new firebird.log should _NOT_ contain lines with words 'gds__detach' or 'lost'.
+   If these words absent - all fine, actual and expected output both have to be empty.
+
+   Checked on: WI-V3.0.0.32311 (CS/SC/SS), WI-V2.5.6.26965 (SC).
+   Elapsed time: 3.0 SS = 15", 3.0 SC = 16", 3.0 CS = 23"; 2.5 SC = 33".
+ """,
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create table test(s varchar(36) unique);
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import subprocess
+from subprocess import Popen
+import time
+import difflib
+
+def svc_get_fb_log( engine, f_fb_log ):
+
+  import subprocess
+
+  if engine.startswith('2.5'):
+      get_firebird_log_key='action_get_ib_log'
+  else:
+      get_firebird_log_key='action_get_fb_log'
+
+  subprocess.call([ "fbsvcmgr", \
+                    "localhost:service_mgr",\
+                    get_firebird_log_key \
+                  ], \
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+
+db_conn.close()
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+att1 = kdb.connect(dsn=dsn)
+
+cur1 = att1.cursor()
+
+cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in cur1:
+    engine = row[0]
+
+att1.close()
+
+#print('engine='+engine)
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_3328_fblog_before.txt'), 'w')
+svc_get_fb_log( engine, f_fblog_before )
+f_fblog_before.close()
+
+# Delete record but not yet commit - it will be done
+# aftert we move database in SHUTDOWN state in another 
+# child process:
+#cur1.execute("delete from test where id = 1")
+
+sql_dml='''
+set term ^;
+execute block as
+    declare v_role varchar(31);
+begin
+    v_role = left(replace( uuid_to_char(gen_uuid()), '-', ''), 31);
+    while (1=1) do
+    begin
+        insert into test(s) values( uuid_to_char( gen_uuid() ) );
+        /*
+        execute statement ( 'insert into test(s) values( ? )' )
+                          ( uuid_to_char( gen_uuid() ) )
+            on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+                        as user '%s' password '%s' 
+                           role v_role
+        ;
+        */
+    end
+end
+^
+set term ;^
+
+''' % (user_name, user_password)
+
+f_client_sql = open( os.path.join(context['temp_directory'],'tmp_client_3328.sql'), 'w')
+f_client_sql.write(sql_dml)
+f_client_sql.close()
+
+f_client_log = open( os.path.join(context['temp_directory'],'tmp_client_3328.log'), 'w')
+p_client_dml=\
+subprocess.Popen( ["isql", dsn, "-n", "-i", f_client_sql.name ], \
+                 stdout = f_client_log, \
+                 stderr = subprocess.STDOUT \
+               )
+time.sleep(5)
+
+db_file="$(DATABASE_LOCATION)bugs.core_3328.fdb"
+
+f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_3328.log'), 'w')
+
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0", \
+                  "dbname", db_file, \
+                 ], \
+                 stdout = f_shutdown_log, \
+                 stderr = subprocess.STDOUT \
+               )
+
+subprocess.call( ["fbsvcmgr","localhost:service_mgr",\
+                  "action_db_stats", \
+                  "dbname", db_file, "sts_hdr_pages" \
+                 ],\
+                 stdout = f_shutdown_log, \
+                 stderr=subprocess.STDOUT \
+               )
+
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_db_online", \
+                  "dbname", db_file, \
+                 ], \
+                 stdout = f_shutdown_log, \
+                 stderr = subprocess.STDOUT \
+               )
+
+f_shutdown_log.close()
+
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_3328_fblog_after.txt'), 'w')
+svc_get_fb_log( engine, f_fblog_after )
+f_fblog_after.close()
+
+p_client_dml.terminate()
+f_client_log.close()
+
+# Now we can compare two versions of firebird.log and check their difference.
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_3328_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+# New lines in firebird.log must |NOT| contain these:
+# ===
+# REMOTE INTERFACE/gds__detach: Unsuccesful detach from database.
+# Uncommitted work may have been lost 
+# ===
+# If such lines present - this is regression and we output them.
+# When all fine, final output is empty.
+#
+# BTW: for 3.0, firebird.log will contain such text:
+# INET/INET_ERROR: READ ERRNO = 10054, SERVER HOST = LOCALHOST, ADDRESS = 127.0.0.1/3333
+# -- but this is checked by another .fbt
+
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+') and ('gds__detach' in line or 'lost' in line):
+            print(line.upper())
+f.close()
+
+###############################
+# Cleanup.
+
+f_list=[]
+f_list.append(f_shutdown_log)
+f_list.append(f_client_sql)
+f_list.append(f_client_log)
+f_list.append(f_fblog_before)
+f_list.append(f_fblog_after)
+f_list.append(f_diff_txt)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
