@@ -1,0 +1,449 @@
+{
+'id': 'bugs.core_5087',
+'qmid': None,
+'tracker_id': 'CORE-5087',
+'title': 'Database shutdown can cause server crash if multiple attachments run EXECUTE STATEMENT',
+'description': 
+ """
+   Test makes copy of current database file (see below 'bk_file') and establishes "checking" attachment to it (see 'att_chk').
+   The fact that this attachment was just successfully established is logged by saving text 'check_point_1' in file (see 'f_chk_log').
+   After this, test starts in child processes dozen of ISQL attachments; every of them does infinite loop with ES.
+   
+   We make some delay after that so all attachments can be fully involved in their job, i.e. can really do some ES.
+   After that we begin to move database to shutdown and return it after to online state.
+   Finally, we recall about our "checking" attachment ('att_chk'), return to it and try to CONTINUE work there by issuing second
+   query to RDB$DATABASE and storing output as 'check_point_2'.
+
+   The main idea is following: if Firebird is alive then we do NOT get exception on this step and f_chk_log should contain 
+   TWO messages: 'check_point_1' and 'check_point_2', and no text like 'error reading connection'.
+   
+   Also, we do two additional checks:
+   1. All ISQL sessions should be disconnected with writing to logs appropriate messages about shutdown.
+       But their logs should NOT contain line with SQLSTATE = 08004 - and we'll check this.
+   2. Also, we get difference between 'old' and 'current' versions of firebird.log and search in it for text
+      that can also point on FB crash: "terminated abnormally".
+
+   Checked on WI-V3.0.0.32320, SS/SC/CS.
+
+   Estimated time: SS = 19", SC = 19", CS = 31".   
+   ::: NB :::. 
+   Specifying of 2.5.6 in 'min_versions' is deferred, found crash on  WI-V2.5.6.26969 (04-feb-2016).
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create sequence g;
+
+    recreate table test(
+        id int, 
+        s varchar(500) unique, 
+        att bigint default current_connection
+    );
+    recreate table log4attach(
+        att bigint default current_connection
+        ,dts timestamp default 'now'
+        ,process varchar(255)
+        ,protocol varchar(255)
+        ,address varchar(255)
+    );
+    commit;
+
+    set term ^;
+    create or alter procedure sys_get_fb_arch (
+         a_connect_with_usr varchar(31) default 'SYSDBA'
+        ,a_connect_with_pwd varchar(31) default 'masterkey'
+    ) returns(
+        fb_arch varchar(50)
+    ) as
+        declare cur_server_pid int;
+        declare ext_server_pid int;
+        declare att_protocol varchar(255);
+        declare v_test_sttm varchar(255);
+        declare v_fetches_beg bigint;
+        declare v_fetches_end bigint;
+    begin
+        
+        -- Aux SP for detect FB architecture.
+
+        select a.mon$server_pid, a.mon$remote_protocol
+        from mon$attachments a
+        where a.mon$attachment_id = current_connection
+        into cur_server_pid, att_protocol;
+
+        if ( att_protocol is null ) then
+            fb_arch = 'Embedded';
+        else if ( upper(current_user) = upper('SYSDBA')
+                  and rdb$get_context('SYSTEM','ENGINE_VERSION') NOT starting with '2.5' 
+                  and exists(select * from mon$attachments a 
+                             where a.mon$remote_protocol is null
+                                   and upper(a.mon$user) in ( upper('Cache Writer'), upper('Garbage Collector'))
+                            ) 
+                ) then
+            fb_arch = 'SuperServer';
+        else
+            begin
+                v_test_sttm =
+                    'select a.mon$server_pid + 0*(select 1 from rdb$database)'
+                    ||' from mon$attachments a '
+                    ||' where a.mon$attachment_id = current_connection';
+
+                select i.mon$page_fetches
+                from mon$io_stats i
+                where i.mon$stat_group = 0  -- db_level
+                into v_fetches_beg;
+            
+                execute statement v_test_sttm
+                on external
+                     'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+                as
+                     user a_connect_with_usr
+                     password a_connect_with_pwd
+                     role left('R' || replace(uuid_to_char(gen_uuid()),'-',''),31)
+                into ext_server_pid;
+            
+                in autonomous transaction do
+                select i.mon$page_fetches
+                from mon$io_stats i
+                where i.mon$stat_group = 0  -- db_level
+                into v_fetches_end;
+            
+                fb_arch = iif( cur_server_pid is distinct from ext_server_pid, 
+                               'Classic', 
+                               iif( v_fetches_beg is not distinct from v_fetches_end, 
+                                    'SuperClassic', 
+                                    'SuperServer'
+                                  ) 
+                             );
+            end
+
+        fb_arch = fb_arch || ' ' || rdb$get_context('SYSTEM','ENGINE_VERSION');
+
+        suspend;
+
+    end 
+    ^ -- sys_get_fb_arch
+
+    set term ;^
+    commit;
+    set heading off;
+
+    -- Obtain FB arch:
+    --select fb_arch from sys_get_fb_arch;
+
+    set term ^;
+    execute block as
+    begin
+        rdb$set_context('USER_SESSION','INITIAL_DDL','1');
+    end
+    ^
+    	
+    create or alter trigger trg_attach active on connect position 0 as
+    begin
+        if ( rdb$get_context('USER_SESSION','INITIAL_DDL') is null ) 
+        then
+            in autonomous transaction do 
+                insert into log4attach(process,protocol, address)
+                values(  rdb$get_context('SYSTEM', 'CLIENT_PROCESS')
+                        ,rdb$get_context('SYSTEM', 'NETWORK_PROTOCOL') 
+                        ,rdb$get_context('SYSTEM', 'CLIENT_ADDRESS') 
+                      );
+    end
+    ^ -- trg_attach
+    set term ;^
+    commit;
+
+    create index test_att on test(att);
+    create index test_id on test(id);
+    create index log4attach_att on log4attach(att);
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import sys
+import subprocess
+from subprocess import Popen
+import time
+import shutil
+import difflib
+
+def svc_get_fb_log( engine, f_fb_log ):
+
+  import subprocess
+
+  if engine.startswith('2.5'):
+      get_firebird_log_key='action_get_ib_log'
+  else:
+      get_firebird_log_key='action_get_fb_log'
+
+  subprocess.call([ "fbsvcmgr", \
+                    "localhost:service_mgr",\
+                    get_firebird_log_key \
+                  ], \
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+db_file="$(DATABASE_LOCATION)bugs.core_5087.fdb"
+
+bk_file="$(DATABASE_LOCATION)tmp_5087_check_attachment_alive.fdb"
+
+# Copy database to another file in order to make connect to this copy
+# and check that this connection is alive after we'll do DML and shutdown
+# with source database (i.e. with "bugs.core_5087.fdb"):
+shutil.copy2( db_file, bk_file )
+
+att_chk = kdb.connect(dsn='localhost:'+bk_file) # This leads to adding 1 row into table 'log4attach'
+
+att_chk.begin()
+cur_chk = att_chk.cursor()
+cur_chk.execute("select 'check_point_1' as msg from rdb$database")
+
+f_chk_log = open( os.path.join(context['temp_directory'],'tmp_chk_5087.log'), 'w')
+
+for row in cur_chk:
+    f_chk_log.write(row[0])
+
+att_chk.commit()
+
+
+# Obtain engine version:
+
+att1 = kdb.connect(dsn=dsn)
+cur1 = att1.cursor()
+
+cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in cur1:
+    engine = row[0]
+
+att1.close()
+
+#print('engine='+engine)
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5087_fblog_before.txt'), 'w')
+svc_get_fb_log( engine, f_fblog_before )
+f_fblog_before.close()
+
+sql_dml='''
+    commit;
+    set transaction read committed;
+    set term ^;
+    execute block as
+        declare n_limit int = 1000000;
+        declare s_length smallint;
+    begin
+        select ff.rdb$field_length
+        from rdb$fields ff
+        join rdb$relation_fields rf on ff.rdb$field_name = rf.rdb$field_source
+        where rf.rdb$relation_name=upper('test') and rf.rdb$field_name=upper('s')
+        into s_length;
+
+        while (n_limit > 0) do
+        begin
+            execute statement ('insert into test(id, s) values( ?, ?)')
+                  ( gen_id(g,1), rpad('', :s_length, uuid_to_char(gen_uuid()))  )
+                  with autonomous transaction
+            ;
+
+            n_limit = n_limit - 1;
+        end
+        insert into test( id ) values( -current_connection );
+    end
+    ^
+    set term ;^
+    commit;
+'''
+
+f_dml_sql = open( os.path.join(context['temp_directory'],'tmp_dml_5087.sql'), 'w')
+f_dml_sql.write(sql_dml)
+f_dml_sql.close()
+
+f_list = []
+p_list = []
+
+########################################################
+#  Launching dozen of child ISQL processes with doing ES
+########################################################
+
+planned_dml_attachments = 30
+
+for i in range(0, planned_dml_attachments):
+    sqllog=open( os.path.join(context['temp_directory'],'tmp_dml_5087_'+str(i)+'.log'), 'w')
+    f_list.append(sqllog)
+
+for i in range(len(f_list)):
+    p_isql=Popen( [ "isql" , "localhost:"+db_file, "-i", f_dml_sql.name ], \
+                  stdout=f_list[i], \
+                  stderr=subprocess.STDOUT \
+                )
+    p_list.append(p_isql)
+
+
+# Delay: let ISQL sessions do their job:
+time.sleep( 10 )
+
+f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_5087.log'), 'w')
+
+####################################
+# S H U T D O W N    D A T A B A S E
+####################################
+
+subprocess.call( ["fbsvcmgr","localhost:service_mgr",\
+                  "action_properties", \
+                  "dbname", db_file, \
+                  "prp_shutdown_mode", "prp_sm_full", "prp_force_shutdown", "0" \
+                 ],\
+                 stdout=f_shutdown_log, \
+                 stderr=subprocess.STDOUT \
+               )
+
+# ...and return it to ONLINE because fbtest will try to remove it on exit from here:
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
+                  "action_properties", "prp_db_online", \
+                  "dbname", db_file, \
+                 ], \
+                 stdout = f_shutdown_log, \
+                 stderr = subprocess.STDOUT \
+               )
+f_shutdown_log.close()
+
+
+for i in range(len(f_list)):
+    f_list[i].close()
+
+for i in range(len(p_list)):
+    p_list[i].terminate()
+
+# Here we must wait because firebird.log will get new messages NOT instantly.
+time.sleep(5)
+
+crashes_in_worker_logs = 0
+for i in range(len(f_list)):
+    dml_worker_log=open(f_list[i].name).read()
+    if 'SQLSTATE = 08004' in dml_worker_log: #### do NOT add >>> or 'SQLSTATE = 08006' in dml_worker_log:
+        crashes_in_worker_logs += 1
+    os.remove(f_list[i].name)
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5087_fblog_after.txt'), 'w')
+svc_get_fb_log( engine, f_fblog_after )
+f_fblog_after.close()
+
+att_chk.begin()
+cur_chk.execute("select 'check_point_2' as msg from rdb$database")
+
+f_chk_log.seek(0,2)
+for row in cur_chk:
+    f_chk_log.write('\\n')
+    f_chk_log.write(row[0])
+
+f_chk_log.seek(0,2)
+f_chk_log.write('\\n')
+f_chk_log.write('Found crash messages in DML worker logs: ' + str(crashes_in_worker_logs))
+
+sql_chk='''
+set list on;
+set count on;
+select iif( count(distinct att) = %s, 'YES', 'NO!' ) as "All_workers_found ?"
+from (
+  select 
+     att
+    ,count( iif(id >=0, id, null) ) as cnt_in_autonom_tx
+    ,count( iif(id < 0, id, null) ) as cnt_in_common_tx
+  from test 
+  group by att
+)
+where cnt_in_common_tx = 0 and cnt_in_autonom_tx > 0;
+''' % planned_dml_attachments
+
+f_chk_sql = open( os.path.join(context['temp_directory'],'tmp_chk_5087.sql'), 'w')
+f_chk_sql.write(sql_chk)
+f_chk_sql.close()
+
+f_chk_log.seek(0,2)
+subprocess.call( [ "isql" , "localhost:"+db_file, "-nod", "-i", f_chk_sql.name ], \
+                  stdout=f_chk_log, \
+                  stderr=subprocess.STDOUT \
+                )
+
+
+att_chk.commit()
+att_chk.close()
+
+os.remove(bk_file)
+
+f_chk_log.close()
+
+# Now we can compare two versions of firebird.log and check their difference.
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5087_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+') and 'terminated abnormally' in line:
+            print('Crash message in firebird.log detected: '+line.upper())
+f.close()
+
+# This should be empty:
+#######################
+with open( f_shutdown_log.name,'r') as f:
+    for line in f:
+        print(line.upper())
+f.close()
+
+# Print check info:
+with open( f_chk_log.name,'r') as f:
+  print( f.read() )
+f.close()
+
+###############################
+# Cleanup.
+
+k_list=[]
+k_list.append(f_shutdown_log)
+k_list.append(f_dml_sql)
+k_list.append(f_chk_sql)
+k_list.append(f_fblog_before)
+k_list.append(f_fblog_after)
+k_list.append(f_diff_txt)
+k_list.append(f_chk_log)
+
+for i in range(len(k_list)):
+    if os.path.isfile(k_list[i].name):
+        os.remove(k_list[i].name)
+
+  """,
+ 'expected_stdout':
+  """
+    check_point_1
+    check_point_2
+    Found crash messages in DML worker logs: 0
+    All_workers_found ?             YES
+    Records affected: 1
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
