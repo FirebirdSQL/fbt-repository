@@ -29,10 +29,10 @@
    ::: NB :::. 
    Specifying of 2.5.6 in 'min_versions' is deferred, found crash on  WI-V2.5.6.26969 (04-feb-2016).
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.6',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'init_script':
   """
@@ -274,7 +274,11 @@ p_list = []
 #  Launching dozen of child ISQL processes with doing ES
 ########################################################
 
-planned_dml_attachments = 30
+if engine.startswith('2.5'):
+    planned_dml_attachments = 5
+else:
+    planned_dml_attachments = 30
+
 
 for i in range(0, planned_dml_attachments):
     sqllog=open( os.path.join(context['temp_directory'],'tmp_dml_5087_'+str(i)+'.log'), 'w')
