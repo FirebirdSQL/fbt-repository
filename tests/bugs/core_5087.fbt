@@ -25,14 +25,16 @@
 
    Checked on WI-V3.0.0.32320, SS/SC/CS.
 
-   Estimated time: SS = 19", SC = 19", CS = 31".   
+   Estimated time for 3.0: SS = 19", SC = 19", CS = 31".   
+   
    ::: NB :::. 
-   Specifying of 2.5.6 in 'min_versions' is deferred, found crash on  WI-V2.5.6.26969 (04-feb-2016).
+
+   On 2.5 no crash but works VERY slow, even for 5 attachments (checked on WI-V2.5.6.26970, 255 seconds!).
  """,
-'min_versions': '2.5.6',
+'min_versions': '3.0',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'init_script':
   """
