@@ -30,6 +30,7 @@
    ::: NB :::. 
 
    On 2.5 no crash but works VERY slow, even for 5 attachments (checked on WI-V2.5.6.26970, 255 seconds!).
+   Setting min_version = 2.6.6 is deferred again until CORE-5106 will not be fixed.
  """,
 'min_versions': '3.0',
 'versions': [
