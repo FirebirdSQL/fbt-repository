@@ -1,0 +1,41 @@
+{
+'id': 'bugs.core_2484',
+'qmid': '',
+'tracker_id': 'CORE-2484',
+'title': 'Success message when connecting to tiny trash database file',
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script':
+  """
+import os
+  
+db_conn.close()
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+f_fake_fdb = open( os.path.join(context['temp_directory'],'tmp_2484_fake.fdb'), 'w')
+f_fake_fdb.write('ŒåŁä')
+f_fake_fdb.close()
+
+runProgram('isql',['-q', f_fake_fdb.name],'quit;')
+
+os.remove(f_fake_fdb.name)
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 08001
+    I/O error during "ReadFile" operation for file "C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\TMP_2484_FAKE.FDB"
+    -Error while trying to read from file  
+  """,
+  'substitutions':[('.*for file.*', '.*for file')]
+}                              
+]
+}
