@@ -1169,6 +1169,15 @@ Dynamic SQL Error
     select coalesce(1 + cast(? as integer), 2 + cast(? as integer))
       from rdb$database
       where coalesce(3 + cast(? as bigint), null) = 0;
+
+    -- This (last) statement will raise exception related to SQLDA.
+    -- Old error messages:
+    --     -SQL error code = -804
+    --     -SQLDA missing or incorrect version, or incorrect number/type of variables
+    -- Messages since  http://sourceforge.net/p/firebird/code/63010 (2016-02-23, DS):
+    --     -SQLDA error
+    --     -Wrong number of parameters (expected 3, got 0)
+    -- (replacement with new text was approved by dimitr, letter 24-feb-2016 22:01).
   """,
  'expected_stdout': 
   """
@@ -1474,8 +1483,8 @@ Dynamic SQL Error
 
     Statement failed, SQLSTATE = 07002
     Dynamic SQL Error
-    -SQL error code = -804
-    -SQLDA missing or incorrect version, or incorrect number/type of variables
+    -SQLDA error
+    -Wrong number of parameters (expected 3, got 0)
   """,
   'substitutions': [('=.*','')]
 }
