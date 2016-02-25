@@ -3,78 +3,83 @@
 'qmid': 'functional.arno.optimizer.opt_sort_by_index_11',
 'tracker_id': '',
 'title': 'ORDER BY ASC using index (multi)',
-'description': """ORDER BY X, Y
-When more fields are given in ORDER BY clause try to use a compound index.""",
+'description': 
+ """
+   ORDER BY X, Y
+   When more fields are given in ORDER BY clause try to use a compound index.
+   *** NB ***
+   Refactored 26-feb-2016: use common .zip archieve with queries for miscelan tests
+   related to optimizer set. For this test we extract from this zip only one file 
+   ('opt_sort_by_index_11.sql') and run ISQL with passing to it this file.
+   ISQL will ouput PLAN of execution and we store it into log.
+   Finally, we compare plan with expected string which differ depending on FB version.
+ """,
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'init_script': """CREATE TABLE Table_53 (
-  ID1 INTEGER,
-  ID2 INTEGER
-);
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import time
+import subprocess
+import zipfile
 
-SET TERM ^^ ;
-CREATE PROCEDURE PR_FillTable_53
-AS
-DECLARE VARIABLE FillID INTEGER;
-DECLARE VARIABLE FillID1 INTEGER;
-BEGIN
-  FillID = 1;
-  WHILE (FillID <= 50) DO
-  BEGIN
-    FillID1 = (FillID / 10) * 10;
-    INSERT INTO Table_53
-      (ID1, ID2)
-    VALUES
-      (:FillID1, :FillID - :FillID1);
-    FillID = FillID + 1;
-  END
-  INSERT INTO Table_53 (ID1, ID2) VALUES (0, NULL);
-  INSERT INTO Table_53 (ID1, ID2) VALUES (NULL, 0);
-  INSERT INTO Table_53 (ID1, ID2) VALUES (NULL, NULL);
-END
-^^
-SET TERM ; ^^
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
-COMMIT;
+c1 = db_conn.cursor()
 
-EXECUTE PROCEDURE PR_FillTable_53;
+c1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in c1:
+    engine = row[0]
+db_conn.close()
 
-COMMIT;
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'functional.arno.optimizer.zip ') )
+zf.extract('opt_sort_by_index_11.sql', context['temp_directory'] )
+zf.close()
 
-CREATE ASC INDEX I_Table_53_ID1_ASC ON Table_53 (ID1);
-CREATE DESC INDEX I_Table_53_ID1_DESC ON Table_53 (ID1);
-CREATE ASC INDEX I_Table_53_ID2_ASC ON Table_53 (ID2);
-CREATE DESC INDEX I_Table_53_ID2_DESC ON Table_53 (ID2);
-CREATE ASC INDEX I_Table_53_ID1_ID2_ASC ON Table_53 (ID1, ID2);
-CREATE DESC INDEX I_Table_53_ID1_ID2_DESC ON Table_53 (ID1, ID2);
-CREATE ASC INDEX I_Table_53_ID2_ID1_ASC ON Table_53 (ID2, ID1);
-CREATE DESC INDEX I_Table_53_ID2_ID1_DESC ON Table_53 (ID2, ID1);
+# Result: file opt_sort_by_index_11.sql is extracted into context['temp_directory']
 
-COMMIT;
-""",
- 'test_type': 'ISQL',
- 'test_script': """SET PLAN ON;
-SELECT
-  t53.ID2, t53.ID1
-FROM
-  Table_53 t53
-WHERE
-  t53.ID1 = 30 and t53.ID2 >= 5
-ORDER BY
-  t53.ID2 ASC, t53.ID1 ASC;""",
- 'expected_stdout': """PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC INDEX (I_TABLE_53_ID1_ID2_ASC))
+f_sql=open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.sql'), 'r')
+f_sql.close()
 
-         ID2          ID1
-============ ============
+f_log = open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.log'), 'w')
 
-           5           30
-           6           30
-           7           30
-           8           30
-           9           30
-"""
+subprocess.call( ["isql", dsn, "-i", f_sql.name],\
+                 stdout=f_log, \
+                 stderr=subprocess.STDOUT
+               )
+f_log.close()
+
+time.sleep(1)
+
+plan_25 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC INDEX (I_TABLE_53_ID1_ID2_ASC))'
+plan_30 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC)'
+with open(f_log.name) as f:
+    for line in f:
+        if engine.startswith('2.') and line.upper().startswith(plan_25):
+            print( 'EXPECTED' )
+        if engine.startswith('3.') and line.upper().startswith(plan_30):
+            print( 'EXPECTED' )
+f.close()
+
+if os.path.isfile(f_log.name):
+    os.remove(f_log.name)
+if os.path.isfile(f_sql.name):
+    os.remove(f_sql.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    EXPECTED
+  """,
+ 'expected_stderr': 
+  """
+  """
 }
 ]
 }
