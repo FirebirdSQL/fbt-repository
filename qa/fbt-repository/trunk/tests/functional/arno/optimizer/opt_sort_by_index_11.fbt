@@ -7,12 +7,16 @@
  """
    ORDER BY X, Y
    When more fields are given in ORDER BY clause try to use a compound index.
-   *** NB ***
-   Refactored 26-feb-2016: use common .zip archieve with queries for miscelan tests
-   related to optimizer set. For this test we extract from this zip only one file 
-   ('opt_sort_by_index_11.sql') and run ISQL with passing to it this file.
-   ISQL will ouput PLAN of execution and we store it into log.
-   Finally, we compare plan with expected string which differ depending on FB version.
+
+   ::::::::::::
+
+   Refactored 26-feb-2016: use common code for 2.5 and 3.0 with checking that 
+   actual plan matches expected one that is defined in differ variables: plan_25 & plan_30.
+   If actual plan will differ from expected message about this will contain BOTH plans
+   (actual and expected), otherwise only text about matching will appear - but NO plan content
+   because it depends on FB version.
+
+   Checked on WI-V2.5.6.26970, WI-V3.0.0.32358
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -26,7 +30,6 @@ import os
 import sys
 import time
 import subprocess
-import zipfile
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -38,13 +41,60 @@ for row in c1:
     engine = row[0]
 db_conn.close()
 
-zf = zipfile.ZipFile( os.path.join(context['files_location'],'functional.arno.optimizer.zip ') )
-zf.extract('opt_sort_by_index_11.sql', context['temp_directory'] )
-zf.close()
+sql_cmd='''
+    create or alter procedure pr_filltable_53 as begin end;
+    recreate table table_53 (
+        id1 int,
+        id2 int
+    );
+
+    set term ^;
+    create or alter procedure pr_filltable_53
+    as
+        declare fillid int;
+        declare fillid1 int;
+    begin
+        fillid = 1;
+        while (fillid <= 50) do
+        begin
+            fillid1 = (fillid / 10) * 10;
+            insert into table_53(id1, id2)
+            values(:fillid1, :fillid - :fillid1);
+            fillid = fillid + 1;
+        end
+        insert into table_53 (id1, id2) values (0, null);
+        insert into table_53 (id1, id2) values (null, 0);
+        insert into table_53 (id1, id2) values (null, null);
+    end
+    ^
+    set term ;^
+    commit;
+
+    execute procedure pr_filltable_53;
+    commit;
+
+    create asc index i_table_53_id1_asc on table_53 (id1);
+    create desc index i_table_53_id1_desc on table_53 (id1);
+    create asc index i_table_53_id2_asc on table_53 (id2);
+    create desc index i_table_53_id2_desc on table_53 (id2);
+    create asc index i_table_53_id1_id2_asc on table_53 (id1, id2);
+    create desc index i_table_53_id1_id2_desc on table_53 (id1, id2);
+    create asc index i_table_53_id2_id1_asc on table_53 (id2, id1);
+    create desc index i_table_53_id2_id1_desc on table_53 (id2, id1);
+    commit;
+
+    set planonly;
+
+    select t53.id2, t53.id1
+    from table_53 t53
+    where t53.id1 = 30 and t53.id2 >= 5
+    order by t53.id2 asc, t53.id1 asc;
+'''
 
 # Result: file opt_sort_by_index_11.sql is extracted into context['temp_directory']
 
-f_sql=open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.sql'), 'r')
+f_sql=open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.tmp'), 'w')
+f_sql.write(sql_cmd)
 f_sql.close()
 
 f_log = open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.log'), 'w')
@@ -61,10 +111,17 @@ plan_25 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC INDEX (I_TABLE_53_ID1_ID2_ASC)
 plan_30 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC)'
 with open(f_log.name) as f:
     for line in f:
-        if engine.startswith('2.') and line.upper().startswith(plan_25):
-            print( 'EXPECTED' )
-        if engine.startswith('3.') and line.upper().startswith(plan_30):
-            print( 'EXPECTED' )
+        if line.upper().startswith('PLAN ('):
+            if engine.startswith('2.'):
+                plan_expected=plan_25
+            else:
+                plan_expected=plan_30
+
+            # Remove trailing whitespaces and newline character:
+            if line.upper().rstrip() == plan_expected:
+                print( 'Actual plan plan coincides with the expected.' )
+            else:
+                print( 'Actual plan: '+line+' - differs from expected: '+plan_expected)
 f.close()
 
 if os.path.isfile(f_log.name):
@@ -75,7 +132,7 @@ if os.path.isfile(f_sql.name):
   """,
  'expected_stdout': 
   """
-    EXPECTED
+    Actual plan plan coincides with the expected.
   """,
  'expected_stderr': 
   """
