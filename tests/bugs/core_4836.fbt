@@ -49,15 +49,11 @@
   """,
  'expected_stdout': 
   """
-    /* Grant permissions for this database */
-    GRANT SELECT ON TEST TO PUBLIC
     GRANT UPDATE (TEXT) ON TEST TO USER TMP$C4836 WITH GRANT OPTION
     GRANT UPDATE (TEXT) ON TEST TO ROLE TMP$R4836 GRANTED BY TMP$C4836
-    
-    /* Grant permissions for this database */
-    GRANT SELECT ON TEST TO PUBLIC
     GRANT UPDATE (TEXT) ON TEST TO USER TMP$C4836 WITH GRANT OPTION
-  """
+  """,
+  'substitutions':[('^((?!C4836|R4836).)*$','')]
 }
 ]
 }
