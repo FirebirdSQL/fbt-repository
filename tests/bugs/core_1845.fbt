@@ -40,7 +40,18 @@ import os
 import subprocess
 import time
 
+c1 = db_conn.cursor()
+
+'''
+c1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in c1:
+    engine = row[0]
+db_conn.close()
+'''
+
 sql_create_user='''\
+  drop user tmp$c1845;
+  commit;
   create user tmp$c1845 password 'QweRtyUi';
   commit;
   connect '%s' user 'TMP$C1845' password 'QweRtyUi';
@@ -130,7 +141,9 @@ if os.path.isfile(fb_log.name):
   'substitutions':[
       ('SERVER VERSION:.*','SERVER VERSION:'),
       ('SERVER IMPLEMENTATION:.*','SERVER IMPLEMENTATION:'),
-      ('SERVICE MANAGER VERSION:.*','SERVICE MANAGER VERSION:')
+      ('SERVICE MANAGER VERSION:.*','SERVICE MANAGER VERSION:'),
+      ('Statement failed, SQLSTATE = HY000',''),
+      ('record not found for user.*','')
   ]
 }
 ]
