@@ -364,7 +364,7 @@ f_parallel_py=open( os.path.join(context['temp_directory'],'tmp_5034_after_detac
 f_parallel_py.write(f_parallel_txt)
 f_parallel_py.close()
 
-runProgram('Python',[f_parallel_py.name])
+runProgram('python',[f_parallel_py.name])
 
 time.sleep(2)
 
@@ -377,15 +377,28 @@ subprocess.call( ["isql", db_dsn, "-user", "SYSDBA", "-password", "masterkey", "
 f_top_slow_log.close()
 
 time.sleep(1)
-os.remove(f_top_slow_sql.name)
 
 with open(f_top_slow_log.name) as f:
     print(f.read())
 f.close()
 
+# Cleanup.
+f_list=[]
+f_list.append(f_top_slow_sql)
+f_list.append(f_top_slow_log)
+f_list.append(f_parallel_py)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+            os.remove(f_list[i].name)
+'''
+os.remove(f_top_slow_sql.name)
 os.remove(f_top_slow_log.name)
 os.remove(f_parallel_py.name)
-os.remove(f_parallel_py.name+'c')
+'''
+if os.path.isfile(f_parallel_py.name+'c'):
+    os.remove(f_parallel_py.name+'c')
+
   """,
  'expected_stdout': 
   """
