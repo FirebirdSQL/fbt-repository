@@ -116,8 +116,14 @@ import filecmp
 
 db_conn.close()
 
-zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_2115.zip') )
-zf.extractall( context['temp_directory'] )
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_2115.zip'), 'r' )
+for name in zf.namelist():
+  zo=zf.open(name, 'rU')
+  fn=open( os.path.join(context['temp_directory'],name), 'w')
+  fn.write( zo.read().replace('\\r','') )
+  fn.close()
+
+### do NOT: preserves Carriage Return character from Windows: zf.extractall( context['temp_directory'] )
 zf.close()
 
 # Result: files 
@@ -206,9 +212,8 @@ zf.close()
 #    
 #    :end
 
-
 sql_long_plans_qry=os.path.join(context['temp_directory'],'tmp_core_2115_queries_with_long_plans.sql')
-sql_long_plans_chk=os.path.join(context['temp_directory'],'tmp_core_2115_check_txt_of_long_plans.log ')
+sql_long_plans_chk=os.path.join(context['temp_directory'],'tmp_core_2115_check_txt_of_long_plans.log')
 
 sql_long_plans_res=open( os.path.join(context['temp_directory'],'tmp_core_2115_current_txt_of_long_plans.log'), 'w')
 
@@ -229,6 +234,7 @@ if os.path.isfile(sql_long_plans_chk):
 
 if os.path.isfile(sql_long_plans_res.name):
     os.remove(sql_long_plans_res.name)
+
   """,
  'expected_stdout': 
   """
