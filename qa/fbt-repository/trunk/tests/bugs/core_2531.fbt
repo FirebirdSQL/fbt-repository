@@ -104,7 +104,7 @@ f_python_run=codecs.open( os.path.join(context['temp_directory'],'tmp_2531_run.p
 f_python_run.write(f_python_txt)
 f_python_run.close()
 
-runProgram('Python',[f_python_run.name])
+runProgram('python',[f_python_run.name])
 time.sleep(1)
 
 f_python_log=os.path.join( context['temp_directory'], 'tmp_2531_w1252.log')
