@@ -123,12 +123,12 @@ with open(f_log.name) as f:
         else:
             print(line )
 f.close()
-'''
+
 if os.path.isfile(f_log.name):
     os.remove(f_log.name)
 if os.path.isfile(f_sql.name):
     os.remove(f_sql.name)
-'''
+
   """,
  'expected_stdout': 
   """
