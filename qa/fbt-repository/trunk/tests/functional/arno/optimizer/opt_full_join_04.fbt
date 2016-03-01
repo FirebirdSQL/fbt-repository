@@ -3,92 +3,179 @@
 'qmid': 'functional.arno.optimizer.opt_full_join_04',
 'tracker_id': '',
 'title': 'FULL OUTER JOIN,  list all values, but filtered in WHERE clause',
-'description': """TableX FULL OUTER JOIN TableY with relation in the ON clause.
-Three tables are used, where 1 table (RC) holds references to the two other tables (R and C). The two tables R and C contain both 1 value that isn't inside RC.""",
+'description': 
+ """
+   TableX FULL OUTER JOIN TableY with relation in the ON clause.
+   Three tables are used, where 1 table (RC) holds references to the two other tables (R and C).
+   The two tables R and C contain both 1 value that isn't inside RC.
+   =====
+   NB: 'UNION ALL' is used here, so PLAN for 2.5 will be of TWO separate rows.
+   =====
+   Refactored 01-mar-2016. Checked on: WI-V2.5.6.26970, WI-V3.0.0.32366
+ """,
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'init_script': """CREATE TABLE Relations (
-  RelationID INTEGER,
-  RelationName VARCHAR(35)
-);
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import time
+import subprocess
 
-CREATE TABLE Categories (
-  CategoryID INTEGER,
-  Description VARCHAR(20)
-);
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
-CREATE TABLE RelationCategories (
-  RelationID INTEGER,
-  CategoryID INTEGER
-);
+c1 = db_conn.cursor()
 
-COMMIT;
+c1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in c1:
+    engine = row[0]
+db_conn.close()
 
-INSERT INTO Relations (RelationID, RelationName) VALUES (1, 'Diving Snorkel Shop');
-INSERT INTO Relations (RelationID, RelationName) VALUES (2, 'Bakery garbage');
-INSERT INTO Relations (RelationID, RelationName) VALUES (3, 'Racing turtle');
-INSERT INTO Relations (RelationID, RelationName) VALUES (4, 'Folding air-hook shop');
+sql_cmd='''
+    create table relations (
+      relationid integer,
+      relationname varchar(35)
+    );
+    
+    create table categories (
+      categoryid integer,
+      description varchar(20)
+    );
+    
+    create table relationcategories (
+      relationid integer,
+      categoryid integer
+    );
+    
+    commit;
+    
+    insert into relations (relationid, relationname) values (1, 'diving snorkel shop');
+    insert into relations (relationid, relationname) values (2, 'bakery garbage');
+    insert into relations (relationid, relationname) values (3, 'racing turtle');
+    insert into relations (relationid, relationname) values (4, 'folding air-hook shop');
+    
+    insert into categories (categoryid, description) values (1, 'relation');
+    insert into categories (categoryid, description) values (2, 'debtor');
+    insert into categories (categoryid, description) values (3, 'creditor');
+    insert into categories (categoryid, description) values (4, 'newsletter');
+    
+    insert into relationcategories (relationid, categoryid) values (1, 1);
+    insert into relationcategories (relationid, categoryid) values (2, 1);
+    insert into relationcategories (relationid, categoryid) values (3, 1);
+    insert into relationcategories (relationid, categoryid) values (1, 2);
+    insert into relationcategories (relationid, categoryid) values (2, 2);
+    insert into relationcategories (relationid, categoryid) values (1, 3);
+    
+    commit;
+    
+    -- normally these indexes are created by the primary/foreign keys,
+    -- but we don't want to rely on them for this test
+    create unique asc index pk_relations on relations (relationid);
+    create unique asc index pk_categories on categories (categoryid);
+    create unique asc index pk_relationcategories on relationcategories (relationid, categoryid);
+    create asc index fk_rc_relations on relationcategories (relationid);
+    create asc index fk_rc_categories on relationcategories (categoryid);
 
-INSERT INTO Categories (CategoryID, Description) VALUES (1, 'Relation');
-INSERT INTO Categories (CategoryID, Description) VALUES (2, 'Debtor');
-INSERT INTO Categories (CategoryID, Description) VALUES (3, 'Creditor');
-INSERT INTO Categories (CategoryID, Description) VALUES (4, 'Newsletter');
+    commit;
 
-INSERT INTO RelationCategories (RelationID, CategoryID) VALUES (1, 1);
-INSERT INTO RelationCategories (RelationID, CategoryID) VALUES (2, 1);
-INSERT INTO RelationCategories (RelationID, CategoryID) VALUES (3, 1);
-INSERT INTO RelationCategories (RelationID, CategoryID) VALUES (1, 2);
-INSERT INTO RelationCategories (RelationID, CategoryID) VALUES (2, 2);
-INSERT INTO RelationCategories (RelationID, CategoryID) VALUES (1, 3);
+    set plan on;
+    set list on;
 
-COMMIT;
+    select
+        r.relationname,
+        rc.relationid,
+        rc.categoryid,
+        c.description
+    from
+        relations r
+        full join relationcategories rc on (rc.relationid = r.relationid)
+        full join categories c on (c.categoryid = rc.categoryid)
+    where
+        rc.categoryid is null and c.categoryid >= 1
 
-/* Normally these indexes are created by the primary/foreign keys,
-   but we don't want to rely on them for this test */
-CREATE UNIQUE ASC INDEX PK_Relations ON Relations (RelationID);
-CREATE UNIQUE ASC INDEX PK_Categories ON Categories (CategoryID);
-CREATE UNIQUE ASC INDEX PK_RelationCategories ON RelationCategories (RelationID, CategoryID);
-CREATE ASC INDEX FK_RC_Relations ON RelationCategories (RelationID);
-CREATE ASC INDEX FK_RC_Categories ON RelationCategories (CategoryID);
+    UNION ALL --- :::::::   U N I O N    A L L  :::::::
 
-COMMIT;
-""",
- 'test_type': 'ISQL',
- 'test_script': """SET PLAN ON;
-SELECT
-  r.RelationName,
-  rc.RelationID,
-  rc.CategoryID,
-  c.Description
-FROM
-  Relations r
-  FULL JOIN RelationCategories rc ON (rc.RelationID = r.RelationID)
-  FULL JOIN Categories c ON (c.CategoryID = rc.CategoryID)
-WHERE
-  rc.CategoryID IS NULL and c.CategoryID >= 1
-UNION ALL
-SELECT
-  r.RelationName,
-  rc.RelationID,
-  rc.CategoryID,
-  c.Description
-FROM
-  Relations r
-  FULL JOIN RelationCategories rc ON (rc.RelationID = r.RelationID)
-  FULL JOIN Categories c ON (c.CategoryID = rc.CategoryID)
-WHERE
-  rc.RelationID IS NULL and r.RelationID >= 1;""",
- 'expected_stdout': """PLAN JOIN (C INDEX (PK_CATEGORIES), JOIN (RC NATURAL, R NATURAL))
-PLAN JOIN (C NATURAL, JOIN (RC NATURAL, R INDEX (PK_RELATIONS)))
+    select
+        r.relationname,
+        rc.relationid,
+        rc.categoryid,
+        c.description
+    from
+        relations r
+        full join relationcategories rc on (rc.relationid = r.relationid)
+        full join categories c on (c.categoryid = rc.categoryid)
+    where
+        rc.relationid is null and r.relationid >= 1;
+'''
 
-RELATIONNAME                          RELATIONID   CATEGORYID DESCRIPTION
-=================================== ============ ============ ====================
+f_sql=open( os.path.join(context['temp_directory'],'tmp_opt_full_join_04.tmp'), 'w')
+f_sql.write(sql_cmd)
+f_sql.close()
 
-<null>                                    <null>       <null> Newsletter
-Folding air-hook shop                     <null>       <null> <null>
-"""
+f_log = open( os.path.join(context['temp_directory'],'tmp_opt_full_join_04.log'), 'w')
+
+subprocess.call( ["isql", dsn, "-i", f_sql.name],
+                 stdout=f_log,
+                 stderr=subprocess.STDOUT
+               )
+f_log.close()
+time.sleep(1)
+
+# NB: plan for 2.5 contains TWO rows!
+plan_25_1 = 'PLAN JOIN (C NATURAL, JOIN (RC NATURAL, R INDEX (PK_RELATIONS)))'
+plan_25_2 = 'PLAN JOIN (C INDEX (PK_CATEGORIES), JOIN (RC NATURAL, R NATURAL))'
+
+# plan for 3.0 contains only ONE row:
+plan_30_1 = 'PLAN (JOIN (JOIN (C INDEX (PK_CATEGORIES), JOIN (JOIN (RC NATURAL, R INDEX (PK_RELATIONS)), JOIN (R NATURAL, RC INDEX (FK_RC_RELATIONS)))), JOIN (JOIN (JOIN (RC NATURAL, R INDEX (PK_RELATIONS)), JOIN (R NATURAL, RC INDEX (FK_RC_RELATIONS))), C INDEX (PK_CATEGORIES))), JOIN (JOIN (C NATURAL, JOIN (JOIN (RC NATURAL, R INDEX (PK_RELATIONS)), JOIN (R INDEX (PK_RELATIONS), RC INDEX (FK_RC_RELATIONS)))), JOIN (JOIN (JOIN (RC NATURAL, R INDEX (PK_RELATIONS)), JOIN (R INDEX (PK_RELATIONS), RC INDEX (FK_RC_RELATIONS))), C NATURAL)))'
+plan_30_2 = ''
+
+with open(f_log.name) as f:
+    for line in f:
+        if line.upper().startswith('PLAN '):
+            if engine.startswith('2.'):
+                plan_expected_1=plan_25_1
+                plan_expected_2=plan_25_2
+            else:
+                plan_expected_1=plan_30_1
+                plan_expected_2=plan_30_2
+
+            # Remove trailing whitespaces and newline character:
+            if line.upper().rstrip() == plan_expected_1 or line.upper().rstrip() == plan_expected_2:
+                if line.upper().rstrip() == plan_expected_1:
+                    print( 'Actual plan plan coincides with the expected.' )
+            else:
+                print( 'Actual plan: '+line+' - differs from expected: '+plan_expected)
+        else:
+            print(line )
+f.close()
+
+# Cleanup
+#########
+
+if os.path.isfile(f_log.name):
+    os.remove(f_log.name)
+if os.path.isfile(f_sql.name):
+    os.remove(f_sql.name)
+
+  """,
+ 'expected_stdout': 
+  """
+    Actual plan plan coincides with the expected.
+
+    RELATIONNAME                    <null>
+    RELATIONID                      <null>
+    CATEGORYID                      <null>
+    DESCRIPTION                     newsletter
+    RELATIONNAME                    folding air-hook shop
+    RELATIONID                      <null>
+    CATEGORYID                      <null>
+    DESCRIPTION                     <null>
+  """
 }
 ]
 }
