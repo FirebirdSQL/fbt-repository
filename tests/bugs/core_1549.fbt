@@ -117,7 +117,7 @@ Fetches = 28217
                 -> Bitmap
                     -> Index "T_ID" Range Scan (full match)
     Select Expression
-        ->  Nested Loop Join (inner)
+        -> Nested Loop Join (inner)
             -> Filter
                 -> Table "T" as "A" Full Scan
             -> Filter
@@ -139,7 +139,7 @@ Fetches = 28217
                 -> Bitmap
                     -> Index "T_ID" Range Scan (full match)
     Select Expression
-        ->  Nested Loop Join (inner)
+        -> Nested Loop Join (inner)
             -> Filter
                 -> Table "T" as "A T1" Full Scan
             -> Filter
