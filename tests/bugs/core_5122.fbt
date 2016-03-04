@@ -1,0 +1,79 @@
+{
+'id': 'bugs.core_5122',
+'qmid': None,
+'tracker_id': 'CORE-5122',
+'title': 'Expression index may not be used by the optimizer if created and used in different connection charsets',
+'description': 
+ """
+   Confirmed:
+      wrong plan (natural scan) on: WI-V3.0.0.32358.
+      plan with index usage on:     WI-T4.0.0.32371, WI-V2.5.6.26979.
+ """,
+'min_versions': '2.5.6',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import subprocess
+import time
+import fdb
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+con1 = fdb.connect(dsn=dsn, user=user_name, password=user_password, charset='iso8859_1')
+
+cur1=con1.cursor()
+cur1.execute("recreate table test(s varchar(10))")
+cur1.execute("create index test_calc_s on test computed by ( 'zxc' || s )")
+con1.commit()
+con1.close()
+
+#con2 = fdb.connect(dsn=dsn, user=user_name, password=user_password, charset='utf8')
+
+sql_data_cmd=open( os.path.join(context['temp_directory'],'tmp_data_5122.sql'), 'w')
+sql_data_cmd.write("set planonly; select * from test where 'zxc' || s starting with 'qwe';")
+sql_data_cmd.close()
+
+sql_data_log=open( os.path.join(context['temp_directory'],'tmp_data_5122.log'), 'w')
+
+subprocess.call(["isql", dsn, "-n", "-ch", "utf8", "-i", sql_data_cmd.name], stdout=sql_data_log, stderr=subprocess.STDOUT)
+sql_data_log.close()
+
+time.sleep(1)
+
+with open(sql_data_log.name) as f:
+    print(f.read())
+f.close()
+
+# Cleanup.
+
+f_list=[]
+f_list.append(sql_data_log)
+f_list.append(sql_data_cmd)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+            os.remove(f_list[i].name)
+
+
+  """,
+ 'expected_stdout': 
+  """
+    PLAN (TEST INDEX (TEST_CALC_S))
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
