@@ -43,6 +43,9 @@ from subprocess import Popen
 #import signal
 import time
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
 
 
@@ -50,16 +53,16 @@ db_conn.close()
 # Move database to FW = OFF in order to increase speed of insertions and output its header info:
 
 fwoff_log=open( os.path.join(context['temp_directory'],'tmp_fw_off_4855.log'), 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
-                  "action_properties",\
-                  "prp_write_mode", "prp_wm_async",\
-                  "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb" ],\
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+                  "action_properties",
+                  "prp_write_mode", "prp_wm_async",
+                  "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb" ],
                   stdout=fwoff_log, stderr=subprocess.STDOUT)
 
 fwoff_log.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
-                 "action_db_stats", \
-                 "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb", "sts_hdr_pages"],\
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "action_db_stats",
+                 "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb", "sts_hdr_pages"],
                  stdout=fwoff_log, stderr=subprocess.STDOUT)
 fwoff_log.close()
 
@@ -97,12 +100,18 @@ f_heavy_dml_cmd.close()
 # remains empty (this table will get one row in separate ISQL session, see below p_stopper):
 
 f_heavy_dml_log=open( os.path.join(context['temp_directory'],'tmp_isql_4855.log'), 'w')
-p_heavy_dml = Popen([ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_heavy_dml_cmd.name ], stdout=f_heavy_dml_log, stderr=subprocess.STDOUT)
+p_heavy_dml = Popen([ "isql" , dsn, "-i", f_heavy_dml_cmd.name ], stdout=f_heavy_dml_log, stderr=subprocess.STDOUT)
 
 # Here we have to wait for sure that ISQL could establish its connect and starts DML 
 # before we will run online-validation:
 
-time.sleep(2)
+
+# 16.03.2016: increased time delay because under some circumstances ISQL could not establish connect
+# and this lead validation to start verify table TEST (which was not expected).
+# Detected many times on CS/SC.
+
+time.sleep(4)
+
 
 #####################################################################
 # Doing online-validation.
@@ -112,9 +121,9 @@ val_log=open( os.path.join(context['temp_directory'],'tmp_onval_4855.log'), 'w')
 
 val_log.write('Iteration #1:\\n')
 val_log.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_validate","val_lock_timeout","1", \
-                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],\
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "action_validate","val_lock_timeout","1",
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],
                  stdout=val_log, stderr=subprocess.STDOUT)
 
 time.sleep(2)
@@ -124,9 +133,9 @@ time.sleep(2)
 val_log.seek(0,2)
 val_log.write('\\n\\nIteration #2:\\n')
 val_log.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_validate","val_lock_timeout","1", \
-                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],\
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "action_validate","val_lock_timeout","1",
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],
                  stdout=val_log, stderr=subprocess.STDOUT)
 '''
 time.sleep(2)
@@ -134,9 +143,9 @@ time.sleep(2)
 val_log.seek(0,2)
 val_log.write('\\n\\nIteration #3:\\n')
 val_log.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_validate","val_lock_timeout","1", \
-                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],\
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "action_validate","val_lock_timeout","1",
+                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],
                  stdout=val_log, stderr=subprocess.STDOUT)
 '''
 val_log.close()
@@ -149,7 +158,7 @@ f_stopper_cmd=open( os.path.join(context['temp_directory'],'tmp_stop_4855.sql'),
 f_stopper_cmd.write('insert into stop(id) values(1); commit;')
 f_stopper_cmd.close()
 
-p_stopper = subprocess.call([ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_stopper_cmd.name])
+p_stopper = subprocess.call([ "isql" , dsn, "-i", f_stopper_cmd.name])
 
 # Stop working ISQL:
 p_heavy_dml.terminate()
