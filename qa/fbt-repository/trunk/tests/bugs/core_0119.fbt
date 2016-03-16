@@ -1,0 +1,33 @@
+{
+'id': 'bugs.core_0119',
+'qmid': None,
+'tracker_id': 'CORE-0119',
+'title': "numeric div in dialect 3 mangles data",
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- Stdout and stderr are OK in WI-V1.5.6.5026 and all above.
+    -- Number of digits in mantiss is the same both on WI- and LI-.
+    set list on;
+    select cast (-70000 as numeric (18,5)) / cast (1.95583 as numeric (18,5)) as result from rdb$database;
+    select (-4611686018427387904)/-0.5 from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    RESULT                          -35790.4316837350
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 22003
+    arithmetic exception, numeric overflow, or string truncation
+    -numeric value is out of range
+  """
+}
+]
+}
