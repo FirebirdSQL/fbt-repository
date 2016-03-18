@@ -4,10 +4,10 @@
 'tracker_id': 'CORE-0014',
 'title': "Trigger do it wrong",
 'description': 'Computed by columns inside triggers always=NULL',
-'min_versions': '2.5',
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.5.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 
