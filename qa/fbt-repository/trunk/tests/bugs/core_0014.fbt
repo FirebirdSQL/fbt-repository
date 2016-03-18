@@ -3,7 +3,7 @@
 'qmid': None,
 'tracker_id': 'CORE-0014',
 'title': "Trigger do it wrong",
-'description': '',
+'description': 'Computed by columns inside triggers always=NULL',
 'min_versions': '2.5',
 'versions': [
 {
