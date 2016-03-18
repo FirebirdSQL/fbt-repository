@@ -1,0 +1,116 @@
+{
+'id': 'bugs.core_0053',
+'qmid': None,
+'tracker_id': 'CORE-0053',
+'title': "FIRST 1 vs ORDER DESC vs explicit plan (ODS11)",
+'description': '',
+'min_versions': '2.5.1',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'mon-stat-gathering-2_5.fbk',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+
+    create or alter procedure gendata as begin end;
+    recreate table test (F1 integer, F2 date);
+    commit;
+      
+    set term ^;
+    create or alter procedure GenData as
+      declare i integer;
+    begin
+      i= 0;
+      while (i < 100000) do begin
+        insert into test(F1, F2) values (:i, 'yesterday');
+        i= i+1;
+      end
+    end
+    ^
+    set term ;^
+    commit;
+      
+    execute procedure gendata;
+    commit;
+
+    create desc index test_f1_f2 on test(F1, F2);
+    commit;
+
+    execute procedure sp_truncate_stat;
+    commit;
+
+    -- #################### MEASURE-1 #################
+    
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+
+    set plan on;
+    select first 1 f1
+    from test t
+    where t.f1=17 and f2 <= 'today'
+    plan (T order test_f1_f2)
+    order by F1 desc, F2 desc;
+    set plan off;
+
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+ 
+    -- #################### MEASURE-2 #################
+
+
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+  
+    set plan on;
+    select first 1 f1
+    from test t
+    where t.f1=17 and f2 <= 'today'
+    plan (t order test_f1_f2 index (test_f1_f2))
+    order by F1 desc, F2 desc;
+    set plan off;
+
+    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
+    commit;
+
+    -- #################### ANALYZING RESULTS #################
+
+    set list on;
+    select 
+        iif( idx_1 / idx_2 > max_ratio, 'PLAN (T ORDER <idx_name>) is slow! Ratio > ' || max_ratio,
+             iif( idx_2 / idx_1 > max_ratio, 'PLAN (T ORDER <idx_name> INDEX(<idx_name>)) is slow! Ratio > '|| max_ratio,
+                                             'PERFORMANCE IS THE SAME.'
+                )
+           ) result
+    from (
+        select 
+            cast(min(idx_1) as double precision) as idx_1, 
+            cast( min(idx_2)  as double precision) as idx_2,
+            3.00 as max_ratio
+        from (
+            select iif(rowset=1, indexed_reads, null) idx_1, iif(rowset=2, indexed_reads, null) idx_2
+            from v_agg_stat
+        ) g
+    );
+    -- Difference of indexed reads that is reported by MON$ tables:
+    -- on 2.5 = {5, 5}, on 3.0 = {5, 3} ==> ratio 3.00 should be always enough.
+  """,
+ 'expected_stdout': 
+  """
+    PLAN (T ORDER TEST_F1_F2)
+    F1                              17
+    PLAN (T ORDER TEST_F1_F2 INDEX (TEST_F1_F2))
+    F1                              17
+    RESULT                          PERFORMANCE IS THE SAME.
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
+
+
