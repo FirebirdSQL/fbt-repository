@@ -1,0 +1,87 @@
+{
+'id': 'bugs.core_0037',
+'qmid': None,
+'tracker_id': 'CORE-0037',
+'title': "Navigation vs IS NULL vs compound index",
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set bail on;
+    recreate view v1 as select 1 k from rdb$database;
+    recreate view v2 as select 1 k from rdb$database;
+    commit;
+
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop function udf_frac';
+    when any do 
+        begin end
+    end
+    ^
+    set term ;^
+    commit;
+
+    declare external function udf_frac
+        double precision
+        returns double precision by value
+        entry_point 'IB_UDF_frac' module_name 'ib_udf';
+
+    commit;
+
+    recreate table t1
+    (
+      t1f1 integer not null primary key,
+      t1f2 varchar(30)
+    );
+
+    recreate table t2
+    (
+      t2f1 integer not null primary key,
+      t2f2 integer not null,
+      t2f3 varchar(30)
+    );
+
+    create index t2f2_ndx on t2(t2f2);
+
+    recreate view v1 as select * from t1 where udf_frac( mod(t1f1,100) / 100.000) > 0.03;
+    recreate view v2 as select * from t2 where udf_frac( mod(t2f1,100) / 100.000) > 0.03;
+
+    insert into t1(t1f1, t1f2) values (1, '1');
+    insert into t1(t1f1, t1f2) values (2, '2');
+    insert into t1(t1f1, t1f2) values (3, '3');
+    insert into t1(t1f1, t1f2) values (104, '104');
+    insert into t1(t1f1, t1f2) values (105, '205');
+    insert into t1(t1f1, t1f2) values (106, '106');
+
+    insert into t2(t2f1, t2f2, t2f3) values (1, 1, '1');
+    insert into t2(t2f1, t2f2, t2f3) values (2, 2, '2');
+    insert into t2(t2f1, t2f2, t2f3) values (3, 3, '3');
+    insert into t2(t2f1, t2f2, t2f3) values (104, 104, '104');
+    insert into t2(t2f1, t2f2, t2f3) values (105, 105, '105');
+    insert into t2(t2f1, t2f2, t2f3) values (106, 106, '106');
+
+    set count on;
+
+    select x.*, y.*, udf_frac( mod(t2f1,100) / 100.000)
+    from v1 x, v2 y
+    where x.t1f1 = y.t2f2 
+    and udf_frac( mod(t2f1,100) / 100.000) < 0.03
+    ;
+  """,
+ 'expected_stdout': 
+  """
+    Records affected: 0
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
