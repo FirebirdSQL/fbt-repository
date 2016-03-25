@@ -1,0 +1,51 @@
+{
+'id': 'bugs.core_0058',
+'qmid': None,
+'tracker_id': 'CORE-0058',
+'title': "WHERE CURRENT OF doesn't work",
+'description': '',
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table test (a integer not null, constraint test_pk primary key (a));
+    insert into test (a) values (1);
+    insert into test (a) values (2);
+    insert into test (a) values (3);
+    insert into test (a) values (4);
+    commit;
+
+    set term ^;
+    create procedure test_upd(d integer) as 
+        declare c cursor for (
+            select a from test
+        );
+    begin
+        open c;
+        update test set a = a + :d 
+        where current of c;
+        close c;
+    end
+    ^
+    set term ;^
+    commit;
+
+    execute procedure test_upd (2);
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    no current record for fetch operation
+    -At procedure 'TEST_UPD' line: 7, col: 9
+  """,
+  'substitutions':[('line: *', '')]
+}
+]
+}
