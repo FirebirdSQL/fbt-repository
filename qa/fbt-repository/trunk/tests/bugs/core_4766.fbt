@@ -41,6 +41,8 @@
     set term ;^
     commit; -- this lead to first "SQLSTATE = 28000 / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
 
+    ROLLBACK; -- [###NB###] Added 01-apr-2016; explanation see in letter by dimitr, 31-mar-2016 17:23
+
     set term ^;
     execute block as
     begin
@@ -52,6 +54,12 @@
     -- since  that  build: "find/delete record error / -no permission for DELETE access to TABLE"
     ^
     set term ;^
+    
+    -- Attention: see above ROLLBACK labaled as [###NB###]: without that rollback following
+    -- COMMIT will again try to ADD user boss/123 and only after it - drop user statement,
+    -- and this will lead to fail again with error about adding (not deleting) user.
+    -- Explanation see in letter by dimitr, 31-mar-2016 17:23
+
     commit; -- this lead to FB crash and message about AV apperaed in firebird.log (checked on WI-T3.0.0.31801)
 
     rollback;
