@@ -155,32 +155,24 @@
  'expected_stderr': 
   """
     There is no privilege granted in this database
-    Statement failed, SQLSTATE = 42000
-    INSERT operation is not allowed for system table RDB$CHARACTER_SETS
-    
-    Statement failed, SQLSTATE = 42000
-    INSERT operation is not allowed for system table RDB$COLLATIONS
-    
-    Statement failed, SQLSTATE = 42000
-    INSERT operation is not allowed for system table RDB$DATABASE
-    
-    Statement failed, SQLSTATE = 42000
-    UPDATE operation is not allowed for system table RDB$COLLATIONS
-    
-    Statement failed, SQLSTATE = 42000
-    UPDATE operation is not allowed for system table RDB$CHARACTER_SETS
-    
-    Statement failed, SQLSTATE = 42000
-    UPDATE operation is not allowed for system table RDB$DATABASE
-    
-    Statement failed, SQLSTATE = 42000
-    DELETE operation is not allowed for system table RDB$COLLATIONS
-    
-    Statement failed, SQLSTATE = 42000
-    DELETE operation is not allowed for system table RDB$CHARACTER_SETS
-    
-    Statement failed, SQLSTATE = 42000
-    DELETE operation is not allowed for system table RDB$DATABASE
+    Statement failed, SQLSTATE = 28000
+    no permission for INSERT access to TABLE RDB$CHARACTER_SETS
+    Statement failed, SQLSTATE = 28000
+    no permission for INSERT access to TABLE RDB$COLLATIONS
+    Statement failed, SQLSTATE = 28000
+    no permission for INSERT access to TABLE RDB$DATABASE
+    Statement failed, SQLSTATE = 28000
+    no permission for UPDATE access to TABLE RDB$COLLATIONS
+    Statement failed, SQLSTATE = 28000
+    no permission for UPDATE access to TABLE RDB$CHARACTER_SETS
+    Statement failed, SQLSTATE = 28000
+    no permission for UPDATE access to TABLE RDB$DATABASE
+    Statement failed, SQLSTATE = 28000
+    no permission for DELETE access to TABLE RDB$COLLATIONS
+    Statement failed, SQLSTATE = 28000
+    no permission for DELETE access to TABLE RDB$CHARACTER_SETS
+    Statement failed, SQLSTATE = 28000
+    no permission for DELETE access to TABLE RDB$DATABASE
   """
 }
 ]
