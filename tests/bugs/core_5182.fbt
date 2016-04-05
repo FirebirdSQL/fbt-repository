@@ -1,0 +1,64 @@
+{
+'id': 'bugs.core_5182',
+'qmid': None,
+'tracker_id': 'CORE-5182',
+'title': "Inconsistent effects of subsequent statement execution if failing during record refetch",
+'description': '',
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- Confirmed: error messages are the same for every DELETE statement since 4.0.0.119; 3.0.0.32440.
+
+    recreate table q (f1 int);
+
+    set term ^;
+    create or alter trigger q_ad for q
+    active after delete position 0
+    as
+    begin
+      delete from q;
+    end
+    ^ set term ;^
+
+    commit;
+
+    insert into q (f1) values (1);
+    insert into q (f1) values (2);
+    insert into q (f1) values (3);
+    insert into q (f1) values (4);
+
+    commit;
+
+    delete from q;
+    delete from q;
+    delete from q;
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+   Statement failed, SQLSTATE = 42000
+   no current record for fetch operation
+   -At trigger 'Q_AD' line: 5, col: 3
+   At trigger 'Q_AD' line: 5, col: 3
+
+   Statement failed, SQLSTATE = 42000
+   no current record for fetch operation
+   -At trigger 'Q_AD' line: 5, col: 3
+   At trigger 'Q_AD' line: 5, col: 3
+
+   Statement failed, SQLSTATE = 42000
+   no current record for fetch operation
+   -At trigger 'Q_AD' line: 5, col: 3
+   At trigger 'Q_AD' line: 5, col: 3
+  """,
+  'substitutions':[("At trigger 'Q_AD' line: [0-9]+, col: [0-9]+", "At trigger 'Q_AD'")]
+}
+]
+}
