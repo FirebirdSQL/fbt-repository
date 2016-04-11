@@ -49,8 +49,8 @@ There are no user-defined collations in this database
 There are no user-defined collations in this database
   """,
   'substitutions': [
-    ('COLL-VERSION=58\.0\.6\.[0-9][0-9]','COLL-VERSION=xx'),
-    ('COLL-VERSION=137\.51','COLL-VERSION=xx')
+    ('COLL-VERSION=\d+\.\d+\.\d+\.\d+','COLL-VERSION=xx'),
+    ('COLL-VERSION=\d+\.\d+','COLL-VERSION=xx')
   ]
 }
 ]
