@@ -43,9 +43,9 @@
   """
     Statement failed, SQLSTATE = 42000
     no current record for fetch operation
-    -At procedure 'TEST_UPD' line: 7, col: 9
+    -At procedure 'TEST_UPD'
   """,
-  'substitutions':[('line: *', '')]
+  'substitutions':[('line: [0-9]+, col: [0-9]+', '')]
 }
 ]
 }
