@@ -96,14 +96,32 @@
     set list on;
     set count on;
 
-    select * from ulaz_master;
+    select 
+         ulzid, datum, broj_racuna, dobid, dobavljac, napid, nacin_placanja, datumprispeca
+        ,cast(vrednost as numeric(10,2)) as vrednost
+        ,cast(rvrednost as numeric(10,2)) as rvrednost
+        ,status
+    from ulaz_master;
 
     insert into
         ulaz_detalji(ulzid, artid, artikal, kolicina, cena, rabat, vratio)
               values(1000,  1000,  'liste',   19,        7,    30,    0);
 
-    select * from ulaz_detalji;
-    select * from ulaz_master;
+    select
+         ulzid, artid, artikal, kolicina,
+         cast(cena as numeric(12,2)) as cena,
+         rabat, 
+         cast(ukupno as numeric(12,2)) as ukupno,
+         vratio
+    from ulaz_detalji;
+
+    select 
+         ulzid, datum, broj_racuna, dobid, dobavljac, napid, nacin_placanja, datumprispeca
+        ,cast(vrednost as numeric(10,2)) as vrednost
+        ,cast(rvrednost as numeric(10,2)) as rvrednost
+        ,status
+    from ulaz_master;
+
   """,
  'expected_stdout':
   """
@@ -115,8 +133,8 @@
     NAPID                           32101
     NACIN_PLACANJA                  asd-fgh-jkl
     DATUMPRISPECA                   <null>
-    VREDNOST                        0.000000000000000
-    RVREDNOST                       0.000000000000000
+    VREDNOST                        0.00
+    RVREDNOST                       0.00
     STATUS                          0
 
 
@@ -127,9 +145,9 @@
     ARTID                           1000
     ARTIKAL                         liste
     KOLICINA                        19
-    CENA                            7.000000000000000
+    CENA                            7.00
     RABAT                           30
-    UKUPNO                          133.0000000000000
+    UKUPNO                          133.00
     VRATIO                          0
 
 
@@ -143,18 +161,15 @@
     NAPID                           32101
     NACIN_PLACANJA                  asd-fgh-jkl
     DATUMPRISPECA                   <null>
-    VREDNOST                        133.0000000000000
-    RVREDNOST                       93.09999999999999
+    VREDNOST                        133.00
+    RVREDNOST                       93.10
     STATUS                          0
 
     Records affected: 1
   """,
  'expected_stderr':
   """
-  """,
-  'substitutions': [
-    ('0\.0000000000000000','0\.000000000000000')
-  ]
+  """
 }
 ]
 }
