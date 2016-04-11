@@ -80,6 +80,8 @@ show table td;
 show domain dm_ids;
 show domain dm_nums;
 show collation nums_coll;
+-- oel64: coll-version=49.192.5.41
+-- winxp: coll-version=58.0.6.50
   """,
  'expected_stdout':
   """
@@ -102,8 +104,8 @@ DM_NUMS                         VARCHAR(20) CHARACTER SET UTF8 Nullable
 NUMS_COLL, CHARACTER SET UTF8, FROM EXTERNAL ('UNICODE'), PAD SPACE, CASE INSENSITIVE, 'COLL-VERSION=xx;NUMERIC-SORT=1'
   """,
   'substitutions': [
-    ('COLL-VERSION=58\.0\.6\.[0-9][0-9]','COLL-VERSION=xx'),
-    ('COLL-VERSION=137\.51','COLL-VERSION=xx')
+    ('COLL-VERSION=\d+\.\d+\.\d+\.\d+','COLL-VERSION=xx'),
+    ('COLL-VERSION=\d+\.\d+','COLL-VERSION=xx')
   ]
 }
 ]
