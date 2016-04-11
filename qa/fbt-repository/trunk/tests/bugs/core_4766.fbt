@@ -78,7 +78,8 @@
   """,
   'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'),
                    ('TABLE PLG\$SRP_VIEW', 'TABLE PLG'),
-                   ('find/delete', 'delete' ]
+                   ('TABLE PLG\$USERS', 'TABLE PLG'),
+                  ]
 }
 ]
 }
