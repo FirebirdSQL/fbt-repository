@@ -10,7 +10,7 @@
  'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 
+ 'test_script':
   """
     -- Works OK on 1.5.6 and up to 4.0.0.
     create domain dom_datum_vreme as timestamp not null;
@@ -59,10 +59,10 @@
     as
     begin
 
-        update ulaz_master u set u.vrednost = u.vrednost + new.ukupno 
+        update ulaz_master u set u.vrednost = u.vrednost + new.ukupno
         where u.ulzid = new.ulzid;
 
-        update ulaz_master u set u.rvrednost = u.rvrednost + (1 - new.rabat/100) * new.ukupno 
+        update ulaz_master u set u.rvrednost = u.rvrednost + (1 - new.rabat/100) * new.ukupno
         where u.ulzid = new.ulzid;
 
     end
@@ -73,7 +73,7 @@
     -- this trigger sets fiedls to null on rc8.
     -- on rc6 it works as it should.
 
-    insert into ulaz_master(ulzid, datum, broj_racuna, dobid, dobavljac, napid, nacin_placanja) 
+    insert into ulaz_master(ulzid, datum, broj_racuna, dobid, dobavljac, napid, nacin_placanja)
                      values(1000,  '19.03.2016 12:01:03', 'qwerty123', 78966, 'foo-bar', 32101, 'asd-fgh-jkl'  );
     /*
     create domain dom_datum_vreme as timestamp not null;
@@ -92,20 +92,20 @@
       napid dom_jid not null,
       nacin_placanja dom_naziv not null,
     */
-      
+
     set list on;
     set count on;
 
     select * from ulaz_master;
 
-    insert into 
+    insert into
         ulaz_detalji(ulzid, artid, artikal, kolicina, cena, rabat, vratio)
               values(1000,  1000,  'liste',   19,        7,    30,    0);
 
     select * from ulaz_detalji;
     select * from ulaz_master;
   """,
- 'expected_stdout': 
+ 'expected_stdout':
   """
     ULZID                           1000
     DATUM                           2016-03-19 12:01:03.0000
@@ -115,8 +115,8 @@
     NAPID                           32101
     NACIN_PLACANJA                  asd-fgh-jkl
     DATUMPRISPECA                   <null>
-    VREDNOST                        0.0000000000000000
-    RVREDNOST                       0.0000000000000000
+    VREDNOST                        0.000000000000000
+    RVREDNOST                       0.000000000000000
     STATUS                          0
 
 
@@ -151,7 +151,10 @@
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions': [
+    ('0\.0000000000000000','0\.000000000000000')
+  ]
 }
 ]
 }

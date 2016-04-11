@@ -30,7 +30,7 @@
 
     create or alter user boss password '123' grant admin role;
     commit;
-    
+
     set term ^;
     execute block as
     begin
@@ -48,13 +48,13 @@
     begin
         execute statement 'drop user mgr1'
         as user 'BOSS' password '123' role 'RDB$ADMIN';
-    end  
+    end
     -- This lead to 2nd "SQLSTATE = 28000" with text:
     -- before build 32136: "add record error / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
     -- since  that  build: "find/delete record error / -no permission for DELETE access to TABLE"
     ^
     set term ;^
-    
+
     -- Attention: see above ROLLBACK labaled as [###NB###]: without that rollback following
     -- COMMIT will again try to ADD user boss/123 and only after it - drop user statement,
     -- and this will lead to fail again with error about adding (not deleting) user.
@@ -65,7 +65,7 @@
     rollback;
 
     drop user boss;
-    commit; 
+    commit;
   """,
   'expected_stderr':
   """
@@ -76,7 +76,9 @@
     find/delete record error
     -no permission for DELETE access to TABLE PLG
   """,
-  'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'), ('TABLE PLG\$SRP_VIEW', 'TABLE PLG') ]
+  'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'),
+                   ('TABLE PLG\$SRP_VIEW', 'TABLE PLG'),
+                   ('find/delete', 'delete' ]
 }
 ]
 }
