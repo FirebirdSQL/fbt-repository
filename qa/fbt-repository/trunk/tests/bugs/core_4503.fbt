@@ -3,8 +3,16 @@
 'qmid': '',
 'tracker_id': 'CORE-4503',
 'title': 'ISQL command SHOW USERS display only me',
-'description': '',
-'min_versions': None,
+'description': 
+ """
+   NB: lot of tests which handle with DB users create accounts with names like this: 'TMP$Cnnnn'
+   where 'nnnn' = ticket number. At the end of test_script such temporary created user will be
+   dropped, but if test_script finishes with error - this 'TMP$Cnnnn' name remains in security 
+   database. This mean that command 'SHOW USERS' issued HERE can display some logins that were
+   created PREVIOUSLY, i.e. in tests which finished abnormally and this logins are still here.
+   In order to filter out them current substitution section contains: ('.*0.*TMP.*','')
+ """,
+'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
