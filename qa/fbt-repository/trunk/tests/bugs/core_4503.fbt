@@ -51,7 +51,9 @@ runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],script)
     4  JOHN                                1  MICK
     3 #SYSDBA
   """,
-  'substitutions':[('.*0.*TMP.*','')
+  'substitutions':[
+      ('.*0.*TMP.*',''),
+      ('.*3.*SYSDBA', '')
   ]
 }
 ]

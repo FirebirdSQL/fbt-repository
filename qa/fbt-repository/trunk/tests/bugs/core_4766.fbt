@@ -73,13 +73,12 @@
     add record error
     -no permission for INSERT access to TABLE PLG
     Statement failed, SQLSTATE = 28000
-    find/delete record error
+    delete record error
     -no permission for DELETE access to TABLE PLG
   """,
   'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'),
                    ('TABLE PLG\$SRP_VIEW', 'TABLE PLG'),
-                   ('TABLE PLG\$USERS', 'TABLE PLG'),
-                  ]
+                   ('find/delete', 'delete') ]
 }
 ]
 }
