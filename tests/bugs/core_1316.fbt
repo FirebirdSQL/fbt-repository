@@ -49,7 +49,8 @@ validation error for variable ID, value "*** null ***"
 Statement failed, SQLSTATE = 42000
 validation error for variable I, value "*** null ***"
 -At procedure 'P0' line: 1, col: 63
-"""
+""",
+  'substitutions':[('line: \d+, col: \d+', '')]
 }
 ]
 }
