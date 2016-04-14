@@ -8,11 +8,11 @@
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'test_type': 'ISQL',
  'test_script':
   """
-    -- Attribute 'LOCALE=en_US' is defined for charset = ISO8859_1 rather that for UTF8, see intl/fbintl.conf 
+    -- Attribute 'LOCALE=en_US' is defined for charset = ISO8859_1 rather that for UTF8, see intl/fbintl.conf
     CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
   """,
  'expected_stderr':

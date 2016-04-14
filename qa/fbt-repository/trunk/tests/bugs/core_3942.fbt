@@ -3,9 +3,9 @@
 'qmid': None,
 'tracker_id': 'CORE-3942',
 'title': "Restore from gbak backup using service doesn't report an error",
-'description': 
+'description':
  """
-     Checked on: 
+     Checked on:
        WI-V2.5.6.26994 SC
        WI-V3.0.0.32474 SS/SC/CS
        LI-T4.0.0.130 // 11.04.2016
@@ -33,20 +33,23 @@ runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','maste
 if os.path.isfile(fbk):
     os.remove(fbk)
   """,
- 'expected_stdout': 
+ 'expected_stdout':
   """
     Trying to overwrite existing database file using gbak -se...
     Trying to overwrite existing database file using fbsvcmgr...
   """,
- 'expected_stderr': 
+ 'expected_stderr':
   """
     gbak: ERROR:database C:/FBTESTING/qa/fbt-repo/tmp/bugs.core_3942.fdb already exists.  To replace it, use the -REP switch
     gbak: ERROR:    Exiting before completion due to errors
     gbak:Exiting before completion due to errors
     database C:/FBTESTING/qa/fbt-repo/tmp/bugs.core_3942.fdb already exists.  To replace it, use the -REP switch
-    -Exiting before completion due to errors
+
   """,
-  'substitutions':[('.*database.*already exists.*','database already exists.*')]
+  'substitutions':[('gbak: ERROR:.*database.*already exists.*','gbak: ERROR:database already exists.*'),
+                   ('database.*already exists.*',''),
+                   ('-Exiting before completion due to errors','')
+  ]
 }
 ]
 }
