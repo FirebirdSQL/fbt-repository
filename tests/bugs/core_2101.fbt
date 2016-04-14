@@ -70,7 +70,10 @@ COMMIT;
  'expected_stderr': """Statement failed, SQLSTATE = HY109
 attempt to fetch past the last record in a record stream
 -At procedure 'P1' line: 9, col: 8
-"""
+""",
+  'substitutions':[  ('line:\s[0-9]+,','line: x'),
+                     ('col:\s[0-9]+','col: y')
+   ]
 }
 ]
 }

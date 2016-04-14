@@ -39,7 +39,9 @@ Dynamic SQL Error
 
 -At line 1, column 67
 
-"""
+""",
+  'substitutions':[('column.*','column x')
+  ]
 }
 ]
 }

@@ -34,7 +34,10 @@ Dynamic SQL Error
 -Column unknown
 -DB_KEY
 -At line 1, column 8
-"""
+""",
+  'substitutions': [('line\s[0-9]+,','line x'),
+                    ('column\s[0-9]+','column y')
+  ]
 },
 {
  'firebird_version': '2.0',
@@ -63,7 +66,10 @@ COMMIT;
 Dynamic SQL Error
 -SQL error code = -607
 -Cannot SELECT RDB$DB_KEY from a stored procedure.
-"""
+""",
+  'substitutions': [('line\s[0-9]+,','line x'),
+                    ('column\s[0-9]+','column y')
+  ]
 }
 ]
 }
