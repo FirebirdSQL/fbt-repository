@@ -3,7 +3,10 @@
 'qmid': '',
 'tracker_id': 'CORE-2987',
 'title': "Don't send full length of field over the wire when field is null",
-'description': '',
+ 'description':
+  """
+    Checked on: WI-V3.0.0.32484 (SS/SC/CS), LI-T4.0.0.138 (SS)
+  """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -81,7 +84,7 @@
     
         sel_data_ms = datediff(millisecond from t0 to t1);
         sel_null_ms = datediff(millisecond from t1 to t2);
-        ratio = 1.000 * coalesce( sel_data_ms / nullif(sel_null_ms,0), 9999999.99);
+        ratio = coalesce( sel_data_ms * 1.000 / nullif(sel_null_ms,0), 9999999.99);
     
         suspend;
     
@@ -99,7 +102,7 @@
 
     set term ^;
     execute block returns( measure_result varchar(40) ) as
-      declare min_profit_ratio smallint = 4;
+      declare min_profit_ratio numeric(3,1) = 3.8;  -- #####  T H R E S H O L D  ####
       declare sel_data_ms int;
       declare sel_null_ms int;
       declare ratio numeric(10,2);
@@ -110,15 +113,15 @@
 
       select ratio, '' from sp_test into ratio, measure_result;
       --- do not suspend now --
-      select sel_data_ms, sel_null_ms, ratio, iif( ratio > :min_profit_ratio, 'WINS >= '||:min_profit_ratio||'x', 'LOOSES, '||ratio||'x')
+      select sel_data_ms, sel_null_ms, ratio, iif( ratio >= :min_profit_ratio, 'WINS >= '||:min_profit_ratio||'x', 'LOOSES, '||ratio||'x')
         from sp_test
         into sel_data_ms, sel_null_ms,ratio, measure_result;
       suspend;
-      select sel_data_ms, sel_null_ms, ratio, iif( ratio > :min_profit_ratio, 'WINS >= '||:min_profit_ratio||'x', 'LOOSES, '||ratio||'x')
+      select sel_data_ms, sel_null_ms, ratio, iif( ratio >= :min_profit_ratio, 'WINS >= '||:min_profit_ratio||'x', 'LOOSES, '||ratio||'x')
         from sp_test
         into sel_data_ms, sel_null_ms,ratio, measure_result;
       suspend;
-      select sel_data_ms, sel_null_ms, ratio, iif( ratio > :min_profit_ratio, 'WINS >= '||:min_profit_ratio||'x', 'LOOSES, '||ratio||'x')
+      select sel_data_ms, sel_null_ms, ratio, iif( ratio >= :min_profit_ratio, 'WINS >= '||:min_profit_ratio||'x', 'LOOSES, '||ratio||'x')
         from sp_test
         into sel_data_ms, sel_null_ms,ratio, measure_result;
       suspend;
@@ -128,9 +131,9 @@
   """,
  'expected_stdout': 
   """
-   MEASURE_RESULT                  WINS >= 4x
-   MEASURE_RESULT                  WINS >= 4x
-   MEASURE_RESULT                  WINS >= 4x
+   MEASURE_RESULT                  WINS >= 3.8x
+   MEASURE_RESULT                  WINS >= 3.8x
+   MEASURE_RESULT                  WINS >= 3.8x
   """
 }
 ]
