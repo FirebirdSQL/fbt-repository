@@ -20,10 +20,10 @@
     
     Confirmed on: 3.0.0.32484, 4.0.0.142 - retcode was ZERO (and this was wrong); since 4.0.0.145 - all fine, retcode=2.
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.6',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'Python',
  'init_script':
