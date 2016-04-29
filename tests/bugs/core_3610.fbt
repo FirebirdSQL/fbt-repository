@@ -56,10 +56,12 @@
     335545072 : Problematic key value is ("F01" = 1)
     Statement : update test set f01 = ? where id = ?
     Data source : Firebird::localhost:
+    -At block line: 3, col: 9
   """,
   'substitutions':[
       ('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:'),
-      ('335544382 : Problematic key', '335545072 : Problematic key')
+      ('335544382 : Problematic key', '335545072 : Problematic key'),
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
