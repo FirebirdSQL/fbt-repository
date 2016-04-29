@@ -70,8 +70,12 @@
     335544850 : Output parameter mismatch for procedure SP2
     Statement : create or alter procedure sp3 as begin  execute procedure sp2; end
     Data source : Firebird::localhost:C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\C1930.FDB
+    -At block line: 3, col: 9
   """,
-  'substitutions':[('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:')]
+  'substitutions':[
+      ('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:'),
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
+   ]
 },
 {
  'firebird_version': '3.0',
@@ -139,8 +143,12 @@
     335544850 : Output parameter mismatch for procedure SP2
     Statement : create or alter procedure sp3 as begin  execute procedure sp2; end
     Data source : Firebird::localhost:C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\C1930.FDB
+    -At block line: 3, col: 9
   """,
-  'substitutions':[('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:')]
+  'substitutions':[
+      ('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:'),
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
+   ]
 }
 ]
 }
