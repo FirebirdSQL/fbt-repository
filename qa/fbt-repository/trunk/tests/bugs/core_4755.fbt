@@ -83,9 +83,11 @@
     exception 1
     -EX_SOMETHING_WRONG
     -Arguments for raising exeption:  10001  10002  10003  10004  10005  10006  10007  10008  10009
+    -At block line: 12, col: 5
     Statement failed, SQLSTATE = 07002
     Number of arguments (10) exceeds the maximum (9) number of EXCEPTION USING arguments
-  """
+  """,
+  'substitutions': [ ('-At block line: [\d]+, col: [\d]+', '-At block line') ]
 }
 ]
 }
