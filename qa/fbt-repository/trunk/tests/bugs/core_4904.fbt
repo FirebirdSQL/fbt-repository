@@ -118,6 +118,7 @@ os.remove(f_long_keys_log.name)
     Statement failed, SQLSTATE = 54000
     Implementation limit exceeded
     -Maximum index level reached
+    -At block line: 3, col: 7
 
     Validation started
     Relation (TEST)
@@ -132,7 +133,8 @@ os.remove(f_long_keys_log.name)
   'substitutions':[
     ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
     ('Relation [0-9]{3,4}','Relation'),
-    ('After line .*', '')
+    ('After line .*', ''),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
