@@ -73,10 +73,12 @@
     335544851 : Unexpected end of command - line 1, column 1
     Statement : 
     Data source : Firebird::localhost:C:\MIX\firebird\QA\fbt-repo\tmp\E30.FDB
+    -At block line: 4, col: 7
   """,
   'substitutions': [
       ('Data source : Firebird::localhost:.*','Data source : Firebird::localhost:'),
-      ('.*Unexpected end of command.*','.*Unexpected end of command')
+      ('.*Unexpected end of command.*','.*Unexpected end of command'),
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
