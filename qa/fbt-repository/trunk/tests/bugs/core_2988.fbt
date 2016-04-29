@@ -102,18 +102,25 @@
     -deadlock
     -update conflicts with concurrent update
     -concurrent transaction number is 127
+    -At block line: 7, col: 9
+
     Statement failed, SQLSTATE = 40001
     lock time-out on wait transaction
     -deadlock
     -concurrent transaction number is 130
+    -At block line: 7, col: 9
+
     Statement failed, SQLSTATE = 40001
     lock time-out on wait transaction
     -deadlock
     -concurrent transaction number is 133
+    -At block line: 7, col: 9
   """,
   'substitutions': [
     ('record not found for user:.*',''),
-    ('-concurrent transaction number is.*','-concurrent transaction number is')
+    ('-concurrent transaction number is.*','-concurrent transaction number is'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+
   ]
 },
 {
@@ -211,18 +218,24 @@
     deadlock
     -update conflicts with concurrent update
     -concurrent transaction number is 18
+    -At block line: 7, col: 9
+
     Statement failed, SQLSTATE = 40001
     deadlock
     -read conflicts with concurrent update
     -concurrent transaction number is 21
+    -At block line: 7, col: 9
+
     Statement failed, SQLSTATE = 40001
     deadlock
     -read conflicts with concurrent update
     -concurrent transaction number is 24
+    -At block line: 7, col: 9
   """,
   'substitutions': [
     ('record not found for user:.*',''),
-    ('-concurrent transaction number is.*','-concurrent transaction number is')
+    ('-concurrent transaction number is.*','-concurrent transaction number is'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
