@@ -4,53 +4,38 @@
 'tracker_id': 'CORE-3761',
 'title': 'Conversion error when using a blob as an argument for the EXCEPTION statement',
 'description': '',
-'min_versions': '2.1.5',
+'min_versions': '2.5',
 'versions': [
 {
- 'firebird_version': '2.1.5',
+ 'firebird_version': '2.5.6',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': """CREATE EXCEPTION CHECK_EXCEPTION 'Check exception';
-COMMIT;
-""",
+ 'init_script': 
+  """
+    CREATE EXCEPTION CHECK_EXCEPTION 'Check exception';
+    COMMIT;
+  """,
  'test_type': 'ISQL',
- 'test_script': """SET TERM ^^;
-EXECUTE BLOCK
-AS
-BEGIN
- EXCEPTION CHECK_EXCEPTION
-  CAST ('WORD' AS BLOB SUB_TYPE TEXT);
-END^^
-SET TERM ;^^
-""",
- 'expected_stderr': """Statement failed, SQLCODE = -836
-exception 1
--CHECK_EXCEPTION
--WORD
-"""
-},
-{
- 'firebird_version': '2.5.2',
- 'platform': 'All',
- 'page_size': '4096',
- 'init_script': """CREATE EXCEPTION CHECK_EXCEPTION 'Check exception';
-COMMIT;
-""",
- 'test_type': 'ISQL',
- 'test_script': """SET TERM ^^;
-EXECUTE BLOCK
-AS
-BEGIN
- EXCEPTION CHECK_EXCEPTION
-  CAST ('WORD' AS BLOB SUB_TYPE TEXT);
-END^^
-SET TERM ;^^
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = HY000
-exception 1
--CHECK_EXCEPTION
--WORD
-"""
+ 'test_script': 
+  """
+    SET TERM ^;
+    EXECUTE BLOCK AS
+    BEGIN
+        EXCEPTION CHECK_EXCEPTION CAST ('WORD' AS BLOB SUB_TYPE TEXT);
+    END^^
+    SET TERM ;^
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    exception 1
+    -CHECK_EXCEPTION
+    -WORD
+    -At block line: 4, col: 2
+  """,
+  'substitutions': [
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
+
 }
 ]
 }
