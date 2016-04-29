@@ -31,7 +31,9 @@
     arithmetic exception, numeric overflow, or string truncation
     -string right truncation
     -expected length 14, actual 16
-  """
+    -At block line: 4, col: 9
+  """,
+  'substitutions': [ ('-At block line: [\d]+, col: [\d]+', '-At block line') ]
 }
 ]
 }
