@@ -222,6 +222,7 @@ os.remove(hang_log.name)
     335544856 : connection shutdown
     Statement : update test set id = - (1000 + id)
     Data source : Firebird::localhost:C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3323.FDB
+    -At block line: 6, col: 9
 
     Point_B                         finished EB with lock-conflict
     id_at_point_B:                  -1
@@ -247,7 +248,8 @@ os.remove(hang_log.name)
     ('After line.*', ''),
     ('set echo off;',''),
     ('Statement failed, SQLSTATE = HY000', ''),
-    ('record not found for user:.*', '')
+    ('record not found for user:.*', ''),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
