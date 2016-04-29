@@ -4,10 +4,10 @@
 'tracker_id': 'CORE-0606',
 'title': ' Tricky role defeats basic SQL security',
 'description': '',
-'min_versions': '2.5.0',
+'min_versions': '2.5',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '2.5.6',
  'platform': 'All',
  'test_type': 'ISQL',
  'init_script':
@@ -100,12 +100,14 @@
     335544352 : no permission for SELECT access to TABLE t t
     Statement : select data from "t t"
     Data source : Firebird::localhost:C:\FBTESTING\QA\FBT-REPO\TMP\E30.FDB
+    -At block line: 3, col: 7
   """,
   'substitutions':[
     ('Statement failed, SQLSTATE = HY000', ''),
     ('record not found for user:.*', ''),
     ('read/select','SELECT'),
-    ('Data source : Firebird::.*','Data source : Firebird::')
+    ('Data source : Firebird::.*','Data source : Firebird::'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
