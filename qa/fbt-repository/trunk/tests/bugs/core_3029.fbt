@@ -180,6 +180,8 @@ SQL> SQL>""",
  'expected_stderr': """Statement failed, SQLSTATE = 23000
 attempt to store duplicate value (visible to active transactions) in unique index "IX_TEST_ROW1"
 -Problematic key value is ("DID" = 2, "PID" = 3, "DEP" = 4)
+-At block
+-At block
 Statement failed, SQLSTATE = 23000
 attempt to store duplicate value (visible to active transactions) in unique index "IX_TEST_ROW1"
 -Problematic key value is ("DID" = 2, "PID" = 3, "DEP" = 4)
