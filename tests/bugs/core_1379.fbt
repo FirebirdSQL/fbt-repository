@@ -45,17 +45,23 @@
     Dynamic SQL Error
     -SQL error code = -804
     -Data type unknown
+    -At block line: 3, col: 9
 
     Statement failed, SQLSTATE = HY004
     Dynamic SQL Error
     -SQL error code = -804
     -Data type unknown
+    -At block line: 3, col: 9
 
     Statement failed, SQLSTATE = HY004
     Dynamic SQL Error
     -SQL error code = -804
     -Data type unknown
-  """
+    -At block line: 3, col: 9
+  """,
+  'substitutions':[ 
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
 }
 ]
 }
