@@ -4,43 +4,45 @@
 'tracker_id': 'CORE-2140',
 'title': "Error messages after parameters substitution contains '\n' characters instead of line break",
 'description': '',
-'min_versions': '',
+'min_versions': '2.5.6',
 'versions': [
 {
- 'firebird_version': '2.5.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """set term ^ ;
-execute block
-returns (y int)
-as
-begin
-  for execute statement
-      ('select rdb$relation_id from rdb$database where rdb$relation_id = :x') (1)
-    with autonomous transaction
-    into y
-  do suspend;
-end ^
-""",
- 'expected_stdout': """
+ 'test_script': 
+  """
+    set term ^ ;
+    execute block
+    returns (y int)
+    as
+    begin
+      for execute statement
+          ('select rdb$relation_id from rdb$database where rdb$relation_id = :x') (1)
+        with autonomous transaction
+        into y
+      do suspend;
+    end ^
+  """,
+ 'expected_stdout': 
+  """
            Y
 ============
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42S22
-
-Dynamic SQL Error
-
--SQL error code = -206
-
--Column unknown
-
--X
-
--At line 1, column 67
-
-""",
-  'substitutions':[('column.*','column x')
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42S22
+    Dynamic SQL Error
+    -SQL error code = -206
+    -Column unknown
+    -X
+    -At line 1, column 67
+    -At block line: 5, col: 3
+  """,
+  'substitutions':[
+    ('column.*','column x'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
