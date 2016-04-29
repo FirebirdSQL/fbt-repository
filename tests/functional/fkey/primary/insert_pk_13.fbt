@@ -104,7 +104,9 @@ except Exception, e:
     -violation of FOREIGN KEY constraint "FK_TDETL_TMAIN" on table "T_DETL"
     -Foreign key reference target does not exist
     -Problematic key value is ("MASTER_PK_ID" = 1)
-   """
+    -At block line: 5, col: 9
+   """,
+  'substitutions': [ ('-At block line: [\d]+, col: [\d]+', '-At block line') ]
 },
 {
  'firebird_version': '3.0',
@@ -146,7 +148,9 @@ except Exception, e:
     violation of FOREIGN KEY constraint "FK_TDETL_TMAIN" on table "T_DETL"
     -Foreign key reference target does not exist
     -Problematic key value is ("MASTER_PK_ID" = 1)
-   """
+    -At block line: 5, col: 9
+   """,
+  'substitutions': [ ('-At block line: [\d]+, col: [\d]+', '-At block line') ]
 }
 ]
 }
