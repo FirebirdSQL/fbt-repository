@@ -1568,8 +1568,13 @@
     exception 4
     -EX_TEST
     -Hi from Mariana Trench, depth=511, time=2015-08-24 13:47:25.1330
+    -At block line: 1026, col: 5
   """,
-  'substitutions':[ ('exception [0-9]+','exception'), ('time=.*', '') ]
+  'substitutions':[ 
+    ('exception [0-9]+','exception'),
+    ('time=.*', ''),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
 }
 ]
 }
