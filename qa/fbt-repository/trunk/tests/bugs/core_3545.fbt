@@ -139,16 +139,23 @@
 
     Statement failed, SQLSTATE = 42000
     validation error for variable VAR2_ASSIGNMENT_WITHOUT_CAST, value "50"
+    -At block line: 4, col: 7
 
     Statement failed, SQLSTATE = 42000
     validation error for variable VAR2_ASSIGNMENT_WITHOUT_CAST, value "399"
+    -At block line: 4, col: 7
 
     Statement failed, SQLSTATE = 42000
     validation error for variable VAR2_CAST_INT_TO_DOMAIN, value "50"
+    -At block line: 4, col: 7
 
     Statement failed, SQLSTATE = 42000
     validation error for variable VAR2_CAST_INT_TO_DOMAIN, value "399"
-  """
+    -At block line: 4, col: 7
+  """,
+  'substitutions': [
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
 }
 ]
 }
