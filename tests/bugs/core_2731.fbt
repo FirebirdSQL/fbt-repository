@@ -57,7 +57,9 @@ Execute statement error at isc_dsql_execute2 :
 335544926 : Execute statement error at isc_dsql_execute2 :
 335544926 : Execute statement error at isc_dsql_execute2 :
 335544926 : Execute statement...
-"""
+-At block line: 5, col: 5
+""",
+'substitutions':[('-At block line: [\d]+, col: [\d]+', '-At block line')]
 }
 ]
 }
