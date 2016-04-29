@@ -80,13 +80,21 @@
   """
     Statement failed, SQLSTATE = 28000
     Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
+    -At block line: 3, col: 9
+
     Statement failed, SQLSTATE = 28000
     Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
+    -At block line: 3, col: 9
+
     Statement failed, SQLSTATE = 28000
     Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
+    -At block line: 3, col: 9
+
     Statement failed, SQLSTATE = 28000
     Your user name and password are not defined. Ask your database administrator to set up a Firebird login.
-  """
+    -At block line: 3, col: 9
+  """,
+  'substitutions': [ ('-At block line: [\d]+, col: [\d]+', '-At block line') ]
 }
 ]
 }
