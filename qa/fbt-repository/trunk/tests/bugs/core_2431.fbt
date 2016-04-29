@@ -43,7 +43,11 @@
     exception 1
     -EX_BAD_REMAINDER
     -Новый остаток изделия будет отрицательным: -8
-  """
+    -At block line: 3, col: 7
+  """,
+  'substitutions':[ 
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
 }
 ]
 }
