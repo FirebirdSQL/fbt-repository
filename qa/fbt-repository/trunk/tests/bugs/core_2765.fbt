@@ -281,11 +281,13 @@
     335544382 : no S privilege with grant option on table/view TEST
     Statement : grant all on test to maverick_4
     Data source : Firebird::localhost:C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\E25.FDB
+    -At block line: 125, col: 9
   """,
   'substitutions': [
     ('Statement failed, SQLSTATE.*',''),
     ('record not found for user:.*',''),
-    ('Data source : Firebird::localhost:.*', 'Data source : Firebird::localhost:')
+    ('Data source : Firebird::localhost:.*', 'Data source : Firebird::localhost:'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 },
 {
@@ -564,11 +566,13 @@
     336068782 : no S privilege with grant option on table/view TEST
     Statement : grant all on test to maverick_4
     Data source : Firebird::localhost:C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\E30.FDB
+    -At block line: 125, col: 9
   """,
   'substitutions': [
     ('Statement failed, SQLSTATE.*',''),
     ('record not found for user:.*',''),
-    ('Data source : Firebird::localhost:.*', 'Data source : Firebird::localhost:')
+    ('Data source : Firebird::localhost:.*', 'Data source : Firebird::localhost:'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
   ]
 }
 ]
