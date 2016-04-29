@@ -2036,7 +2036,11 @@
   """
     Statement failed, SQLSTATE = 42000
     validation error for variable V_NN, value "*** null ***"
-  """
+    -At block line: 2004, col: 9
+  """,
+  'substitutions':[
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
+   ]
 }
 ]
 }
