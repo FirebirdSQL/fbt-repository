@@ -113,15 +113,18 @@ ID     NAME
 1      <null>
 
 """,
- 'expected_stderr': """Statement failed, SQLSTATE = HY000
-
-exception 1
-
--EX_PERM
-
--AAA
-
-"""
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    exception 1
+    -EX_PERM
+    -AAA
+    -At block line: 5, col: 3
+  """,
+  'substitutions':[
+    ('column.*','column x'),
+    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
 }
 ]
 }
