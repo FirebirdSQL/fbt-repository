@@ -37,7 +37,11 @@
     Statement failed, SQLSTATE = 23000
     violation of PRIMARY or UNIQUE KEY constraint "T_PK" on table "T"
     -Problematic key value is ("ID" = 1)
-  """
+    -At block line: 5, col: 7
+  """,
+  'substitutions': [
+      ('-At block line: [\d]+, col: [\d]+', '-At block line')
+  ]
 }
 ]
 }
