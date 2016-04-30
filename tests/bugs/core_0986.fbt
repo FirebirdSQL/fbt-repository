@@ -68,10 +68,10 @@ non_ascii_ddl=u'''\
     create domain "ИД'шники" int;
     create domain "Группы" varchar(30) check( value in ('Электрика', 'Ходовая', 'Арматурка', 'Кузовщина') );
     create domain "Артикулы" varchar(12) character set utf8 check( value = upper(value) ) 
-    -- TEMPLY COMMENTED UNTIL CORE-5220 IS OPEN: collate "Циферки"
+    collate "Циферки" -- enabled since core-5220 was fixed (30.04.2016)
     ;
     create domain "Комрады" varchar(40) character set iso8859_1 
-    -- TEMPLY COMMENTED UNTIL CORE-5220 IS OPEN: collate "Испания"
+    collate "Испания" -- enabled since core-5220 was fixed (30.04.2016)
     ;
     create domain "Кол-во" numeric(12,3) not null;
 
