@@ -7,9 +7,9 @@
  """
     Prototype: https://groups.yahoo.com/neo/groups/firebird-support/conversations/messages/128920
     Done with suggestions from dimitr, see letter 01-may-2016 09:15.
-    Confirmed on WI-V3.0.0.32366 - it was enough to async. start THREE child ISQLs sessions, 
-    one of them always raise exception after few seconds with 'deadlock / update conflicts'
-    and could not finish its job.
+    Confirmed on WI-V3.0.0.32366, 3.0.0.32501 (SS,SC,CS) - it was enough to async. start THREE 
+    child ISQLs sessions, one or two of them always raise exception after few seconds with text
+    'deadlock / update conflicts' and could not finish its job.
 
     Checked on: WI-V3.0.0.32503, WI-T4.0.0.157 - works fine.
  """,
