@@ -13,7 +13,7 @@
  'test_type': 'ISQL',
  'init_script':
   """
-recreate table test1 (id int not null, c computed by (id * 10));
+    recreate table test1 (id int not null, c computed by (id * 10));
     recreate table test2 (id int not null, c computed by (id * 10));
     commit;
     
@@ -76,12 +76,12 @@ recreate table test1 (id int not null, c computed by (id * 10));
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = 42000
+    Statement failed, SQLSTATE = HY000
     exception 1
     -EX_BAD_COMPUTED_FIELD_VALUE
     -20
     -At trigger 'TEST1_BU' line: 3, col: 7
-    Statement failed, SQLSTATE = 42000
+    Statement failed, SQLSTATE = HY000
     exception 1
     -EX_BAD_COMPUTED_FIELD_VALUE
     -20
