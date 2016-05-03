@@ -171,7 +171,7 @@
  'expected_stderr':
   """
     Statement failed, SQLSTATE = 28000
-    Statement failed, SQLSTATE = 42000
+    Statement failed, SQLSTATE = HY000
     exception 3
     -EX_HAVE_NO_ROLE
     -You've specified role: >"BoSs"< -- but your actual role is NONE.
