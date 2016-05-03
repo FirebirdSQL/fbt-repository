@@ -108,13 +108,13 @@ select * from SP_FETCHED;
 ============ ==============================
            1 OK
 """,
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
+ 'expected_stderr': """Statement failed, SQLSTATE = 22000
 no current record for fetch operation
 -At procedure 'SP_CLOSED' line: 14, col: 3
-Statement failed, SQLSTATE = 42000
+Statement failed, SQLSTATE = 22000
 no current record for fetch operation
 -At procedure 'SP_NOTOPEN' line: 5, col: 3
-Statement failed, SQLSTATE = 42000
+Statement failed, SQLSTATE = 22000
 no current record for fetch operation
 -At procedure 'SP_FETCHED' line: 13, col: 3
 """,
