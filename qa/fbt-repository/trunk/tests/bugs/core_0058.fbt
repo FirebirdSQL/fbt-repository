@@ -12,6 +12,13 @@
  'test_type': 'ISQL',
  'test_script': 
   """
+    -- NB: changed expected value of SQLSTATE to actual. See comment in git:
+    -- "Prevent stack trace (line/column info) from overriding the real error's SQLSTATE", 30-apr-2016 
+    -- https://github.com/FirebirdSQL/firebird/commit/d1d8b36a07d4f11d98d2c8ec16fb8ec073da442b // FB 4.0
+    -- https://github.com/FirebirdSQL/firebird/commit/849bfac745bc9158e9ef7990f5d52913f8b72f02 // FB 3.0
+    -- https://github.com/FirebirdSQL/firebird/commit/b9d4142c4ed1fdf9b7c633edc7b2425f7b93eed0 // FB 2.5
+    -- See also letter from dimitr, 03-may-2016 19:24.
+
     recreate table test (a integer not null, constraint test_pk primary key (a));
     insert into test (a) values (1);
     insert into test (a) values (2);
@@ -41,7 +48,7 @@
   """,
  'expected_stderr':
   """
-    Statement failed, SQLSTATE = 42000
+    Statement failed, SQLSTATE = 22000
     no current record for fetch operation
     -At procedure 'TEST_UPD'
   """,
