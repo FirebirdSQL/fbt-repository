@@ -9,14 +9,12 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'test_script': 
   """
+    set list on;
     set term ^ ;
-    execute block
-    returns (y int)
-    as
+    execute block returns (y int) as
     begin
       for execute statement
           ('select rdb$relation_id from rdb$database where rdb$relation_id = :x') (1)
@@ -27,8 +25,6 @@
   """,
  'expected_stdout': 
   """
-           Y
-============
   """,
  'expected_stderr': 
   """
@@ -42,7 +38,7 @@
   """,
   'substitutions':[
     ('column.*','column x'),
-    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+    ('-At block line: [\d]+, col: [\d]+', '')
   ]
 }
 ]
