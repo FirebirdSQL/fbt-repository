@@ -190,7 +190,7 @@ f_create_db_32k_sql = open( os.path.join(context['temp_directory'],'tmp_2192_ddl
 f_create_db_32k_sql.write(sql_ddl)
 f_create_db_32k_sql.close()
 
-fbb='/opt/fb40ss/bin/'
+fbb='' # '/opt/fb40ss/bin/'
 
 # 0. CREATE DATABASE 
 ####################
