@@ -1,0 +1,273 @@
+{
+'id': 'bugs.core_1746',
+'qmid': None,
+'tracker_id': 'CORE-1746',
+'title': 'Expression index can be created while doing inserts into table',
+'description':
+ """
+   We check THREE cases of Tx setting: WAIT, NO WAIT and LOCK TIMEOUT n.
+   First ISQL session always inserts some big number of rows, second ISQL is started after
+   small delay (~1..2 second) and launches transaction with correspinding [NO]WAIT-clause. 
+   If Tx starts with NO wait or lock timeout then this (2nd) ISQL always MUST FAIL.
+
+   BOTH isql are launched in asynchronous mode, i.e. as separate child processes.
+   We have to wait about 10 seconds to ensure that any activity in database will finish
+   before closing ISQL logs - but this delay can strongly depend on hardware environment.
+   Because of this, we run shutdown/online to terminate any activity after each checking,
+   otherwise results can be unpredictable.
+   Each iteration lasts ~10 seconds, the whole test - about 30 seconds (THREE iterations).
+
+   Checked on: WI-V2.5.6.27008 (CS, SC), WI-V3.0.1.32516 (CS, SC, SS), WI-T4.0.0.180 (SC, SS).
+   Hardware: P-IV 3.00 GHz RAM 2 GB, IDE HDD 140 Gb.
+   OS: Windows XP.
+ """,
+'min_versions': '2.5.6',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script': """
+    create or alter procedure sp_ins(n int) as begin end;
+    recreate table test(s varchar(10));
+    set term  ^;
+    execute block as
+    begin
+        execute statement 'drop sequence g';
+        when any do begin end
+    end
+    ^
+    set term ;^
+    commit;
+    create sequence g;
+    commit;
+
+    set term ^;
+    create or alter procedure sp_ins(n int) as
+    begin
+        while (n>0) do
+        begin
+            insert into test(s) values( gen_id(g,1) );
+            n = n - 1;
+        end
+    end
+    ^
+    set term ;^
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': """\
+import os
+import time
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_file="$(DATABASE_LOCATION)bugs.core_1746.fdb"
+
+db_conn.close()
+
+#########################################################
+
+# NB-1: value of 'rows_to_add' must require to insert records NOT LESS that several seconds.
+# NB-2: FB 2.5 makes DML *faster* than 3.0 in single-connection mode!
+
+rows_to_add=300000
+
+sql_bulk_insert='''\
+    set bail on;
+    set list on;
+    alter sequence g restart with 0;
+    commit;
+    set transaction no wait;
+    select current_timestamp as bulk_insert_start from rdb$database;
+    execute procedure sp_ins( %(rows_to_add)s );
+    commit;
+    select current_timestamp as bulk_insert_finish from rdb$database;
+'''
+
+sql_create_indx='''\
+    set bail on;
+    set list on;
+    set blob all;
+    select 
+        iif( gen_id(g,0) > 0 and gen_id(g,0) < %(rows_to_add)s, 'OK, IS RUNNING', 'SOMETHING WRONG!') as inserts_state, 
+        current_timestamp as create_indx_start 
+    from rdb$database;
+    set autoddl off;
+    commit;
+    
+    set echo on;
+    set transaction %(tx_decl)s;
+
+    create index test_%(idx_name)s on test computed by( %(idx_expr)s ); 
+    set echo off;
+    commit;
+
+    select 
+        iif( gen_id(g,0) = %(rows_to_add)s, 'OK, FINISHED', 'SOMETHING WRONG!') as inserts_state
+    from rdb$database;
+    
+    set count on;
+    select
+        rdb$index_name
+        ,rdb$index_id
+        ,coalesce(rdb$unique_flag,0) as rdb$unique_flag
+        ,coalesce(rdb$index_inactive,0) as rdb$index_inactive
+        ,rdb$expression_source as rdb_expr_blob
+    from rdb$indices ri
+    where ri.rdb$index_name = upper( 'test_%(idx_name)s' )
+    ;
+    set count off;
+    set echo on;
+    set plan on;
+    select 1 from test where %(idx_expr)s > '' rows 0;
+    set plan off;
+    set echo off;
+    commit;
+    drop index test_%(idx_name)s;
+    commit;
+'''
+
+tx_param=['WAIT','NO WAIT','LOCK TIMEOUT 1']
+
+for i in range(len(tx_param)):
+
+    #if i >= 1:
+    #    continue # temply!
+
+    f_bulk_insert_sql = open( os.path.join(context['temp_directory'],'tmp_1746_ins.sql'), 'w')
+    f_bulk_insert_sql.write(sql_bulk_insert % locals() )
+    f_bulk_insert_sql.close()
+
+    tx_decl=tx_param[i]
+    idx_name=tx_decl.replace(' ','_')
+    idx_expr="'"+idx_name+"'|| s"
+ 
+    f_create_indx_sql = open( os.path.join(context['temp_directory'],'tmp_1746_idx_%s.sql' % str(i) ), 'w')
+    f_create_indx_sql.write( sql_create_indx % locals() )
+    f_create_indx_sql.close()
+
+    f_bulk_insert_log = open( os.path.join(context['temp_directory'],'tmp_1746_ins_%s.log' % str(i) ), 'w')
+    f_create_indx_log = open( os.path.join(context['temp_directory'],'tmp_1746_idx_%s.log' % str(i) ), 'w')
+
+    p_bulk_insert=subprocess.Popen( ["isql", dsn, "-q", "-i", f_bulk_insert_sql.name ],
+                                   stdout = f_bulk_insert_log,
+                                   stderr = subprocess.STDOUT
+                                 )
+
+    time.sleep(1)
+
+    p_create_indx=subprocess.Popen( ["isql", dsn, "-q", "-i", f_create_indx_sql.name ],
+                                   stdout = f_create_indx_log,
+                                   stderr = subprocess.STDOUT
+                                 )
+
+    time.sleep(9)
+
+    p_create_indx.terminate()
+    p_bulk_insert.terminate()
+
+    f_bulk_insert_log.close()
+    f_create_indx_log.close()
+
+    f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_1746.log'), 'w')
+
+    subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+                      "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
+                      "dbname", db_file,
+                     ],
+                     stdout = f_shutdown_log,
+                     stderr = subprocess.STDOUT
+                   )
+
+    subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+                      "action_properties", "prp_db_online",
+                      "dbname", db_file,
+                     ],
+                     stdout = f_shutdown_log,
+                     stderr = subprocess.STDOUT
+                   )
+
+    with open( f_bulk_insert_log.name,'r') as f:
+        for line in f:
+            if line.split():
+                print( str(i)+': BULK INSERTS LOG: '+line.strip().upper() )
+    f.close()
+    os.remove(f_bulk_insert_log.name)
+    os.remove(f_bulk_insert_sql.name)
+
+    with open( f_create_indx_log.name,'r') as f:
+        for line in f:
+            if line.split():
+                print( str(i)+': CREATE INDEX LOG: '+line.strip().upper() )
+    f.close()
+    os.remove(f_create_indx_log.name)
+    os.remove(f_create_indx_sql.name)
+
+    with open( f_shutdown_log.name,'r') as f:
+        for line in f:
+            if line.split():
+                print( str(i)+': DB SHUTDOWN LOG: '+line.upper() )
+    f.close()
+    f_shutdown_log.close()
+    os.remove(f_shutdown_log.name)
+
+""",
+ 'expected_stdout': 
+  """
+    0: BULK INSERTS LOG: BULK_INSERT_START
+    0: BULK INSERTS LOG: BULK_INSERT_FINISH
+    0: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
+    0: CREATE INDEX LOG: CREATE_INDX_START
+    0: CREATE INDEX LOG: SET TRANSACTION WAIT;
+    0: CREATE INDEX LOG: CREATE INDEX TEST_WAIT ON TEST COMPUTED BY( 'WAIT'|| S );
+    0: CREATE INDEX LOG: SET ECHO OFF;
+    0: CREATE INDEX LOG: INSERTS_STATE                   OK, FINISHED
+    0: CREATE INDEX LOG: RDB$INDEX_NAME                  TEST_WAIT
+    0: CREATE INDEX LOG: RDB$INDEX_ID                    1
+    0: CREATE INDEX LOG: RDB$UNIQUE_FLAG                 0
+    0: CREATE INDEX LOG: RDB$INDEX_INACTIVE              0
+    0: CREATE INDEX LOG: RDB_EXPR_BLOB
+    0: CREATE INDEX LOG: ( 'WAIT'|| S )
+    0: CREATE INDEX LOG: RECORDS AFFECTED: 1
+    0: CREATE INDEX LOG: SET PLAN ON;
+    0: CREATE INDEX LOG: SELECT 1 FROM TEST WHERE 'WAIT'|| S > '' ROWS 0;
+    0: CREATE INDEX LOG: PLAN (TEST INDEX (TEST_WAIT))
+    0: CREATE INDEX LOG: SET PLAN OFF;
+    0: CREATE INDEX LOG: SET ECHO OFF;
+    1: BULK INSERTS LOG: BULK_INSERT_START
+    1: BULK INSERTS LOG: BULK_INSERT_FINISH
+    1: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
+    1: CREATE INDEX LOG: CREATE_INDX_START
+    1: CREATE INDEX LOG: SET TRANSACTION NO WAIT;
+    1: CREATE INDEX LOG: CREATE INDEX TEST_NO_WAIT ON TEST COMPUTED BY( 'NO_WAIT'|| S );
+    1: CREATE INDEX LOG: SET ECHO OFF;
+    1: CREATE INDEX LOG: STATEMENT FAILED, SQLSTATE = 40001
+    1: CREATE INDEX LOG: LOCK CONFLICT ON NO WAIT TRANSACTION
+    1: CREATE INDEX LOG: -UNSUCCESSFUL METADATA UPDATE
+    1: CREATE INDEX LOG: -OBJECT TABLE "TEST" IS IN USE
+    1: CREATE INDEX LOG: AFTER LINE
+
+    2: BULK INSERTS LOG: BULK_INSERT_START               
+    2: BULK INSERTS LOG: BULK_INSERT_FINISH              
+    2: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
+    2: CREATE INDEX LOG: CREATE_INDX_START               
+    2: CREATE INDEX LOG: SET TRANSACTION LOCK TIMEOUT 1;
+    2: CREATE INDEX LOG: CREATE INDEX TEST_LOCK_TIMEOUT_1 ON TEST COMPUTED BY( 'LOCK_TIMEOUT_1'|| S );
+    2: CREATE INDEX LOG: SET ECHO OFF;
+    2: CREATE INDEX LOG: STATEMENT FAILED, SQLSTATE = 40001
+    2: CREATE INDEX LOG: LOCK TIME-OUT ON WAIT TRANSACTION
+    2: CREATE INDEX LOG: -UNSUCCESSFUL METADATA UPDATE
+    2: CREATE INDEX LOG: -OBJECT TABLE "TEST" IS IN USE
+    2: CREATE INDEX LOG: AFTER LINE
+  """,
+  'substitutions':[
+      ('0: CREATE INDEX LOG: RDB_EXPR_BLOB.*', '0: CREATE INDEX LOG: RDB_EXPR_BLOB'),
+      ('BULK_INSERT_START.*', 'BULK_INSERT_START'),
+      ('BULK_INSERT_FINISH.*', 'BULK_INSERT_FINISH'),
+      ('CREATE_INDX_START.*', 'CREATE_INDX_START'),
+      ('AFTER LINE.*', 'AFTER LINE')
+   ]
+}
+]
+}
