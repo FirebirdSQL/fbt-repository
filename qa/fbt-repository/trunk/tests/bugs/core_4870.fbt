@@ -2,7 +2,7 @@
 'id': 'bugs.core_4870',
 'qmid': None,
 'tracker_id': 'CORE-4870',
-'title': 'SET COUNT ON: issuing UPDATE on view which was created WITH CHECK OPTION produces wrong number of affected rows (doubled ?)',
+'title': 'Incorrect number of affected rows for UPDATE against VIEW created WITH CHECK OPTION',
 'description': '',
 'min_versions': '3.0',
 'versions': [
