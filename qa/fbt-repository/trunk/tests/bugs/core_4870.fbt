@@ -4,12 +4,11 @@
 'tracker_id': 'CORE-4870',
 'title': 'Incorrect number of affected rows for UPDATE against VIEW created WITH CHECK OPTION',
 'description': '',
-'min_versions': '3.0',
+'min_versions': '2.5.6',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'init_script': 
   """
   """,
