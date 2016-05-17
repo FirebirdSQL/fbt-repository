@@ -57,6 +57,7 @@
     select gen_id(g,1), dateadd( gen_id(g,1) day to cast('01.01.2010' as date) ), dateadd( gen_id(g,1) second to cast('00:00:00' as time) )
     from rdb$types
     rows 200;
+    commit; -- this was missed! (notice by dimitr, letter 17-may-2016 17:15).
     
     create index i2asc_comput_by_expr_dat_cas on test2 computed by (datumzacatek+caszacatek);
     commit;
