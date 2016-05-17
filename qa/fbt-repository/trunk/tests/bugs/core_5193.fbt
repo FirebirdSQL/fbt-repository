@@ -3,7 +3,10 @@
 'qmid': None,
 'tracker_id': 'CORE-5193',
 'title': "Precedence problem with operator IS",
-'description': '',
+'description':
+  """
+      Checked on WI-V3.0.1.32518,  WI-T4.0.0.184
+  """,
 'min_versions': '3.0.1',
 'versions': [
 {
