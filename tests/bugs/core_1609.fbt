@@ -2,9 +2,9 @@
 'id': 'bugs.core_1609',
 'qmid': None,
 'tracker_id': 'CORE-1609',
-'title': 'Wrong error message (should point out the proper expected length)',
+'title': 'PSQL output parameter size limited',
 'description': '',
-'min_versions': '3.0',
+'min_versions': '3.0.1',
 'versions': [
 {
  'firebird_version': '3.0',
