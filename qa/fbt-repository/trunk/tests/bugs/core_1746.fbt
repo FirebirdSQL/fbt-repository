@@ -68,10 +68,11 @@ db_conn.close()
 
 #########################################################
 
-# NB-1: value of 'rows_to_add' must require to insert records NOT LESS that several seconds.
+# NB-1: value of 'rows_to_add' must have value that will require at least
+#       4...5 seconds for inserting such number of rows
 # NB-2: FB 2.5 makes DML *faster* than 3.0 in single-connection mode!
 
-rows_to_add=300000
+rows_to_add=350000
 
 sql_bulk_insert='''\
     set bail on;
@@ -90,7 +91,13 @@ sql_create_indx='''\
     set list on;
     set blob all;
     select 
-        iif( gen_id(g,0) > 0 and gen_id(g,0) < %(rows_to_add)s, 'OK, IS RUNNING', 'SOMETHING WRONG!') as inserts_state, 
+        iif( gen_id(g,0) > 0 and gen_id(g,0) < %(rows_to_add)s, 
+             'OK, IS RUNNING', 
+             iif( gen_id(g,0) <=0, 
+                  'WRONG: not yet started, current gen_id='||gen_id(g,0), 
+                  'WRONG: already finished, rows_to_add='||%(rows_to_add)s
+                )
+           ) as inserts_state, 
         current_timestamp as create_indx_start 
     from rdb$database;
     set autoddl off;
@@ -104,7 +111,10 @@ sql_create_indx='''\
     commit;
 
     select 
-        iif( gen_id(g,0) = %(rows_to_add)s, 'OK, FINISHED', 'SOMETHING WRONG!') as inserts_state
+        iif(  gen_id(g,0) = %(rows_to_add)s, 
+              'OK, FINISHED', 
+              'SOMETHING WRONG: current gen_id=' || gen_id(g,0)||', rows_to_add='||%(rows_to_add)s
+           ) as inserts_state
     from rdb$database;
     
     set count on;
@@ -162,7 +172,7 @@ for i in range(len(tx_param)):
                                    stderr = subprocess.STDOUT
                                  )
 
-    time.sleep(9)
+    time.sleep(10)
 
     p_create_indx.terminate()
     p_bulk_insert.terminate()
@@ -193,16 +203,16 @@ for i in range(len(tx_param)):
             if line.split():
                 print( str(i)+': BULK INSERTS LOG: '+line.strip().upper() )
     f.close()
-    os.remove(f_bulk_insert_log.name)
-    os.remove(f_bulk_insert_sql.name)
+    #os.remove(f_bulk_insert_log.name)
+    #os.remove(f_bulk_insert_sql.name)
 
     with open( f_create_indx_log.name,'r') as f:
         for line in f:
             if line.split():
                 print( str(i)+': CREATE INDEX LOG: '+line.strip().upper() )
     f.close()
-    os.remove(f_create_indx_log.name)
-    os.remove(f_create_indx_sql.name)
+    #os.remove(f_create_indx_log.name)
+    #os.remove(f_create_indx_sql.name)
 
     with open( f_shutdown_log.name,'r') as f:
         for line in f:
@@ -210,7 +220,14 @@ for i in range(len(tx_param)):
                 print( str(i)+': DB SHUTDOWN LOG: '+line.upper() )
     f.close()
     f_shutdown_log.close()
-    os.remove(f_shutdown_log.name)
+    #os.remove(f_shutdown_log.name)
+
+    '''
+    f_list=[f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log, f_shutdown_log]
+    for i in range(len(f_list)):
+       if os.path.isfile(f_list[i].name):
+           os.remove(f_list[i].name)
+    '''
 
 """,
  'expected_stdout': 
