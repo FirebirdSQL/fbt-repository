@@ -6,8 +6,10 @@
 'description':
  """
    We check THREE cases of Tx setting: WAIT, NO WAIT and LOCK TIMEOUT n.
-   First ISQL session always inserts some big number of rows, second ISQL is started after
-   small delay (~1..2 second) and launches transaction with correspinding [NO]WAIT-clause. 
+   First ISQL session always inserts some number of rows and falls in delay (it is created
+   artificially by attempting toinsert duplicate key in index in Tx with lock timeout = 5), 
+   second ISQL is started after small delay (~1..2 second) and launches transaction with 
+   correspinding [NO]WAIT-clause. 
    If Tx starts with NO wait or lock timeout then this (2nd) ISQL always MUST FAIL.
 
    BOTH isql are launched in asynchronous mode, i.e. as separate child processes.
@@ -28,7 +30,9 @@
  'platform': 'All',
  'init_script': """
     create or alter procedure sp_ins(n int) as begin end;
-    recreate table test(s varchar(10));
+    
+    recreate table test(x int unique using index test_x, s varchar(10) default 'qwerty' );
+
     set term  ^;
     execute block as
     begin
@@ -46,7 +50,7 @@
     begin
         while (n>0) do
         begin
-            insert into test(s) values( gen_id(g,1) );
+            insert into test( x ) values( gen_id(g,1) );
             n = n - 1;
         end
     end
@@ -72,16 +76,37 @@ db_conn.close()
 #       4...5 seconds for inserting such number of rows
 # NB-2: FB 2.5 makes DML *faster* than 3.0 in single-connection mode!
 
-rows_to_add=350000
+rows_to_add=1000
 
 sql_bulk_insert='''\
     set bail on;
     set list on;
     alter sequence g restart with 0;
+    delete from test;
     commit;
-    set transaction no wait;
+    
+    set transaction lock timeout 7; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY, see below auton Tx start.
+
     select current_timestamp as bulk_insert_start from rdb$database;
-    execute procedure sp_ins( %(rows_to_add)s );
+    set term ^;
+    execute block as
+        declare i int;
+    begin
+        execute procedure sp_ins( %(rows_to_add)s );
+        begin
+            -- #########################################################
+            -- #######################  D E L A Y  #####################
+            -- #########################################################
+            in autonomous transaction do
+            insert into test( x ) values( %(rows_to_add)s ); -- this will cause delay because of duplicate in index
+        when any do 
+            begin
+                i  =  gen_id(g,1);
+            end
+        end
+    end
+    ^
+    set term ;^
     commit;
     select current_timestamp as bulk_insert_finish from rdb$database;
 '''
@@ -91,11 +116,11 @@ sql_create_indx='''\
     set list on;
     set blob all;
     select 
-        iif( gen_id(g,0) > 0 and gen_id(g,0) < %(rows_to_add)s, 
+        iif( gen_id(g,0) > 0 and gen_id(g,0) < 1 + %(rows_to_add)s, 
              'OK, IS RUNNING', 
              iif( gen_id(g,0) <=0, 
                   'WRONG: not yet started, current gen_id='||gen_id(g,0), 
-                  'WRONG: already finished, rows_to_add='||%(rows_to_add)s
+                  'WRONG: already finished, rows_to_add='||%(rows_to_add)s ||', current gen_id='||gen_id(g,0)
                 )
            ) as inserts_state, 
         current_timestamp as create_indx_start 
@@ -111,7 +136,7 @@ sql_create_indx='''\
     commit;
 
     select 
-        iif(  gen_id(g,0) = %(rows_to_add)s, 
+        iif(  gen_id(g,0) >= 1 + %(rows_to_add)s, 
               'OK, FINISHED', 
               'SOMETHING WRONG: current gen_id=' || gen_id(g,0)||', rows_to_add='||%(rows_to_add)s
            ) as inserts_state
@@ -120,7 +145,6 @@ sql_create_indx='''\
     set count on;
     select
         rdb$index_name
-        ,rdb$index_id
         ,coalesce(rdb$unique_flag,0) as rdb$unique_flag
         ,coalesce(rdb$index_inactive,0) as rdb$index_inactive
         ,rdb$expression_source as rdb_expr_blob
@@ -142,7 +166,7 @@ tx_param=['WAIT','NO WAIT','LOCK TIMEOUT 1']
 
 for i in range(len(tx_param)):
 
-    #if i >= 1:
+    #if i >= 2:
     #    continue # temply!
 
     f_bulk_insert_sql = open( os.path.join(context['temp_directory'],'tmp_1746_ins.sql'), 'w')
@@ -165,14 +189,15 @@ for i in range(len(tx_param)):
                                    stderr = subprocess.STDOUT
                                  )
 
-    time.sleep(1)
+    # 3.0 Classic: seems that it requires at least 2 seconds for ISQL be loaded into memory.
+    time.sleep(3)
 
     p_create_indx=subprocess.Popen( ["isql", dsn, "-q", "-i", f_create_indx_sql.name ],
                                    stdout = f_create_indx_log,
                                    stderr = subprocess.STDOUT
                                  )
 
-    time.sleep(10)
+    time.sleep(6)
 
     p_create_indx.terminate()
     p_bulk_insert.terminate()
@@ -222,12 +247,12 @@ for i in range(len(tx_param)):
     f_shutdown_log.close()
     #os.remove(f_shutdown_log.name)
 
-    '''
+
     f_list=[f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log, f_shutdown_log]
     for i in range(len(f_list)):
        if os.path.isfile(f_list[i].name):
            os.remove(f_list[i].name)
-    '''
+
 
 """,
  'expected_stdout': 
@@ -241,7 +266,6 @@ for i in range(len(tx_param)):
     0: CREATE INDEX LOG: SET ECHO OFF;
     0: CREATE INDEX LOG: INSERTS_STATE                   OK, FINISHED
     0: CREATE INDEX LOG: RDB$INDEX_NAME                  TEST_WAIT
-    0: CREATE INDEX LOG: RDB$INDEX_ID                    1
     0: CREATE INDEX LOG: RDB$UNIQUE_FLAG                 0
     0: CREATE INDEX LOG: RDB$INDEX_INACTIVE              0
     0: CREATE INDEX LOG: RDB_EXPR_BLOB
@@ -252,6 +276,7 @@ for i in range(len(tx_param)):
     0: CREATE INDEX LOG: PLAN (TEST INDEX (TEST_WAIT))
     0: CREATE INDEX LOG: SET PLAN OFF;
     0: CREATE INDEX LOG: SET ECHO OFF;
+
     1: BULK INSERTS LOG: BULK_INSERT_START
     1: BULK INSERTS LOG: BULK_INSERT_FINISH
     1: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
@@ -277,6 +302,7 @@ for i in range(len(tx_param)):
     2: CREATE INDEX LOG: -UNSUCCESSFUL METADATA UPDATE
     2: CREATE INDEX LOG: -OBJECT TABLE "TEST" IS IN USE
     2: CREATE INDEX LOG: AFTER LINE
+
   """,
   'substitutions':[
       ('0: CREATE INDEX LOG: RDB_EXPR_BLOB.*', '0: CREATE INDEX LOG: RDB_EXPR_BLOB'),
