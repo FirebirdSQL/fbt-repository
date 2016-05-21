@@ -3,7 +3,13 @@
 'qmid': None,
 'tracker_id': 'CORE-4870',
 'title': 'Incorrect number of affected rows for UPDATE against VIEW created WITH CHECK OPTION',
-'description': '',
+'description': 
+ """
+   Issue about 2.5.x: added artificial sort inside MERGE source in order to avoid unstable cursor affects.
+   Until 21-may-2016 ISQL 2.5 did not contain portion that fixed CORE-4817
+   (see: https://github.com/FirebirdSQL/firebird/commit/845120fdb9b5934e3af32b5404ffde7ed363724d )
+   - letter from dimitr, 21-may-2016 14:51.
+ """,
 'min_versions': '2.5.6',
 'versions': [
 {
@@ -46,19 +52,19 @@
     update v_test3 set x = -x where mod(id,3) = 0;
     rollback;
     
-    merge into v_test1 t using(select id, x from test) s on t.id = s.id
+    merge into v_test1 t using(select id, x from test ORDER BY X ) s on t.id = s.id
     when matched then update set x = -s.x
     when not matched then insert(id, x) values( -3 * s.id, -s.x )
     ;
     rollback;
     
-    merge into v_test2 t using(select id, x from test) s on t.id = s.id -- and mod(s.id, 3) = 0
+    merge into v_test2 t using(select id, x from test ORDER BY X ) s on t.id = s.id
     when matched then update set x = -s.x
     when not matched then insert(id, x) values( -3 * s.id, -s.x )
     ;
     rollback;
     
-    merge into v_test3 t using(select id, x from test) s on t.id = s.id -- and mod(s.id, 3) = 0
+    merge into v_test3 t using(select id, x from test ORDER BY X ) s on t.id = s.id
     when matched then update set x = -s.x
     when not matched then insert(id, x) values( -3 * s.id, -s.x )
     ;
