@@ -3,206 +3,238 @@
 'qmid': None,
 'tracker_id': 'CORE-3076',
 'title': 'Better performance for (table.field = :param or :param = -1) in where clause',
-'description': 'Execute SP_TEST with several NOT-null args and check RATIO of rec_idx_reads and rec_seq_reads',
-'min_versions': '2.5.0',
+'description': 
+  """
+    Test adds 20'000 rows into a table with single field and two indices on it (asc & desc).
+    Indexed field will have values which will produce very poor selectivity (~1/3).
+    Then we check number of indexed and natural reads using mon$ tables and prepared view
+    from .fbk. 
+    We check cases when SP count rows using equality (=), IN and BETWEEN expr.
+    When we pass NULLs then procedure should not produce any indexed reads.
+    When we pass not null value then SP should produce IR with number ~ 1/3 of total rows in the table.
+  """,
+'min_versions': '3.0',
 'versions': [
-{
- 'firebird_version': '2.5',
- 'platform': 'All',
- 'database': 'Restore',
- 'backup_file': 'core3076.fbk',
- 'page_size': '4096',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    delete from mon_log;
-    commit;
-    
-    ---------------------------------------------------------------------------------------
-    -- We call SP_ADD_MON which gathers statistics of all MON$ tables BEFORE and AFTER
-    -- of execution SP_TEST. Statistics is gathered in AUTONOMOUS transaction.
-    -- Difference between values of mon$ tables can be used to estimate which kind of
-    -- scans (natural of index) occured.
-    ---------------------------------------------------------------------------------------
-
-    execute procedure sp_add_mon(0); -- mon$ gathering BEFORE
-    commit;
-    execute procedure sp_test(0); 
-    commit;
-    execute procedure sp_add_mon(0); -- mon$ gathering AFTER
-    commit;
-    -- Results:
-    -- 1) two records has been added into MON_LOG table, with common value in column ROWSET, and it is equal to 0.
-    -- 2) [before 3.0] for ALL types of architecures (CS/SC/SS): no IDX reads at all, only NATURAL ones.
-    --    (because such optimization was done only for 3.0 -- see below)
-   
-    
-    execute procedure sp_add_mon(37); -- mon$ gathering BEFORE
-    commit;
-    execute procedure sp_test(37);
-    commit;
-    execute procedure sp_add_mon(37); -- mon$ gathering AFTER
-    commit;
-
-    
-    execute procedure sp_add_mon(75); -- mon$ gathering BEFORE
-    commit;
-    execute procedure sp_test(75);
-    commit;
-    execute procedure sp_add_mon(75); -- mon$ gathering AFTER
-    commit;
-    
-    
-    execute procedure sp_add_mon(null);
-    commit;
-    execute procedure sp_test(null); -- here only NATURAL scans will be. NB: this call has to be placed AFTER all in SuperServer!
-    commit;
-    execute procedure sp_add_mon(null);
-    commit;
-    
-    -- This query will return for all values of ARG_VALUE only NATural scans in 2.5:
-
-    select rowset as arg_value, iif( nat_scans > idx_scans, 'NAT', 'IDX' ) scans_occured
-    from (
-      select m.rowset, max(m.rec_seq_reads) - min(m.rec_seq_reads) nat_scans, max(m.rec_idx_reads) - min(m.rec_idx_reads) idx_scans
-      from mon_log m
-      group by m.rowset
-      --where m.remote_pid is not null
-    )
-    ;
-  """,
- 'expected_stdout': 
-  """
-       ARG_VALUE SCANS_OCCURED
-    ============ =============
-          <null> NAT
-               0 NAT
-              37 NAT
-              75 NAT
-  """,
-  'substitutions': [('=.*','')]
-},
 {
  'firebird_version': '3.0',
  'platform': 'All',
  'database': 'Restore',
- 'backup_file': 'core3076.fbk',
- 'page_size': '4096',
+ 'backup_file': 'mon-stat-gathering-3_0.fbk',
  'test_type': 'ISQL',
  'test_script': 
   """
-    ---------------------------------------------------------------------------------------
-    -- We call SP_ADD_MON which gathers statistics of all MON$ tables BEFORE and AFTER
-    -- of execution SP_TEST. Statistics is gathered in AUTONOMOUS transaction.
-    -- Difference between values of mon$ tables can be used to estimate which kind of
-    -- scans (natural of index) occured.
-    ----------------------------------- [  A C H T U N G  ] -------------------------------
-    -- It was encountered in 3.0 that:
-    -- 1. Difference of counters mon$record_stats.mon$record_IDX_reads will be ACCURATE
-    --    only in CLASSIC and SUPERCLASSIC, and it should be always ZERO in 3.0 if we pass
-    --    NOT-null argument (i.e. values of 0, 37 or 75).
-    -- 2. However, in SUPERSERVER difference of mon$record_IDX_reads will be GREATER than 0,
-    --    but still greater than difference of mon$record_SEQ_reads, so we have only APPROXIMATE
-    --    indication that query in SP_TEST really used index on table for not-null argument.
-    delete from mon_log;
+    set bail on;
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop sequence g';
+      when any do begin end
+    end
+    ^
+    set term ;^
     commit;
-    
-    execute procedure sp_add_mon(0);
+    create sequence g;
     commit;
-    execute procedure sp_test(0);
-    commit;
-    execute procedure sp_add_mon(0);
-    commit;
-    -- Results:
-    -- 1) two records has been added into MON_LOG table, with common value in column ROWSET, and it is equal to 0.
-    -- 2) [only in 3.0] CS and SC: difference of rec_idx_reads = 0 ==> 
-    -- 3) [only in 3.0] SS: difference of rec_IDX_reads > 0, but it is GREATER than difference of rec_SEQ_reads
-    
-    
-    execute procedure sp_add_mon(37);
-    commit;
-    execute procedure sp_test(37);
-    commit;
-    execute procedure sp_add_mon(37);
-    commit;
-    
-    execute procedure sp_add_mon(75);
-    commit;
-    execute procedure sp_test(75);
-    commit;
-    execute procedure sp_add_mon(75);
-    commit;
-    
-    execute procedure sp_add_mon(null);
-    commit;
-    execute procedure sp_test(null);
-    commit;
-    execute procedure sp_add_mon(null);
-    commit;
-    
-    --    Results for query:
-    --
-    --          select
-    --              m.rowset,
-    --              max(m.rec_seq_reads) - min(m.rec_seq_reads) nat_scans,
-    --              max(m.rec_idx_reads) - min(m.rec_idx_reads) idx_scans
-    --          from mon_log m
-    --          group by m.rowset
-    --
-    --    -- are like these:
-    --
-    --    1. For Classic and SuperClassic:
-    --    [all runs]:
-    --     ROWSET             NAT_SCANS             IDX_SCANS
-    --    ======= ===================== =====================
-    --     <null>                   200                     0
-    --          0                     0                    26
-    --         37                     0                     2
-    --         75                     0                     1
-    --    
-    --    2. For SuperServer:
-    --    [run-1]:
-    --          ROWSET             NAT_SCANS             IDX_SCANS
-    --    ============ ===================== =====================
-    --          <null>                   288                   228
-    --               0                    88                   225
-    --              37                    88                   227
-    --              75                    88                   228
-    --    
-    --    [runs 2,3,...] -- same for each:
-    --          ROWSET             NAT_SCANS             IDX_SCANS
-    --    ============ ===================== =====================
-    --          <null>                   304                   228
-    --               0                   104                   225
-    --              37                   104                   227
-    --              75                   104                   228
-    --        
-    --    So, the single common rule here is:
-    --    ########################################################################################
-    --    "Number of IDX_scans should be GREATER than number of NAT_scans when ROWSET is NOT null"
-    --    ########################################################################################
 
-    select rowset as arg_value, iif( nat_scans > idx_scans, 'NAT', 'IDX' ) scans_occured
+    create or alter procedure sp_test_x as begin end;
+    create or alter procedure sp_test_y as begin end;
+    commit;
+
+    recreate table test(x int, y int);
+    recreate table tcnt(q int); -- this serves only for storing total number of rows in 'TEST' table.
+    commit;
+
+    set term ^ ;
+    create or alter procedure sp_test_x(arg_a int, arg_b int) -- for testing ASCENDING index
+    as
+        declare c int;
+    begin
+        if ( :arg_a = 0 ) then
+            select count(*) from test where x = :arg_a or :arg_a is null into c;
+        else if ( :arg_a = 1 ) then
+            select count(*) from test where x in (:arg_a, :arg_b) or :arg_a is null into c;
+        else
+            select count(*) from test where x between :arg_a and :arg_b or :arg_a is null into c;
+    end
+    ^
+    create or alter procedure sp_test_y(arg_a int, arg_b int) -- for testing DESCENDING index
+    as
+        declare c int;
+    begin
+        if ( :arg_a = 0 ) then
+            select count(*) from test where y = :arg_a or :arg_a is null into c;
+        else if ( :arg_a = 1 ) then
+            select count(*) from test where y in (:arg_a, :arg_b) or :arg_a is null into c;
+        else
+            select count(*) from test where y between :arg_a and :arg_b or :arg_a is null into c;
+    end
+    ^
+    set term ; ^
+    commit;
+
+    insert into test (x, y)
+    select mod( gen_id(g,1), 3 ), mod( gen_id(g,1), 3 )
+    from rdb$types, rdb$types
+    rows 20000;
+    insert into tcnt(q) select count(*) from test;
+    commit;
+
+    create index test_x on test(x);
+    create descending index test_y on test(y);
+    commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey'; -- mandatory!
+    
+    execute procedure sp_truncate_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_x(0, 0);
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_y(0, 0);
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_x(1, 1);
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_y(1, 1);
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_x(2, 2);
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_y(2, 2);
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_x(null, null); -- check that asc index will NOT be in use when count for :a is null
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    --------------------------------
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    execute procedure sp_test_y(null, null); -- check that desc index will NOT be in use when count for :a is null
+
+    execute procedure sp_gather_stat;
+    commit;
+
+    SET LIST ON;
+    select * 
     from (
-      select m.rowset, max(m.rec_seq_reads) - min(m.rec_seq_reads) nat_scans, max(m.rec_idx_reads) - min(m.rec_idx_reads) idx_scans
-      from mon_log m
-      group by m.rowset
-      --where m.remote_pid is not null
+        select 
+            'When input arg is NOT null' as what_we_check,
+            rowset,
+            iif( natural_reads = 0 
+                 and indexed_reads - total_rows/3.00 < 120 -- max detected was: 6685 for c.total_rows=20'000
+                ,'OK'
+                ,'POOR:'||
+                 ' NR=' || coalesce(natural_reads, '<null>') ||
+                 ', IR='|| coalesce(indexed_reads, '<null>')
+               ) as result
+        from (
+            select v.rowset, v.natural_reads, v.indexed_reads, c.q as total_rows
+            from v_agg_stat v cross join tcnt c
+            where rowset <= 6
+        )
+
+        UNION ALL
+        
+        select 
+            'When input arg is NULL' as what_we_check,
+            rowset,
+            iif( natural_reads = total_rows
+                 and indexed_reads = 0
+                ,'OK'
+                ,'POOR:'||
+                 ' NR=' || coalesce(natural_reads, '<null>') ||
+                 ', IR='|| coalesce(indexed_reads, '<null>')
+               ) as result
+        from (
+            select v.rowset, v.natural_reads, v.indexed_reads, c.q as total_rows 
+            from v_agg_stat v cross join tcnt c
+            where rowset > 6
+        )
     )
-    ;
-
-
+    order by rowset;
   """,
  'expected_stdout': 
   """
-       ARG_VALUE SCANS_OCCURED
-    ============ =============
-          <null> NAT
-               0 IDX
-              37 IDX
-              75 IDX
-  """,
-  'substitutions': [('=.*','')]
+    WHAT_WE_CHECK                   When input arg is NOT null
+    ROWSET                          1
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NOT null
+    ROWSET                          2
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NOT null
+    ROWSET                          3
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NOT null
+    ROWSET                          4
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NOT null
+    ROWSET                          5
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NOT null
+    ROWSET                          6
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NULL
+    ROWSET                          7
+    RESULT                          OK
+    WHAT_WE_CHECK                   When input arg is NULL
+    ROWSET                          8
+    RESULT                          OK
+  """
 }
 ]
 }
