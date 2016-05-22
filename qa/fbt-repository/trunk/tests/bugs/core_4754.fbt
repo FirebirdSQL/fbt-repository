@@ -31,6 +31,7 @@
   """
 import os
 import subprocess
+import fdb
 
 db_conn.close()
 os.environ["ISC_USER"] = user_name
