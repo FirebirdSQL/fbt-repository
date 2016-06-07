@@ -10,35 +10,6 @@ Basic SELECT
 """,
 'versions': [
 {
- 'firebird_version': '1.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': """CREATE ROLE test;
-COMMIT;
-SELECT * FROM RDB$ROLES;
-""",
- 'expected_stdout': """RDB$ROLE_NAME                   RDB$OWNER_NAME
-=============================== ===============================
-
-TEST                            SYSDBA
-"""
-},
-{
- 'firebird_version': '2.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': """CREATE ROLE test;
-COMMIT;
-SELECT * FROM RDB$ROLES;
-""",
- 'expected_stdout': """
-RDB$ROLE_NAME                                                                                 RDB$OWNER_NAME                                                                                  RDB$DESCRIPTION RDB$SYSTEM_FLAG
-=============================================================================== =============================================================================== ================= ===============
-TEST                                                                                          SYSDBA                                                                                                   <null>               0
-
-"""
-},
-{
  'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
@@ -79,7 +50,33 @@ TEST                                                                            
     RDB$SYSTEM_FLAG                 0
     RDB$SECURITY_CLASS              <null>
   """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create role test;
+    commit;
+    set list on;
+    select * from rdb$roles;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$ROLE_NAME                   RDB$ADMIN
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
+    RDB$ROLE_NAME                   TEST
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 0
+    RDB$SECURITY_CLASS              <null>
+    RDB$SYSTEM_PRIVILEGES           0000000000000000
+  """
 }
-
 ]
 }
