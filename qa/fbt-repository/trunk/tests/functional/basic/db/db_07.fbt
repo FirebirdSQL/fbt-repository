@@ -8205,18 +8205,6 @@
     set blob all;
     set count on;
     select * from rdb$fields order by rdb$field_name;
-    /*
-        Changed after ~WI-T6.3.0.159 (07-may-2016):
-        https://github.com/FirebirdSQL/firebird/commit/8186c1e40b6f39c9fc3bb3b1c996395f51054afc
-        CORE-2192: Extend maximum database page size to 32KB. All underlying 
-
-        RDB$FIELD_NAME                  RDB$PAGE_SIZE                                                                                
-        . . .
-        RDB$FIELD_LENGTH                4 << was: 2
-        RDB$FIELD_SCALE                 0
-        RDB$FIELD_TYPE                  8 << was: 7
-        . . .
-    */
   """,
  'expected_stdout': 
   """
@@ -12324,6 +12312,41 @@
     RDB$SECURITY_CLASS              SQL$8                                                                                        
     RDB$OWNER_NAME                  SYSDBA                                                                                       
 
+    RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                        
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               2:1e3
+            	blr_version5,
+            	blr_literal, blr_text2, 1,0, 8,0, 0,0,0,0,0,0,0,0,
+            	blr_eoc
+
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                8
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  14
+    RDB$FIELD_SUB_TYPE              1
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                0
+    RDB$CHARACTER_SET_ID            1
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$151                                                                                      
+    RDB$OWNER_NAME                  SYSDBA                                                                                       
+
     RDB$FIELD_NAME                  RDB$TIMESTAMP                                                                                
     RDB$QUERY_NAME                  <null>
     RDB$VALIDATION_BLR              <null>
@@ -12882,7 +12905,7 @@
     RDB$SECURITY_CLASS              SQL$133                                                                                      
     RDB$OWNER_NAME                  SYSDBA                                                                                       
 
-    Records affected: 150
+    Records affected: 151
   """,
   'substitutions': [
     ('RDB\$DEFAULT_VALUE.*',''),
