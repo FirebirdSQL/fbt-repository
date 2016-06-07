@@ -6,12 +6,6 @@
 'description': 'Check for correct content of RDB$ROLES in empty database.',
 'versions': [
 {
- 'firebird_version': '1.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 'select * from RDB$ROLES;'
-},
-{
  'firebird_version': '2.5.0',
  'platform': 'All',
  'test_type': 'ISQL',
@@ -44,6 +38,25 @@
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
     RDB$SECURITY_CLASS              <null>
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select * from RDB$ROLES;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$ROLE_NAME                   RDB$ADMIN
+    RDB$OWNER_NAME                  SYSDBA
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
   """
 }
 ]
