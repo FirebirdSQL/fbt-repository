@@ -12,8 +12,29 @@
    5. Stop trace session. Output its log with filtering only statistics info.
 
    Checked on: WI-V2.5.5.26916 (SS, SC, CS); WI-V3.0.0.32008 (SS, SC, CS). Result: OK.
+   Checked on: 3.0.1.32525, 4.0.0.238 // 07-jun-2016
    ::: NB :::
    Several delays (time.sleep) added in main thread because of OS buffering. Couldn't switch this buffering off.
+
+
+   ::: NB ::: 07-jun-2016.
+
+   WI-T4.0.0.238 will issue in trace log following statement with its statistics ("1 records fetched"):
+   ===
+   with recursive role_tree as (     
+     select rdb$relation_name as nm, 0 as ur from rdb$user_privileges         
+     where 
+         rdb$privilege = 'M' and rdb$field_name = 'D' 
+         and rdb$user = ?  and rdb$user_type = 8     
+     union all     
+     select rdb$role_name as nm, 1 as ur from rdb$roles         
+     where rdb$role_name =...
+
+   param0 = varchar(93), "SYSDBA"
+   param1 = varchar(93), "NONE"
+   ===
+   We have to SKIP this statement statistics and start to check only "our" selects from rdb$database¡
+   see usage of first_sttm_pattern and trace_stat_pattern.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -30,6 +51,7 @@ import os
 import subprocess
 from subprocess import Popen
 import time
+import re
 
 db_conn.close()
 
@@ -181,14 +203,24 @@ f_trclog.close()
 # Output log of trace session, with filtering only info about statistics ('fetches'):
 
 # Output log of trace for comparing it with expected: it must contain only TWO events: TRACE_INIT and TRACE_FINI
+#with open( trclog.name,'r') as f:
+#    print(f.read())
+
+first_sttm_pattern=re.compile("select 1 k1")
+trace_stat_pattern=re.compile("1 records fetched")
+flag=0
 with open( trclog.name,'r') as f:
-    print(f.read())
+    for line in f:
+        if first_sttm_pattern.match(line):
+            flag=1
+        if flag==1 and trace_stat_pattern.match(line):
+            print(line)
+
 f.close()
 
 # Cleanup:
 ##########
 time.sleep(1)
-
 if os.path.isfile(sqllog.name):
     os.remove(sqllog.name)
 if os.path.isfile(trccfg.name):
