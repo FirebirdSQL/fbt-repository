@@ -6,6 +6,27 @@
 'description': 
  """
    WI-V2.5.2.26540: confirmed wrong parameters sequence in trace log: 1,4,3,2.
+
+   ::: NB ::: 07-jun-2016.
+
+   WI-T4.0.0.238 will issue in trace log following parametrized statement:
+   ===
+   with recursive role_tree as (     
+     select rdb$relation_name as nm, 0 as ur from rdb$user_privileges         
+     where 
+         rdb$privilege = 'M' and rdb$field_name = 'D' 
+         and rdb$user = ?  and rdb$user_type = 8     
+     union all     
+     select rdb$role_name as nm, 1 as ur from rdb$roles         
+     where rdb$role_name =...
+
+   param0 = varchar(93), "SYSDBA"
+   param1 = varchar(93), "NONE"
+   ===
+
+   This statement will issued BEFORE our call of stored procedure, so we have to analyze
+   lines from trace only AFTER we found pattern 'execute procedure sp_test'.
+
  """,
 'min_versions': '2.5.3',
 'versions': [
@@ -183,19 +204,23 @@ trc_log.close()
 #############
 # O U T P U T
 #############
-pattern = re.compile("param[0-9]{1} = ")
+spcall_pattern=re.compile("execute procedure ")
+params_pattern = re.compile("param[0-9]{1} = ")
+flag=0
 with open( trc_log.name,'r') as f:
     for line in f:
-        if pattern.match(line):
-            print( line )
+        if spcall_pattern.match(line):
+            flag=1
+        if flag==1 and params_pattern.match(line):
+            print(line)
 f.close()
 
 ###############################
 # Cleanup.
 
 f_list=[]
-f_list.append(trc_log)
 
+f_list.append(trc_log)
 for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
