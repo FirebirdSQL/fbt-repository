@@ -36,14 +36,33 @@ MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """SELECT MON$ODS_MAJOR, MON$ODS_MINOR, MON$SQL_DIALECT FROM MON$DATABASE;
-""",
- 'expected_stdout': """
-MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
-============= ============= ===============
-           12             0               3
-
-"""
+ 'test_script': 
+  """
+    set list on;
+    select mon$ods_major, mon$ods_minor, mon$sql_dialect from mon$database; 
+  """,
+ 'expected_stdout': 
+ """
+    MON$ODS_MAJOR                   12
+    MON$ODS_MINOR                   0
+    MON$SQL_DIALECT                 3
+ """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select mon$ods_major, mon$ods_minor, mon$sql_dialect from mon$database; 
+  """,
+ 'expected_stdout': 
+ """
+    MON$ODS_MAJOR                   13
+    MON$ODS_MINOR                   0
+    MON$SQL_DIALECT                 3
+ """
 }
 ]
 }
