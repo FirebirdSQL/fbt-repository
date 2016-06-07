@@ -85,7 +85,7 @@ sql_bulk_insert='''\
     delete from test;
     commit;
     
-    set transaction lock timeout 7; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY, see below auton Tx start.
+    set transaction lock timeout 10; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY, see below auton Tx start.
 
     select current_timestamp as bulk_insert_start from rdb$database;
     set term ^;
@@ -162,7 +162,20 @@ sql_create_indx='''\
     commit;
 '''
 
+sql_kill_att='''\
+set count on; 
+set list on; 
+COMMIT; 
+--select * from mon$attachments where mon$attachment_id<>current_connection; 
+delete from mon$attachments where mon$attachment_id<>current_connection;
+'''
+
+f_kill_att_sql = open( os.path.join(context['temp_directory'],'tmp_1746_kill_att.sql' ), 'w')
+f_kill_att_sql.write( sql_kill_att )
+f_kill_att_sql.close()
+
 tx_param=['WAIT','NO WAIT','LOCK TIMEOUT 1']
+tx_param=['WAIT','NO WAIT']
 
 for i in range(len(tx_param)):
 
@@ -197,7 +210,15 @@ for i in range(len(tx_param)):
                                    stderr = subprocess.STDOUT
                                  )
 
-    time.sleep(6)
+    time.sleep(3)
+
+    f_kill_att_log = open( os.path.join(context['temp_directory'],'tmp_1746_kill_att.log' ), 'w')
+
+    subprocess.call( ["isql", dsn, "-q", "-i", f_kill_att_sql.name ],
+                                   stdout = f_kill_att_log,
+                                   stderr = subprocess.STDOUT
+                                 )
+    f_kill_att_log.close()
 
     p_create_indx.terminate()
     p_bulk_insert.terminate()
@@ -205,8 +226,10 @@ for i in range(len(tx_param)):
     f_bulk_insert_log.close()
     f_create_indx_log.close()
 
+    
     f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_1746.log'), 'w')
 
+    '''
     subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
                       "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
                       "dbname", db_file,
@@ -222,6 +245,9 @@ for i in range(len(tx_param)):
                      stdout = f_shutdown_log,
                      stderr = subprocess.STDOUT
                    )
+    '''
+    f_shutdown_log.close()
+
 
     with open( f_bulk_insert_log.name,'r') as f:
         for line in f:
@@ -244,65 +270,39 @@ for i in range(len(tx_param)):
             if line.split():
                 print( str(i)+': DB SHUTDOWN LOG: '+line.upper() )
     f.close()
-    f_shutdown_log.close()
     #os.remove(f_shutdown_log.name)
 
+    
+    with open( f_kill_att_log.name,'r') as f:
+        for line in f:
+            if line.split():
+                print( str(i)+': KILL ATTACH LOG: '+line.upper() )
+    f.close()
 
-    f_list=[f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log, f_shutdown_log]
+
+    f_list=[f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log, f_kill_att_sql, f_kill_att_log, f_shutdown_log]
+    '''
     for i in range(len(f_list)):
        if os.path.isfile(f_list[i].name):
            os.remove(f_list[i].name)
-
+    '''
 
 """,
  'expected_stdout': 
   """
-    0: BULK INSERTS LOG: BULK_INSERT_START
-    0: BULK INSERTS LOG: BULK_INSERT_FINISH
-    0: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
-    0: CREATE INDEX LOG: CREATE_INDX_START
-    0: CREATE INDEX LOG: SET TRANSACTION WAIT;
-    0: CREATE INDEX LOG: CREATE INDEX TEST_WAIT ON TEST COMPUTED BY( 'WAIT'|| S );
-    0: CREATE INDEX LOG: SET ECHO OFF;
-    0: CREATE INDEX LOG: INSERTS_STATE                   OK, FINISHED
-    0: CREATE INDEX LOG: RDB$INDEX_NAME                  TEST_WAIT
-    0: CREATE INDEX LOG: RDB$UNIQUE_FLAG                 0
-    0: CREATE INDEX LOG: RDB$INDEX_INACTIVE              0
-    0: CREATE INDEX LOG: RDB_EXPR_BLOB
-    0: CREATE INDEX LOG: ( 'WAIT'|| S )
-    0: CREATE INDEX LOG: RECORDS AFFECTED: 1
-    0: CREATE INDEX LOG: SET PLAN ON;
-    0: CREATE INDEX LOG: SELECT 1 FROM TEST WHERE 'WAIT'|| S > '' ROWS 0;
-    0: CREATE INDEX LOG: PLAN (TEST INDEX (TEST_WAIT))
-    0: CREATE INDEX LOG: SET PLAN OFF;
-    0: CREATE INDEX LOG: SET ECHO OFF;
-
-    1: BULK INSERTS LOG: BULK_INSERT_START
-    1: BULK INSERTS LOG: BULK_INSERT_FINISH
-    1: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
-    1: CREATE INDEX LOG: CREATE_INDX_START
-    1: CREATE INDEX LOG: SET TRANSACTION NO WAIT;
-    1: CREATE INDEX LOG: CREATE INDEX TEST_NO_WAIT ON TEST COMPUTED BY( 'NO_WAIT'|| S );
-    1: CREATE INDEX LOG: SET ECHO OFF;
-    1: CREATE INDEX LOG: STATEMENT FAILED, SQLSTATE = 40001
-    1: CREATE INDEX LOG: LOCK CONFLICT ON NO WAIT TRANSACTION
-    1: CREATE INDEX LOG: -UNSUCCESSFUL METADATA UPDATE
-    1: CREATE INDEX LOG: -OBJECT TABLE "TEST" IS IN USE
-    1: CREATE INDEX LOG: AFTER LINE
-
-    2: BULK INSERTS LOG: BULK_INSERT_START               
-    2: BULK INSERTS LOG: BULK_INSERT_FINISH              
-    2: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
-    2: CREATE INDEX LOG: CREATE_INDX_START               
-    2: CREATE INDEX LOG: SET TRANSACTION LOCK TIMEOUT 1;
-    2: CREATE INDEX LOG: CREATE INDEX TEST_LOCK_TIMEOUT_1 ON TEST COMPUTED BY( 'LOCK_TIMEOUT_1'|| S );
-    2: CREATE INDEX LOG: SET ECHO OFF;
-    2: CREATE INDEX LOG: STATEMENT FAILED, SQLSTATE = 40001
-    2: CREATE INDEX LOG: LOCK TIME-OUT ON WAIT TRANSACTION
-    2: CREATE INDEX LOG: -UNSUCCESSFUL METADATA UPDATE
-    2: CREATE INDEX LOG: -OBJECT TABLE "TEST" IS IN USE
-    2: CREATE INDEX LOG: AFTER LINE
-
+0: BULK INSERTS LOG: BULK_INSERT_START
+0: BULK INSERTS LOG: STATEMENT FAILED, SQLSTATE = 08003
+0: BULK INSERTS LOG: CONNECTION SHUTDOWN
+0: BULK INSERTS LOG: AFTER LINE
+0: CREATE INDEX LOG: INSERTS_STATE                   OK, IS RUNNING
+0: CREATE INDEX LOG: CREATE_INDX_START
+0: CREATE INDEX LOG: SET TRANSACTION WAIT;
+0: CREATE INDEX LOG: CREATE INDEX TEST_WAIT ON TEST COMPUTED BY( 'WAIT'|| S );
+0: CREATE INDEX LOG: SET ECHO OFF;
+0: CREATE INDEX LOG: STATEMENT FAILED, SQLSTATE = 08003
+0: CREATE INDEX LOG: CONNECTION SHUTDOWN
+0: CREATE INDEX LOG: AFTER LINE
+0: KILL ATTACH LOG: RECORDS AFFECTED: 2
   """,
   'substitutions':[
       ('0: CREATE INDEX LOG: RDB_EXPR_BLOB.*', '0: CREATE INDEX LOG: RDB_EXPR_BLOB'),
