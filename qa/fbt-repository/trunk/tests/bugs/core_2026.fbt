@@ -3,88 +3,50 @@
 'qmid': None,
 'tracker_id': 'CORE-2026',
 'title': 'Problem with a read-only marked database',
-'description': '',
-'min_versions': '',
+'description':
+ """
+   Since FB 2.1 engine performs transliteraion of blobs between character sets. 
+   In this case system blob, stored in UNICODE_FSS, transliterated into connection charset. 
+   To do this, temporary blob is created. Engine didn't support temporary blobs creation in 
+   read-only databases since read-only databases was introduced
+ """,
+'min_versions': '2.5.0',
 'versions': [
-{
- 'firebird_version': '2.1.2',
- 'platform': 'All',
- 'database_character_set': 'ISO8859_1',
- 'page_size': '4096',
- 'init_script': """create table test (test integer default 0);
-""",
- 'test_type': 'Python',
- 'test_script': '''db_conn.close()
-runProgram('gfix',['-mode','read_only','-user',user_name,'-pas',user_password,dsn])
-
-script = """select RDB$FIELD_NAME, rdb$default_source from rdb$relation_fields where rdb$default_source is not null;
-"""
-runProgram('isql',['-ch','iso8859_1','-user',user_name,'-pas',user_password,dsn],script)
-
-#db_conn = kdb.connect(dsn=dsn,user=user_name,password=user_password,charset='iso8859_1')
-#c = db_conn.cursor()
-#c.execute("select RDB$FIELD_NAME, rdb$default_source from rdb$relation_fields where rdb$default_source is not null")
-#printData(c)
-#db_conn.close()
-''',
- 'expected_stdout': """
-RDB$FIELD_NAME                  RDB$DEFAULT_SOURCE
-=============================== ==================
-TEST                                          0:3
-==============================================================================
-RDB$DEFAULT_SOURCE:
-default 0
-==============================================================================
-
-"""
-},
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'database': 'Existing',
- 'database_name': 'core2026-ods11.fdb',
  'database_character_set': 'ISO8859_1',
- 'connection_character_set': 'ISO8859_1',
- 'page_size': '4096',
- 'test_type': 'ISQL',
+ 'test_type': 'Python',
  'test_script':
   """
+import os
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+runProgram('isql',[dsn],'recreate table test (test integer default 0);')
+
+script='''
     set list on;
     set blob all;
+    select mon$read_only from mon$database;
+    set count on;
     select RDB$FIELD_NAME, rdb$default_source 
     from rdb$relation_fields 
     where rdb$default_source is not null;
+'''
+runProgram('gfix',['-mode','read_only',dsn])
+runProgram('isql',['-ch','iso8859_1',dsn],script)
+
   """,
  'expected_stdout': 
   """
-    RDB$FIELD_NAME                  TEST                                                                                         
-    RDB$DEFAULT_SOURCE              5:884
+    MON$READ_ONLY                   1
+    RDB$FIELD_NAME                  TEST
     default 0
-  """,
-  'substitutions': [('RDB\$DEFAULT_SOURCE.*','')]
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'database': 'Existing',
- 'database_name': 'core2026-ods12.fdb',
- 'database_character_set': 'ISO8859_1',
- 'connection_character_set': 'ISO8859_1',
- 'page_size': '4096',
- 'test_type': 'ISQL',
- 'test_script':
-  """
-    set list on;
-    set blob all;
-    select RDB$FIELD_NAME, rdb$default_source 
-    from rdb$relation_fields 
-    where rdb$default_source is not null;
-  """,
- 'expected_stdout': 
-  """
-    RDB$FIELD_NAME                  TEST                                                                                         
-    RDB$DEFAULT_SOURCE              5:d13
-    default 0
+    Records affected: 1
   """,
   'substitutions': [('RDB\$DEFAULT_SOURCE.*','')]
 }
