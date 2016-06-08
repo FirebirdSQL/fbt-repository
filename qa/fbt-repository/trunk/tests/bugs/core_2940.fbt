@@ -33,7 +33,7 @@
    param0 = varchar(93), "SYSDBA"
    param1 = varchar(93), "NONE"
    ===
-   We have to SKIP this statement statistics and start to check only "our" selects from rdb$database¡
+   We have to SKIP this statement statistics and start to check only "our" selects from rdb$database
    see usage of first_sttm_pattern and trace_stat_pattern.
  """,
 'min_versions': '2.5.0',
