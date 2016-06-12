@@ -34,7 +34,6 @@
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script': 
   """
@@ -52,6 +51,29 @@
   """
     01: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 3 UNICODE_FSS
     01: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 3 UNICODE_FSS
+  """,
+  'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    set sqlda_display on;
+    set planonly;
+    select rdb$procedure_source from rdb$procedures where rdb$procedure_source like ?;
+    -- NB: output in 3.0 will contain values of sqltype with ZERO in bit_0,
+    -- so it will be: 520 instead of previous 521.
+    -- (see also: core_4156.fbt)
+  """,
+ 'expected_stdout':
+  """
+    01: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 4 UTF8
+    01: sqltype: 520 BLOB Nullable scale: 0 subtype: 1 len: 8 charset: 4 UTF8
   """,
   'substitutions':[('^((?!sqltype).)*$',''),('[ ]+',' '),('[\t]*',' ')]
 }
