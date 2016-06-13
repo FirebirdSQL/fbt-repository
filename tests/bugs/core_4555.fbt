@@ -15,7 +15,7 @@
   """,
  'test_script':
   """
-    create exception e1 'e1';
+    create exception ddl_exception 'You have no right to create exceptions. Learn DDL triggers first!';
     commit;
     set term ^;
     create or alter trigger t_ddl
@@ -23,47 +23,46 @@
     as
     begin
       if (current_user <> 'DUDE') then
-        exception e1;
+        exception ddl_exception;
     end
     ^
     set term ;^
     commit;
 
-    set echo on;
-
-    create exception e2 'e2';
+    create exception user_exception 'Invalid remainder found for case-1.';
     commit;
+    
     drop trigger t_ddl;
     commit;
-    create exception e2 'e2'
+
+    create exception user_exception 'Invalid remainder found for case-2.'
     ;
-    show exception;
+    commit;
+
+    set list on;
+    set count on;
+    select rdb$exception_name, rdb$message 
+    from rdb$exceptions
+    order by rdb$exception_name;
   """,
   'expected_stdout':
   """
-    create exception e2 'e2';
-    commit;
-    drop trigger t_ddl;
-    commit;
-    create exception e2 'e2'
-    ;
-    show exception;
-    Exception Name                  Used by, Type
-    =============================== =============================================
-    E1
-    Msg: e1
+    RDB$EXCEPTION_NAME              DDL_EXCEPTION                                                                                                                                                                                                                                                              
+    RDB$MESSAGE                     You have no right to create exceptions. Learn DDL triggers first!
 
-    E2
-    Msg: e2
+    RDB$EXCEPTION_NAME              USER_EXCEPTION                                                                                                                                                                                                                                                              
+    RDB$MESSAGE                     Invalid remainder found for case-2.
+
+    Records affected: 2
   """,
   'expected_stderr':
   """
     Statement failed, SQLSTATE = HY000
     unsuccessful metadata update
-    -CREATE EXCEPTION E2 failed
+    -CREATE EXCEPTION USER_EXCEPTION failed
     -exception 1
-    -E1
-    -e1
+    -DDL_EXCEPTION
+    -You have no right to create exceptions. Learn DDL triggers first!
     -At trigger 'T_DDL' line: 6, col: 9
   """,
   'substitutions': [('=.*',''),
