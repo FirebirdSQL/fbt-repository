@@ -204,6 +204,337 @@
     -SQL error code = -104
     -Zero length identifiers are not allowed
   """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    --set echo on;
+    --set list on;
+
+    create role 
+r2345678901234567890123456789012345678901234567890123456789012345;
+
+    create sequence 
+g2345678901234567890123456789012345678901234567890123456789012345;
+
+    create exception
+e2345678901234567890123456789012345678901234567890123456789012345 'foo!..';
+
+    create collation 
+c2345678901234567890123456789012345678901234567890123456789012345 for utf8 from unicode;
+
+    create domain
+d2345678901234567890123456789012345678901234567890123456789012345 int;
+
+    create table
+t2345678901234567890123456789012345678901234567890123456789012345 (x int);
+
+    create table
+x(t2345678901234567890123456789012345678901234567890123456789012345 int);
+
+    create or alter procedure
+p2345678901234567890123456789012345678901234567890123456789012345 as begin end;
+
+    set term ^;
+    create or alter procedure p1 returns(
+o2345678901234567890123456789012345678901234567890123456789012345 int
+) as 
+begin 
+    suspend;
+end^
+
+/* DEFERRED, SEE ISSUE IN CORE-2350, 14.06.2016
+create or alter procedure p2 returns(o2 double precision) as 
+    declare 
+v2345678901234567890123456789012345678901234567890123456789012345b2345678901234567890123456789012345678901234567890123456789012345a2345678901234567890123456789012345678901234567890123456789012345b23456789012345678901234567890123456789012345678901234567890
+    int;
+begin
+    select rand()*1000 as
+a2345678901234567890123456789012345678901234567890123456789012345b2345678901234567890123456789012345678901234567890123456789012345a2345678901234567890123456789012345678901234567890123456789012345b23456789012345678901234567890123456789012345678901234567890
+    from rdb$database
+    into
+v2345678901234567890123456789012345678901234567890123456789012345b2345678901234567890123456789012345678901234567890123456789012345a2345678901234567890123456789012345678901234567890123456789012345b23456789012345678901234567890123456789012345678901234567890;
+    o2 = sqrt(v2345678901234567890123456789012345678901234567890123456789012345b2345678901234567890123456789012345678901234567890123456789012345a2345678901234567890123456789012345678901234567890123456789012345b23456789012345678901234567890123456789012345678901234567890);
+    suspend;
+end^
+*/
+
+    create or alter function
+f2345678901234567890123456789012345678901234567890123456789012345 returns int as 
+begin 
+    return 1; 
+end^
+
+    create or alter function
+f( a2345678901234567890123456789012345678901234567890123456789012345 int ) returns int as 
+begin 
+    return 1; 
+end^
+
+    recreate package p2345678901234567890123456789012345678901234567890123456789012345 as
+    begin
+        function f(a int) returns bigint;
+    end
+    ^
+
+    recreate package p1 as
+    begin
+        function f2345678901234567890123456789012345678901234567890123456789012345( a int) returns bigint;
+    end
+    ^
+
+    recreate package p2 as
+    begin
+        function g( a2345678901234567890123456789012345678901234567890123456789012345 int) returns bigint;
+    end
+    ^
+
+    set term ;^
+
+    -- deferred, see CORE-5277:
+    --create or alter user u2345678901234567890123456789012345678901234567890123456789012345 password 'q';
+    --commit;
+    --create or alter user u234567890123456789012345678901234567890123456789012345678901234567890 password 'q';
+    --commit;
+    --select * from sec$users;
+    --show users;
+
+    -- ############  check that empty names are forbidden  ###############
+
+    create role "";
+
+    create sequence "";
+
+    create domain "" int;
+
+    create exception "" as '@1';
+
+    create view "" as select 1 from rdb$database;
+
+    create table ""(x int);
+
+    create table tx("" int);
+
+    create procedure "" as begin end;
+
+    create procedure p("" int) as begin end;
+
+    set term ^; 
+    create function "" returns int as begin return 1; end
+    ^
+    recreate package "" as
+    begin
+    function pg_func(a int) returns bigint;
+    end
+    ^
+    create package body "" as
+    begin
+        function pg_func(a int) returns bigint as
+        begin
+            return a * a;
+        end
+    end
+
+    recreate package pg_test as
+    begin
+        function ""(a int) returns bigint;
+    end
+    ^
+    create package body pg_test as
+    begin
+        function ""(a int) returns bigint as
+        begin
+            return a * a;
+        end
+    end
+    ^
+    execute block returns("" int) as
+    begin
+    "" = 1;
+    suspend;
+    end
+    ^
+    set term ^;
+
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE ROLE R2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 0 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE SEQUENCE G2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 5 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE EXCEPTION E2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 8 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE COLLATION C2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 11 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE DOMAIN D2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 14 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE TABLE T2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 17 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE TABLE X failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 20 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE OR ALTER PROCEDURE P2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 23 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE OR ALTER PROCEDURE P1 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 28 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE OR ALTER FUNCTION F2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 34 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -CREATE OR ALTER FUNCTION F failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 56 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -RECREATE PACKAGE P2345678901234567890123456789012345678901234567890123456789012345 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 62 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -RECREATE PACKAGE P1 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 68 in file c2560.sql
+    Statement failed, SQLSTATE = 22001
+    unsuccessful metadata update
+    -RECREATE PACKAGE P2 failed
+    -arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 64, actual 65
+    After line 74 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 82 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 94 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 96 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 98 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 100 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 102 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 104 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 106 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 108 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 112 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 114 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 119 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 132 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Zero length identifiers are not allowed
+    After line 140 in file c2560.sql
+  """,
+  'substitutions':[('After line.*','')]
 }
 ]
 }
