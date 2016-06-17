@@ -3,7 +3,10 @@
 'qmid': None,
 'tracker_id': 'CORE-5277',
 'title': 'Parameters with multibyte character sets allow to bypass the character limit of varchar fields',
-'description': '',
+'description':
+ """
+   Checked on LI-V3.0.1.32533, built it from sources 20160617 19:30
+ """,
 'min_versions': '3.0.1',
 'versions': [
 {
