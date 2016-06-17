@@ -22,8 +22,6 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
-db_conn.close()
-
 this_fdb=os.path.join(context['temp_directory'],'bugs.core_5229.fdb')
 who = user_name
 pwd = user_password
