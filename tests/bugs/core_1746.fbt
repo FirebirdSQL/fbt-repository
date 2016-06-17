@@ -9,7 +9,7 @@
    First ISQL session always inserts some number of rows and falls in delay (it is created
    artificially by attempting toinsert duplicate key in index in Tx with lock timeout = 5), 
    second ISQL is started after small delay (~1..2 second) and launches transaction with 
-   correspinding [NO]WAIT-clause. 
+   corresponding [NO]WAIT-clause. 
    If Tx starts with NO wait or lock timeout then this (2nd) ISQL always MUST FAIL.
 
    BOTH isql are launched in asynchronous mode, i.e. as separate child processes.
@@ -175,7 +175,7 @@ f_kill_att_sql.write( sql_kill_att )
 f_kill_att_sql.close()
 
 tx_param=['WAIT','NO WAIT','LOCK TIMEOUT 1']
-tx_param=['WAIT','NO WAIT']
+#tx_param=['WAIT','NO WAIT']
 
 for i in range(len(tx_param)):
 
