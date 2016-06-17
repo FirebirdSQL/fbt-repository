@@ -1,0 +1,62 @@
+{
+'id': 'bugs.core_5277',
+'qmid': None,
+'tracker_id': 'CORE-5277',
+'title': 'Parameters with multibyte character sets allow to bypass the character limit of varchar fields',
+'description': '',
+'min_versions': '3.0.1',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    recreate table test ( c varchar(2) character set utf8 );
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+# 'connection_character_set': 'UTF8',
+
+db_conn.close()
+
+sql_chk='''   
+    set bulk_insert insert into test values(?);
+    ('ab')
+    ('qw')
+    ('er')
+    ('tyu')
+    stop
+    set list on; -- !! do NOT remove this "duplicate" statement, otherwise data will be shown as when set list OFF !! Incredible... 8-O
+    set list on;
+    select * from test;
+'''
+
+runProgram('isql',[dsn, '-ch', 'utf8'],sql_chk)
+
+  """,
+ 'expected_stdout': 
+  """
+    C                               ab
+    C                               qw
+    C                               er
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 22001
+    arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 2, actual 3
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Token unknown - line 1, column 1
+    -stop
+  """
+}
+]
+}
