@@ -4,114 +4,28 @@
 'tracker_id': 'CORE-2632',
 'title': 'Invalid BLOB ID when working with monitoring tables',
 'description': '',
-'min_versions': '',
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.5.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'connection_character_set': 'UNICODE_FSS',
  'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """select 1 from mon$database;
-select mon$sql_text from mon$statements;
-commit;
-select mon$sql_text from mon$statements;
-select mon$sql_text from mon$statements;
-""",
- 'expected_stdout': """
-    CONSTANT
-============
-           1
-
-
-     MON$SQL_TEXT
-=================
-              0:1
-==============================================================================
-MON$SQL_TEXT:
-select 1 from mon$database
-==============================================================================
-
-
-     MON$SQL_TEXT
-=================
-              0:1
-==============================================================================
-MON$SQL_TEXT:
-select mon$sql_text from mon$statements
-==============================================================================
-
-
-     MON$SQL_TEXT
-=================
-              0:1
-==============================================================================
-MON$SQL_TEXT:
-select mon$sql_text from mon$statements
-==============================================================================
-
-"""
-},
-{
- 'firebird_version': '2.1.4',
- 'platform': 'All',
- 'connection_character_set': 'UNICODE_FSS',
- 'page_size': '4096',
- 'test_type': 'ISQL',
- 'test_script': """select 1 from mon$database;
-select mon$sql_text from mon$statements;
-commit;
-select mon$sql_text from mon$statements;
-select mon$sql_text from mon$statements;
-""",
- 'expected_stdout': """
-    CONSTANT
-============
-           1
-
-
-     MON$SQL_TEXT
-=================
-              0:1
-==============================================================================
-MON$SQL_TEXT:
-select 1 from mon$database
-==============================================================================
-<null>
-<null>
-<null>
-<null>
-<null>
-
-
-     MON$SQL_TEXT
-=================
-              0:1
-==============================================================================
-MON$SQL_TEXT:
-select mon$sql_text from mon$statements
-==============================================================================
-<null>
-<null>
-<null>
-<null>
-<null>
-
-
-     MON$SQL_TEXT
-=================
-              0:1
-==============================================================================
-MON$SQL_TEXT:
-select mon$sql_text from mon$statements
-==============================================================================
-<null>
-<null>
-<null>
-<null>
-<null>
-
-"""
+ 'test_script': 
+  """
+    set list on;
+    set blob all;
+    select 1 as k from mon$database;
+    select mon$sql_text as sql_text_blob from mon$statements;
+  """,
+  'expected_stdout':
+  """
+    K                               1
+    SQL_TEXT_BLOB
+    select 1 as k from mon$database
+  """,
+  'substitutions':[('SQL_TEXT_BLOB.*', 'SQL_TEXT_BLOB')]
 }
 ]
 }
