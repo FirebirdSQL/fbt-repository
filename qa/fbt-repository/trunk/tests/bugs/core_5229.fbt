@@ -1,0 +1,69 @@
+{
+'id': 'bugs.core_5229',
+'qmid': None,
+'tracker_id': 'CORE-5229',
+'title': "Allow to enforce IPv4 or IPv6 in URL-like connection strings",
+'description': 
+ """
+   Currently test checks only inet4 ability.
+   Checked on 4.0.0.256 (SS, SC), 3.0.1.32531 (SS,SC,CS) - all on Windows XP.
+ """,
+'min_versions': '3.0.1',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+db_conn.close()
+
+this_fdb=os.path.join(context['temp_directory'],'bugs.core_5229.fdb')
+who = user_name
+pwd = user_password
+
+sql_chk='''
+    set list on;
+    select mon$remote_protocol as procotol_when_connect_from_os 
+    from mon$attachments where mon$attachment_id = current_connection;
+
+    commit;
+    connect 'inet4://%(this_fdb)s';
+
+    select mon$remote_protocol as procotol_when_connect_from_isql 
+    from mon$attachments where mon$attachment_id = current_connection;
+
+    set term ^;
+    execute block returns(protocol_when_connect_by_es_eds varchar(20) ) as
+        declare stt varchar(255) = 'select mon$remote_protocol from mon$attachments where mon$attachment_id = current_connection';
+    begin
+        for
+            execute statement (stt) 
+                on external 'inet4://%(this_fdb)s' 
+                as user '%(who)s' password '%(pwd)s'
+            into protocol_when_connect_by_es_eds
+        do
+            suspend;
+    end
+    ^
+    set term ;^
+
+    quit;
+'''
+runProgram('isql',[ 'inet4://'+this_fdb, '-q'], sql_chk % locals() )
+  """,
+ 'expected_stdout': 
+  """
+    PROCOTOL_WHEN_CONNECT_FROM_OS   TCPv4
+    PROCOTOL_WHEN_CONNECT_FROM_ISQL TCPv4
+    PROTOCOL_WHEN_CONNECT_BY_ES_EDS TCPv4
+  """
+}
+]
+}
