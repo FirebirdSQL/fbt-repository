@@ -1,0 +1,164 @@
+{
+'id': 'functional.syspriv.trace_any_attachment',
+'tracker_id': '',
+'title': 'Check ability to trace any attachment by non-sysdba user who is granted with necessary system privileges.',
+'description':
+ """
+   Checked on 4.0.0.262.
+ """,
+'min_versions': '4.0.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    set wng off;
+    set bail on;
+    create or alter user u01 password '123' revoke admin role;
+    revoke all on all from u01;
+    commit;
+    -- Trace other users' attachments
+    create role role_for_trace_any_attachment 
+        set system privileges to TRACE_ANY_ATTACHMENT;
+    commit;
+    grant default role_for_trace_any_attachment to user u01;
+    commit;
+
+    recreate table test_trace_any_attachment(id int);
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import subprocess
+from subprocess import Popen
+import time
+
+db_conn.close()
+db_file="$(DATABASE_LOCATION)functional.syspriv.trace_any_attachment.fdb"
+
+trace_options = '''# Trace config, format for 3.0 and above. Generated auto, do not edit!
+database=%[\\\\\\\\/]functional.syspriv.trace_any_attachment.fdb
+{
+  enabled = true
+  log_errors = true
+  time_threshold = 0
+  log_statement_start = true
+  log_statement_finish = true
+  print_perf = true
+  max_sql_length = 16384
+  max_log_size = 5000000
+}
+'''
+f_trccfg=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.cfg'), 'w')
+f_trccfg.write(trace_options)
+f_trccfg.close()
+
+# Starting trace session in new child process (async.):
+#######################################################
+
+f_trclog=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.log'), 'w')
+f_trcerr=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.err'), 'w')
+
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_trace=Popen(["fbsvcmgr", "localhost:service_mgr",
+               "user", "U01", "password", "123",
+               "action_trace_start",
+                "trc_cfg", f_trccfg.name],
+                stdout=f_trclog, 
+                stderr=f_trcerr
+             )
+
+# Wait! Trace session is initialized not instantly!
+time.sleep(2)
+
+runProgram('isql',[dsn,'-nod','-user','SYSDBA', '-pas', 'masterkey'], 'insert into test_trace_any_attachment(id) values(123456789);')
+
+#####################################################
+# Getting ID of launched trace session and STOP it:
+
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_5273.lst'), 'w')
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "user", "U01", "password", "123",
+                 "action_trace_list"],
+                 stdout=f_trclst, 
+                 stderr=subprocess.STDOUT
+               )
+f_trclst.close()
+
+trcssn=0
+with open( f_trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+f.close()
+
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+f_trclst=open(f_trclst.name,'a')
+f_trclst.seek(0,2)
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "user", "U01", "password", "123",
+                 "action_trace_stop",
+                 "trc_id",trcssn],
+                 stdout=f_trclst, stderr=subprocess.STDOUT
+               )
+f_trclst.close()
+
+# do NOT remove this delay: trase session can not be stopped immediatelly:
+time.sleep(2)
+
+# Terminate child process of launched trace session (though it should already be killed):
+p_trace.terminate()
+f_trclog.close()
+f_trcerr.close()
+
+
+# Must be EMPTY:
+with open( f_trcerr.name,'r') as f:
+    for line in f:
+        print(line)
+f.close()
+
+# Must contain info about SYSDBA activity (this was traced by non-sysdba user):
+with open( f_trclog.name,'r') as f:
+    for line in f:
+        if 'SYSDBA:NONE' in line:
+            print('FOUND SYSDBA RECORD.')
+        if '123456789' in line:
+            print(line.upper())
+f.close()
+
+# Cleanup:
+
+f_list=[f_trclst,f_trcerr,f_trclog, f_trccfg]
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+runProgram('isql',[dsn,'-nod','-user', user_name, '-pas', user_password], 'drop user u01;')
+
+  """,
+  'expected_stdout':
+  """
+    FOUND SYSDBA RECORD.
+    FOUND SYSDBA RECORD.
+    FOUND SYSDBA RECORD.
+    INSERT INTO TEST_TRACE_ANY_ATTACHMENT(ID) VALUES(123456789)
+    FOUND SYSDBA RECORD.
+    INSERT INTO TEST_TRACE_ANY_ATTACHMENT(ID) VALUES(123456789)
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
