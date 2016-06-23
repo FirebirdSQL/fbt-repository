@@ -15,6 +15,11 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
+ 'init_script':
+  """
+    recreate table test(x integer default 0);
+    commit;
+  """,
  'database_character_set': 'ISO8859_1',
  'test_type': 'Python',
  'test_script':
@@ -26,8 +31,6 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
-runProgram('isql',[dsn],'recreate table test (test integer default 0);')
-
 script='''
     set list on;
     set blob all;
@@ -37,14 +40,19 @@ script='''
     from rdb$relation_fields 
     where rdb$default_source is not null;
 '''
+runProgram('isql',[dsn],script)
 runProgram('gfix',['-mode','read_only',dsn])
 runProgram('isql',['-ch','iso8859_1',dsn],script)
 
   """,
  'expected_stdout': 
   """
+    MON$READ_ONLY                   0
+    RDB$FIELD_NAME                  X
+    default 0
+    Records affected: 1
     MON$READ_ONLY                   1
-    RDB$FIELD_NAME                  TEST
+    RDB$FIELD_NAME                  X
     default 0
     Records affected: 1
   """,
