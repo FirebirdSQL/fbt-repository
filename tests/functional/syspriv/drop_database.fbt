@@ -1,0 +1,139 @@
+{
+'id': 'functional.syspriv.drop_database',
+'tracker_id': '',
+'title': 'Check ability to DROP database by non-sysdba user who is granted with necessary system privileges.',
+'description':
+ """
+   We make backup and restore of current DB to other name ('functional.syspriv.drop_database.tmp'). 
+   Than we attach to DB 'functional.syspriv.drop_database.tmp' as user U01 and try to DROP it.
+   This should NOT raise any error, database file should be deleted from disk.
+
+   Checked on 4.0.0.267.
+ """,
+'min_versions': '4.0.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    set wng off;
+    set bail on;
+    set list on;
+    set count on;
+
+    create or alter view v_check as
+    select 
+        upper(mon$database_name) as db_name
+        ,current_user as who_ami
+        ,r.rdb$role_name
+        ,rdb$role_in_use(r.rdb$role_name) as rdb$role_in_use
+        ,r.rdb$system_privileges
+    from mon$database m cross join rdb$roles r;
+    commit;
+
+    grant select on v_check to public;
+    commit;
+
+    create or alter user u01 password '123' revoke admin role;
+    revoke all on all from u01;
+    commit;
+
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop role role_for_drop_this_database';
+      when any do begin end
+    end^
+    set term ;^
+    commit;
+
+    create role role_for_drop_this_database set system privileges to DROP_DATABASE;
+    commit;
+    grant default role_for_drop_this_database to user u01;
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import subprocess
+
+db_conn.close()
+
+db_pref='$(DATABASE_LOCATION)functional.syspriv.drop_database'
+fdb_this=db_pref+'.fdb'
+fbk_name=db_pref+'.fbk'
+fdb_test=db_pref+'.tmp'
+
+f_backup_restore=open( os.path.join(context['temp_directory'],'tmp_drop_db_backup_restore.log'), 'w')
+subprocess.call(["fbsvcmgr","localhost:service_mgr",
+                 "user","SYSDBA","password","masterkey",
+                 "action_backup",
+                 "dbname",   fdb_this,
+                 "bkp_file", fbk_name,
+                 "verbose"],
+                 stdout=f_backup_restore, 
+                 stderr=subprocess.STDOUT
+                )
+
+subprocess.call(["fbsvcmgr","localhost:service_mgr",
+                 "user","SYSDBA","password","masterkey",
+                 "action_restore", "res_replace", 
+                 "verbose", 
+                 "bkp_file", fbk_name, 
+                 "dbname", fdb_test],
+                stdout=f_backup_restore, 
+                stderr=subprocess.STDOUT
+              )
+f_backup_restore.close()
+
+
+# Check that non-sysdba user can connect and DROP database <fdb_test>
+#######
+sql_chk='''
+    set list on; 
+    set count on; 
+    select * from v_check;
+    commit;
+    drop database;
+'''
+
+runProgram('isql',['localhost:'+fdb_test,'-user','U01', '-pas', '123'], sql_chk)
+
+# Cleanup:
+
+if os.path.isfile(fbk_name):
+    os.remove(fbk_name)
+if os.path.isfile(fdb_test):
+    print('ERROR WHILE DROP DATABASE: FILE REMAINS ON DISK!')
+    os.remove(fdb_test)
+
+f_list=[f_backup_restore]
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+  """,
+  'expected_stdout':
+  """
+    DB_NAME                         FUNCTIONAL.SYSPRIV.DROP_DATABASE.TMP
+    WHO_AMI                         U01
+    RDB$ROLE_NAME                   RDB$ADMIN
+    RDB$ROLE_IN_USE                 <false>
+    RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
+
+    DB_NAME                         FUNCTIONAL.SYSPRIV.DROP_DATABASE.TMP
+    WHO_AMI                         U01
+    RDB$ROLE_NAME                   ROLE_FOR_DROP_THIS_DATABASE
+    RDB$ROLE_IN_USE                 <true>
+    RDB$SYSTEM_PRIVILEGES           0004000000000000
+    Records affected: 2
+  """,
+  'expected_stderr':
+  """
+  """,
+  'substitutions':[('DB_NAME.*FUNCTIONAL.SYSPRIV.DROP_DATABASE.TMP', 'DB_NAME FUNCTIONAL.SYSPRIV.DROP_DATABASE.TMP')]
+}
+]
+}
