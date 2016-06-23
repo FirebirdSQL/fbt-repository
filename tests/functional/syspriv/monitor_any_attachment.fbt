@@ -86,7 +86,6 @@
 
     connect '$(DSN)' user sysdba password 'masterkey';
     drop user u01;
-    drop role role_for_monitor_any_attach;
     commit;
   """,
   'expected_stdout':
