@@ -17,7 +17,6 @@
     set bail on;
     set list on;
     set count on;
-    set echo on;
 
     create or alter view v_check as
     select 
