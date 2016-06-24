@@ -1,0 +1,269 @@
+{
+'id': 'functional.syspriv.use_gstat_utility',
+'tracker_id': '',
+'title': 'Check ability to obtain database statistics.',
+'description':
+ """
+   We create user and grant system privileges USE_GSTAT_UTILITY and IGNORE_DB_TRIGGERS to him.
+   Then we check that this user can extract DB statistics in TWO ways:
+   1) common data except encryption info
+   2) only encryption info (I don't know why "sts_encryption" can not be used together with other switches...) 
+   Both these actions should not produce any error.
+   Also, logs of them should contain all needed 'check words' and patterns - and we check this.
+   Finally, we ensure that when user U01 gathered DB statistics then db-level trigger did NOT fire.
+
+   Checked on 4.0.0.267.
+ """,
+'min_versions': '4.0.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    set wng off;
+    set bail on;
+    set list on;
+    set count on;
+
+    create or alter view v_check as
+    select 
+        mon$database_name
+        ,current_user as who_ami
+        ,r.rdb$role_name
+        ,rdb$role_in_use(r.rdb$role_name) as rdb$role_in_use
+        ,r.rdb$system_privileges
+    from mon$database m cross join rdb$roles r;
+    commit;
+
+    create or alter user u01 password '123' revoke admin role;
+    revoke all on all from u01;
+    commit;
+
+    create or alter trigger trg_connect active on connect as
+    begin
+    end;
+    commit;
+
+    recreate table att_log (
+        att_user varchar(255),
+        att_prot varchar(255)
+    );
+
+    commit;
+
+
+    recreate table test(s char(1000) unique using index test_s_unq);
+    commit;
+
+    insert into test select rpad('', 1000, uuid_to_char(gen_uuid()) ) from rdb$types;
+    commit;
+
+    grant select on v_check to public;
+    grant select on att_log to public;
+    --------------------------------- [ !! ] -- do NOT: grant select on test to u01; -- [ !! ] 
+    commit;
+
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop role role_for_use_gstat_utility';
+      when any do begin end
+    end
+    ^
+    create or alter trigger trg_connect active on connect as
+    begin
+      if ( upper(current_user) <> upper('SYSDBA') ) then
+         in autonomous transaction do
+         insert into att_log( att_user, att_prot )
+         select
+              mon$user
+             ,mon$remote_protocol
+         from mon$attachments
+         where mon$user = current_user
+         ;
+    end
+    ^
+    set term ;^
+    commit;
+
+    -- Ability to get database statistics.
+    -- NB: 'IGNORE_DB_TRIGGERS' - required for get full db statistics, otherwise:
+    --  Unable to perform operation: system privilege IGNORE_DB_TRIGGERS is missing
+    create role role_for_use_gstat_utility 
+        set system privileges to USE_GSTAT_UTILITY, IGNORE_DB_TRIGGERS;
+    commit;
+    grant default role_for_use_gstat_utility to user u01;
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import subprocess
+import re
+
+db_conn.close()
+
+db_file='$(DATABASE_LOCATION)functional.syspriv.use_gstat_utility.fdb'
+
+#-----------------------
+
+f_db_stat_log=open( os.path.join(context['temp_directory'],'tmp_dbstat.log'), 'w')
+f_db_stat_err=open( os.path.join(context['temp_directory'],'tmp_dbstat.err'), 'w')
+subprocess.call(["fbsvcmgr","localhost:service_mgr",
+                 "user","U01","password","123",
+                 "action_db_stats",
+                 "dbname", db_file,
+                 "sts_record_versions",
+                 "sts_data_pages", 
+                 "sts_idx_pages", 
+                 "sts_sys_relations"
+                 ],
+                 stdout=f_db_stat_log, 
+                 stderr=f_db_stat_err
+                )
+
+f_db_stat_log.close()
+f_db_stat_err.close()
+
+# Separate call for get encryption statistics:
+
+f_db_encr_log=open( os.path.join(context['temp_directory'],'tmp_dbencr.log'), 'w')
+f_db_encr_err=open( os.path.join(context['temp_directory'],'tmp_dbencr.err'), 'w')
+
+subprocess.call(["fbsvcmgr","localhost:service_mgr",
+                 "user","U01","password","123",
+                 "action_db_stats",
+                 "dbname", db_file,
+                 "sts_encryption"
+                 ],
+                 stdout=f_db_encr_log, 
+                 stderr=f_db_encr_err
+                )
+
+f_db_encr_log.close()
+f_db_encr_err.close()
+
+#-----------------------
+
+
+# Check content of logs:
+#######
+
+# Must be EMPTY:
+with open( f_db_stat_err.name,'r') as f:
+    for line in f:
+        print('U01 GSTAT STDERR: '+line.upper())
+f.close()
+
+# Must contain: 
+check_words=[
+    "rdb$database",
+    "rdb$index",
+    "Primary pointer page", 
+    "Index root page", 
+    "Total formats", 
+    "total records", 
+    "total versions", 
+    "total fragments", 
+    "compression ratio", 
+    "Pointer pages",
+    "Data pages", 
+    "Primary pages",
+    "swept pages", 
+    "Empty pages", 
+    "full pages",
+    "Fill distribution", 
+    "0 - 19%",
+    "80 - 99%"
+]
+
+f = open( f_db_stat_log.name, 'r')
+lines = f.read().lower()
+for i in range(len(check_words)):
+    if check_words[i].lower() in lines:
+        print( 'Found: ' + check_words[i].lower() )
+    else:
+        print( 'NOT found: ' + check_words[i].lower() )
+f.close()
+
+
+# Must be EMPTY:
+with open( f_db_encr_err.name,'r') as f:
+    for line in f:
+        print('U01 STS_ENCRYPTION STDERR: '+line.upper())
+f.close()
+
+# Encryption statistics should look like following:
+# Data pages: total 102, encrypted 0, non-crypted 102 
+# Index pages: total 142, encrypted 0, non-crypted 142 
+# Blob pages: total 0, encrypted 0, non-crypted 0 
+
+enc_pattern=re.compile(".*total[\s]+[0-9]+,[\s]+encrypted[\s]+[0-9]+,[\s]+non-crypted[\s]+[0-9]+")
+with open( f_db_encr_log.name,'r') as f:
+    for line in f:
+        if enc_pattern.match(line):
+            print('Found: ' + line.lower())
+f.close()
+
+
+# Cleanup:
+##########
+
+sql_final='''
+    set list on; 
+    set count on; 
+    select * from att_log; -- this should output: "Records affected: 0" because U01 must ignore DB-level trigger
+    commit; 
+    drop user u01; 
+    commit;
+'''
+runProgram('isql',[dsn,'-user',user_name, '-pas', user_password], sql_final)
+
+f_list=[
+    f_db_stat_log,
+    f_db_stat_err,
+    f_db_encr_log,
+    f_db_encr_err
+]
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+  """,
+  'expected_stdout':
+  """
+    Found: rdb$database
+    Found: rdb$index
+    Found: primary pointer page
+    Found: index root page
+    Found: total formats
+    Found: total records
+    Found: total versions
+    Found: total fragments
+    Found: compression ratio
+    Found: pointer pages
+    Found: data pages
+    Found: primary pages
+    Found: swept pages
+    Found: empty pages
+    Found: full pages
+    Found: fill distribution
+    Found: 0 - 19%
+    Found: 80 - 99%
+    Found: data pages: total 102, encrypted 0, non-crypted 102
+    Found: index pages: total 132, encrypted 0, non-crypted 132
+    Found: blob pages: total 0, encrypted 0, non-crypted 0
+    Records affected: 0
+  """,
+  'expected_stderr':
+  """
+  """,
+  'substitutions':[
+      ('.*total[\s]+[0-9]+,[\s]+encrypted[\s]+[0-9]+,[\s]+non-crypted[\s]+[0-9]+', 'total 102, encrypted 0, non-crypted')
+  ]
+}
+]
+}
