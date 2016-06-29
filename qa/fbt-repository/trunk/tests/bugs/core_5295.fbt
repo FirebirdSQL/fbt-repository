@@ -1,0 +1,72 @@
+{
+'id': 'bugs.core_5295',
+'qmid': None,
+'tracker_id': 'CORE-5295',
+'title': 'Validation could read after the end-of-file when handle multifile database',
+'description':
+ """
+   Reproduced error on WI-V3.0.1.32542 (SS/SC/CS) and WI-T4.0.0.267 (SS).
+   Could NOT reproduce on WI-V2.5.6.27017 (SuperClassic).
+ """,
+'min_versions': '2.5.6',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script':
+  """
+import os
+import time
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+fbk_file='$(DATABASE_LOCATION)tmp.core_5295.fbk'
+fdb_tmp1='$(DATABASE_LOCATION)tmp.core_5295.fd1'
+fdb_tmp2='$(DATABASE_LOCATION)tmp.core_5295.fd2'
+
+runProgram('gbak',['localhost:employee',fbk_file])
+runProgram('gbak',['-rep',fbk_file, 'localhost:'+fdb_tmp1, '100000', fdb_tmp2 ])
+
+val_log=open( os.path.join(context['temp_directory'],'tmp_onval_5295.log'), 'w')
+
+# Only 'gfix -v' raised error. Online validation works fine:
+################
+subprocess.call(["gfix","-v",'localhost:'+fdb_tmp1],stdout=val_log, stderr=subprocess.STDOUT)
+
+#subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+#                 "action_validate",
+#                 "dbname",fdb_tmp1],
+#                 stdout=val_log, stderr=subprocess.STDOUT)
+
+val_log.close()
+
+#I/O error during "ReadFile" operation for file "<path>\tmp.core_5295.fd1"
+#-Error while trying to read from file
+#-<localized message: EOF encountered>
+
+time.sleep(2)
+
+# NB: because of localized text inside val_log we have to SKIP scanning this file line-by-line
+# and only check that its size is ZERO. 
+# If size of validation is non-zero than it must be considered as error:
+
+print("Size of validation log: " + str(os.path.getsize(val_log.name)) )
+
+f_list=[val_log.name, fbk_file, fdb_tmp1, fdb_tmp2]
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i]):
+        os.remove(f_list[i])
+
+  """,
+ 'expected_stdout': 
+  """
+    Size of validation log: 0
+  """
+}
+]
+}
