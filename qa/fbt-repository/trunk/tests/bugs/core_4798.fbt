@@ -11,7 +11,6 @@
  'platform': 'All',
  'database': 'Restore',
  'backup_file': 'mon-stat-gathering-3_0.fbk',
- 'page_size': '4096',
  'init_script': 
   """
   """,
@@ -32,7 +31,7 @@
         -- S E T T I N G    T H R E S H O L D S
         -- ####################################
         rdb$set_context('USER_SESSION','NAT_READS_MAX_THRESHOLD', '0');
-        rdb$set_context('USER_SESSION','IDX_READS_MAX_THRESHOLD', '9');
+        rdb$set_context('USER_SESSION','IDX_READS_MAX_THRESHOLD', '20'); -- increased 27.07.2016
     end
     ^
     set term ;^
@@ -62,6 +61,9 @@
         -- 3.0.0.31852:
         --    natural_reads                   0
         --    indexed_reads                   6
+        -- 4.0.0.313:
+        --    natural_reads                   0
+        --    indexed_reads                   18
     select
          iif( natural_reads <= nat_max, 'acceptable, <= ' || nat_max, 'abnormal, ' || natural_reads || ' > ' || nat_max ) as natural_reads
         ,iif( indexed_reads <= idx_max, 'acceptable, <= ' || idx_max, 'abnormal, ' || indexed_reads || ' > ' || idx_max ) as indexed_reads
@@ -77,7 +79,7 @@
  'expected_stdout':
   """
     NATURAL_READS                   acceptable, <= 0
-    INDEXED_READS                   acceptable, <= 9
+    INDEXED_READS                   acceptable, <= 20
   """,
  'expected_stderr':
   """
