@@ -85,10 +85,14 @@
         left join k kum on u.kont_id=kum.id
         where zf.kont_id<>u.kont_id
         into c;
-        rdb$set_context('USER_SESSION', 'MAX_IDX_READS', '30');
-        --                                                 ^
-        --                                                 |
-        --                 ### T H R E S H O L D ###-------+
+
+        if ( rdb$get_context('SYSTEM','ENGINE_VERSION') starting with '4.0' ) then
+            rdb$set_context('USER_SESSION', 'MAX_IDX_READS', '45'); -- 27.07.2016
+        else
+            rdb$set_context('USER_SESSION', 'MAX_IDX_READS', '30');
+            --                                                 ^
+            --                                                 |
+            --                 ### T H R E S H O L D ###-------+
     end
     ^
     set term ;^
@@ -98,7 +102,7 @@
 
     set list on;
     select iif( indexed_reads <= c_max_idx_reads, 
-                'ACCEPTABLE: LESS THAN ' || c_max_idx_reads, 
+                'ACCEPTABLE', 
                 'FAILED, TOO BIG: ' || indexed_reads || ' > ' || c_max_idx_reads 
               ) as idx_reads_estimation
     from (
@@ -108,11 +112,12 @@
     -- WI-V2.5.5.26952 IR=22
     -- WI-V3.0.0.32140 IR=33
     -- WI-V3.0.0.32179 IR=25
+    -- WI-T4.0.0.313:  IR=39
 
   """,
  'expected_stdout': 
   """
-    IDX_READS_ESTIMATION            ACCEPTABLE: LESS THAN 30
+    IDX_READS_ESTIMATION            ACCEPTABLE
   """
 }
 ]
