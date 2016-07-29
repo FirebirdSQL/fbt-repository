@@ -11,6 +11,12 @@
    database. This mean that command 'SHOW USERS' issued HERE can display some logins that were
    created PREVIOUSLY, i.e. in tests which finished abnormally and this logins are still here.
    In order to filter out them current substitution section contains: ('.*0.*TMP.*','')
+   ------------------------------------------------------------------------------------------------
+   29.07.2016: instead of issuing SHOW USERS which has unstable output (can be changed multiple times!)
+   it was decided to replace it with SQL query which actually is done by this command.
+   This query can be easily found in trace when we run SHOW USERS.
+   Also, we limit output with only those users who is enumerated here thus one may do not warry about
+   another user logins which could left in securitiN.fdb after some test failed.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -31,38 +37,75 @@
     commit;
   """,
  'test_type': 'Python',
- 'test_script': """db_conn.close()
-con_0a = kdb.connect(dsn=dsn.encode(),user='SYSDBA',password='masterkey')
-con_0b = kdb.connect(dsn=dsn.encode(),user='SYSDBA',password='masterkey')
+ 'test_script': """\
+import os
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+con_0a = kdb.connect(dsn=dsn.encode())
+con_0b = kdb.connect(dsn=dsn.encode())
+
 con_1a = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
 con_1b = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
 con_1c = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
 con_1d = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
 con_1e = kdb.connect(dsn=dsn.encode(),user='BILL',password='123')
+
 con_2a = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
 con_2b = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
 con_2c = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
 con_2d = kdb.connect(dsn=dsn.encode(),user='JOHN',password='456')
+
 con_3a = kdb.connect(dsn=dsn.encode(),user='MICK',password='789')
-script = '''show users;
-drop user bill;
-drop user john;
-drop user mick;
-drop user boss;
+script = '''
+    set list on;
+    -- "SHOW USERS" command actually runs following query:
+    select 
+        case 
+            when coalesce(mon$user, sec$user_name) = current_user 
+                then '#' 
+            when sec$user_name is distinct from null
+                then ' ' 
+            else '-' 
+        end is_current_user
+        ,coalesce(m.mon$user, u.sec$user_name) user_name
+        ,count(m.mon$user) keeps_attachments
+    from mon$attachments m 
+    full join sec$users u on m.mon$user = u.sec$user_name 
+    where 
+        coalesce(mon$system_flag, 0) = 0 
+        and coalesce(m.mon$user, u.sec$user_name) in (upper('BILL'), upper('BOSS'), upper('JOHN'), upper('MICK'), upper('SYSDBA'))
+    group by mon$user, sec$user_name 
+    order by coalesce(mon$user, sec$user_name);
+    commit;
+
+    drop user bill;
+    drop user john;
+    drop user mick;
+    drop user boss;
 '''
-runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],script)
+runProgram('isql',[dsn,'-q'],script)
 """,
  'expected_stdout':
   """
-    Users in the database
-    5  BILL                                0  BOSS
-    4  JOHN                                1  MICK
-    3 #SYSDBA
-  """,
-  'substitutions':[
-      ('.*0.*TMP.*',''),
-      ('.*3.*SYSDBA', '')
-  ]
+     IS_CURRENT_USER
+     USER_NAME                       BILL
+     KEEPS_ATTACHMENTS               5
+     IS_CURRENT_USER
+     USER_NAME                       BOSS
+     KEEPS_ATTACHMENTS               0
+     IS_CURRENT_USER
+     USER_NAME                       JOHN
+     KEEPS_ATTACHMENTS               4
+     IS_CURRENT_USER
+     USER_NAME                       MICK
+     KEEPS_ATTACHMENTS               1
+     IS_CURRENT_USER                 #
+     USER_NAME                       SYSDBA
+     KEEPS_ATTACHMENTS               3
+  """
 }
 ]
 }
