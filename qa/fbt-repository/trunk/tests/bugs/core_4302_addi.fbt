@@ -15,6 +15,7 @@
    ===
    Excessive fetches count reproduced on WI-T3.0.0.30566 (Alpha1 release).
    Current results were checked on Windows (2.5.6.26994, 3.0.0.32484, 4.0.0.138) and POSIX (4.0.0.138)
+   29.07.2016. On 4.0.0.316 number of fetches is ~99 thus new threshold was added for engine = 4.0.
  """,
 'min_versions': '2.5.3',
 'versions': [
@@ -105,8 +106,8 @@
     select 
          rn as measure
         ,iif( fetches_diff < max_allowed,
-              'OK, less then: '||max_for_25||' - for FB 2.5; '||max_for_30||' - for FB >= 3.0', 
-              'BAD: '|| fetches_diff ||' - greater then ' || max_allowed 
+              'OK, less then max_allowed', 
+              'BAD: '|| fetches_diff ||' - greater then ' || max_allowed || ' for engine = ' || rdb$get_context('SYSTEM','ENGINE_VERSION')
             ) as fetches_count
     from (
         select 
@@ -114,7 +115,15 @@
            ,fetches_at_end - fetches_at_beg as fetches_diff
            ,max_for_25
            ,max_for_30
-           ,cast(iif(rdb$get_context('SYSTEM','ENGINE_VERSION') >= '3.0', max_for_30, max_for_25) as int) as max_allowed
+           ,cast( iif( rdb$get_context('SYSTEM','ENGINE_VERSION') >= '4.0', 
+                       max_for_40,
+                       iif( rdb$get_context('SYSTEM','ENGINE_VERSION') >= '3.0', 
+                            max_for_30, 
+                            max_for_25
+                          )
+                     ) 
+                  as int
+                ) as max_allowed
         from (
           select 
                rn
@@ -122,6 +131,7 @@
               ,max(iif(bg=1, null, pg_fetches)) as fetches_at_end
               ,140 as max_for_25
               ,70  as max_for_30
+              ,110  as max_for_40 -- 29.07.2016
            --  ^        ####################################################
            --  |        #                                                  #
            --  +------- #   T H R E S H O L D S    F O R    F E T C H E S  #
@@ -139,10 +149,10 @@
  'expected_stdout': 
   """
     MEASURE                         1
-    FETCHES_COUNT                   OK, less then: 140 - for FB 2.5; 70 - for FB >= 3.0
+    FETCHES_COUNT                   OK, less then max_allowed
 
     MEASURE                         2
-    FETCHES_COUNT                   OK, less then: 140 - for FB 2.5; 70 - for FB >= 3.0
+    FETCHES_COUNT                   OK, less then max_allowed
   """
 }
 ]
