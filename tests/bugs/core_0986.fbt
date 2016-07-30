@@ -323,11 +323,11 @@ f_list.append(f_apply_cset_none_err)
 f_list.append(f_apply_cset_1251_log)
 f_list.append(f_apply_cset_1251_err)
 f_list.append(f_checksql)
-'''
+
 for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
-'''
+
   """,
  'expected_stdout': 
   """
