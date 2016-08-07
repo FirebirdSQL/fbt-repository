@@ -2965,9 +2965,7 @@
   """,
  'expected_stdout': 
   """
-
 DDL of table rdb$types:         
-
 
 RDB$FIELD_NAME                  (RDB$FIELD_NAME) CHAR(63) CHARACTER SET UTF8 Nullable 
 RDB$TYPE                        (RDB$GENERIC_TYPE) SMALLINT Nullable 
@@ -2976,8 +2974,6 @@ RDB$DESCRIPTION                 (RDB$DESCRIPTION) BLOB segment 80, subtype TEXT 
 RDB$SYSTEM_FLAG                 (RDB$SYSTEM_FLAG) SMALLINT Not Null 
 
 Data:                           
-
-
 
 RDB$FIELD_NAME                  MON$BACKUP_STATE                                                                                                                                                                                                                                            
 RDB$TYPE                        2
