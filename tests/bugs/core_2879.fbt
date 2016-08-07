@@ -113,6 +113,9 @@ f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_2879_fblog_befo
 svc_get_fb_log( engine, f_fblog_before )
 f_fblog_before.close()
 
+# 07.08.2016
+time.sleep(1)
+
 # RUN ISQL
 ##########
 
@@ -135,13 +138,16 @@ p_sweep=subprocess.Popen([ "fbsvcmgr","localhost:service_mgr",
                            stdout=fbsvc_log, stderr=subprocess.STDOUT
                         )
 
-time.sleep(7)
+time.sleep(3)
 
 p_isql.terminate()
 f_isql_log.close()
 
 p_sweep.terminate()
 fbsvc_log.close()
+
+# 07.08.2016
+time.sleep(2)
 
 # Get content of firebird.log AFTER test:
 #########################################
@@ -150,6 +156,9 @@ f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_2879_fblog_after
 svc_get_fb_log( engine, f_fblog_after )
 f_fblog_after.close()
 
+
+# 07.08.2016
+time.sleep(1)
 
 # DIFFERENCE in the content of firebird.log should be EMPTY:
 ####################
