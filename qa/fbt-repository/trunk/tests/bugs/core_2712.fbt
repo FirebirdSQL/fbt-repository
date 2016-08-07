@@ -22,14 +22,14 @@ os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
 msg=''
 
-att1 = fdb.connect(dsn=dsn)
+att1 = kdb.connect(dsn=dsn)
 cur1 = att1.cursor()
 cur1.execute("recreate table test(x int)")
 att1.commit()
 cur1.execute("insert into test values(1)")
 att1.commit()
 
-att2 = fdb.connect(dsn=dsn)
+att2 = kdb.connect(dsn=dsn)
 cur2 = att2.cursor()
 cur2.execute("select 1 from rdb$database")
 
