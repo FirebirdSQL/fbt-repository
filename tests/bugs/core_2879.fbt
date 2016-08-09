@@ -177,9 +177,14 @@ f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2879_diff.txt'), 'w
 f_diff_txt.write(difftext)
 f_diff_txt.close()
 
+# NB: difflib.unified_diff() can show line(s) that present in both files, without marking that line(s) with "+". 
+# Usually these are 1-2 lines that placed just BEFORE difference starts.
+# So we have to check output before display diff content: lines that are really differ must start with "+".
+
 with open( f_diff_txt.name,'r') as f:
     for line in f:
-        print(line)
+        if line.startswith('+') and line.split('+'):
+            print(line.replace('+',' '))
 f.close()
 
 #####################################################################
@@ -191,12 +196,11 @@ for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
 
-
   """,
  'expected_stdout': 
   """
-    + Sweep is started by SYSDBA
-    + Sweep is finished
+    Sweep is started by SYSDBA
+    Sweep is finished
   """,
  'expected_stderr': 
   """
