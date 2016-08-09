@@ -240,10 +240,15 @@ f_diff_txt.close()
 pattern  = re.compile("\+[\s]+OIT[ ]+[0-9]+,[\s]*OAT[\s]+[0-9]+,[\s]*OST[\s]+[0-9]+,[\s]*NEXT[\s]+[0-9]+")
 # OIT 160, OAT 159, OST 159, Next 161
 
+# NB: difflib.unified_diff() can show line(s) that present in both files, without marking that line(s) with "+". 
+# Usually these are 1-2 lines that placed just BEFORE difference starts.
+# So we have to check output before display diff content: lines that are really differ must start with "+".
+
 with open( f_diff_txt.name,'r') as f:
     for line in f:
-        if  'SWEEP' in line.upper() or 'bugs.core_2668.fdb'.upper() in line.upper() or pattern.match(line.upper()):
-            print( ' '.join(line.split()).upper() )
+        if line.startswith('+'):
+            if  'SWEEP' in line.upper() or 'bugs.core_2668.fdb'.upper() in line.upper() or pattern.match(line.upper()):
+                print( ' '.join(line.split()).upper() )
 f.close()
 
 ###############################
