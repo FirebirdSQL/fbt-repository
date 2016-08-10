@@ -1,0 +1,92 @@
+{
+'id': 'bugs.core_3963',
+'qmid': None,
+'tracker_id': 'CORE-3963',
+'title': "isql doesn't know the difference between UDF's and psql-functions ",
+'description':
+ """
+   Test used UDF 'strlen' declared in ib_udf.sql script which for sure present in every FB snapshot.
+   After this, we try to create PSQL function with the same signature but evaluate its returning value
+   as double size of input argument (in order to distinguish these functions by their results).
+
+   Checked on WI-V3.0.1.32570, WI-T4.0.0.322 -- all fine.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    --set echo on;
+
+    -- Should PASS:
+    set term ^; 
+    create function strlen(s varchar(32765)) returns int as begin return 2 * char_length(s); end
+    ^ 
+    set term ;^
+    select strlen('tratata') from rdb$database;
+    commit;
+
+    -- Should FAIL:
+    DECLARE EXTERNAL FUNCTION strlen CSTRING(32767) RETURNS INTEGER BY VALUE ENTRY_POINT 'IB_UDF_strlen' MODULE_NAME 'ib_udf';
+
+    drop function strlen; -- kill PSQL function 
+    commit;
+
+
+    -- Should PASS:
+    DECLARE EXTERNAL FUNCTION strlen CSTRING(32767) RETURNS INTEGER BY VALUE ENTRY_POINT 'IB_UDF_strlen' MODULE_NAME 'ib_udf';
+
+    select strlen('tratata') from rdb$database;
+    commit;
+
+    -- Should FAIL:
+    set term ^; 
+    create function strlen(s varchar(32765)) returns int as begin return 2 * char_length(s); end
+    ^ 
+    set term ;^
+
+    select strlen('tratata') from rdb$database;
+    commit;
+
+    drop function strlen; -- kill UDF function
+    commit;
+
+
+    -- Should PASS:
+    set term ^; 
+    create function strlen(s varchar(32765)) returns int as begin return 2 * char_length(s); end
+    ^ 
+    set term ;^
+    select strlen('tratata') from rdb$database;
+    commit;
+
+    drop function strlen;
+    commit;
+
+  """,
+  'expected_stdout':
+  """
+    STRLEN                          14
+    STRLEN                          7
+    STRLEN                          7
+    STRLEN                          14
+  """,
+  'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE FUNCTION STRLEN failed
+    -Function STRLEN already exists
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE FUNCTION STRLEN failed
+    -Function STRLEN already exists
+  """
+}
+]
+}
