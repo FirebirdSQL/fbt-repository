@@ -7,11 +7,12 @@
  """
     Prototype: https://groups.yahoo.com/neo/groups/firebird-support/conversations/messages/128920
     Done with suggestions from dimitr, see letter 01-may-2016 09:15.
-    Confirmed on WI-V3.0.0.32366, 3.0.0.32501 (SS,SC,CS) - it was enough to async. start THREE 
-    child ISQLs sessions, one or two of them always raise exception after few seconds with text
-    'deadlock / update conflicts' and could not finish its job.
+    Confirmed on WI-V3.0.0.32366, WI-V3.0.0.32483, 3.0.0.32501 (SS,SC,CS) - it was enough to 
+    async. start THREE child ISQLs sessions, one or two of them always raise exception after 
+    few seconds with text: 'deadlock / update conflicts' and could not finish its job.
 
-    Checked on: WI-V3.0.0.32503, WI-T4.0.0.157 - works fine.
+    Checked on: WI-V3.0.0.32503, 3.0.1.32570, WI-T4.0.0.157 - works fine.
+    Checked on 4.0.0.322 (Classic, SuperClassic, SuperServer) - works OK.
  """,
 'min_versions': '3.0.0',
 'versions': [
@@ -65,7 +66,7 @@
         end
         proc_finish = 'now';
 
-        suspend;
+        suspend; -- outputs row with three fields: 'PROC_START <timestamp>', 'SELECTED_ID <id>', 'PROC_FINISH <timestamp>'
     end ^
     set term ;^
     commit;
@@ -79,6 +80,7 @@ import os
 import time
 import subprocess
 from subprocess import Popen
+import re
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -88,17 +90,17 @@ db_conn.close()
 
 f_run_sql=open( os.path.join(context['temp_directory'],'tmp_5222_run.sql'), 'w')
 f_run_sql.write('''\
---show version;
-commit; 
-set list on;
-set transaction read committed no record_version lock timeout 30; 
-select current_timestamp as before_proc 
-from rdb$database;
+    --show version;
+    commit; 
+    set list on;
+    set transaction read committed no record_version lock timeout 3;
+    select current_timestamp as before_proc 
+    from rdb$database;
 
-execute procedure p_increment;
+    select * from p_increment(10);
 
-select current_timestamp as after_proc
-from rdb$database;
+    select current_timestamp as after_proc
+    from rdb$database;
 ''')
 f_run_sql.close()
 
@@ -116,13 +118,13 @@ for i in range(0, planned_dml_attachments):
     f_list.append(sqllog)
 
 for i in range(len(f_list)):
-    p_isql=Popen( [ "isql" , dsn, "-i", f_run_sql.name ], \
-                  stdout=f_list[i], \
-                  stderr=subprocess.STDOUT \
+    p_isql=Popen( [ "isql" , dsn, "-i", f_run_sql.name ],
+                  stdout=f_list[i],
+                  stderr=subprocess.STDOUT
                 )
     p_list.append(p_isql)
 
-time.sleep(20)
+time.sleep(7)
 
 for i in range(len(f_list)):
     f_list[i].close()
@@ -130,7 +132,12 @@ for i in range(len(f_list)):
 for i in range(len(p_list)):
     p_list[i].terminate()
 
-          
+# 12.08.2016: added small delay because it's possible to get:
+# WindowsError:
+# 32
+# The process cannot access the file because it is being used by another process
+
+time.sleep(2)
 
 ###########################
 # CHECK RESULTS and CLEANUP
@@ -146,34 +153,65 @@ for i in range(len(p_list)):
 
 # Open every log and print 1st word from each line, ignoring values of timestamp and ID.
 # Then close log and remove it:
+
+pattern = re.compile("BEFORE_PROC*|PROC_START*|SELECTED_ID*|PROC_FINISH*|AFTER_PROC*")
 for i in range(len(f_list)):
     with open( f_list[i].name, 'r') as f:
         for line in f:
             if line.split():
-                print( 'LOG #'+str(i)+': '+line.split()[0] )
+                if pattern.match(line):
+                    print( 'EXPECTED, LOG #'+str(i)+': '+line.split()[0] )
+                else:
+                    print( 'UNEXPECTED, LOG #'+str(i)+': '+ line )
     f.close()
     os.remove(f_list[i].name)
 
 os.remove(f_run_sql.name)
 
+#           Sample of WRONG result (got on 3.0.0.32483):
+#           ===============
+#             EXPECTED, LOG #0: BEFORE_PROC
+#             EXPECTED, LOG #0: PROC_START
+#             EXPECTED, LOG #0: SELECTED_ID
+#             EXPECTED, LOG #0: PROC_FINISH
+#             EXPECTED, LOG #0: AFTER_PROC
+#             EXPECTED, LOG #1: BEFORE_PROC
+#             EXPECTED, LOG #1: PROC_START
+#             EXPECTED, LOG #1: SELECTED_ID
+#             EXPECTED, LOG #1: PROC_FINISH
+#             EXPECTED, LOG #1: AFTER_PROC
+#             EXPECTED, LOG #2: BEFORE_PROC
+#           - EXPECTED, LOG #2: PROC_START
+#           - EXPECTED, LOG #2: SELECTED_ID
+#           - EXPECTED, LOG #2: PROC_FINISH
+#           + UNEXPECTED, LOG #2: Statement failed, SQLSTATE = 40001
+#           + UNEXPECTED, LOG #2: deadlock
+#           + UNEXPECTED, LOG #2: -update conflicts with concurrent update
+#           + UNEXPECTED, LOG #2: -concurrent transaction number is 32
+#           + UNEXPECTED, LOG #2: -At procedure 'P_INCREMENT' line: 17, col: 17
+#           + UNEXPECTED, LOG #2: After line 6 in file C:\MIX\firebird\QA\fbt-repo\tmp\tmp_5222_run.sql
+#             EXPECTED, LOG #2: AFTER_PROC
+
   """,
  'expected_stdout': 
   """
-    LOG #0: BEFORE_PROC
-    LOG #0: PROC_START
-    LOG #0: SELECTED_ID
-    LOG #0: PROC_FINISH
-    LOG #0: AFTER_PROC
-    LOG #1: BEFORE_PROC
-    LOG #1: PROC_START
-    LOG #1: SELECTED_ID
-    LOG #1: PROC_FINISH
-    LOG #1: AFTER_PROC
-    LOG #2: BEFORE_PROC
-    LOG #2: PROC_START
-    LOG #2: SELECTED_ID
-    LOG #2: PROC_FINISH
-    LOG #2: AFTER_PROC
+    EXPECTED, LOG #0: BEFORE_PROC
+    EXPECTED, LOG #0: PROC_START
+    EXPECTED, LOG #0: SELECTED_ID
+    EXPECTED, LOG #0: PROC_FINISH
+    EXPECTED, LOG #0: AFTER_PROC
+
+    EXPECTED, LOG #1: BEFORE_PROC
+    EXPECTED, LOG #1: PROC_START
+    EXPECTED, LOG #1: SELECTED_ID
+    EXPECTED, LOG #1: PROC_FINISH
+    EXPECTED, LOG #1: AFTER_PROC
+
+    EXPECTED, LOG #2: BEFORE_PROC
+    EXPECTED, LOG #2: PROC_START
+    EXPECTED, LOG #2: SELECTED_ID
+    EXPECTED, LOG #2: PROC_FINISH
+    EXPECTED, LOG #2: AFTER_PROC
   """,
  'expected_stderr': 
   """
