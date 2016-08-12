@@ -7,10 +7,10 @@
  """
    Works fine on 4.0.0.316.
  """,
-'min_versions': '3.0.1',
+'min_versions': '4.0',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'init_script':
   """
