@@ -1,0 +1,50 @@
+{
+'id': 'functional.tabloid.core_5325_binary_to_utf8',
+'qmid': None,
+'tracker_id': 'CORE-5325',
+'title': "Malformed string error when using cyrilic symbols and x'0d0a' in exception",
+'description':
+ """
+   Ticked is marked as Won't fix, but it seems that sample shown by Adriano is useful for testing.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'connection_character_set': 'WIN1251',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+    create exception error_test 'йцукенг';
+    commit;
+  """,
+ 'test_script':
+  """
+    set term ^;
+    execute block as
+    begin
+        exception error_test 'йцу' || _win1251 x'0d0a' || 'кенг';
+    end^
+    set term ;^  
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY000
+    exception 1
+    -ERROR_TEST
+    -йцу
+
+    кенг
+    -At block line: 3, col: 5  
+  """,
+  'substitutions':[
+      ('exception [\d]+', 'exception'),
+      ('-At block line: [\d]+, col: [\d]+', '')
+  ]
+}
+]
+}
