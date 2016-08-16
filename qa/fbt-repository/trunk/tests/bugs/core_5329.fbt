@@ -45,16 +45,21 @@ def svc_get_fb_log( f_fb_log ):
 
 db_conn.close()
 
+# Get firebird.log content BEFORE running validation:
+
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5329_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
 f_fblog_before.close()
 
-# Only 'gfix -v' raised error. Online validation works fine:
-################
+# Only 'gfix -v' did show errors. 
+#################################
+# Online validation ('fbsvcmgr action_validate ...') worked WITHOUT any error/warningin its output.
 
 f_gfix_log=open( os.path.join(context['temp_directory'],'tmp_5329_gfix.txt'), 'w')
 subprocess.call( ['gfix', '-v', '-full', dsn], stdout=f_gfix_log, stderr=subprocess.STDOUT)
 f_gfix_log.close()
+
+# Get firebird.log content AFTER running validation:
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5329_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
@@ -62,14 +67,14 @@ f_fblog_after.close()
 
 time.sleep(2)
 
-# NB: because of localized text inside f_val_log we have to SKIP scanning this file line-by-line
-# and only check that its size is ZERO. 
-# If size of validation is non-zero than it must be considered as error:
+# Check-1. Log of 'gfix -v -full'should be EMPTY:
+#################################################
 
 print("Checked_size of gfix stdlog+stderr: " + str(os.path.getsize(f_gfix_log.name)) )
+
 with open( f_gfix_log.name,'r') as f:
     for line in f:
-        print('VALIDATION LOG: '+line)
+        print('UNEXPECTED VALIDATION LOG: '+line)
 
 oldfb=open(f_fblog_before.name, 'r')
 newfb=open(f_fblog_after.name, 'r')
@@ -91,7 +96,10 @@ pattern  = re.compile('.*VALIDATION.*|.*ERROR:.*')
 # Usually these are 1-2 lines that placed just BEFORE difference starts.
 # So we have to check output before display diff content: lines that are really differ must start with "+".
 
-# Should contain only lines about validation start and finish, without errors:
+# Check-2. Difference betweenold and new firebird.log should contain 
+# only lines about validation start and finish, without errors:
+###############################################################
+
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         if line.startswith('+'):
@@ -109,27 +117,6 @@ for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
 
-'''
-CSPROG	Tue Aug 16 09:35:54 2016
-	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
-	Validation started
-
-CSPROG	Tue Aug 16 09:35:54 2016
-	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
-	Error: Page 1017 wrong type (expected SCN inventory encountered purposely undefined)
-
-... ... ...
-
-CSPROG	Tue Aug 16 09:35:54 2016
-	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
-	Warning: Page 1017 is an orphan
-
-CSPROG	Tue Aug 16 09:35:54 2016
-	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
-	Validation finished: 142 errors, 1 warnings, 0 fixed
-'''
-
-#'substitutions':[ ('\t+', ' '), ('^((?!checked_size|Validation|Error|error|Warning|warning).)*$','')]
   """,
  'expected_stdout': 
   """
