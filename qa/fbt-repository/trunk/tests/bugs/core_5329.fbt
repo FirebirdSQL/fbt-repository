@@ -1,0 +1,143 @@
+{
+'id': 'bugs.core_5329',
+'qmid': None,
+'tracker_id': 'CORE-5329',
+'title': 'Database gets partially corrupted in the "no-reserve" mode',
+'description':
+ """
+   Test uses .fbk which was created on 2.5.7.
+   We restore this database and run validation using gfix (NOT fbsvcmgr!).
+   Validation should not produce any output and new lines in firebird.log should contain
+   only messages about start and finish of validation with zero errors and warnings.
+
+   Confirmed bug on 4.0.0.326, 3.0.1.32573. No errors on 4.0.0.328,  3.0.1.32575
+ """,
+'min_versions': '3.0.1',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'database': 'Restore',
+ 'backup_file': 'core5329.fbk',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script':
+  """
+import os
+import time
+import subprocess
+import difflib
+import re
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+def svc_get_fb_log( f_fb_log ):
+
+  import subprocess
+
+  subprocess.call([ "fbsvcmgr",
+                    "localhost:service_mgr",
+                    'action_get_fb_log'
+                  ],
+                  stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+db_conn.close()
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5329_fblog_before.txt'), 'w')
+svc_get_fb_log( f_fblog_before )
+f_fblog_before.close()
+
+# Only 'gfix -v' raised error. Online validation works fine:
+################
+
+f_gfix_log=open( os.path.join(context['temp_directory'],'tmp_5329_gfix.txt'), 'w')
+subprocess.call( ['gfix', '-v', '-full', dsn], stdout=f_gfix_log, stderr=subprocess.STDOUT)
+f_gfix_log.close()
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5329_fblog_after.txt'), 'w')
+svc_get_fb_log( f_fblog_after )
+f_fblog_after.close()
+
+time.sleep(2)
+
+# NB: because of localized text inside f_val_log we have to SKIP scanning this file line-by-line
+# and only check that its size is ZERO. 
+# If size of validation is non-zero than it must be considered as error:
+
+print("Checked_size of gfix stdlog+stderr: " + str(os.path.getsize(f_gfix_log.name)) )
+with open( f_gfix_log.name,'r') as f:
+    for line in f:
+        print('VALIDATION LOG: '+line)
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2668_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+pattern  = re.compile('.*VALIDATION.*|.*ERROR:.*')
+
+# NB: difflib.unified_diff() can show line(s) that present in both files, without marking that line(s) with "+". 
+# Usually these are 1-2 lines that placed just BEFORE difference starts.
+# So we have to check output before display diff content: lines that are really differ must start with "+".
+
+# Should contain only lines about validation start and finish, without errors:
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+'):
+            if pattern.match(line.upper()):
+                print( ' '.join(line.split()).upper() )
+f.close()
+
+time.sleep(1)
+
+# Cleanup
+#########
+
+f_list=[f_gfix_log, f_fblog_before, f_fblog_after, f_diff_txt]
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+'''
+CSPROG	Tue Aug 16 09:35:54 2016
+	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
+	Validation started
+
+CSPROG	Tue Aug 16 09:35:54 2016
+	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
+	Error: Page 1017 wrong type (expected SCN inventory encountered purposely undefined)
+
+... ... ...
+
+CSPROG	Tue Aug 16 09:35:54 2016
+	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
+	Warning: Page 1017 is an orphan
+
+CSPROG	Tue Aug 16 09:35:54 2016
+	Database: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\CORE_5329.TMP
+	Validation finished: 142 errors, 1 warnings, 0 fixed
+'''
+
+#'substitutions':[ ('\t+', ' '), ('^((?!checked_size|Validation|Error|error|Warning|warning).)*$','')]
+  """,
+ 'expected_stdout': 
+  """
+    Checked_size of gfix stdlog+stderr: 0
+    + VALIDATION STARTED
+    + VALIDATION FINISHED: 0 ERRORS, 0 WARNINGS, 0 FIXED
+  """,
+  'substitutions':[ ('\t+', ' ')]
+}
+]
+}
