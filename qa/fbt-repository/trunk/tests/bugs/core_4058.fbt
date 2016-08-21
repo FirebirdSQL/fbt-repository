@@ -30,7 +30,7 @@
                 Plain dump starting with offset 18: <05><15>localhost.loca
    ===
  """,
-'min_versions': '2.5.2',
+'min_versions': '2.5.5',
 'versions': [
 {
  'firebird_version': '2.5',
