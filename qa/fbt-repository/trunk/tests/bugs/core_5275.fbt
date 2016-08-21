@@ -27,35 +27,8 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'init_script': """
-    create or alter procedure sp_ins(n int) as begin end;
-    
-    recreate table test(x int unique using index test_x, s varchar(10) default 'qwerty' );
-
-    set term  ^;
-    execute block as
-    begin
-        execute statement 'drop sequence g';
-        when any do begin end
-    end
-    ^
-    set term ;^
-    commit;
-    create sequence g;
-    commit;
-
-    set term ^;
-    create or alter procedure sp_ins(n int) as
-    begin
-        while (n>0) do
-        begin
-            insert into test( x ) values( gen_id(g,1) );
-            n = n - 1;
-        end
-    end
-    ^
-    set term ;^
-    commit;
+ 'init_script': 
+  """
   """,
  'test_type': 'Python',
  'test_script': """\
@@ -96,6 +69,38 @@ for row in cur1:
     engine = row[0]
 
 db_conn.close()
+
+sql_ddl='''
+    create or alter procedure sp_ins(n int) as begin end;
+    
+    recreate table test(x int unique using index test_x, s varchar(10) default 'qwerty' );
+
+    set term  ^;
+    execute block as
+    begin
+        execute statement 'drop sequence g';
+        when any do begin end
+    end
+    ^
+    set term ;^
+    commit;
+    create sequence g;
+    commit;
+
+    set term ^;
+    create or alter procedure sp_ins(n int) as
+    begin
+        while (n>0) do
+        begin
+            insert into test( x ) values( gen_id(g,1) );
+            n = n - 1;
+        end
+    end
+    ^
+    set term ;^
+    commit;
+'''
+runProgram('isql',[dsn],sql_ddl)
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5275_fblog_before.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_before )
