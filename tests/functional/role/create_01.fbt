@@ -3,27 +3,38 @@
 'qmid': 'functional.role.create.create_role_01',
 'tracker_id': '',
 'title': 'CREATE ROLE',
-'description': """CREATE ROLE
-Dependencies:
-CREATE DATABASE
-Basic SELECT
-""",
+'description': 
+ """
+    CREATE ROLE
+    Dependencies:
+    CREATE DATABASE
+    Basic SELECT
+ """,
+'min_versions': '2.5.0',
 'versions': [
 {
  'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """CREATE ROLE test;
-COMMIT;
-SELECT * FROM RDB$ROLES;
-""",
- 'expected_stdout': """
-RDB$ROLE_NAME                                                                                 RDB$OWNER_NAME                                                                                  RDB$DESCRIPTION RDB$SYSTEM_FLAG
-=============================================================================== =============================================================================== ================= ===============
-RDB$ADMIN                                                                                     SYSDBA                                                                                                   <null>               4
-TEST                                                                                          SYSDBA                                                                                                   <null>               0
+ 'test_script': 
+  """
+    create role test;
+    commit;
+    set list on;
+    select * from rdb$roles order by rdb$role_name;
+  """,
+ 'expected_stdout': 
+  """
+     RDB$ROLE_NAME                   RDB$ADMIN
+     RDB$OWNER_NAME                  SYSDBA
+     RDB$DESCRIPTION                 <null>
+     RDB$SYSTEM_FLAG                 4
 
-"""
+     RDB$ROLE_NAME                   TEST
+     RDB$OWNER_NAME                  SYSDBA
+     RDB$DESCRIPTION                 <null>
+     RDB$SYSTEM_FLAG                 0
+  """
 },
 {
  'firebird_version': '3.0',
@@ -34,7 +45,7 @@ TEST                                                                            
     create role test;
     commit;
     set list on;
-    select * from rdb$roles;
+    select * from rdb$roles order by rdb$role_name;
   """,
  'expected_stdout': 
   """
@@ -48,8 +59,9 @@ TEST                                                                            
     RDB$OWNER_NAME                  SYSDBA
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 0
-    RDB$SECURITY_CLASS              <null>
-  """
+    RDB$SECURITY_CLASS              SQLnnnn
+  """,
+  'substitutions': [('SQL\$.*', 'SQLnnnn')]
 },
 {
  'firebird_version': '4.0',
@@ -60,7 +72,7 @@ TEST                                                                            
     create role test;
     commit;
     set list on;
-    select * from rdb$roles;
+    select * from rdb$roles order by rdb$role_name;
   """,
  'expected_stdout': 
   """
@@ -70,13 +82,15 @@ TEST                                                                            
     RDB$SYSTEM_FLAG                 1
     RDB$SECURITY_CLASS              <null>
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
+
     RDB$ROLE_NAME                   TEST
     RDB$OWNER_NAME                  SYSDBA
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 0
-    RDB$SECURITY_CLASS              <null>
+    RDB$SECURITY_CLASS              SQLnnnn
     RDB$SYSTEM_PRIVILEGES           0000000000000000
-  """
+  """,
+  'substitutions': [('SQL\$.*', 'SQLnnnn')]
 }
 ]
 }
