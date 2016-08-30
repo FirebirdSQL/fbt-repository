@@ -18,7 +18,7 @@
     set list on;
     set autoddl off;
     commit;
-    connect '$(DSN)' user sysdba password 'masterke';
+    connect '$(DSN)' user sysdba password 'masterkey';
     create or alter user tmp$c5248_usr0 password 'c5248$u0';
     create or alter user tmp$c5248_usrx password 'c5248$ux';
     commit;
@@ -50,6 +50,10 @@
     select count(*) from rdb$roles where rdb$role_name = 'TEST_ROLE1';
     rollback;
 
+    connect '$(DSN)' user sysdba password 'masterkey';
+    drop user tmp$c5248_usr0;
+    drop user tmp$c5248_usrx;
+    commit;
   """,
   'expected_stdout':
   """
@@ -74,7 +78,7 @@
     set autoddl off;
     --set echo on;
     commit;
-    connect '$(DSN)' user sysdba password 'masterke';
+    connect '$(DSN)' user sysdba password 'masterkey';
     create or alter user tmp$c5248_usr0 password 'c5248$u0';
     create or alter user tmp$c5248_usr1 password 'c5248$u1';
     create or alter user tmp$c5248_usr2 password 'c5248$u2';
@@ -114,7 +118,7 @@
     create role test_role1; -- tmp$c5248_usr0 is owner of role test_role1
     commit;
 
-    connect '$(DSN)' user sysdba password 'masterke';
+    connect '$(DSN)' user sysdba password 'masterkey';
     grant test_role1 to tmp$c5248_usr1 with admin option;
     grant test_role1 to tmp$c5248_usr3;
     commit;
@@ -125,7 +129,7 @@
 
     -- 1. revoke - avoid cascade grants delete
 
-    connect '$(DSN)' user sysdba password 'masterke';
+    connect '$(DSN)' user sysdba password 'masterkey';
 
     select * from v_grants where upper(who_was_granted) in ( upper('tmp$c5248_usr1'), upper('tmp$c5248_usr2') );  -- must contain 2 records
 
@@ -225,6 +229,16 @@
     select * from rdb$roles where upper(rdb$role_name) = upper('TEST_ROLE1'); -- should output 0 records
     select * from v_grants where upper(role_name) = upper('TEST_ROLE1');        -- should output 0 records
     rollback;
+
+
+    connect '$(DSN)' user sysdba password 'masterkey';
+    drop user tmp$c5248_usr0;
+    drop user tmp$c5248_usr1;
+    drop user tmp$c5248_usr2;
+    drop user tmp$c5248_usr3;
+    drop user tmp$c5248_usrx;
+    commit;
+
   """,
   'expected_stdout':
   """
