@@ -5,6 +5,8 @@
 'title': 'Maximum and minimum identifier length should be enforced by DSQL',
 'description': 
   """
+     Changed expected_stderr for 4.0 after discuss with dimitr (see letter 01-aug-2016 15:15).
+     Checked on WI-T4.0.0.356, 03-sep-2016.
   """,
 'min_versions': '3.0',
 'versions': [
@@ -369,174 +371,156 @@ u2345678901234567890123456789012345678901234567890123456789012345 password 'q';
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE ROLE R2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 0 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE SEQUENCE G2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 5 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE EXCEPTION E2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 8 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE COLLATION C2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 11 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE DOMAIN D2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 14 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE TABLE T2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 17 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE TABLE X failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 20 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE OR ALTER PROCEDURE P2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 23 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE OR ALTER PROCEDURE P1 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 28 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE OR ALTER FUNCTION F2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 34 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -CREATE OR ALTER FUNCTION F failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 56 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -RECREATE PACKAGE P2345678901234567890123456789012345678901234567890123456789012345 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 62 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -RECREATE PACKAGE P1 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 68 in file c2560.sql
-    Statement failed, SQLSTATE = 22001
-    unsuccessful metadata update
-    -RECREATE PACKAGE P2 failed
-    -arithmetic exception, numeric overflow, or string truncation
-    -string right truncation
-    -expected length 64, actual 65
-    After line 74 in file c2560.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 0 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 5 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 8 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 11 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 14 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 17 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 20 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 24 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 29 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 35 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 51 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 58 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 65 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 72 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 79 in file c2560-x.sql
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Name longer than database column size
+    After line 89 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 82 in file c2560.sql
+    After line 94 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 94 in file c2560.sql
+    After line 98 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 96 in file c2560.sql
+    After line 100 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 98 in file c2560.sql
+    After line 102 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 100 in file c2560.sql
+    After line 104 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 102 in file c2560.sql
+    After line 106 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 104 in file c2560.sql
+    After line 108 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 106 in file c2560.sql
+    After line 110 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 108 in file c2560.sql
+    After line 112 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 112 in file c2560.sql
+    After line 116 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 114 in file c2560.sql
+    After line 118 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 119 in file c2560.sql
+    After line 123 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 132 in file c2560.sql
+    After line 136 in file c2560-x.sql
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Zero length identifiers are not allowed
-    After line 140 in file c2560.sql
+    After line 144 in file c2560-x.sql
   """,
   'substitutions':[('After line.*','')]
 }
