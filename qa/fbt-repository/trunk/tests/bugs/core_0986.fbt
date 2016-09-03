@@ -55,6 +55,12 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+# Obtain engine version:
+cur1 = db_conn.cursor()
+cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in cur1:
+    engine = row[0]
+
 db_conn.close()
 
 non_ascii_ddl=u'''\
@@ -288,10 +294,12 @@ with open( f_apply_cset_none_err.name, 'r') as f:
     for line in f:
         out_txt='STDERR WHEN CSET=NONE: ';
         if 'SQLSTATE =' in line.strip():
-            if 'SQLSTATE = 22000' in line.strip():
-                print( out_txt+'MALFORMED STRING ERROR' )
+            if 'SQLSTATE = 22000' in line.strip() and engine.startswith('3.') \
+               or \
+               'SQLSTATE = 22018' in line.strip() and not engine.startswith('3.'):
+                print( out_txt+'EXPECTED SQLSTATE IN ERROR MESSAGE' )
             else:
-                print( out_txt+'SOME OTHER ERROR FOUND' )
+                print( out_txt+'SOME OTHER ERROR FOUND: '+line )
 f.close()
 
 
@@ -308,10 +316,12 @@ with open( f_apply_cset_1251_err.name, 'r') as f:
     for line in f:
         out_txt='STDERR WHEN CSET=1251: ';
         if 'SQLSTATE =' in line.strip():
-            if 'SQLSTATE = 22000' in line.strip():
-                print( out_txt+'MALFORMED STRING ERROR' )
+            if 'SQLSTATE = 22000' in line.strip() and engine.startswith('3.') \
+               or \
+               'SQLSTATE = 22018' in line.strip() and not engine.startswith('3.'):
+                print( out_txt+'EXPECTED SQLSTATE IN ERROR MESSAGE' )
             else:
-                print( out_txt+'SOME OTHER ERROR FOUND' )
+                print( out_txt+'SOME OTHER ERROR FOUND: '+line )
 f.close()
 
 #####################################################################
@@ -332,7 +342,7 @@ for i in range(len(f_list)):
  'expected_stdout': 
   """
      STDLOG WHEN CSET=NONE: CREATE COLLATION STATEMENT
-     STDERR WHEN CSET=NONE: MALFORMED STRING ERROR
+     STDERR WHEN CSET=NONE: EXPECTED SQLSTATE IN ERROR MESSAGE
      STDLOG WHEN CSET=1251: ALL FINISHED OK.
   """,
  'expected_stderr': 
