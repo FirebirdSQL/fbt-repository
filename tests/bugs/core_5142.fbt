@@ -6,7 +6,7 @@
 'description':
  """
    Reproduced bug on WI-V3.0.0.32483.
-   All fine on WI-V3.0.1.3259, WI-T4.0.0.366.
+   All fine on WI-V3.0.1.32596, WI-T4.0.0.366.
    After this test commit it is possible to remove test for CORE-5182 because the latter does the same.
  """,
 'min_versions': '3.0.1',
