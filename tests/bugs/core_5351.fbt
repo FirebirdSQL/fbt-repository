@@ -28,16 +28,35 @@
     set term ;^
     commit;
 
-    declare external function udf_strlen cstring(32767) returns integer by value entry_point 'IB_UDF_strlen' module_name 'ib_udf';
+    declare external function udf_strlen cstring(32765) returns integer by value entry_point 'IB_UDF_strlen' module_name 'ib_udf';
+    
     set term ^;
-
-    create or alter function psql_strlen (val varchar(10)) returns int as
+    create or alter function psql_strlen (val varchar(32765))
+      returns int
+    as
     begin
-        return char_length(coalesce(val, ''));
-    end ^
+      return nullif(char_length(coalesce(val, '')), 32765);
+    end 
+    ^
+
+    recreate package pkg_test as
+    begin
+        function pkg_strlen(val varchar(32765)) returns bigint;
+    end
+    ^
+    create package body pkg_test as
+    begin
+        function pkg_strlen(val varchar(32765)) returns bigint as
+        begin
+            return nullif(char_length(coalesce(val, '')), 32765);
+        end
+    end
+    ^
+
     set term ;^
     commit;
-    
+
+   
     recreate table test_table1 (
         id int primary key ,
         testtable2_id int
@@ -45,35 +64,56 @@
 
     recreate table test_table2 (
         id int primary key,
-        groupcode varchar(10)
+        groupcode varchar(32765)
     );
     commit;
 
 
-    insert into test_table1 (id,testtable2_id) values (1,100);
-    insert into test_table2 (id,groupcode) values (100,'a');
+    insert into test_table1 (id,testtable2_id) values (1,101);
+    insert into test_table1 (id,testtable2_id) values (2,102);
+    insert into test_table1 (id,testtable2_id) values (3,103);
+    insert into test_table2 (id,groupcode) values (101,'a');
+    insert into test_table2 (id,groupcode) values (102, rpad('',32765, uuid_to_char(gen_uuid())) );
+    insert into test_table2 (id,groupcode) values (103, null);
     commit;
 
     set count on;
     set list on;
 
-    select t1.id as psql_result
+    select t1.*, psql_strlen(t2.groupcode)
     from test_table1 t1
-    left join test_table2 t2 on t2.id = t1.testtable2_id
-    where psql_strlen(t2.groupcode)=0
+    left join test_table2 t2 on  t2.id = t1.testtable2_id 
+    where psql_strlen(t2.groupcode) in(0, null, 32765)
     ;
 
-    select t1.id as udf_result
+    select t1.*, pkg_test.pkg_strlen(t2.groupcode)
     from test_table1 t1
-    left join test_table2 t2 on t2.id = t1.testtable2_id
-    where udf_strlen(t2.groupcode)=0
+    left join test_table2 t2 on  t2.id = t1.testtable2_id 
+    where pkg_test.pkg_strlen(t2.groupcode)  in(0, null, 32765)
     ;
 
+    select t1.*, udf_strlen(t2.groupcode)
+    from test_table1 t1
+    left join test_table2 t2 on t2.id = t1.testtable2_id
+    where nullif(udf_strlen(t2.groupcode),32765) in(0, null, 32765)
+    ;
   """,
   'expected_stdout':
   """
-    Records affected: 0
-    Records affected: 0
+    ID                              3
+    TESTTABLE2_ID                   103
+    PSQL_STRLEN                     0
+    Records affected: 1
+
+    ID                              3
+    TESTTABLE2_ID                   103
+    PKG_STRLEN                      0
+    Records affected: 1
+
+    ID                              3
+    TESTTABLE2_ID                   103
+    UDF_STRLEN                      0
+    Records affected: 1
   """,
   'expected_stderr':
   """
