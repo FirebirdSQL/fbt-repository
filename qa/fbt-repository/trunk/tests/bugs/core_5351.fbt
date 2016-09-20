@@ -1,0 +1,83 @@
+{
+'id': 'bugs.core_5351',
+'qmid': None,
+'tracker_id': 'CORE-5351',
+'title': 'LEFT JOIN incorrectly pushes UDF into the inner stream causing wrong results',
+'description':
+ """
+   Confirmed  on 3.0.1.32597, 4.0.0.371 (wrong result).
+   Works fine on 3.0.1.32598, 4.0.0.372,
+ """,
+'min_versions': '3.0.1',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop function udf_strlen';
+      when any do begin end
+    end^
+    set term ;^
+    commit;
+
+    declare external function udf_strlen cstring(32767) returns integer by value entry_point 'IB_UDF_strlen' module_name 'ib_udf';
+    set term ^;
+
+    create or alter function psql_strlen (val varchar(10)) returns int as
+    begin
+        return char_length(coalesce(val, ''));
+    end ^
+    set term ;^
+    commit;
+    
+    recreate table test_table1 (
+        id int primary key ,
+        testtable2_id int
+    );
+
+    recreate table test_table2 (
+        id int primary key,
+        groupcode varchar(10)
+    );
+    commit;
+
+
+    insert into test_table1 (id,testtable2_id) values (1,100);
+    insert into test_table2 (id,groupcode) values (100,'a');
+    commit;
+
+    set count on;
+    set list on;
+
+    select t1.id as psql_result
+    from test_table1 t1
+    left join test_table2 t2 on t2.id = t1.testtable2_id
+    where psql_strlen(t2.groupcode)=0
+    ;
+
+    select t1.id as udf_result
+    from test_table1 t1
+    left join test_table2 t2 on t2.id = t1.testtable2_id
+    where udf_strlen(t2.groupcode)=0
+    ;
+
+  """,
+  'expected_stdout':
+  """
+    Records affected: 0
+    Records affected: 0
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
