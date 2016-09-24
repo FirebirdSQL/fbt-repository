@@ -1,0 +1,391 @@
+{
+'id': 'bugs.core_5346',
+'qmid': None,
+'tracker_id': 'CORE-5346',
+'title': 'Window Function: named window',
+'description':
+ """
+   Simlified test for just check ability to compile and run a query with named window.
+   More complex tests (e.g. when result of window functions are involved in JOIN expr.)
+   will be implemented later.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    create table emp_test (
+        emp_no       smallint, 
+        dept_no      char(3),
+        salary       numeric(10,2)
+    );
+
+    insert into emp_test (emp_no, dept_no, salary) values (2, '600', 105900);
+    insert into emp_test (emp_no, dept_no, salary) values (4, '621', 97500);
+    insert into emp_test (emp_no, dept_no, salary) values (5, '130', 102750);
+    insert into emp_test (emp_no, dept_no, salary) values (8, '180', 64635);
+    insert into emp_test (emp_no, dept_no, salary) values (9, '622', 75060);
+    insert into emp_test (emp_no, dept_no, salary) values (11, '130', 86292.94);
+    insert into emp_test (emp_no, dept_no, salary) values (12, '000', 53793);
+    insert into emp_test (emp_no, dept_no, salary) values (14, '900', 69482.63);
+    insert into emp_test (emp_no, dept_no, salary) values (15, '623', 67241.25);
+    insert into emp_test (emp_no, dept_no, salary) values (20, '671', 89655);
+    insert into emp_test (emp_no, dept_no, salary) values (24, '671', 81810.19);
+    insert into emp_test (emp_no, dept_no, salary) values (28, '120', 22935);
+    insert into emp_test (emp_no, dept_no, salary) values (29, '623', 69482.63);
+    insert into emp_test (emp_no, dept_no, salary) values (34, '110', 61637.81);
+    insert into emp_test (emp_no, dept_no, salary) values (36, '120', 33620.63);
+    insert into emp_test (emp_no, dept_no, salary) values (37, '120', 39224.06);
+    insert into emp_test (emp_no, dept_no, salary) values (44, '623', 56034.38);
+    insert into emp_test (emp_no, dept_no, salary) values (45, '621', 80689.5);
+    insert into emp_test (emp_no, dept_no, salary) values (46, '900', 116100);
+    insert into emp_test (emp_no, dept_no, salary) values (52, '180', 42742.5);
+    insert into emp_test (emp_no, dept_no, salary) values (61, '110', 68805);
+    insert into emp_test (emp_no, dept_no, salary) values (65, '670', 31275);
+    insert into emp_test (emp_no, dept_no, salary) values (71, '622', 53167.5);
+    insert into emp_test (emp_no, dept_no, salary) values (72, '140', 100914);
+    insert into emp_test (emp_no, dept_no, salary) values (83, '621', 62550);
+    insert into emp_test (emp_no, dept_no, salary) values (85, '100', 111262.5);
+    insert into emp_test (emp_no, dept_no, salary) values (94, '672', 56295);
+    insert into emp_test (emp_no, dept_no, salary) values (105, '000', 212850);
+    insert into emp_test (emp_no, dept_no, salary) values (107, '670', 111262.5);
+    insert into emp_test (emp_no, dept_no, salary) values (109, '600', 27000);
+    insert into emp_test (emp_no, dept_no, salary) values (110, '115', 6000000);
+    insert into emp_test (emp_no, dept_no, salary) values (113, '671', 48000);
+    insert into emp_test (emp_no, dept_no, salary) values (114, '623', 35000);
+    insert into emp_test (emp_no, dept_no, salary) values (118, '115', 7480000);
+    insert into emp_test (emp_no, dept_no, salary) values (121, '125', 33000);
+    insert into emp_test (emp_no, dept_no, salary) values (127, '100', 44000);
+    insert into emp_test (emp_no, dept_no, salary) values (134, '123', 38500);
+    insert into emp_test (emp_no, dept_no, salary) values (136, '623', 60000);
+    insert into emp_test (emp_no, dept_no, salary) values (138, '621', 36000);
+    insert into emp_test (emp_no, dept_no, salary) values (141, '121', 110000);
+    insert into emp_test (emp_no, dept_no, salary) values (144, '672', 35000);
+    insert into emp_test (emp_no, dept_no, salary) values (145, '622', 32000);
+    commit;
+
+    set list on;
+
+    select
+        e.emp_no,
+        e.dept_no,
+        e.salary,
+        count(*) over w1,
+        first_value(e.salary) over w2,
+        last_value(e.salary) over w2
+    from emp_test e
+        window w1 as (partition by e.dept_no),
+        w2 as (w1 order by e.salary)
+    order by
+        rank() over w2,
+        e.dept_no,
+        e.salary;
+  """,
+  'expected_stdout':
+  """
+    EMP_NO                          12
+    DEPT_NO                         000
+    SALARY                          53793.00
+    COUNT                           2
+    FIRST_VALUE                     53793.00
+    LAST_VALUE                      212850.00
+
+    EMP_NO                          105
+    DEPT_NO                         000
+    SALARY                          212850.00
+    COUNT                           2
+    FIRST_VALUE                     53793.00
+    LAST_VALUE                      212850.00
+
+    EMP_NO                          127
+    DEPT_NO                         100
+    SALARY                          44000.00
+    COUNT                           2
+    FIRST_VALUE                     44000.00
+    LAST_VALUE                      111262.50
+
+    EMP_NO                          85
+    DEPT_NO                         100
+    SALARY                          111262.50
+    COUNT                           2
+    FIRST_VALUE                     44000.00
+    LAST_VALUE                      111262.50
+
+    EMP_NO                          34
+    DEPT_NO                         110
+    SALARY                          61637.81
+    COUNT                           2
+    FIRST_VALUE                     61637.81
+    LAST_VALUE                      68805.00
+
+    EMP_NO                          61
+    DEPT_NO                         110
+    SALARY                          68805.00
+    COUNT                           2
+    FIRST_VALUE                     61637.81
+    LAST_VALUE                      68805.00
+
+    EMP_NO                          110
+    DEPT_NO                         115
+    SALARY                          6000000.00
+    COUNT                           2
+    FIRST_VALUE                     6000000.00
+    LAST_VALUE                      7480000.00
+
+    EMP_NO                          118
+    DEPT_NO                         115
+    SALARY                          7480000.00
+    COUNT                           2
+    FIRST_VALUE                     6000000.00
+    LAST_VALUE                      7480000.00
+
+    EMP_NO                          28
+    DEPT_NO                         120
+    SALARY                          22935.00
+    COUNT                           3
+    FIRST_VALUE                     22935.00
+    LAST_VALUE                      39224.06
+
+    EMP_NO                          36
+    DEPT_NO                         120
+    SALARY                          33620.63
+    COUNT                           3
+    FIRST_VALUE                     22935.00
+    LAST_VALUE                      39224.06
+
+    EMP_NO                          37
+    DEPT_NO                         120
+    SALARY                          39224.06
+    COUNT                           3
+    FIRST_VALUE                     22935.00
+    LAST_VALUE                      39224.06
+
+    EMP_NO                          141
+    DEPT_NO                         121
+    SALARY                          110000.00
+    COUNT                           1
+    FIRST_VALUE                     110000.00
+    LAST_VALUE                      110000.00
+
+    EMP_NO                          134
+    DEPT_NO                         123
+    SALARY                          38500.00
+    COUNT                           1
+    FIRST_VALUE                     38500.00
+    LAST_VALUE                      38500.00
+
+    EMP_NO                          121
+    DEPT_NO                         125
+    SALARY                          33000.00
+    COUNT                           1
+    FIRST_VALUE                     33000.00
+    LAST_VALUE                      33000.00
+
+    EMP_NO                          11
+    DEPT_NO                         130
+    SALARY                          86292.94
+    COUNT                           2
+    FIRST_VALUE                     86292.94
+    LAST_VALUE                      102750.00
+
+    EMP_NO                          5
+    DEPT_NO                         130
+    SALARY                          102750.00
+    COUNT                           2
+    FIRST_VALUE                     86292.94
+    LAST_VALUE                      102750.00
+
+    EMP_NO                          72
+    DEPT_NO                         140
+    SALARY                          100914.00
+    COUNT                           1
+    FIRST_VALUE                     100914.00
+    LAST_VALUE                      100914.00
+
+    EMP_NO                          52
+    DEPT_NO                         180
+    SALARY                          42742.50
+    COUNT                           2
+    FIRST_VALUE                     42742.50
+    LAST_VALUE                      64635.00
+
+    EMP_NO                          8
+    DEPT_NO                         180
+    SALARY                          64635.00
+    COUNT                           2
+    FIRST_VALUE                     42742.50
+    LAST_VALUE                      64635.00
+
+    EMP_NO                          109
+    DEPT_NO                         600
+    SALARY                          27000.00
+    COUNT                           2
+    FIRST_VALUE                     27000.00
+    LAST_VALUE                      105900.00
+
+    EMP_NO                          2
+    DEPT_NO                         600
+    SALARY                          105900.00
+    COUNT                           2
+    FIRST_VALUE                     27000.00
+    LAST_VALUE                      105900.00
+
+    EMP_NO                          138
+    DEPT_NO                         621
+    SALARY                          36000.00
+    COUNT                           4
+    FIRST_VALUE                     36000.00
+    LAST_VALUE                      97500.00
+
+    EMP_NO                          83
+    DEPT_NO                         621
+    SALARY                          62550.00
+    COUNT                           4
+    FIRST_VALUE                     36000.00
+    LAST_VALUE                      97500.00
+
+    EMP_NO                          45
+    DEPT_NO                         621
+    SALARY                          80689.50
+    COUNT                           4
+    FIRST_VALUE                     36000.00
+    LAST_VALUE                      97500.00
+
+    EMP_NO                          4
+    DEPT_NO                         621
+    SALARY                          97500.00
+    COUNT                           4
+    FIRST_VALUE                     36000.00
+    LAST_VALUE                      97500.00
+
+    EMP_NO                          145
+    DEPT_NO                         622
+    SALARY                          32000.00
+    COUNT                           3
+    FIRST_VALUE                     32000.00
+    LAST_VALUE                      75060.00
+
+    EMP_NO                          71
+    DEPT_NO                         622
+    SALARY                          53167.50
+    COUNT                           3
+    FIRST_VALUE                     32000.00
+    LAST_VALUE                      75060.00
+
+    EMP_NO                          9
+    DEPT_NO                         622
+    SALARY                          75060.00
+    COUNT                           3
+    FIRST_VALUE                     32000.00
+    LAST_VALUE                      75060.00
+
+    EMP_NO                          114
+    DEPT_NO                         623
+    SALARY                          35000.00
+    COUNT                           5
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      69482.63
+
+    EMP_NO                          44
+    DEPT_NO                         623
+    SALARY                          56034.38
+    COUNT                           5
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      69482.63
+
+    EMP_NO                          136
+    DEPT_NO                         623
+    SALARY                          60000.00
+    COUNT                           5
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      69482.63
+
+    EMP_NO                          15
+    DEPT_NO                         623
+    SALARY                          67241.25
+    COUNT                           5
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      69482.63
+
+    EMP_NO                          29
+    DEPT_NO                         623
+    SALARY                          69482.63
+    COUNT                           5
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      69482.63
+
+    EMP_NO                          65
+    DEPT_NO                         670
+    SALARY                          31275.00
+    COUNT                           2
+    FIRST_VALUE                     31275.00
+    LAST_VALUE                      111262.50
+
+    EMP_NO                          107
+    DEPT_NO                         670
+    SALARY                          111262.50
+    COUNT                           2
+    FIRST_VALUE                     31275.00
+    LAST_VALUE                      111262.50
+
+    EMP_NO                          113
+    DEPT_NO                         671
+    SALARY                          48000.00
+    COUNT                           3
+    FIRST_VALUE                     48000.00
+    LAST_VALUE                      89655.00
+
+    EMP_NO                          24
+    DEPT_NO                         671
+    SALARY                          81810.19
+    COUNT                           3
+    FIRST_VALUE                     48000.00
+    LAST_VALUE                      89655.00
+
+    EMP_NO                          20
+    DEPT_NO                         671
+    SALARY                          89655.00
+    COUNT                           3
+    FIRST_VALUE                     48000.00
+    LAST_VALUE                      89655.00
+
+    EMP_NO                          144
+    DEPT_NO                         672
+    SALARY                          35000.00
+    COUNT                           2
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      56295.00
+
+    EMP_NO                          94
+    DEPT_NO                         672
+    SALARY                          56295.00
+    COUNT                           2
+    FIRST_VALUE                     35000.00
+    LAST_VALUE                      56295.00
+
+    EMP_NO                          14
+    DEPT_NO                         900
+    SALARY                          69482.63
+    COUNT                           2
+    FIRST_VALUE                     69482.63
+    LAST_VALUE                      116100.00
+
+    EMP_NO                          46
+    DEPT_NO                         900
+    SALARY                          116100.00
+    COUNT                           2
+    FIRST_VALUE                     69482.63
+    LAST_VALUE                      116100.00
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
