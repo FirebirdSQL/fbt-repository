@@ -613,7 +613,7 @@
     update t set y=null where 2 not in( select cnt from v ); 
 
     set count on;
-    select 'core-3362, case-8' as test_case, t.* from t;
+    select 'core-3362, case-8.1' as test_case, t.* from t;
     set count off;
 
 
@@ -637,6 +637,43 @@
     drop view v;
     drop table t;
     commit;
+
+
+    --###########################################################################
+
+    -- 25.09.2016: case with NOT IN and ALL predicates, see letters to hvlad, dimitr from this date:
+    recreate table t(id int, x int);
+    commit;
+
+    insert into t(id, x) values(1,10);
+    insert into t(id, x) values(2,20);
+    insert into t(id, x) values(3,30);
+    insert into t(id, x) values(4,40);
+    commit;
+
+    update t s set x = null where x not in ( select x from t z where z.x > all(select x from t y where y.id<>z.id ) );
+    set count on;
+    select 'core-3362, case-8.2' as test_case, t.* from t;
+    set count off;
+    /********************************
+    Expected output:
+    ID                              1
+    X                               <null>
+
+    ID                              2
+    X                               <null>
+
+    ID                              3
+    X                               <null>
+
+    ID                              4
+    X                               40
+
+    Records affected: 4
+    *********************************/
+    -- result: OK on 3.x, 4.0;  2.5.x: wrong for id=4: {4,null}
+
+    rollback;
 
     -- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     -- ::::::::::::::::::::::::::::::       M  E  R  G  E      :::::::::::::::::::::::::
@@ -824,346 +861,466 @@
                3            0 
     */
     -- OK on WI-T4.0.0.371, WI-V3.0.1.32597; totally wrong on 2.5.x
+
+
+
+    --###########################################################################
+
+    -- 25.09.2016: case with NOT IN and ALL predicates, see letters to hvlad, dimitr from this date:
+
+    recreate table t1(id int, x int);
+
+    --create index t1_xa on t1(x);
+    --create descending index t1_xd on t1(x);
+    commit;
+
+    insert into t1(id, x) values(1,10);
+    insert into t1(id, x) values(2,20);
+    insert into t1(id, x) values(3,30);
+    insert into t1(id, x) values(4,40);
+    commit;
+
+    merge into t1 t using t1 s on 
+    t.x not in ( select x from t1 z where z.x is null or z.x > all(select x from t1 y where y.id<>z.id ) )
+    when matched then update set x = null
+    ;
+
+    select 'core-3362, case-12a' as test_case, a.* from t1 a; 
+
+    /* Expected result:
+        ID                              1
+        X                               <null>
+
+        ID                              2
+        X                               <null>
+
+        ID                              3
+        X                               <null>
+
+        ID                              4
+        X                               40
+    */
+    -- OK on 3.x, wrong data on 2.5.x for id >= 2;
+
+    rollback;
+
+
+    merge into t1 t using t1 s on 
+    t.x not in ( select x from t1 z where z.x is null or z.x > all(select x from t1 y where y.id<>z.id ) )
+    when matched then update set x = null
+    ;
+
+    select 'core-3362, case-12b' as test_case, a.* from t1 a; 
+    /* Expected result:
+        ID                              1
+        X                               <null>
+
+        ID                              2
+        X                               <null>
+
+        ID                              3
+        X                               <null>
+
+        ID                              4
+        X                               40
+    */
+    -- OK on 3.x, wrong data on 2.5.x for id >= 2;
+
+    rollback;
+
   """,
   'expected_stdout':
   """
+    TEST_CASE                       core-92
+    X                               0
 
-     TEST_CASE                       core-92
-     X                               0
+    TEST_CASE                       core-92
+    X                               1
 
-     TEST_CASE                       core-92
-     X                               1
 
+    Records affected: 2
 
-     Records affected: 2
+    TEST_CASE                       core-634, case-1
+    X                               6
 
-     TEST_CASE                       core-634, case-1
-     X                               6
+    TEST_CASE                       core-634, case-1
+    X                               7
 
-     TEST_CASE                       core-634, case-1
-     X                               7
+    TEST_CASE                       core-634, case-1
+    X                               8
 
-     TEST_CASE                       core-634, case-1
-     X                               8
+    TEST_CASE                       core-634, case-1
+    X                               9
 
-     TEST_CASE                       core-634, case-1
-     X                               9
+    TEST_CASE                       core-634, case-1
+    X                               10
 
-     TEST_CASE                       core-634, case-1
-     X                               10
 
+    Records affected: 5
 
-     Records affected: 5
+    TEST_CASE                       core-634, case-2
+    ID                              1
+    VAL                             red  
 
-     TEST_CASE                       core-634, case-2
-     ID                              1
-     VAL                             red  
+    TEST_CASE                       core-634, case-2
+    ID                              3
+    VAL                             blue 
 
-     TEST_CASE                       core-634, case-2
-     ID                              3
-     VAL                             blue 
 
+    Records affected: 2
 
-     Records affected: 2
+    TEST_CASE                       core-2799, case-1
+    X                               2
 
-     TEST_CASE                       core-2799, case-1
-     X                               2
+    TEST_CASE                       core-2799, case-1
+    X                               3
 
-     TEST_CASE                       core-2799, case-1
-     X                               3
+    TEST_CASE                       core-2799, case-1
+    X                               4
 
-     TEST_CASE                       core-2799, case-1
-     X                               4
+    TEST_CASE                       core-2799, case-1
+    X                               5
 
-     TEST_CASE                       core-2799, case-1
-     X                               5
 
+    Records affected: 4
 
-     Records affected: 4
+    TEST_CASE                       core-2799, case-2
+    X                               1
 
-     TEST_CASE                       core-2799, case-2
-     X                               1
+    TEST_CASE                       core-2799, case-2
+    X                               2
 
-     TEST_CASE                       core-2799, case-2
-     X                               2
+    TEST_CASE                       core-2799, case-2
+    X                               3
 
-     TEST_CASE                       core-2799, case-2
-     X                               3
+    TEST_CASE                       core-2799, case-2
+    X                               4
 
-     TEST_CASE                       core-2799, case-2
-     X                               4
 
+    Records affected: 4
+    Records affected: 0
 
-     Records affected: 4
-     Records affected: 0
+    TEST_CASE                       core-3317
+    ID                              1
+    ID_PARENT                       2
+    ID_CHILD                        2
+    DEPTH                           0
 
-     TEST_CASE                       core-3317
-     ID                              1
-     ID_PARENT                       2
-     ID_CHILD                        2
-     DEPTH                           0
+    TEST_CASE                       core-3317
+    ID                              2
+    ID_PARENT                       7
+    ID_CHILD                        7
+    DEPTH                           0
 
-     TEST_CASE                       core-3317
-     ID                              2
-     ID_PARENT                       7
-     ID_CHILD                        7
-     DEPTH                           0
+    TEST_CASE                       core-3317
+    ID                              3
+    ID_PARENT                       10
+    ID_CHILD                        10
+    DEPTH                           0
 
-     TEST_CASE                       core-3317
-     ID                              3
-     ID_PARENT                       10
-     ID_CHILD                        10
-     DEPTH                           0
+    TEST_CASE                       core-3317
+    ID                              6
+    ID_PARENT                       7
+    ID_CHILD                        10
+    DEPTH                           1
 
-     TEST_CASE                       core-3317
-     ID                              6
-     ID_PARENT                       7
-     ID_CHILD                        10
-     DEPTH                           1
 
+    Records affected: 4
 
-     Records affected: 4
+    TEST_CASE                       core-3362, case-1
+    ID                              1
+    F01                             600
 
-     TEST_CASE                       core-3362, case-1
-     ID                              1
-     F01                             600
+    TEST_CASE                       core-3362, case-1
+    ID                              2
+    F01                             600
 
-     TEST_CASE                       core-3362, case-1
-     ID                              2
-     F01                             600
+    TEST_CASE                       core-3362, case-1
+    ID                              3
+    F01                             600
 
-     TEST_CASE                       core-3362, case-1
-     ID                              3
-     F01                             600
 
+    Records affected: 3
 
-     Records affected: 3
+    TEST_CASE                       core-3362, case-2
+    ID                              1
+    F01                             600
 
-     TEST_CASE                       core-3362, case-2
-     ID                              1
-     F01                             600
+    TEST_CASE                       core-3362, case-2
+    ID                              2
+    F01                             600
 
-     TEST_CASE                       core-3362, case-2
-     ID                              2
-     F01                             600
+    TEST_CASE                       core-3362, case-2
+    ID                              3
+    F01                             600
 
-     TEST_CASE                       core-3362, case-2
-     ID                              3
-     F01                             600
 
+    Records affected: 3
 
-     Records affected: 3
+    TEST_CASE                       core-3362, case-3
+    I                               1
+    X                               6
+    Y                               5
 
-     TEST_CASE                       core-3362, case-3
-     I                               1
-     X                               6
-     Y                               5
+    TEST_CASE                       core-3362, case-3
+    I                               2
+    X                               2
+    Y                               6
 
-     TEST_CASE                       core-3362, case-3
-     I                               2
-     X                               2
-     Y                               6
+    TEST_CASE                       core-3362, case-3
+    I                               3
+    X                               3
+    Y                               2
 
-     TEST_CASE                       core-3362, case-3
-     I                               3
-     X                               3
-     Y                               2
+    TEST_CASE                       core-3362, case-3
+    I                               4
+    X                               4
+    Y                               3
 
-     TEST_CASE                       core-3362, case-3
-     I                               4
-     X                               4
-     Y                               3
+    TEST_CASE                       core-3362, case-3
+    I                               5
+    X                               5
+    Y                               4
 
-     TEST_CASE                       core-3362, case-3
-     I                               5
-     X                               5
-     Y                               4
 
+    Records affected: 5
 
-     Records affected: 5
+    TEST_CASE                       core-3362, case-4
+    X                               <null>
+    Y                               5
 
-     TEST_CASE                       core-3362, case-4
-     X                               <null>
-     Y                               5
+    TEST_CASE                       core-3362, case-4
+    X                               <null>
+    Y                               5
 
-     TEST_CASE                       core-3362, case-4
-     X                               <null>
-     Y                               5
+    TEST_CASE                       core-3362, case-4
+    X                               <null>
+    Y                               5
 
-     TEST_CASE                       core-3362, case-4
-     X                               <null>
-     Y                               5
+    TEST_CASE                       core-3362, case-4
+    X                               <null>
+    Y                               5
 
-     TEST_CASE                       core-3362, case-4
-     X                               <null>
-     Y                               5
+    TEST_CASE                       core-3362, case-4
+    X                               <null>
+    Y                               5
 
-     TEST_CASE                       core-3362, case-4
-     X                               <null>
-     Y                               5
 
+    Records affected: 5
 
-     Records affected: 5
+    TEST_CASE                       core-3362, case-5
+    X                               1
+    Y                               15
 
-     TEST_CASE                       core-3362, case-5
-     X                               1
-     Y                               15
+    TEST_CASE                       core-3362, case-5
+    X                               2
+    Y                               15
 
-     TEST_CASE                       core-3362, case-5
-     X                               2
-     Y                               15
+    TEST_CASE                       core-3362, case-5
+    X                               3
+    Y                               15
 
-     TEST_CASE                       core-3362, case-5
-     X                               3
-     Y                               15
+    TEST_CASE                       core-3362, case-5
+    X                               4
+    Y                               15
 
-     TEST_CASE                       core-3362, case-5
-     X                               4
-     Y                               15
+    TEST_CASE                       core-3362, case-5
+    X                               5
+    Y                               15
 
-     TEST_CASE                       core-3362, case-5
-     X                               5
-     Y                               15
 
+    Records affected: 5
 
-     Records affected: 5
+    TEST_CASE                       core-3362, case-6
+    X                               1
+    Y                               0
 
-     TEST_CASE                       core-3362, case-6
-     X                               1
-     Y                               0
 
+    Records affected: 1
 
-     Records affected: 1
+    TEST_CASE                       core-3362, case-7
+    ID                              1
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-7
-     ID                              1
-     X                               <null>
+    TEST_CASE                       core-3362, case-7
+    ID                              2
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-7
-     ID                              2
-     X                               <null>
+    TEST_CASE                       core-3362, case-7
+    ID                              3
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-7
-     ID                              3
-     X                               <null>
 
+    Records affected: 3
 
-     Records affected: 3
+    TEST_CASE                       core-3362, case-8.1
+    X                               1
+    Y                               <null>
 
-     TEST_CASE                       core-3362, case-8
-     X                               1
-     Y                               <null>
+    TEST_CASE                       core-3362, case-8.1
+    X                               2
+    Y                               <null>
 
-     TEST_CASE                       core-3362, case-8
-     X                               2
-     Y                               <null>
+    TEST_CASE                       core-3362, case-8.1
+    X                               3
+    Y                               <null>
 
-     TEST_CASE                       core-3362, case-8
-     X                               3
-     Y                               <null>
 
+    Records affected: 3
 
-     Records affected: 3
+    TEST_CASE                       core-3362, case-8.2
+    ID                              1
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-9
-     X                               1
-     Y                               4
+    TEST_CASE                       core-3362, case-8.2
+    ID                              2
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-9
-     X                               2
-     Y                               4
+    TEST_CASE                       core-3362, case-8.2
+    ID                              3
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-9
-     X                               3
-     Y                               4
+    TEST_CASE                       core-3362, case-8.2
+    ID                              4
+    X                               40
 
-     TEST_CASE                       core-3362, case-9
-     X                               4
-     Y                               4
 
-     TEST_CASE                       core-3362, case-9
-     X                               5
-     Y                               4
+    Records affected: 4
 
+    TEST_CASE                       core-3362, case-9
+    X                               1
+    Y                               4
 
-     Records affected: 5
+    TEST_CASE                       core-3362, case-9
+    X                               2
+    Y                               4
 
-     TEST_CASE                       core-3362, case-10
-     ID                              6
-     PID                             <null>
+    TEST_CASE                       core-3362, case-9
+    X                               3
+    Y                               4
 
-     TEST_CASE                       core-3362, case-10
-     ID                              5
-     PID                             <null>
+    TEST_CASE                       core-3362, case-9
+    X                               4
+    Y                               4
 
-     TEST_CASE                       core-3362, case-10
-     ID                              4
-     PID                             <null>
+    TEST_CASE                       core-3362, case-9
+    X                               5
+    Y                               4
 
-     TEST_CASE                       core-3362, case-10
-     ID                              3
-     PID                             <null>
 
-     TEST_CASE                       core-3362, case-10
-     ID                              2
-     PID                             <null>
+    Records affected: 5
 
+    TEST_CASE                       core-3362, case-10
+    ID                              6
+    PID                             <null>
 
-     Records affected: 5
+    TEST_CASE                       core-3362, case-10
+    ID                              5
+    PID                             <null>
 
-     TEST_CASE                       core-3362, case-11a
-     ID                              1
-     X                               <null>
+    TEST_CASE                       core-3362, case-10
+    ID                              4
+    PID                             <null>
 
-     TEST_CASE                       core-3362, case-11a
-     ID                              2
-     X                               <null>
+    TEST_CASE                       core-3362, case-10
+    ID                              3
+    PID                             <null>
 
-     TEST_CASE                       core-3362, case-11a
-     ID                              3
-     X                               <null>
+    TEST_CASE                       core-3362, case-10
+    ID                              2
+    PID                             <null>
 
 
+    Records affected: 5
 
-     TEST_CASE                       core-3362, case-11b
-     ID                              1
-     X                               <null>
+    TEST_CASE                       core-3362, case-11a
+    ID                              1
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-11b
-     ID                              2
-     X                               <null>
+    TEST_CASE                       core-3362, case-11a
+    ID                              2
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-11b
-     ID                              3
-     X                               <null>
+    TEST_CASE                       core-3362, case-11a
+    ID                              3
+    X                               <null>
 
 
 
-     TEST_CASE                       core-3362, case-11c
-     ID                              1
-     X                               <null>
+    TEST_CASE                       core-3362, case-11b
+    ID                              1
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-11c
-     ID                              2
-     X                               <null>
+    TEST_CASE                       core-3362, case-11b
+    ID                              2
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-11c
-     ID                              3
-     X                               <null>
+    TEST_CASE                       core-3362, case-11b
+    ID                              3
+    X                               <null>
 
 
 
-     TEST_CASE                       core-3362, case-11d
-     ID                              1
-     X                               0
+    TEST_CASE                       core-3362, case-11c
+    ID                              1
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-11d
-     ID                              2
-     X                               0
+    TEST_CASE                       core-3362, case-11c
+    ID                              2
+    X                               <null>
 
-     TEST_CASE                       core-3362, case-11d
-     ID                              3
-     X                               0
+    TEST_CASE                       core-3362, case-11c
+    ID                              3
+    X                               <null>
+
+
+
+    TEST_CASE                       core-3362, case-11d
+    ID                              1
+    X                               0
+
+    TEST_CASE                       core-3362, case-11d
+    ID                              2
+    X                               0
+
+    TEST_CASE                       core-3362, case-11d
+    ID                              3
+    X                               0
+
+    TEST_CASE                       core-3362, case-12a
+    ID                              1
+    X                               <null>
+
+    TEST_CASE                       core-3362, case-12a
+    ID                              2
+    X                               <null>
+
+    TEST_CASE                       core-3362, case-12a
+    ID                              3
+    X                               <null>
+
+    TEST_CASE                       core-3362, case-12a
+    ID                              4
+    X                               40
+
+
+
+    TEST_CASE                       core-3362, case-12b
+    ID                              1
+    X                               <null>
+
+    TEST_CASE                       core-3362, case-12b
+    ID                              2
+    X                               <null>
+
+    TEST_CASE                       core-3362, case-12b
+    ID                              3
+    X                               <null>
+
+    TEST_CASE                       core-3362, case-12b
+    ID                              4
+    X                               40
+
   """,
   'expected_stderr':
   """
