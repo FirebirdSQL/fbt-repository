@@ -1,0 +1,305 @@
+{
+'id': 'bugs.core_1389',
+'qmid': None,
+'tracker_id': 'CORE-1389',
+'title': "Indexed MIN/MAX aggregates produce three index reads instead of the expected one indexed read",
+'description':
+ """
+   Ticked issues can be verified only by using TRACE log parsing.
+   Gathering of MON$ data seems bad way: some values are added to the number 
+   of indexed reads so they are GREATER than expected (i.e. more than 1).
+
+   Previous code for this test (sent it to dimitr 07-jul-2015):
+   ===
+       recreate table log(measure_type varchar(10), what char(3), idx_reads bigint);
+       commit;
+
+       create or alter view vmon as
+       select r.mon$record_seq_reads seq_reads,r.mon$record_idx_reads idx_reads
+       from mon$attachments a left join mon$record_stats r on a.mon$stat_id=r.mon$stat_id
+       where a.mon$attachment_id = current_connection;
+       commit;
+
+       recreate table test(x int, y int);
+       commit;
+       insert into test(x, y)
+       select -1, 1 from (select 1 i from rdb$types rows 100) a, (select 1 i from rdb$types rows 100) b
+       ;
+       commit;
+
+       create index test_x on test(x);
+       create descending index test_y on test(y);
+       commit;
+
+       --- OBTAINING MON$ INFO FOR SQL STATEMENTS ---
+       out nul;
+
+       insert into log(measure_type, what, idx_reads) select 'MIN_ASC', 'beg', idx_reads from vmon;
+       select min(x) from test;
+       commit;
+       insert into log(measure_type, what, idx_reads) select 'MIN_ASC', 'end', idx_reads from vmon;
+       commit;
+
+       insert into log(measure_type, what, idx_reads) select 'ORD_ASC', 'beg', idx_reads from vmon;
+       select x from test order by x rows 1;
+       commit;
+       insert into log(measure_type, what, idx_reads) select 'ORD_ASC', 'end', idx_reads from vmon;
+       commit;
+
+       insert into log(measure_type, what, idx_reads) select 'MAX_DEC', 'beg', idx_reads from vmon;
+       select max(y) from test;
+       commit;
+       insert into log(measure_type, what, idx_reads) select 'MAX_DEC', 'end', idx_reads from vmon;
+       commit;
+
+       insert into log(measure_type, what, idx_reads) select 'ORD_DEC', 'beg', idx_reads from vmon;
+       select y from test order by y desc rows 1;
+       commit;
+       insert into log(measure_type, what, idx_reads) select 'ORD_DEC', 'end', idx_reads from vmon;
+       commit;
+
+       out;
+
+       select 
+           measure_type,
+           max( iif(what='end', idx_reads, 0) ) - max( iif(what='beg', idx_reads, 0) ) idx_reads
+       from log
+       group by 1;
+    ===
+
+    WI-V2.5.7.27025:
+    MEASURE_TYPE             IDX_READS
+    ============ =====================
+    MAX_DEC                          1 << OK
+    MIN_ASC                          3 << ??
+    ORD_ASC                          1 << OK
+    ORD_DEC                          1 << OK
+
+
+    WI-V3.0.1.32608:
+    MEASURE_TYPE             IDX_READS
+    ============ =====================
+    MAX_DEC                          3 << ??
+    MIN_ASC                          3 << ??
+    ORD_ASC                          3 << ??
+    ORD_DEC                          3 << ??
+
+    WI-T4.0.0.392:
+    MEASURE_TYPE             IDX_READS
+    ============ =====================
+    MAX_DEC                          8 << ??
+    MIN_ASC                          8 << ??
+    ORD_ASC                          8 << ??
+    ORD_DEC                          8 << ??
+ """,
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+    recreate table test(x int, y int);
+    commit;
+    insert into test(x, y)
+    select -1, 1 from (select 1 i from rdb$types rows 100) a, (select 1 i from rdb$types rows 100) b
+    ;
+    commit;
+
+    create index test_x on test(x);
+    create descending index test_y on test(y);
+    commit;
+  """,
+ 'test_script':
+  """\
+import os
+import time
+import subprocess
+from subprocess import Popen
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+# Obtain engine version:
+db_conn = kdb.connect(dsn=dsn)
+cur1 = db_conn.cursor()
+
+cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in cur1:
+    engine = row[0]
+
+db_conn.close()
+
+
+fbb='' # 'C:/MIX/firebird/fb40sc/' # '/opt/fb40ss/bin/'
+
+txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
+<database %[\\\\\\\\/]bugs.core_1389.fdb>
+  enabled true
+  log_statement_finish true
+  print_plan true
+  print_perf true
+  time_threshold 0
+</database>
+<services>
+    enabled false
+    log_services false
+    log_service_query false
+</services> 
+'''
+
+# NOTES ABOUT TRACE CONFIG FOR 3.0:
+# 1) Header contains `database` clause in different format vs FB 2.5: its data must be enclosed with '{' '}'
+# 2) Name and value must be separated by EQUALITY sign ('=') in FB-3 trace.conf, otherwise we get runtime error:
+#    element "<. . .>" have no attribute value set
+
+txt30 = '''# Trace config, format for 3.0. Generated auto, do not edit!
+database=%[\\\\\\\\/]bugs.core_1389.fdb
+{
+  enabled = true
+  exclude_filter = %(with recursive role_tree|select current_user)%
+  log_statement_finish = true
+  print_plan = true
+  print_perf = true
+  time_threshold = 0
+}
+services {
+  enabled = false
+  log_services = false
+  log_service_query = false
+}
+'''
+
+f_trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_1389.cfg'), 'w')
+if engine.startswith('2.5'):
+    f_trccfg.write(txt25)
+else:
+    f_trccfg.write(txt30)
+f_trccfg.close()
+
+# Starting trace session in new child process (async.):
+#######################################################
+
+f_trclog=open( os.path.join(context['temp_directory'],'tmp_trace_1389.log'), 'w')
+f_trcerr=open( os.path.join(context['temp_directory'],'tmp_trace_1389.err'), 'w')
+
+
+p_trace=Popen([fbb+"fbsvcmgr", "localhost:service_mgr",
+               "action_trace_start",
+                "trc_cfg", f_trccfg.name],
+                stdout=f_trclog, 
+                stderr=f_trcerr
+             )
+
+# Wait! Trace session is initialized not instantly!
+time.sleep(2)
+
+sql='''
+    set plan on;
+    set list on;
+    select min(x) from test;
+    select x from test order by x asc rows 1;
+    select max(y) from test;
+    select y from test order by y desc rows 1;
+'''
+
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_1389.sql'), 'w')
+f_isql_cmd.write(sql)
+f_isql_cmd.close()
+
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_1389.log'), 'w')
+f_isql_err=open( os.path.join(context['temp_directory'],'tmp_isql_1389.err'), 'w')
+
+subprocess.call(['isql', dsn, '-i', f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
+
+f_isql_log.close()
+f_isql_err.close()
+
+
+# Let trace log be finished because it works in async mode:
+time.sleep(3)
+
+#####################################################
+# Getting ID of launched trace session and STOP it:
+
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_1389.lst'), 'w')
+subprocess.call([fbb+"fbsvcmgr", "localhost:service_mgr",
+                 "action_trace_list"],
+                 stdout=f_trclst, 
+                 stderr=subprocess.STDOUT
+               )
+f_trclst.close()
+
+trcssn=0
+with open( f_trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+f.close()
+
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+f_trclst=open(f_trclst.name,'a')
+f_trclst.seek(0,2)
+subprocess.call([fbb+"fbsvcmgr", "localhost:service_mgr",
+                 "action_trace_stop",
+                 "trc_id",trcssn],
+                 stdout=f_trclst, stderr=subprocess.STDOUT
+               )
+f_trclst.close()
+
+# Terminate child process of launched trace session (though it should already be killed):
+p_trace.terminate()
+f_trclog.close()
+f_trcerr.close()
+
+MAX_FETCHES_THRESHOLD=5
+
+with open(f_trclog.name,'r') as f:
+    for line in f:
+        if 'TEST' in line and not 'PLAN' in line:
+            print('Number of indexed reads: ' + str(line.split()[1]) )
+        if  'fetch(es)' in line:
+            # 0 ms, 2 read(s), 5 fetch(es)
+            # 0 ms, 5 fetch(es)
+            fetches_cnt = int(line.split()[len(line.split())-2])
+            print('Number of fetches: ' + 'EXPECTED, <='+str(MAX_FETCHES_THRESHOLD) if fetches_cnt<=MAX_FETCHES_THRESHOLD else 'UNEXPECTED, ' + str(fetches_cnt))
+
+f.close()
+
+#####################################################################
+# Cleanup:
+time.sleep(1)
+
+f_list=[f_isql_cmd, f_isql_log, f_isql_err, f_trccfg, f_trclst, f_trcerr, f_trclog]
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout': 
+  """
+    Number of fetches: EXPECTED, <=5
+    Number of indexed reads: 1
+
+    Number of fetches: EXPECTED, <=5
+    Number of indexed reads: 1
+
+    Number of fetches: EXPECTED, <=5
+    Number of indexed reads: 1
+
+    Number of fetches: EXPECTED, <=5
+    Number of indexed reads: 1
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
