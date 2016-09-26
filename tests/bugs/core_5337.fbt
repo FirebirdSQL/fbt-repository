@@ -6,13 +6,16 @@
 'description':
  """
    Confirmed  on WI-T4.0.0.372 (nightly build)
-   Works fine on 4.0.0.372 - after commit 21-sep-2016 12:39
-   https://github.com/FirebirdSQL/firebird/commit/d8f43da00f10181495160d12f17556fe9cc5687b
+   Works fine on:
+   * 4.0.0.372 - after commit 21-sep-2016 12:39
+     https://github.com/FirebirdSQL/firebird/commit/d8f43da00f10181495160d12f17556fe9cc5687b
+   *  WI-V3.0.1.32609 -  after commit 25-sep-2016 23:47
+     https://github.com/FirebirdSQL/firebird/commit/d5ff6d82c2d9edba7b6def2e6a32f753b856227a
  """,
-'min_versions': '4.0',
+'min_versions': '3.0.1',
 'versions': [
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'init_script':
   """
