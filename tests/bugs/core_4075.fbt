@@ -3,18 +3,35 @@
 'qmid': None,
 'tracker_id': 'CORE-4075',
 'title': 'Server bugchecks or crashes on exception in calculated index',
-'description': '',
+'description':
+ """
+     18.10.2016: added test case from CORE-4603.
+     NB: 2.5.x output contains TWO lines with error message, i.e.:
+         Statement failed, SQLSTATE = 22018
+         conversion error from string "2014.02.33"
+         -conversion error from string "2014.02.33"
+     Decided to suppress second line because its unlikely to be fixed
+     (after get reply from dimitr, letter 18.10.2016 18:47).
+ """,
 'min_versions': '2.5.4',
 'versions': [
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
   """
     recreate table TEST (BIT smallint);
     create index IDX_TEST_BIT on TEST computed by (bin_shl(1, TEST.BIT-1));
+
+    -- from CORE-4603:
+    recreate table T_TABLE (
+        F_YEAR varchar(4),
+        F_MONTH_DAY varchar(5)
+    );
+    create index T_INDEX on T_TABLE computed by (cast(F_YEAR || '.' || F_MONTH_DAY as date));
+    commit;
+
   """,
  'test_script':
   """
@@ -22,13 +39,20 @@
     -- Trace:
     -- 335544606 : expression evaluation not supported
     -- 335544967 : Argument for BIN_SHL must be zero or positive
+
+    -- from core-4603:
+    insert into T_TABLE (F_YEAR, F_MONTH_DAY) values ('2014', '02.33');
   """,
  'expected_stderr': 
   """
     Statement failed, SQLSTATE = 42000
     expression evaluation not supported
     -Argument for BIN_SHL must be zero or positive
-  """
+
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "2014.02.33"
+  """,
+  'substitutions':[('-conversion error from string "2014.02.33"', '')]
 }
 ]
 }
