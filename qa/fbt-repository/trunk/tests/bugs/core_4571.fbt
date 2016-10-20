@@ -31,14 +31,26 @@
     Result of fbsvcmgr (STDOUT and STDERR) should be empty.
     Than we run ISQL and query table with UTF8 data - several rows with varchar field which is filled by text
     from Hungarian, Norwegian and Greek languages.
+    
+    WARNING! 'Raw' database should be recreated in case of changing ODS structure, otherwise one may get:
+    ===
+          File "c:\firebirdqa\fbtest\fbtest.py", line 827, in run
+            exec substitute_macros(self.test_script) in global_ns, local_ns
 
+          File "", line 29, in 
+
+          File "c:\python27\lib\subprocess.py", line 540, in check_call
+            raise CalledProcessError(retcode, cmd)    
+    ===
+    
     Linux ICU info:
     $ rpm -qa | grep icu
     icu4j-eclipse-4.2.1-5.el6.x86_64
     libicu-4.2.1-9.1.el6_2.x86_64 
 
-    Checked on WI-V3.0.1.32570, WI-T4.0.0.321
-    OS = Windows XP. Database was created on LI-V3.0.0.32239.
+    Database initially was created on LI-V3.0.0.32239, then re-created 20.10.2016 on LI-T4.0.0.419 because ODS was changed.
+    Checked on OS = Windows XP: WI-V3.0.1.32570, WI-T4.0.0.321
+    20.10.2016: checked on WI-T4.0.0.420
  """,
 'min_versions': '3.0',
 'versions': [
