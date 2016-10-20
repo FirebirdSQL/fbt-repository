@@ -25,7 +25,7 @@
  'test_script': 
   """
     set TERM ^;
-    create or alter procedure test (
+    create or alter procedure sp_test (
       "Class" bigint)
     returns (
       "Result" varchar(64))
