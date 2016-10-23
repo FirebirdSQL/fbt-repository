@@ -806,7 +806,6 @@
 
     --###########################################################################
 
-
     -- Issue 13.09.2014 09:33
 
 
@@ -926,6 +925,39 @@
     */
     -- OK on 3.x, wrong data on 2.5.x for id >= 2;
 
+    rollback;
+
+
+    --###########################################################################
+ 
+    -- 24.10.2016 from CORE-3862:
+
+    recreate table icesling (
+        id integer,
+        yearofbirth integer,
+        name varchar(30),
+        constraint someuniqueconstrain primary key (id)
+    );
+    commit;
+
+    insert into icesling (id, yearofbirth, name) values ('1', '1980', 'zeca');
+    insert into icesling (id, yearofbirth, name) values ('2', '1980', 'chico');
+    insert into icesling (id, yearofbirth, name) values ('3', '1983', 'leila');
+    commit;
+
+    set list on;
+
+    -- the min() grouping is ignored and 2 records are deleted, only one shoud be deleted
+    set count on;
+
+    delete
+    from icesling where id in (
+        select min(i.id) from icesling i
+        where i.yearofbirth=1980
+    );
+    set count off;
+
+    select 'core-3862' as test_case, t.* from icesling t;
     rollback;
 
   """,
@@ -1320,6 +1352,17 @@
     TEST_CASE                       core-3362, case-12b
     ID                              4
     X                               40
+
+    Records affected: 1
+    TEST_CASE                       core-3862
+    ID                              2
+    YEAROFBIRTH                     1980
+    NAME                            chico
+
+    TEST_CASE                       core-3862
+    ID                              3
+    YEAROFBIRTH                     1983
+    NAME                            leila
 
   """,
   'expected_stderr':
