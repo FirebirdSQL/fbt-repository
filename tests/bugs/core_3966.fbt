@@ -11,7 +11,6 @@
  'platform': 'All',
  'database': 'Restore',
  'backup_file': 'employee-ods12.fbk',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
   """
@@ -75,10 +74,38 @@
     
     end
     ^
+    -- from core-3968:
+    create or alter procedure empiu (
+        emp_no smallint,
+        first_name varchar(15),
+        last_name varchar(20),
+        phone_ext varchar(4),
+        hire_date timestamp,
+        dept_no char(3),
+        job_code varchar(5),
+        job_grade smallint,
+        job_country varchar(15),
+        salary numeric(10,2),
+        proj_id type of column project.proj_id)
+    as
+    begin
+      select first 1 p.proj_id from project p where p.proj_id=:proj_id into :proj_id;
+      update or insert into employee_project (emp_no, proj_id)
+      values (:emp_no, :proj_id)
+      matching (emp_no, proj_id);
+
+      update or insert into employee (emp_no, first_name, last_name, phone_ext, hire_date, dept_no, job_code, job_grade,
+                                      job_country, salary)
+      values (:emp_no, :first_name, :last_name, :phone_ext, :hire_date, :dept_no, :job_code, :job_grade, :job_country,
+              :salary)
+      matching (emp_no);
+    end
+    ^
     set term ;^ 
     commit;
 
     drop procedure p_beteiligung_iu;
+    drop procedure EMPIU;
     commit;
   """,
  'expected_stderr': 
