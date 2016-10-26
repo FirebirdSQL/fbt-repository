@@ -71,6 +71,7 @@
  'test_script':
   """
 import os
+import fdb
 os.environ["ISC_USER"] = 'SYSDBA'
 os.environ["ISC_PASSWORD"] = 'masterkey'
 
