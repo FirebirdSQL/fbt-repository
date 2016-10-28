@@ -94,15 +94,25 @@ sql_dml='''
     commit;
     set term ^;
     execute block as
-    declare n int = 15000;
+        declare n int = 20000;
+        declare w int;
     begin
-    while (n>0) do
-        insert into t(s01) values( rpad('',4000,uuid_to_char(gen_uuid())) ) returning :n-1 into n;
+        select f.rdb$field_length
+        from rdb$relation_fields rf
+        join rdb$fields f on rf.rdb$field_source=f.rdb$field_name
+        where rf.rdb$relation_name=upper('t')
+	into w;
+
+        while (n>0) do
+            insert into t(s01) values( rpad('', :w, uuid_to_char(gen_uuid())) ) returning :n-1 into n;
     end^
     set term ;^
     commit;
+    select count(*) check_total_cnt, min(char_length(s01)) check_min_length from t;
+
     create index t_s01 on t(s01);
     commit;
+
     delete from t;
     commit;
     -- overall time for data filling , create index and delete all rows: ~ 3 seconds.
@@ -115,13 +125,14 @@ f_work_sql.write(sql_dml)
 f_work_sql.close()
 
 f_work_log=open( os.path.join(context['temp_directory'],'tmp_work_4337.log'), 'w')
-
+f_work_err=open( os.path.join(context['temp_directory'],'tmp_work_4337.err'), 'w')
 subprocess.call( ["isql", dsn, "-i", f_work_sql.name],
                   stdout = f_work_log,
-                  stderr = subprocess.STDOUT
+                  stderr = f_work_err
                 )
 
 f_work_log.close()
+f_work_err.close()
 
 # REDUCE number of cache buffers in DB header in order to sweep make its work as long as possible
 ################################
@@ -139,6 +150,20 @@ subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
                )
 fn_nul.close()
 '''
+
+
+# Change FW to ON (in order to make sweep life harder :))
+##################
+
+fn_nul = open(os.devnull, 'w')
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+                  "action_properties", "prp_write_mode", "prp_wm_sync",
+                  "dbname", db_file ],
+                  stdout = fn_nul,
+                  stderr = subprocess.STDOUT
+               )
+fn_nul.close()
+
 
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4337_fblog_before.txt'), 'w')
@@ -227,10 +252,10 @@ f_wait_sql.write(sql_mon)
 f_wait_sql.close()
 
 f_wait_log=open( os.path.join(context['temp_directory'],'tmp_wait_4337.log'), 'w')
-
+f_wait_err=open( os.path.join(context['temp_directory'],'tmp_wait_4337.err'), 'w')
 p_isql = subprocess.Popen( ["isql", dsn, "-i", f_wait_sql.name],
                   stdout = f_wait_log,
-                  stderr = subprocess.STDOUT
+                  stderr = f_wait_err
                 )
 
 
@@ -257,6 +282,7 @@ time.sleep(2)
 
 p_isql.terminate()
 f_wait_log.close()
+f_wait_err.close()
 f_gfix_log.close()
 
 
@@ -449,12 +475,24 @@ with open( f_diff_txt.name,'r') as f:
 f.close()
 
 
+# 6. ERROR logs of ISQL for initial data filling should be EMPTY:
+with open( f_work_err.name,'r') as f:
+    for line in f:
+        print('UNEXPECTED ERROR IN ISQL WHEN DID INITIAL DATA FILLING: ' + line)
+f.close()
+
+# 7. ERROR logs of ISQL for initial data filling should be EMPTY:
+with open( f_wait_err.name,'r') as f:
+    for line in f:
+        print('UNEXPECTED ERROR IN ISQL WHEN MADE DELAY AND WAITING: ' + line)
+f.close()
+
 time.sleep(1)
 
 # Cleanup.
 ###############################
 
-f_list=[f_work_sql,f_work_log,f_fblog_before,f_trccfg,f_trclog,f_trcerr,f_wait_sql,f_wait_log,f_gfix_log,f_trclst,f_db_reset_log,f_fblog_after,f_diff_txt]
+f_list=[f_work_sql,f_work_log,f_work_err,f_fblog_before,f_trccfg,f_trclog,f_trcerr,f_wait_sql,f_wait_log,f_wait_err,f_gfix_log,f_trclst,f_db_reset_log,f_fblog_after,f_diff_txt]
 
 for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
