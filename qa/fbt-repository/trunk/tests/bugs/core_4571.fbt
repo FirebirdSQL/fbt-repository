@@ -72,7 +72,7 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-# Ibtain ODS major version:
+# Obtain ODS major version:
 cur1 = db_conn.cursor()
 cur1.execute("select mon$ods_major as ods from mon$database")
 for row in cur1:
