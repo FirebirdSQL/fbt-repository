@@ -177,15 +177,22 @@
         select 
             'When input arg is NOT null' as what_we_check,
             rowset,
-            iif( natural_reads = 0 
-                 and indexed_reads - total_rows/3.00 < 120 -- max detected was: 6685 for c.total_rows=20'000
+            iif( natural_reads <= nr_threshold
+                 and indexed_reads - total_rows/3.00 < ir_threshold -- max detected IR was: 6685 for c.total_rows=20'000
                 ,'OK'
                 ,'POOR:'||
                  ' NR=' || coalesce(natural_reads, '<null>') ||
-                 ', IR='|| coalesce(indexed_reads, '<null>')
+                 ', IR='|| coalesce(indexed_reads, '<null>') ||
+                 ', ir-cnt/3='|| coalesce(indexed_reads - total_rows/3.00, '<null>')
                ) as result
         from (
-            select v.rowset, v.natural_reads, v.indexed_reads, c.q as total_rows
+            select 
+                v.rowset
+                ,v.natural_reads
+                ,v.indexed_reads
+                ,c.q as total_rows
+                ,iif( rdb$get_context('SYSTEM','ENGINE_VERSION') starting with '3.', 0, 2 ) as nr_threshold -- max detected NR=2 for 4.0 (SS, CS)
+                ,iif( rdb$get_context('SYSTEM','ENGINE_VERSION') starting with '3.', 45, 45 ) as ir_threshold -- max detected=44 for 4.0 (SS, CS)
             from v_agg_stat v cross join tcnt c
             where rowset <= 6
         )
