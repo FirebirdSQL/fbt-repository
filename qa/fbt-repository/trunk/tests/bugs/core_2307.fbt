@@ -39,6 +39,7 @@
   """\
 import os
 import subprocess
+import fdb
 
 db_conn.close()
 
