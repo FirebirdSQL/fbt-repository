@@ -53,8 +53,16 @@ os.remove(f_work_sql.name)
   """,
  'expected_stderr': 
   """
-      Single isql command exceeded maximum buffer size
-  """
+     Statement failed, SQLSTATE = 42S02
+     Dynamic SQL Error
+     -SQL error code = -204
+     -Table unknown
+     -DU
+  """,
+  'substitutions':[
+    ('-At line.*', ''),
+    ('At line.*', '')
+  ]
 }
 ]
 }
