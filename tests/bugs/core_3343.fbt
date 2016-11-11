@@ -36,7 +36,7 @@
     set term ;^
     commit;
 
-    -- from core-3079 (refactored: check results when operating with blob):
+    -- from core-3709 (refactored: check results when operating with blob):
     recreate table test(
        i int
       ,b blob sub_type 1
