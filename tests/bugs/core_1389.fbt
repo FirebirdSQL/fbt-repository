@@ -46,6 +46,7 @@
  'test_type': 'Python',
  'test_script': 
   """\
+import fdb
 sql_get_rel_id="select rdb$relation_id from rdb$relations where trim(rdb$relation_name)=upper('test')"
 
 cur=db_conn.cursor()
