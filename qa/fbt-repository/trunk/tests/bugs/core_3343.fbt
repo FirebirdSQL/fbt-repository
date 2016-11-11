@@ -9,7 +9,6 @@
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
   """
@@ -36,13 +35,50 @@
     ^
     set term ;^
     commit;
+
+    -- from core-3079 (refactored: check results when operating with blob):
+    recreate table test(
+       i int
+      ,b blob sub_type 1
+    );
+    insert into test(i,b) values(1, 'qwe');
+    commit;
+
+    set blob all;
+    set list on;
+
+    set term ^;
+    execute block returns(vb_old blob, vb_new blob) as
+       declare c cursor for (  select b from test where i = 1 );
+       declare v_s varchar(20);
+    begin
+       open c;
+       while (1=1) do
+       begin
+         fetch c into :v_s;
+         if (row_count = 0) then leave;
+         update test set b = reverse(b) 
+         where current of c 
+         returning upper(old.b), upper(new.b) into vb_old, vb_new
+         ;
+         suspend;
+       end
+       close c;
+    end
+    ^
+    set term ;^
+    commit;
+
   """,
  'expected_stdout': 
   """
+    QWE
+    EWQ
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions':[('VB_.*', '')]
 }
 ]
 }
