@@ -1,0 +1,95 @@
+{
+'id': 'bugs.core_4172',
+'qmid': None,
+'tracker_id': 'CORE-4172',
+'title': 'Creating external function (udf) to not existing dll - and then procedure with it - crash server',
+'description':
+ """
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+tmpfdb_1=os.path.join(context['temp_directory'],'tmp_4172_1.fdb')
+tmpfdb_2=os.path.join(context['temp_directory'],'tmp_4172_2.fdb')
+
+sql_chk=\
+'''
+    create database '%(tmpfdb_2)s';
+    commit;
+    create database '%(tmpfdb_1)s';
+
+    set autoddl off;
+    commit;
+
+    declare external function dummy_ext
+    integer
+    returns integer by value
+    entry_point 'dummy_ext'
+    module_name 'non_existing_udf.dll'; 
+    commit;
+
+    set term ^;
+    create procedure sp_test ( a_id integer ) returns  ( o_name integer ) as
+    begin
+      o_name = dummy_ext(a_id);
+      suspend;
+    end
+    ^
+    set term ;^ 
+    commit;
+
+    rollback;
+
+    connect '%(tmpfdb_2)s';
+    set list on;
+    select 1 as x from rdb$database;
+''' % locals()
+
+f_list=[tmpfdb_1, tmpfdb_2]
+
+# Cleanup BEFORE running script:
+################
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i]):
+        os.remove(f_list[i])
+
+runProgram('isql',['-q'], sql_chk)
+
+# Final cleanup:
+################
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i]):
+        os.remove(f_list[i])
+
+  """,
+ 'expected_stdout': 
+  """
+    X                               1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 39000
+    invalid request BLR at offset
+    -function DUMMY_EXT is not defined
+    -module name or entrypoint could not be found
+  """,
+  'substitutions':[('.* at offset.*', '.* at offset')]
+}
+]
+}
