@@ -34,14 +34,14 @@ import fdb
 db_conn.close()
 
 dml_pref='select /*'
-dml_suff='*/ %s i from dua;'
+dml_suff='*/ %s i from rdb$database;'
 
 # prepare DB for testing: create lot of tables:
 ###############################################
 f_work_sql=open( os.path.join(context['temp_directory'],'tmp_work_5382.sql'), 'w')
 f_work_sql.write('set list on;' + os.linesep)
-f_work_sql.write( (dml_pref.ljust(10485738,'-') + dml_suff) % (10485760) )
-f_work_sql.write( (dml_pref.ljust(10485739,'-') + dml_suff) % (10485761) )
+f_work_sql.write( (dml_pref.ljust(10485729,'-') + dml_suff) % (10485760) )
+f_work_sql.write( (dml_pref.ljust(10485730,'-') + dml_suff) % (10485761) )
 f_work_sql.close()
 
 runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-i',f_work_sql.name])
@@ -53,13 +53,14 @@ os.remove(f_work_sql.name)
   """,
  'expected_stderr': 
   """
-     Statement failed, SQLSTATE = 42S02
-     Dynamic SQL Error
-     -SQL error code = -204
-     -Table unknown
-     -DU
+    Statement failed, SQLSTATE = 54000
+    Dynamic SQL Error
+    -SQL error code = -902
+    -Implementation limit exceeded
+    -SQL statement is too long. Maximum size is 10485760 bytes.
   """,
   'substitutions':[
+    ('After line .*',''),
     ('-At line.*', ''),
     ('At line.*', '')
   ]
