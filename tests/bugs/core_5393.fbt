@@ -2,7 +2,7 @@
 'id': 'bugs.core_5393',
 'qmid': None,
 'tracker_id': 'CORE-5393',
-'title': 'Dependencies in Package not recognised',
+'title': 'Bad optimization of some operations with views containing subqueries',
 'description':
  """
    Confirmed trouble on WI-V3.0.2.3262, ratio was ~146(!).
@@ -100,23 +100,27 @@
     set term ;^
 
     set list on;
-    --                       #################
-    --                       T H R E S H O L D
-    --                       #################
-    --                              |
-    --                              |
-    --                              V
-    select iif( coalesce(ratio,0) < 2, 'Acceptable', 
-                                       'Poor ratio = ' 
-                                       || cast(max_elap as varchar(20)) 
-                                       || '/' || cast(min_elap as varchar(20)) 
-                                       || ' = ' 
-                                       || cast(ratio as varchar(20)) ) as ratio
+    select iif( coalesce(ratio,0) < max_allowed, 
+                'Acceptable', 
+                'Poor ratio = ' 
+                || cast(max_elap as varchar(20)) 
+                || '/' || cast(min_elap as varchar(20)) 
+                || ' = ' 
+                || cast(ratio as varchar(20)) 
+                || ' - more than max_allowed = ' || cast(max_allowed as varchar(20))
+              )
+           as ratio
     from (
       select 
          min(elap_ms) min_elap, 
          max(elap_ms) max_elap, 
-         1.00 * max(elap_ms) / nullif(min(elap_ms),0) as ratio 
+         1.00 * max(elap_ms) / nullif(min(elap_ms),0) as ratio,
+         2.30 as max_allowed
+      --  ^
+      --  |
+      -- #################
+      -- T H R E S H O L D
+      -- #################
       from tlog
     );
   """,
