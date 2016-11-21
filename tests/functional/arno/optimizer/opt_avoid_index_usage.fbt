@@ -5,7 +5,8 @@
 'title': 'AVOID index usage in WHERE <indexed_varchar_field> = <integer_value>',
 'description': 
  """
-   Samples here are from CORE-3051
+   Samples here are from CORE-3051.
+   Confirmed usage 'PLAN INDEX ...' in FB 2.0.0.12724
  """,
 'min_versions': '2.5.0',
 'versions': [
