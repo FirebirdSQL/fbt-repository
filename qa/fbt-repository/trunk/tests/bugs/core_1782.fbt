@@ -75,7 +75,8 @@ from rdb$database;
     Dynamic SQL Error
     -SQL error code = -104
     -token size exceeds limit
-  """
+  """,
+  'substitutions':[('-At line[:]{0,1}[\s]+[\d]+,[\s]+column[:]{0,1}[\s]+[\d]+', '')]
 }
 ]
 }
