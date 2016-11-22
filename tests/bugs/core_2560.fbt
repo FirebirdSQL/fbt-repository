@@ -522,7 +522,10 @@ u2345678901234567890123456789012345678901234567890123456789012345 password 'q';
     -Zero length identifiers are not allowed
     After line 144 in file c2560-x.sql
   """,
-  'substitutions':[('After line.*','')]
+  'substitutions':[
+      ('After line.*',''),
+      ('-At line[:]{0,1}[\s]+[\d]+,[\s]+column[:]{0,1}[\s]+[\d]+', '')
+  ]
 }
 ]
 }
