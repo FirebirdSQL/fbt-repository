@@ -269,7 +269,8 @@
     Dynamic SQL Error
     -SQL error code = -104
     -Name longer than database column size
-  """
+  """,
+  'substitutions':[('-At line[:]{0,1}[\s]+[\d]+,[\s]+column[:]{0,1}[\s]+[\d]+', '')]
 }
 ]
 }
