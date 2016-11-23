@@ -4,7 +4,7 @@
 'tracker_id': 'CORE-501',
 'title': 'Problem with COALESCE',
 'description': 'It tests many problems Adriano found when fixing CORE-501, CORE-1343 and CORE-2041.',
-'min_versions': '',
+'min_versions': '2.5.0',
 'versions': [
 {
  'firebird_version': '2.5',
