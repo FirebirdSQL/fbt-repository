@@ -39,6 +39,10 @@
 
    Successfully checked on build 32276, SS/SC/CS.
    Confirmed error on WI-V3.0.0.32134, Cs: "MonitoringData: Cannot initialize the shared memory region / sh_mem_length_mapped is 0"
+
+   23.11.2016
+   Increased threshold to 6000 ms instead of old 5000 ms -- see 
+   http://web.firebirdsql.org/download/prerelease/results/archive/3.0.2.32630/bugs.core_5034.html )
  """   ,
 'min_versions': '3.0',
 'versions': [
@@ -204,7 +208,7 @@
                 ,datediff(millisecond from min(t0) to min(t1)) as detach_ms
                 ,min(t0) as dts_before_detach
                 ,min(t1) as dts_after_detach
-                ,5000 as max_detach_ms
+                ,6000 as max_detach_ms                -- changed 23.11.2016; was: 5000
             --                ^
             --                |
             --   ##############################
