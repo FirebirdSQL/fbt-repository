@@ -253,18 +253,13 @@ f.close()
 
 ###############################
 # Cleanup.
-f_list=[]
-f_list.append(f_init_log)
-f_list.append(f_work_sql)
-f_list.append(f_work_log)
-f_list.append(f_fblog_before)
-f_list.append(f_fblog_after)
-f_list.append(f_diff_txt)
-'''
+
+f_list=[f_init_log,f_work_sql,f_work_log,f_fblog_before,f_fblog_after,f_diff_txt]
+
 for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
-'''
+
   """,
  'expected_stdout':
   """
