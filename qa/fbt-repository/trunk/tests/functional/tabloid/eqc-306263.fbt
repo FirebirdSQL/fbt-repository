@@ -18,16 +18,18 @@
  'test_script': '''\
 import os
 import zipfile
+os.environ["ISC_USER"] = 'SYSDBA'
+os.environ["ISC_PASSWORD"] = 'masterkey'
 
 db_conn.close()
+
 zf = zipfile.ZipFile( os.path.join(context['files_location'],'eqc306263.zip') )
 zf.extractall( context['temp_directory'] )
 zf.close()
 
 fbk = os.path.join(context['temp_directory'],'eqc306263.fbk')
-fbn = 'localhost:'+os.path.join(context['temp_directory'],'eqc306263.fdb')
 
-runProgram('gbak',['-rep','-user',user_name,'-password',user_password,fbk,fbn])
+runProgram('gbak',['-rep', fbk, dsn])
 
 script="""set list on; 
     select
@@ -82,8 +84,13 @@ script="""set list on;
                 zuschkond.zuko_id is  null
                 or zuschkond.zuko_gvond<'12/02/2011 00:00:00' and zuschkond.zuko_gbid>='12/01/2011 00:00:00'
             );
+    commit;
 """
-runProgram('isql',[fbn,'-q','-user',user_name,'-password',user_password],script)
+runProgram('isql',[dsn,'-q'],script)
+
+###############################
+# Cleanup.
+os.remove(fbk)
 ''',
  'expected_stdout': 
   """
