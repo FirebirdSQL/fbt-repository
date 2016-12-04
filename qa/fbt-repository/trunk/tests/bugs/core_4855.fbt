@@ -35,60 +35,69 @@
   """
   """,
  'test_type': 'Python',
- 'test_script':"""\
+ 'test_script':"""
 
 import os
 import subprocess
 from subprocess import Popen
 #import signal
 import time
+from fdb import services
+
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+# Obtain engine version:
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+fb_home = services.connect(host='localhost').get_home_directory()
+if engine.startswith('2.5'):
+  fb_home = fb_home + 'bin'+os.sep
+
 db_conn.close()
 
+dbname='$(DATABASE_LOCATION)bugs.core_4855.fdb'
 
 #####################################################################
-# Move database to FW = OFF in order to increase speed of insertions and output its header info:
+# Change database FW to OFF in order to increase speed of insertions and output its header info:
 
 fwoff_log=open( os.path.join(context['temp_directory'],'tmp_fw_off_4855.log'), 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ fb_home+"fbsvcmgr", "localhost:service_mgr",
                   "action_properties",
                   "prp_write_mode", "prp_wm_async",
-                  "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb" ],
+                  "dbname", dbname ],
                   stdout=fwoff_log, stderr=subprocess.STDOUT)
 
 fwoff_log.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
-                 "action_db_stats",
-                 "dbname", "$(DATABASE_LOCATION)bugs.core_4855.fdb", "sts_hdr_pages"],
-                 stdout=fwoff_log, stderr=subprocess.STDOUT)
+subprocess.call([ fb_home+"fbsvcmgr", "localhost:service_mgr",
+                  "action_db_stats",
+                  "dbname", dbname, "sts_hdr_pages"],
+                  stdout=fwoff_log, stderr=subprocess.STDOUT)
 fwoff_log.close()
 
 #####################################################################
 # Preparing script for ISQL that will do 'heavy DML':
 
 sql_cmd='''
-recreate sequence g;
-recreate table test(id int, s varchar( 36 ) unique using index test_s_unq);
-recreate table stop(id int);
-commit; 
-set list on;
-set transaction read committed;
-set term ^;
-execute block returns( inserted_rows varchar(20) ) as
-begin
-  while ( not exists(select * from stop) ) do
-  begin
-    insert into test(id, s) values( gen_id(g,1), rpad('', 36, uuid_to_char(gen_uuid())) );
-  end
-  inserted_rows = iif( gen_id(g,0) > 0, 'OK, LOT OF.', 'FAIL: ZERO!');
-  suspend;
-end
-^
-set term ;^
-commit;
+    recreate sequence g;
+    recreate table test(id int, s varchar( 36 ) unique using index test_s_unq);
+    recreate table stop(id int);
+    commit; 
+    set list on;
+    set transaction read committed;
+    set term ^;
+    execute block returns( inserted_rows varchar(20) ) as
+    begin
+      while ( not exists(select * from stop) ) do
+      begin
+        insert into test(id, s) values( gen_id(g,1), rpad('', 36, uuid_to_char(gen_uuid())) );
+      end
+      inserted_rows = iif( gen_id(g,0) > 0, 'OK, LOT OF.', 'FAIL: ZERO!');
+      suspend;
+    end
+    ^
+    set term ;^
+    commit;
 '''
 
 f_heavy_dml_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_4855.sql'), 'w')
@@ -105,7 +114,6 @@ p_heavy_dml = Popen([ "isql" , dsn, "-i", f_heavy_dml_cmd.name ], stdout=f_heavy
 # Here we have to wait for sure that ISQL could establish its connect and starts DML 
 # before we will run online-validation:
 
-
 # 16.03.2016: increased time delay because under some circumstances ISQL could not establish connect
 # and this lead validation to start verify table TEST (which was not expected).
 # Detected many times on CS/SC.
@@ -121,10 +129,12 @@ val_log=open( os.path.join(context['temp_directory'],'tmp_onval_4855.log'), 'w')
 
 val_log.write('Iteration #1:\\n')
 val_log.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
-                 "action_validate","val_lock_timeout","1",
-                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],
-                 stdout=val_log, stderr=subprocess.STDOUT)
+subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+                   "action_validate","val_lock_timeout","1",
+                   "dbname",dbname
+                 ],
+                 stdout=val_log, stderr=subprocess.STDOUT
+               )
 
 time.sleep(2)
 
@@ -135,7 +145,7 @@ val_log.write('\\n\\nIteration #2:\\n')
 val_log.seek(0,2)
 subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  "action_validate","val_lock_timeout","1",
-                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],
+                 "dbname",dbname],
                  stdout=val_log, stderr=subprocess.STDOUT)
 '''
 time.sleep(2)
@@ -145,7 +155,7 @@ val_log.write('\\n\\nIteration #3:\\n')
 val_log.seek(0,2)
 subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  "action_validate","val_lock_timeout","1",
-                 "dbname","$(DATABASE_LOCATION)bugs.core_4855.fdb"],
+                 "dbname",dbname],
                  stdout=val_log, stderr=subprocess.STDOUT)
 '''
 val_log.close()
@@ -179,11 +189,11 @@ f.close()
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
 
-os.remove(fwoff_log.name)
-os.remove(f_stopper_cmd.name)
-os.remove(val_log.name)
-os.remove(f_heavy_dml_cmd.name)
-os.remove(f_heavy_dml_log.name)
+f_list=[fwoff_log, f_stopper_cmd, val_log, f_heavy_dml_cmd, f_heavy_dml_log]
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
 
   """,
  'expected_stdout':
