@@ -16,36 +16,40 @@ import os
 import sys
 import subprocess
 import time
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
-create_user_ddl='''\
-create or alter user TMP_U4218 password '123' revoke admin role;
-grant create database to user TMP_U4218;
+create_user_ddl=\
+'''
+    create or alter user TMP_U4218 password '123' revoke admin role;
+    grant create database to user TMP_U4218;
 '''
 
-runProgram('isql',['-user',user_name,'-pas',user_password,dsn],create_user_ddl)
+runProgram('isql',[dsn,'-q'],create_user_ddl)
 
 db_check='$(DATABASE_LOCATION)tmp.core_4218.fdb'
 
 if os.path.isfile(db_check):
     os.remove(db_check)
 
-create_db_sql='''\
-create database 'localhost:$(DATABASE_LOCATION)tmp.core_4218.fdb' user 'TMP_U4218' password '123';
-set list on;
-select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
-commit;
-connect 'localhost:$(DATABASE_LOCATION)tmp.core_4218.fdb' user 'SYSDBA' password 'masterkey';
-select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
-commit;
-drop user TMP_U4218; 
-commit;
-revoke create database from user TMP_U4218;
-commit;
-drop database;
-quit;
+create_db_sql=\
 '''
+    create database 'localhost:%(db_check)s' user 'TMP_U4218' password '123';
+    set list on;
+    select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
+    commit;
+    connect 'localhost:%(db_check)s';
+    select current_user as who_am_i, mon$owner as who_is_owner from mon$database;
+    commit;
+    drop user TMP_U4218; 
+    commit;
+    revoke create database from user TMP_U4218;
+    commit;
+    drop database;
+    quit;
+''' % locals()
 
 sqlddl=open( os.path.join(context['temp_directory'],'tmp_create_db_4218.sql'), 'w')
 sqlddl.write(create_db_sql)
@@ -61,10 +65,10 @@ f.close()
 
 time.sleep(1)
 
-if os.path.isfile(sqlddl.name):
-    os.remove(sqlddl.name)
-if os.path.isfile(sqllog.name):
-    os.remove(sqllog.name)
+f_list=[sqlddl, sqllog]
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
 
   """,
  'expected_stdout': 
