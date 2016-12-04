@@ -136,7 +136,10 @@ with open( f_trclog.name,'r') as f:
             print(line.upper())
 f.close()
 
+runProgram('isql',[dsn,'-nod','-user', user_name, '-pas', user_password], 'drop user u01;')
+
 # Cleanup:
+##########
 
 f_list=[f_trclst,f_trcerr,f_trclog, f_trccfg]
 
@@ -144,7 +147,6 @@ for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
 
-runProgram('isql',[dsn,'-nod','-user', user_name, '-pas', user_password], 'drop user u01;')
 
   """,
   'expected_stdout':
