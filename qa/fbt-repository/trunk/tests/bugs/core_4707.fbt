@@ -9,71 +9,6 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': 
-  """
-    set term ^;
-    execute block as
-    begin
-        execute statement 'drop sequence g';
-    when any do begin end
-    end^
-    set term ;^
-    commit;
-    create sequence g;
-    commit;
-    recreate table test1(id int, s varchar(1000));
-    recreate table test2(id int primary key using index test2_pk, s varchar(1000), t computed by (s) );
-    recreate table test3(id int);
-    commit;
-    
-    insert into test1(id, s) select gen_id(g,1), rpad('', 1000, gen_id(g,0) ) from rdb$types rows 100;
-    insert into test2(id, s) select id, s from test1;
-    commit;
-    
-    create index test2_s on test2(s);
-    create index test2_c on test2 computed by(s);
-    create index test2_t on test2 computed by(t);
-    commit;
-  """,
- 'test_type': 'Python',
- 'test_script':"""\
-c=db_conn.cursor()
-
-dml='delete from test1'
-c.execute(dml)
-dml='insert into test3(id) values(%s)'
-c.execute(dml % '1')
-
-runProgram('fbsvcmgr',['localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'])
-  """,
- 'expected_stdout':
-  """
-    08:37:01.14 Validation started
-    08:37:01.15 Relation 128 (TEST1)
-    08:37:02.15 Acquire relation lock failed
-    08:37:02.15 Relation 128 (TEST1) : 1 ERRORS found
-    08:37:02.15 Relation 129 (TEST2)
-    08:37:02.15   process pointer page    0 of    1
-    08:37:02.15 Index 1 (TEST2_PK)
-    08:37:02.15 Index 2 (TEST2_S)
-    08:37:02.15 Index 3 (TEST2_C)
-    08:37:02.15 Index 4 (TEST2_T)
-    08:37:02.17 Relation 129 (TEST2) is ok
-    08:37:02.17 Relation 130 (TEST3)
-    08:37:03.17 Acquire relation lock failed
-    08:37:03.17 Relation 130 (TEST3) : 1 ERRORS found
-    08:37:03.17 Validation finished
-  """,
-  'substitutions':[
-    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
-    ('Relation [0-9]{3,4}','Relation')
-  ]
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'page_size': '4096',
  'init_script': 
   """
     set term ^;
@@ -106,8 +41,20 @@ import os
 import subprocess
 from subprocess import Popen
 import time
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+# Obtain engine version:
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
 
 db_conn.close()
+
+fb_home = services.connect(host='localhost').get_home_directory()
+if engine.startswith('2.5'):
+  fb_home = fb_home + 'bin'+os.sep
+
 
 # Following script will hang for sevral seconds (see 'lock timeout' argument - and this will serve as pause
 # during which we can launch fbsvcmgr to validate database:
@@ -132,14 +79,14 @@ lock_sql='''
     begin
       execute statement 'update test1 set id=-id'
       on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-      as user 'SYSDBA' password 'masterkey'
+      as user '%s' password '%s'
          role 'TMP$R4707' -- this will force to create new attachment, and its Tx will be paused on INFINITE time.
       ;
       when any do begin end
     end ^
     set term ;^
     select 'EB with pause finished.' as msg_2 from rdb$database;
-'''
+''' % (user_name, user_password)
 
 hang_sql=open( os.path.join(context['temp_directory'],'tmp_4707_hang.sql'), 'w')
 hang_sql.write(lock_sql)
@@ -156,7 +103,7 @@ hang_log=open(hang_log.name, "w")
 # Make asynchronous call of ISQL which will stay several seconds in pause due to row-level lock
 # #############################################################################################
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
+p_hang = Popen(["isql", dsn, "-i", hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
 
 # Here we should wait while ISQL will establish its connect (in separate child window, call asynchronous) and 
 # stay in pause:
@@ -170,7 +117,7 @@ svc_log.close()
 # Make SYNC. call of fbsvcmgr in order to validate database which has locks on some relations
 #############################################################################################
 svc_log=open(svc_log.name, "w")
-subprocess.call(['fbsvcmgr', 'localhost:service_mgr','user','SYSDBA','password','masterkey','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'],stdout=svc_log, stderr=subprocess.STDOUT)
+subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_4707.fdb','val_lock_timeout','1'],stdout=svc_log, stderr=subprocess.STDOUT)
 svc_log.close()
 
 #######################################################
@@ -192,12 +139,11 @@ f.close()
 # Otherwise will get error of accessing file ('Windows 32' etc):
 time.sleep(1)
 
-if os.path.isfile(hang_sql.name):
-    os.remove(hang_sql.name)
-if os.path.isfile(hang_log.name):
-    os.remove(hang_log.name)
-if os.path.isfile(svc_log.name):
-    os.remove(svc_log.name)
+f_list=[hang_sql, hang_log, svc_log]
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
 
   """,
  'expected_stdout':
