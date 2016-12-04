@@ -14,15 +14,17 @@
 import os
 import zipfile
 
+os.environ["ISC_USER"] = 'SYSDBA'
+os.environ["ISC_PASSWORD"] = 'masterkey'
+
 db_conn.close()
 zf = zipfile.ZipFile( os.path.join(context['files_location'],'eqc136030.zip') )
 zf.extractall( context['temp_directory'] )
 zf.close()
 
 fbk = os.path.join(context['temp_directory'],'eqc136030.fbk')
-fbn = 'localhost:'+os.path.join(context['temp_directory'],'eqc136030.fdb')
 
-runProgram('gbak',['-rep','-user',user_name,'-password',user_password,fbk,fbn])
+runProgram('gbak',['-rep',fbk, dsn])
 
 script=\
 """
@@ -62,7 +64,11 @@ script=\
         and a.nreserc = '' -- :nreserc
     order by a.codgio, a.coddoc;
 """
-runProgram('isql',[fbn,'-q','-user',user_name,'-password',user_password],script)
+runProgram('isql',[dsn,'-q'],script)
+
+###############################
+# Cleanup.
+os.remove(fbk)
 ''',
  'expected_stdout': 
   """
