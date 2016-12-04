@@ -49,6 +49,11 @@ runProgram('gbak',['-rep', tmpfbk, 'localhost:' + tmpres2, '-user', 'tmp$c5291_2
 
 runProgram('isql',[dsn],'drop user tmp$c5291_1; drop user tmp$c5291_2;')
 
+f_list=[tmpfbk, tmpres1, tmpres2]
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i]):
+       os.remove(f_list[i])
   """,
  'expected_stdout': 
   """
