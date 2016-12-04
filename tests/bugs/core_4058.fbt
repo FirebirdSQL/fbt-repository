@@ -39,29 +39,24 @@
   """
   """,
  'test_type': 'Python',
- 'test_script': """\
+ 'test_script': """
 import sys
 import socket
 import os
 import time
 import difflib
 import subprocess
+from fdb import services
 
 fb_host = '127.0.0.1'
-
-###############################################################
-# !!! NB !!! Change port value according to your firebird.conf:
-###############################################################
-fb_port = 3050
 
 os.environ["ISC_USER"] = 'none'
 os.environ["ISC_PASSWORD"] = 'QwaSeDTy'
 db_file="$(DATABASE_LOCATION)bugs.core_4058.fdb"
 
-def svc_get_fb_log( engine, f_fb_log ):
+def svc_get_fb_log( engine, fb_home, fb_port, f_fb_log ):
 
     import subprocess
-    global fb_port
 
     if engine.startswith('2.5'):
         get_firebird_log_key='action_get_ib_log'
@@ -69,9 +64,10 @@ def svc_get_fb_log( engine, f_fb_log ):
         get_firebird_log_key='action_get_fb_log'
 
     # C:\MIX\firebird\oldfb251\bin\fbsvcmgr localhost:service_mgr -user sysdba -password masterkey action_get_ib_log
-    subprocess.call([ "fbsvcmgr",
-                      "localhost/"+str(fb_port)+":service_mgr",
-                      "-user", 'sysdba',
+
+    subprocess.call([ fb_home+"fbsvcmgr",
+                      "localhost/"+fb_port+":service_mgr",
+                      "-user", 'SYSDBA',
                       "-password", 'masterkey',
                       get_firebird_log_key
                     ],
@@ -81,15 +77,35 @@ def svc_get_fb_log( engine, f_fb_log ):
     return
 
 # Obtain engine version:
-cur1 = db_conn.cursor()
-cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in cur1:
-    engine = row[0]
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
 
 db_conn.close()
 
+# Get HOME dir of FB instance that is now checked.
+# We will concatenate this string with 'fbsvcmgr' command in order to choose 
+# PROPER binary file when querying services API to shutdown/online DB
+# NOTE: this is NECESSARY if several instances are in work and we did not change
+# PATH variable before call this test!
+
+fb_home = services.connect(host='localhost').get_home_directory()
+fb_conf = fb_home + os.sep + 'firebird.conf'
+
+#################################################
+# Parsing firebird.conf for getting port  number:
+#################################################
+with open( fb_conf,'r') as f:
+    for line in f:
+        if 'remoteserviceport' in line.lower():
+            fb_port = line.split('=')[1].strip()
+            
+f.close()
+
+if engine.startswith('2.5'):
+  fb_home = fb_home + 'bin'+os.sep
+
+
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4058_fblog_before.txt'), 'w')
-svc_get_fb_log( engine, f_fblog_before )
+svc_get_fb_log( engine, fb_home, fb_port, f_fblog_before )
 f_fblog_before.close()
 
 #########################################################
@@ -109,14 +125,14 @@ data_1 += "000000010000000200000005"
 data_1 += "0000000800" 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect( (fb_host, fb_port ) )
+s.connect( (fb_host, int(fb_port) ) )
 s.send(data_1.decode('hex'))
 s.close()
     
 # ------------------------------------------------------------------------------------------    
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4058_fblog_after.txt'), 'w')
-svc_get_fb_log( engine, f_fblog_after )
+svc_get_fb_log( engine, fb_home, fb_port, f_fblog_after )
 f_fblog_after.close()
 
 time.sleep(2)
@@ -156,7 +172,6 @@ f_list=[f_fblog_before, f_fblog_after, f_diff_txt]
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
-
 
 """,
  'expected_stdout': 
