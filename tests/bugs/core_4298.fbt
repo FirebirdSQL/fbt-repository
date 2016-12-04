@@ -44,61 +44,76 @@ import os
 import time
 import subprocess
 from subprocess import Popen
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+# Obtain engine version:
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+fb_home = services.connect(host='localhost').get_home_directory()
+if engine.startswith('2.5'):
+  fb_home = fb_home + 'bin'+os.sep
 
 sqltxt='''
-commit;
-set transaction lock timeout 3;
-update test set x = -x;
-set term ^;
-execute block as
-begin
-    execute statement 'update test set x = -x'
-    on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
-    as user 'SYSDBA' password 'masterkey' role 'TMP$R4298';
-when any do 
-    begin 
+    set term ^;
+    execute block as
+    begin
+      execute statement 'drop role TMP$R4298';
+      when any do begin end
+    end ^
+    set term ;^
+    commit;
+
+
+    commit;
+    set transaction lock timeout 15;
+    update test set x = -x;
+    set term ^;
+    execute block as
+    begin
+        execute statement 'update test set x = -x'
+        on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+        as user '%s' password '%s' role 'TMP$R4298';
+    when any do 
+        begin 
+        end
     end
-end
-^
-set term ;^
-rollback;
-'''
+    ^
+    set term ;^
+    rollback;
+''' % (user_name, user_password)
 
-hang_sql=open( os.path.join(context['temp_directory'],'tmp_4298_hang.sql'), 'w')
-hang_sql.write(sqltxt)
-hang_sql.close()
 
-hang_log=open( os.path.join(context['temp_directory'],'tmp_4298_hang.log'), 'w')
-hang_log.write('')
-hang_log.close()
 
-fn_hang=open(hang_log.name, "w")
+f_hanged_sql=open( os.path.join(context['temp_directory'],'tmp_4298_hang.sql'), 'w')
+f_hanged_sql.write(sqltxt)
+f_hanged_sql.close()
+
+f_hanged_log=open( os.path.join(context['temp_directory'],'tmp_4298_hang.log'), 'w')
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name],\
-               stdout=fn_hang, stderr=subprocess.STDOUT)
+p_hang = Popen(["isql", dsn, "-i" , f_hanged_sql.name], stdout=f_hanged_log, stderr=subprocess.STDOUT)
 
 time.sleep(1)
 
-runProgram('isql',[dsn,'-user',user_name,'-pas',user_password],'insert into test(id, x) values(-1, -100); commit;')
+runProgram('isql',[dsn],'insert into test(id, x) values(-1, -100); commit;')
 
 tmpsrc='$(DATABASE_LOCATION)bugs.core_4298.fdb'
 
-log_dbstat=open( os.path.join(context['temp_directory'],'tmp_4298_dbstat.log'), 'w')
-log_dbstat.close()
-err_dbstat=open( os.path.join(context['temp_directory'],'tmp_4298_dbstat.err'), 'w')
-err_dbstat.close()
+f_stat_log=open( os.path.join(context['temp_directory'],'tmp_4298_dbstat.log'), 'w')
+f_stat_err=open( os.path.join(context['temp_directory'],'tmp_4298_dbstat.err'), 'w')
 
-fn_stat_log=open(log_dbstat.name, "w")
-fn_stat_err=open(err_dbstat.name, "w")
+subprocess.call( [ fb_home+"fbsvcmgr","localhost:service_mgr",
+                   "action_db_stats", "dbname", tmpsrc, 
+                   "sts_record_versions"
+                 ],
+                 stdout=f_stat_log, 
+                 stderr=f_stat_err
+               )
 
-subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
-                 "action_db_stats", "dbname", tmpsrc, 
-                 "sts_record_versions"],\
-                stdout=fn_stat_log, stderr=fn_stat_err)
-
-fn_stat_log.close()
-fn_stat_err.close()
+f_stat_log.close()
+f_stat_err.close()
 
 # do NOT remove this pause: Classic 3.0 keeps database opened even after we kill hanged ISQL by p_hang.terminate().
 # So we have to wait enough for 1st ISQL process that currently will hangs about 4 seconds to be CORRECTLY closed 
@@ -109,18 +124,18 @@ time.sleep(3)
 # These kill and close commands are also needed here, despite that corresponding ISQL has been already closed itself.
 # It is so at least for Cs 3.0:
 p_hang.terminate()
-fn_hang.close()
+f_hanged_log.close()
 
 # ERRORS log of obtaining DB statistics should be EMPTY:
-if os.path.getsize(err_dbstat.name) > 0:
-  with open( err_dbstat.name,'r') as f:
+if os.path.getsize(f_stat_err.name) > 0:
+  with open( f_stat_err.name,'r') as f:
     print("action_db_stats STDERR: "+f.read())
   f.close()
 
 # STDOUT of obtaining DB statistics should NOT be EMPTY:
-with open(log_dbstat.name,'r') as f:
+with open(f_stat_log.name,'r') as f:
   for line in f:
-    if 'versions:' in line:
+    if 'versions:' in line.lower():
       print(line)
 f.close()
 
@@ -129,16 +144,13 @@ f.close()
 
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
-time.sleep(5)
+time.sleep(1)
 
-if os.path.isfile(hang_sql.name):
-  os.remove(hang_sql.name)
-if os.path.isfile(hang_log.name):
-  os.remove(hang_log.name)
-if os.path.isfile(log_dbstat.name):
-  os.remove(log_dbstat.name)
-if os.path.isfile(err_dbstat.name):
-  os.remove(err_dbstat.name)
+f_list=[f_hanged_sql, f_hanged_log, f_stat_log, f_stat_err]
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
 
   """,
  'expected_stdout': 
@@ -148,7 +160,9 @@ if os.path.isfile(err_dbstat.name):
  'expected_stderr': 
   """
   """,
- 'substitutions':[('Average version length: [0-9]+.[0-9]+, total versions: 5, max versions: 1', 'total versions: 5, max versions: 1')]
+ 'substitutions':[
+   ('Average version length: [0-9]+.[0-9]+, total versions: 5, max versions: 1', 'total versions: 5, max versions: 1')
+  ]
 }
 ]
 }
