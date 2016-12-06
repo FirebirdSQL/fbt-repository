@@ -27,7 +27,7 @@
     select 
          current_user as who_ami
         ,r.rdb$role_name
-        ,rdb$role_in_use(r.rdb$role_name) as rdb$role_in_use
+        ,rdb$role_in_use(r.rdb$role_name) as RDB_ROLE_IN_USE
         ,r.rdb$system_privileges
     from mon$database m cross join rdb$roles r;
     commit;
@@ -107,11 +107,11 @@
   """
     WHO_AMI                         U01
     RDB$ROLE_NAME                   RDB$ADMIN
-    RDB$ROLE_IN_USE                 <false>
+    RDB_ROLE_IN_USE                 <false>
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
     WHO_AMI                         U01
     RDB$ROLE_NAME                   ROLE_FOR_DDL_DML_ANY_OBJ
-    RDB$ROLE_IN_USE                 <true>
+    RDB_ROLE_IN_USE                 <true>
     RDB$SYSTEM_PRIVILEGES           0000070000000000
     ID                              10
     PID                             1
