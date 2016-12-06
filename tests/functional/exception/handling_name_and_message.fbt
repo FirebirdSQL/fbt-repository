@@ -7,7 +7,7 @@
  """
    Testing new built-in context variables for exception handling (appearance: 06-sep-2016 21:12, 4.0 only):
    * 'exception' -- returns name of the active user-defined exception;
-   * 'error_messages' -- returns interpreted text for the active exception.
+   * 'error_message' -- returns interpreted text for the active exception.
    See: https://github.com/FirebirdSQL/firebird/commit/ebd0d3c8133c62b5359100de5f1eec541e43da3b
    Explanation: doc\sql.extensions\README.context_variables 
    
@@ -28,6 +28,10 @@
    WARNING-2.
    It seems that handling of message with length = 1023 bytes (i.e. exactly upper limit) works wrong.
    Waiting for reply from dimitr, letter 09-sep-2016 18:27.
+   
+   ### NOTE ### 07.12.2016
+   'exception' and 'error_message' context variables were replaced with calls RDB$ERROR(EXCEPTION) and RDB$ERROR(MESSAGE)
+   (letter from dimitr, 06.12.2016 21:44; seems that this was done in 4.0.0.461, between 02-dec-2016 and 04-dec-2016)
  """,
 'min_versions': '4.0',
 'versions': 
@@ -94,6 +98,7 @@
     from rdb$exceptions;
     --*/
 
+    -- RDB$ERROR(GDSCODE|SQLCODE|SQLSTATE|EXCEPTION|MESSAGE)
     set term  ^;
     create or alter procedure sp_check_amount(a_new_qty int) as
     begin
@@ -103,8 +108,9 @@
                 --exception "ЙцуКенгШщзХъЭждЛорПавЫфЯчсмиТьбЮЪхЗщШШГнЕкУцЙФывААпрОолДжЭЭюБьТ"; -- malformed string
                 
             when any do
-                if (exception is not null) then
-                    execute procedure sp_log_user_trouble(exception, error_message);
+                if ( RDB$ERROR(EXCEPTION) is not null) then
+                    -- before 4.0.0.462 (04.12.2016): execute procedure sp_log_user_trouble(exception, error_message);
+                    execute procedure sp_log_user_trouble( RDB$ERROR(EXCEPTION), RDB$ERROR(MESSAGE) );
                 else
                     exception;
 
