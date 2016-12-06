@@ -51,7 +51,14 @@ os.environ["ISC_PASSWORD"] = user_password
 
 # Obtain engine version:
 engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
-fb_home = services.connect(host='localhost').get_home_directory()
+
+# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
+# via to FB services API by services.connect() - see FB tracker, PYFB-69
+# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+# fb_home = services.connect(host='localhost').get_home_directory()
+
 if engine.startswith('2.5'):
   fb_home = fb_home + 'bin'+os.sep
 
