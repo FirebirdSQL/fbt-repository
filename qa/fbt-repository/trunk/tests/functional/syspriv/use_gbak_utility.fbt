@@ -30,7 +30,7 @@
         upper(mon$database_name) as db_name
         ,current_user as who_ami
         ,r.rdb$role_name
-        ,rdb$role_in_use(r.rdb$role_name) as rdb$role_in_use
+        ,rdb$role_in_use(r.rdb$role_name) as RDB_ROLE_IN_USE
         ,r.rdb$system_privileges
     from mon$database m cross join rdb$roles r;
     commit;
@@ -231,12 +231,12 @@ for i in range(len(f_list)):
     DB_NAME FUNCTIONAL.SYSPRIV.USE_GBAK_UTILITY.TMP
     WHO_AMI                         U01
     RDB$ROLE_NAME                   RDB$ADMIN
-    RDB$ROLE_IN_USE                 <false>
+    RDB_ROLE_IN_USE                 <false>
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
     DB_NAME FUNCTIONAL.SYSPRIV.USE_GBAK_UTILITY.TMP
     WHO_AMI                         U01
     RDB$ROLE_NAME                   ROLE_FOR_USE_GBAK_UTILITY
-    RDB$ROLE_IN_USE                 <true>
+    RDB_ROLE_IN_USE                 <true>
     RDB$SYSTEM_PRIVILEGES           0008010000000000
     Records affected: 2
     X                               1
