@@ -31,7 +31,7 @@
         mon$database_name
         ,current_user as who_ami
         ,r.rdb$role_name
-        ,rdb$role_in_use(r.rdb$role_name) as rdb$role_in_use
+        ,rdb$role_in_use(r.rdb$role_name) as RDB_ROLE_IN_USE
         ,r.rdb$system_privileges
     from mon$database m cross join rdb$roles r;
     commit;
