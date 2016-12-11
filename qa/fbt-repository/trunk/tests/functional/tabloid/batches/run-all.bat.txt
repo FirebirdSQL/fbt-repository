@@ -460,7 +460,7 @@ endlocal & goto:eof
             set msg=Wait a few seconds. . .
             call :sho "!msg!" !joblog!
 
-            ping -n 6 127.0.0.1 1>nul
+            ping -n 11 127.0.0.1 1>nul
 
             set msg=Check that service was really stopped.
             call :sho "!msg!" !joblog!
