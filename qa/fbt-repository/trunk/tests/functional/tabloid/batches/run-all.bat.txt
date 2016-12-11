@@ -1,0 +1,545 @@
+@echo off
+setlocal enabledelayedexpansion enableextensions
+cd /d %~dp0
+set isc_user=sysdba
+set isc_password=masterkey
+set logdir=e:\temp\logs.qa
+set joblog=!logdir!\%~n0.log
+
+set fblst=fb30_tmp,fb40_tmp
+set fbars=ss,sc,cs
+
+::set fblst=fb30_tmp
+::set fbars=ss,sc
+
+set job_failed_flag=0
+
+set svnbin="C:\Program Files (x86)\Subversion\bin\svn.exe"
+set mteebin=%~dp0mtee.exe
+set zipbin=%~dp07za.exe
+set zipext=7z
+set pyp=C:\Python27
+
+md !logdir! 2>nul
+
+if exist !joblog!  (
+  del !joblog!
+  if errorlevel 1 (
+      echo Can not delete log file %joblog% - perhaps it is opened by another program.
+      echo Job terminated.
+      goto final
+  )
+)
+
+(
+    echo !date! !time! Current directory and executing batch:
+    cd
+    echo %~dpnx0
+) 2>&1 >>!joblog!
+type !joblog!
+
+call :sho "Check that all necessary binaries exist." !joblog!
+
+for /d %%s in (!pyp!\python.exe,!pyp!\Scripts\fbt_run.exe,!pyp!\Scripts\fbt_db.exe,!pyp!\Scripts\fbt_analyze.exe,!svnbin!,!mteebin!,!zipbin!) do (
+  dir %%s | findstr /i /c:%%~ns 2>&1 1>nul
+  if errorlevel 1 (
+      echo Binary file %%s not found. Job terminated.
+      goto final
+  )
+)
+
+call :sho "Trying to kill python.exe" !joblog!
+tasklist | findstr /i /c:python.exe 1>nul
+if not errorlevel 1 (
+    taskkill /f /t /im python.exe 2>&1 1>!joblog!
+)
+
+call :sho "Trying to kill mtee.exe" !joblog!
+tasklist | findstr /i /c:mtee.exe 1>nul
+if not errorlevel 1 (
+    taskkill /f /t /im mtee.exe 2>&1 1>!joblog!
+)
+
+set msg=Trying to update tests using svn.
+call :sho "!msg!" !joblog!
+
+@rem --- temply commented --- !svnbin! up 2>&1 1>>!joblog!
+
+for /d %%s in ( %fblst% ) do (
+    set msg=Analyzing service with name: %%s
+    call :sho "!msg!" !joblog!
+
+    sc query FirebirdServer%%s | findstr /i /c:"STATE" 1>nul 2>&1
+    if errorlevel 1 (
+        set msg=FB instance with name %%s NOT FOUND. Job terminated.
+        call :sho "!msg!" !joblog!
+        goto final
+    )
+    for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%s ^| findstr /i /c:"ImagePath"') do (
+        set fn=%%k
+        set fp=%%~dpk
+        if /i .%%s.==.fb25_tmp. (
+            for %%m in ("!fp:~0,-1!") do set fp=%%~dpm
+        )
+        @rem Remove trailing backslash:
+        set fp=!fp:~0,-1!
+
+        set msg=Home dir for %%s: !fp!
+        call :sho "!msg!" !joblog!
+        if not exist !fp!\firebird.conf.previous (
+            set msg=Backup of original FB config file: "!fp!\firebird.conf.previous" NOT FOUND. Job terminated.
+            call :sho "!msg!" !joblog!
+            goto final
+        )
+
+        for /d %%u in ( %fbars% ) do (
+
+            @rem Trying to STOP service if it is active. Terminate job if service can not be stopped.
+            call :try_to_stop_fb %%s !joblog!
+
+            set msg=Generate temporary firebird.conf for use in service %%s with architecture=%%u
+            call :sho "!msg!" !joblog!
+            @rem Parse line by line firebird.conf and comment 'ServerMode' and  'DefaultDbCachePages' parameters.
+            set fbconf_new=!fp!\tmp_firebird_conf.%%u
+            (
+                for /f "tokens=*" %%a in ('type !fp!\firebird.conf') do (
+                    set line=%%a
+                    echo !line! | findstr /i /c:servermode 1>nul
+                    if not errorlevel 1 (
+                        echo !line! | findstr /i /c:comment 1>nul
+                        if errorlevel 1 (
+                            set line=### TEMPLY COMMENTED BY QA DAILY BATCH ### !line!
+                            echo !line!
+                            if /i .%%u.==.cs. (
+                                echo ServerMode=Classic
+                            ) else if /i .%%u.==.sc. (
+                                echo ServerMode=SuperClassic
+                            ) else (
+                                echo ServerMode=Super
+                            )
+                        )
+                    ) else (
+                        echo !line! | findstr /i /c:DefaultDbCachePages 1>nul
+                        if not errorlevel 1 (
+                            echo !line! | findstr /i /c:comment 1>nul
+                            if errorlevel 1 (
+                                set line=### TEMPLY COMMENTED BY QA DAILY BATCH ### !line!
+                                echo !line!
+                            )
+                        ) else (
+                            echo !line!
+                        )
+                    )
+                )
+            ) > !fbconf_new!
+        
+            set job_failed_flag=1
+            
+            set msg=Temply replace !fp!\firebird.conf with !fbconf_new!
+            call :sho "!msg!" !joblog!
+
+            copy !fbconf_new! !fp!\firebird.conf 2>&1 1>>!joblog!
+            dir !fp!\firebird.conf | findstr /i /c:firebird 2>&1 1>>!joblog!
+            del !fbconf_new!
+
+            set msg=Trying to START service %%s using TEMPORARY created firebird.conf, architecture=%%u
+            call :sho "!msg!" !joblog!
+            call :try_to_start_fb %%s !joblog!
+
+            (
+                echo.
+                echo --------------- launch tests for %%s, arch=%%u
+                echo.
+            )>>!joblog!
+
+            set msg=Launch fbt_run and other commands for %%s, architecture=%%u
+            call :sho "!msg!" !joblog!
+
+            call :run_fbtest !fp! !joblog!
+
+            (
+                echo.
+                echo --------------- finish tests for %%s, arch=%%u
+                echo.
+            )>>!joblog!
+
+            set msg=Finish fbt_run and other commands for %%s, architecture=%%u
+            call :sho "!msg!" !joblog!
+
+            set msg=Restore original file !fp!\firebird.conf
+            call :sho "!msg!" !joblog!
+
+            copy !fp!\firebird.conf.previous !fp!\firebird.conf  2>&1 1>>!joblog!
+            dir !fp!\firebird.conf | findstr /i /c:firebird 2>&1 1>>!joblog!
+
+            @rem Original firebird.conf restored, no we can clear flag:
+            set job_failed_flag=0
+
+            set msg=trying to STOP service %%s after all tests finish.
+            call :sho "!msg!" !joblog!
+            call :try_to_stop_fb %%s !joblog!
+
+            set msg=Trying to START service %%s using ORIGINAL firebird.conf
+            call :sho "!msg!" !joblog!
+            call :try_to_start_fb %%s !joblog!
+
+            (
+                echo.
+                echo ######################## done for %%s, arch=%%u ##########################
+                echo.
+            ) >>!joblog!
+
+        )
+        @rem end of "for /d %%u in ( %fbars% ) do"
+        set msg=Finish all architectures from list %fbars% for %%s
+        call :sho "!msg!" !joblog!
+
+    )
+    @rem end of "for /f "tokens=3" %%k in ('REG.EXE ..."
+)
+@rem end of "for /d %%s in ( %fblst% ) do"
+
+set msg=Done for all FB services and architectures.
+call :sho "!msg!" !joblog!
+goto final
+
+@rem %%%%%%%%%%%%%%%%%%%%%%%%%%%%   e n d   o f    m ai n   b l o c k    %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+:run_fbtest
+    setlocal
+    set fbc=%1
+    set joblog=%2
+
+    set port=unknown
+    set fbconf_path=!fbc!
+    if not exist !fbc!\firebird.conf (
+        for %%m in ("!fbconf_path:~0,-1!") do (
+          set fbconf_path=%%~dpm
+          set fbconf_path=!fbconf_path:~0,-1!
+        )
+    )
+
+    set path=!fbc!;%path%
+    echo Check path=!path!>>!joblog!
+
+    if exist !fbconf_path!\firebird.conf (
+        for /f "tokens=3" %%a in ('findstr /i /c:"RemoteServicePort" !fbconf_path!\firebird.conf') do (
+            set port=%%a
+        )
+        if .!port!.==.. (
+            set msg=Can not find string with PORT number in !fbconf_path!\firebird.conf. Job terminated.
+            call :sho "!msg!" !joblog!
+            goto final
+        ) else (
+            set msg=Detect line with port=!port! in !fbconf_path!\firebird.conf
+            call :sho "!msg!" !joblog!
+        )
+    ) else (
+        set msg=Can not find firebird.conf in specified path=!fbc!. Job terminated.
+        call :sho "!msg!" !joblog!
+        goto final
+    )
+
+    set msg=Attempt to determine FB architecture and version: try to create temp DB using port=!port!
+    call :sho "!msg!" !joblog!
+    for /f "tokens=1-3 delims='(), " %%a in ('!pyp!\python %~dp0run-all-get-fb-arch.py !port!') do (
+        set fba=%%a
+        set fbv=%%b
+        set fbv=!fbv:.=!
+        set fbv=!fbv: =!
+        set fbb=%%c
+        set fbb=!fbb:.=_!
+    )
+    set msg=Detected FB arch=!fba!, engine=!fbv!, port=!port!, build=!fbb!
+    call :sho "!msg!" !joblog!
+
+    set analyze_dir=%~dp0archive\analyze\!fbb!.!fba!
+    set msg=Detailed results see in folder: !analyze_dir!\
+    call :sho "!msg!" !joblog!
+
+    md !analyze_dir! 2>nul
+    if exist !analyze_dir!\*.html del !analyze_dir!\*.html 2>>!joblog!
+
+    set log=!logdir!\%~n0_!fbv!_!fba!.log
+    set err=!logdir!\%~n0_!fbv!_!fba!.log
+
+    del !log! 2>nul
+    del !err! 2>nul
+    for /d %%g in (!log!,!err!) do (
+        if exist %%g (
+            echo File %%g can not be deleted - probably it is still opened by another process. Job terminated.
+            goto final
+        )
+    )
+
+    @rem not yet debugged when svn is in folder with spaces ("program files" etc):
+    @rem for /f "tokens=2" %%a in ('!svnbin! st .\tests ^| findstr /c:"?"') do (
+    @rem     del %%a
+    @rem )
+
+    if exist %~dp0tmp\bugs.core_*.fdb del %~dp0tmp\bugs.core_*.fdb 2>>!joblog!
+
+    set msg=Trying to RESTORE test results from previously created .fbk
+    call :sho "!msg!" !joblog!
+
+    if exist %~dp0archive\fbt_run_outcomes_%fbv%.fdb del %~dp0archive\fbt_run_outcomes_%fbv%.fdb
+    set cmd_run=!fbc!\gbak -rep -v %~dp0archive\fbt_run_outcomes_%fbv%.fbk localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb
+    call :sho "Run: !cmd_run!" !joblog!
+
+    cmd /c !cmd_run! 2>&1 1>>!log!
+    findstr /i /c:"gbak: ERROR" !log! >>!log!
+    if not errorlevel 1 (
+        set msg=ERROR occured during restoring process! Job terminated.
+        call :sho "!msg!" !joblog!
+        goto final
+    ) else (
+        set msg=OK. Restore successful.
+        call :sho "!msg!" !joblog!
+    )
+
+    set msg=Extract BEFORE fbt_run first 10 rows with previous runs
+    call :sho "!msg!" !joblog!
+    echo set count on; select r.created, r.arch, r.build from runs r order by 1 desc rows 10; | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
+
+    (
+        echo.
+        echo ~~~~~~~~~~~~ f b t _ r u n ~~~~~~~~~
+        echo.
+    ) >>!joblog!
+
+    set msg=Running tests
+    call :sho "!msg!" !joblog!
+
+    set cmd_run=!pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fba! --skip run-all-excluded-tests-list.txt -c !fbc!\fbclient.dll
+    if exist !mteebin! (
+       set cmd_run="!cmd_run! 2^>^&1 ^| !mteebin! /t /+ !log!"
+       echo !cmd_run! >>!joblog!
+       call :sho "Run: !cmd_run!" !joblog!
+       cmd /c !cmd_run!
+    ) else (
+       call :sho "Run: !cmd_run!" !joblog!
+       cmd /c !cmd_run! 2>&1 1>>!log!
+    )
+
+    @rem 4debug: cmd /c !pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fba! bugs.core_5133 -c !fbc!\fbclient.dll 2>&1 1>>!log!
+
+    (
+        echo.
+        echo Check results of fbt_run.
+        set cmd_run=findstr /i /r /c:"Ran [0-9]* tests" !log!
+        echo Run: !cmd_run!
+        echo ------------- results beg ------------
+        cmd /c !cmd_run!
+        echo ------------- results end ------------
+        echo.
+
+        echo Evaluate suffix for archive file.
+        set fails=0
+        set errors=0
+        set skipped=0
+        for /f "tokens=1-8 delims=() " %%a in ('findstr /r /c:"(fails=[1-9])" /c:"(errors=[1-9]*)" /c:"(skipped=[1-9]*)" !log!') do (
+            if not .%%c.==.. set /a "%%c"
+            if not .%%d.==.. set /a "%%d"
+            if not .%%e.==.. set /a "%%e"
+        )
+        @echo fails=!fails! eroros=!errors! skipped=!skipped!
+        if !fails! gtr 0 (
+            set zip_suff=!zip_suff!__f!fails!
+        )
+        if !errors! gtr 0 (
+           set zip_suff=!zip_suff!__e!errors!
+        )
+        if !skipped! gtr 0 (
+            set zip_suff=!zip_suff!__s!skipped!
+        )
+        if .!zip_suff!.==.. (
+            set zip_suff=_-__OK
+        ) else (
+            set zip_suff=_-!zip_suff!
+        )
+        @echo Suffix for archive is: !zip_suff!
+        @echo off
+    ) >>!joblog!
+    
+    set msg=Save results in DB
+    call :sho "!msg!" !joblog!
+
+    set cmd_run=!pyp!\Scripts\fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbv%.fdb import
+    call :sho "Run: !cmd_run!" !joblog!
+    cmd /c !cmd_run! 2>&1 1>>!joblog!
+
+    @rem temply commented: fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbv%.fdb import 2>&1 | mtee /t /+ %log%
+
+    set msg=Extract AFTER fbt_run first 10 rows with previous runs
+    call :sho "!msg!" !joblog!
+
+    echo set count on; select r.created, r.arch, r.build from runs r order by 1 desc rows 10; | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
+
+    set msg=BACKUP database with results
+    call :sho "!msg!" !joblog!
+
+    set cmd_run=!fbc!\gbak -b -v localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb %~dp0archive\fbt_run_outcomes_%fbv%.fbk
+    call :sho "Run: !cmd_run!" !joblog!
+    cmd /c !cmd_run! 2>&1 1>>!log!
+    findstr /i /c:"gbak: ERROR" !log! >>!joblog!
+    if not errorlevel 1 (
+        set msg=ERROR occured during backup process! Job terminated.
+        call :sho "!msg!" !joblog!
+        goto final
+    ) else (
+        set msg=OK. Backup successful.
+        call :sho "!msg!" !joblog!
+    )
+
+    set msg=ANALYZE results of test runs
+    call :sho "!msg!" !joblog!
+
+    @rem Generate HTML with results:
+    @rem ###########################
+    set cmd_run=!pyp!\Scripts\fbt_analyze -o !analyze_dir!\
+    call :sho "Run: !cmd_run!" !joblog!
+    cmd /c !cmd_run! 2>&1 1>>!joblog!
+
+    set msg=Saving %~dp0results.trf in !analyze_dir!\*.*
+    call :sho "!msg!" !joblog!
+    copy %~dp0results.trf !analyze_dir!\*.* 2>&1 1>>!joblog!
+    dir  /-c !analyze_dir!\results.trf | findstr /i /c:results 2>&1 1>>!joblog!
+    del %~dp0results.trf 2>>!joblog!
+
+    echo Packing results from !analyze_dir!\*.* into archive !analyze_dir!!zip_suff!
+    call :sho "!msg!" !joblog!
+
+    set cmd_run=!zipbin! u -r -bd -ssw -mx=9 !analyze_dir:.=_!!zip_suff!.!zipext! !analyze_dir!\*.* !log!
+    call :sho "Run: !cmd_run!" !joblog!
+    cmd /c !cmd_run! 2>&1 1>>!joblog!
+    if not errorlevel 1 (
+        rd /q /s !analyze_dir!
+        del !log!
+    ) else (
+       echo errorlevel detected.
+    )
+
+    @rem echo End of iter &pause
+
+endlocal & goto:eof
+
+@rem ######################################################################################################
+
+@rem echo alter table annotations drop annotation, add annotation blob character set none;|C:\MIX\firebird\fb30\isql /:C:\MIX\firebird\QA\fbt-repo\archive\FBT_RUN_OUTCOMES_30.FDB
+
+
+:sho
+    setlocal
+    set msg=%1
+    set log=%2
+    set tmp=!%1:"=!
+    set result=0
+    if not "!tmp!"=="!tmp: =!" set result=1
+    if .!result!.==.1. set msg=!msg:"=!
+    set txt=!date! !time! !msg!
+    @echo !txt!
+    @echo !txt!>>%log%
+endlocal & goto:eof
+
+:try_to_stop_fb
+    setlocal
+    set fbs=%1
+    set joblog=%2
+
+        set cmd_run=sc query FirebirdServer!fbs!
+        call :sho "!cmd_run!" !joblog!
+        cmd /c !cmd_run! | findstr /i /c:"STOPPED" 1>nul 2>&1
+        if errorlevel 1 (
+            set msg=Attempt to stop service FirebirdServer!fbs!
+            call :sho "!msg!" !joblog!
+
+            set cmd_run=sc stop FirebirdServer!fbs!
+            call :sho "Run: !cmd_run!" !joblog!
+            cmd /c !cmd_run! | findstr /i /c:state /c:service_name 1>>!joblog! 2>&1
+            
+            set msg=Wait a few seconds. . .
+            call :sho "!msg!" !joblog!
+
+            ping -n 6 127.0.0.1 1>nul
+
+            set msg=Check that service was really stopped.
+            call :sho "!msg!" !joblog!
+ 
+            set cmd_run=sc query FirebirdServer!fbs!
+            call :sho "Run: !cmd_run!" !joblog!
+            cmd /c !cmd_run! | findstr /i /c:state /c:service_name 1>>!joblog! 2>&1
+            cmd /c !cmd_run! | findstr /i /c:"STOPPED" 1>nul 2>&1
+            if errorlevel 1 (
+                set msg=FAIL: service !fbs! is not in 'STOPPED' state. Job terminated.
+                call :sho "!msg!" !joblog!
+                goto final
+            ) else (
+                set msg=OK: service !fbs! has been stopped.
+                call :sho "!msg!" !joblog!
+            )
+
+        ) else (
+            set msg=Service !fbs! was already stopped.
+            call :sho "!msg!" !joblog!
+        )
+        @rem end of block stopping service !fbs!
+endlocal & goto:eof
+
+:try_to_start_fb
+    setlocal
+    set fbs=%1
+    set joblog=%2
+
+        set cmd_run=sc query FirebirdServer!fbs!
+        call :sho "!cmd_run!" !joblog!
+        cmd /c !cmd_run! | findstr /i /c:"RUNNING" 1>nul 2>&1
+        if errorlevel 1 (
+            set msg=Attempt to START service FirebirdServer!fbs!
+            call :sho "!msg!" !joblog!
+
+            set cmd_run=sc start FirebirdServer!fbs!
+            call :sho "Run: !cmd_run!" !joblog!
+            cmd /c !cmd_run! | findstr /i /c:state /c:service_name 1>>!joblog! 2>&1
+            
+            set msg=Wait a few seconds. . .
+            call :sho "!msg!" !joblog!
+
+            ping -n 6 127.0.0.1 1>nul
+
+            set msg=Check that service was really started.
+            call :sho "!msg!" !joblog!
+ 
+            set cmd_run=sc query FirebirdServer!fbs!
+            call :sho "Run: !cmd_run!" !joblog!
+            cmd /c !cmd_run! | findstr /i /c:state /c:service_name 1>>!joblog! 2>&1
+            cmd /c !cmd_run! | findstr /i /c:"RUNNING" 1>nul 2>&1
+            if errorlevel 1 (
+                set msg=FAIL: service !fbs! is not in 'RUNNING' state. Job terminated.
+                call :sho "!msg!" !joblog!
+                goto final
+            ) else (
+                set msg=OK: service !fbs! has been started.
+                call :sho "!msg!" !joblog!
+            )
+
+        ) else (
+            set msg=Service !fbs! is already RUNNING.
+            call :sho "!msg!" !joblog!
+        )
+        @rem end of block starting service !fbs!
+endlocal & goto:eof
+
+:haltHelper
+()
+exit /b
+
+:final
+    if .!job_failed_flag!.==.1. (
+        set msg=Restoring original firebird.conf in !fp!
+        call :sho "!msg!" !joblog!
+        copy !fp!\firebird.conf.previous !fp!\firebird.conf 2>&1 1>>!joblog!
+        dir !fp!\firebird.conf.previous !fp!\firebird.conf | findstr firebird  2>&1 1>>!joblog!
+    )
+    @echo Bye-bye.
+    @rem http://stackoverflow.com/questions/10534911/how-can-i-exit-a-batch-file-from-within-a-function
+    call :haltHelper 2> nul
