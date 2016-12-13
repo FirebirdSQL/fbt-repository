@@ -1,0 +1,74 @@
+{
+'id': 'bugs.core_5418',
+'qmid': None,
+'tracker_id': 'CORE-5418',
+'title': 'Inconsistent output when retrieving the server log via Services API',
+'description':
+ """
+   Test gets FB home directory and copies firebird.log to *.tmp.
+   Then it makes firebird.log empty and retrieves it via services API. Output should be empty.
+   Finally, it opens firebird.log and adds to it several empty newlines. 
+   Repeat retrieveing content - it also should not contain any characters except newline.
+   Checked on 2.5.7.27030, 4.0.0.465
+ """,
+'min_versions': '2.5.7',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+import os
+from fdb import services
+import subprocess
+import shutil
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+# Get engine version and FB binaries folder:
+############################################
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+
+# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
+# via to FB services API by services.connect() - see FB tracker, PYFB-69
+# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+fb_bins = fb_home
+if engine.startswith('2.5'):
+  fb_bins = fb_home + 'bin'+os.sep
+  get_firebird_log_key='action_get_ib_log'
+else:
+  get_firebird_log_key='action_get_fb_log'
+
+db_conn.close()
+fb_log=fb_home+'firebird.log'
+fb_bak=fb_home+'firebird.tmp'
+shutil.copy2( fb_log, fb_bak )
+open(fb_log, 'w').close()
+
+subprocess.call( [ fb_bins + "fbsvcmgr","localhost:service_mgr",  get_firebird_log_key ] )
+
+f=open(fb_log, 'w')
+for i in range(0,10):
+  f.write(os.linesep)
+f.close()
+
+subprocess.call( [ fb_bins + "fbsvcmgr","localhost:service_mgr",  get_firebird_log_key ] )
+
+shutil.copy2( fb_bak, fb_log )
+os.remove( fb_bak )
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
