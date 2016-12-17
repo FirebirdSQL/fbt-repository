@@ -183,7 +183,7 @@
     -- FB 2.5 and 3.0, and they are the same on SS/SC/CS and equal to 2.7 and 2.2.
     -- Number for fetches and marks for fixed table and session-level GTT
     -- rows should be always GREATER than for transaction-level GTT at least on
-    -- that constants:
+    -- that constants.
 
     set term ^;
     execute block as
