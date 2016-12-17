@@ -3,7 +3,15 @@
 'qmid': None,
 'tracker_id': 'CORE-3537',
 'title': 'There is no need to undo changes made in GTT created with ON COMMIT DELETE ROWS option when transaction is rolled back.',
-'description': '',
+'description': 
+ """
+   Checked on:
+   2.5.7.27030 SC
+   3.0.2.32643 SC, CS
+   3.0.2.32644 SS
+   4.0.0.468 SS
+   4.0.0.463 SC, CS
+ """,
 'min_versions': '2.5.1',
 'versions': [
 {
@@ -180,7 +188,11 @@
     set term ^;
     execute block as
     begin
-      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES', '2.5');
+      -- 17.12.2016: since ~25-nov-2016, builds 4.0.0.459 and 3.0.2.32641,
+      -- number of fetches was significantly reduced (Vldas states that for ALL kinds of tables).
+      -- Threshold should be reduced also. Value = 2.5 is replaced with 2.4 (see tests result page):
+      -- See also letter from Vlad 17.12.2016 12:18
+      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES', '2.4');
       rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS',   '2.0');
     end
     ^
@@ -298,9 +310,9 @@
   """,
  'expected_stdout': 
   """
-    GTT_DEL_VS_FIX_TAB_FETCHES      WINS >= 2.50 times
+    GTT_DEL_VS_FIX_TAB_FETCHES      WINS >= 2.40 times
     GTT_DEL_VS_FIX_TAB_MARKS        WINS >= 2.00 times
-    GTT_DEL_VS_GTT_SAV_FETCHES      WINS >= 2.50 times
+    GTT_DEL_VS_GTT_SAV_FETCHES      WINS >= 2.40 times
     GTT_DEL_VS_GTT_SAV_MARKS        WINS >= 2.00 times
   """
 }
