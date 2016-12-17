@@ -67,7 +67,7 @@
          select
               mon$attachment_name
              ,mon$user
-             ,mon$remote_protocol
+             ,left(mon$remote_protocol,3)
          from mon$attachments
          where mon$user = current_user
          ;
@@ -252,7 +252,7 @@ runProgram('isql',[dsn, '-user', user_name, '-pas', user_password], 'drop user u
     Records affected: 1
 
     ATT_USER                        U01
-    ATT_PROT                        TCPv4
+    ATT_PROT                        TCP
     Records affected: 1
 
     Records affected: 0
