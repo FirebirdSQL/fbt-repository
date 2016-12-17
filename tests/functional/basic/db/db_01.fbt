@@ -6,30 +6,6 @@
 'description': 'Check the correct content of RDB$DATABASE for freh, empty database.',
 'versions': [
 {
- 'firebird_version': '1.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 'select * from RDB$DATABASE;',
- 'expected_stdout': """  RDB$DESCRIPTION RDB$RELATION_ID RDB$SECURITY_CLASS              RDB$CHARACTER_SET_NAME
-================= =============== =============================== ===============================
-
-           <null>             128 <null>                          <null>
-
-"""
-},
-{
- 'firebird_version': '1.0.3',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 'select * from RDB$DATABASE;',
- 'expected_stdout': """  RDB$DESCRIPTION RDB$RELATION_ID RDB$SECURITY_CLASS              RDB$CHARACTER_SET_NAME
-================= =============== =============================== ===============================
-
-           <null>             128 <null>                          NONE
-
-"""
-},
-{
  'firebird_version': '2.0',
  'platform': 'All',
  'test_type': 'ISQL',
@@ -64,6 +40,29 @@
     RDB$SECURITY_CLASS              SQL$362
     RDB$CHARACTER_SET_NAME          NONE
     RDB$LINGER                      <null>
+  """,
+  'substitutions': [
+    ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
+  ]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set blob all;
+    select * from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$DESCRIPTION                 <null>
+    RDB$RELATION_ID                 128
+    RDB$SECURITY_CLASS              SQL$362
+    RDB$CHARACTER_SET_NAME          NONE
+    RDB$LINGER                      <null>
+    RDB$SQL_SECURITY                <null>
   """,
   'substitutions': [
     ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
