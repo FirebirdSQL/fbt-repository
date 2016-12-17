@@ -6,11 +6,12 @@ set isc_password=masterkey
 set logdir=e:\temp\logs.qa
 set joblog=!logdir!\%~n0.log
 
-set fblst=fb30_tmp,fb40_tmp
+set fblst=fb40_tmp,fb30_tmp
 set fbars=ss,sc,cs
 
+:: 4debug:
 ::set fblst=fb30_tmp
-::set fbars=ss,sc
+::set fbars=ss
 
 set job_failed_flag=0
 
@@ -63,7 +64,7 @@ if not errorlevel 1 (
 set msg=Trying to update tests using svn.
 call :sho "!msg!" !joblog!
 
-@rem --- temply commented --- !svnbin! up 2>&1 1>>!joblog!
+!svnbin! up 2>&1 1>>!joblog!
 
 for /d %%s in ( %fblst% ) do (
     set msg=Analyzing service with name: %%s
