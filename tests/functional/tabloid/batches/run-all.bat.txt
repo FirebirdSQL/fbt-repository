@@ -9,10 +9,6 @@ set joblog=!logdir!\%~n0.log
 set fblst=fb40_tmp,fb30_tmp
 set fbars=ss,sc,cs
 
-:: 4debug:
-::set fblst=fb30_tmp
-::set fbars=ss
-
 set job_failed_flag=0
 
 set svnbin="C:\Program Files (x86)\Subversion\bin\svn.exe"
@@ -131,7 +127,15 @@ for /d %%s in ( %fblst% ) do (
                             echo !line!
                         )
                     )
+
+                    echo !line! | findstr /i /c:ExternalFileAccess 1>nul
+                    if not errorlevel 1 (
+                            set line=### TEMPLY COMMENTED BY QA DAILY BATCH ### !line!
+                            echo !line!
+                    )
                 )
+
+                echo ExternalFileAccess = Full
             ) > !fbconf_new!
         
             set job_failed_flag=1
