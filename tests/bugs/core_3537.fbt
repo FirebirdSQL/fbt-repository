@@ -2,318 +2,385 @@
 'id': 'bugs.core_3537',
 'qmid': None,
 'tracker_id': 'CORE-3537',
-'title': 'There is no need to undo changes made in GTT created with ON COMMIT DELETE ROWS option when transaction is rolled back.',
+'title': "There is no need to undo changes made in GTT created with ON COMMIT DELETE ROWS option when transaction is rolled back",
 'description': 
  """
-   Checked on:
-   2.5.7.27030 SC
-   3.0.2.32643 SC, CS
-   3.0.2.32644 SS
-   4.0.0.468 SS
-   4.0.0.463 SC, CS
+   19.12.2016. 
+   After discuss with hvlad it was decided to use fetches & marks values that are issued in trace 
+   ROLLBACK_TRANSACTION statistics and evaluate ratio of these values with:
+   1) number of inserted rows(see 'NUM_ROWS_TO_BE_ADDED' constant);
+   2) number of data pages that table occupies (it's retieved via 'gstat -t T_FIX_TAB').
+
+   We use three tables with the same DDL: permanent ('t_fix_tab'), GTT PRESERVE and GTT DELETE rows.
+   All these tables are subject to DML which does insert rows.
+   Permanent table is used for retrieving statistics of data pages that are in use after this DML.
+   Number of rows that we add into tables should not be very high, otherwise rollback will be done via TIP,
+   i.e. without real undone actions ==> we will not see proper ratios. 
+   After serveral runs it was decided to use value = 45000 (rows).
+
+   All ratios should belong to some range with +/-5% of possible difference from one run to another.
+   Concrete values of ratio were found after several runs on 2.5.7, 3.0.2 & 4.0.0
+
+   Checked on 2.5.7.27030 (SS/SC), WI-V3.0.2.32644 (SS/SC/CS) and WI-T4.0.0.468 (SS/SC).
+
+   Notes.
+   1. We can estimate volume of UNDO changes in trace statistics for ROLLBACK event.
+      This statistics was added since 2.5.2 (see CORE-3598).
+   2. We have to use 'gstat -t <table>'instead of 'fbsvcmgr sts_table <...>'in 2.5.x - see CORE-5426.
+
  """,
-'min_versions': '2.5.1',
+'min_versions': '2.5.2',
 'versions': [
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'database': 'Restore',
- 'backup_file': 'mon-stat-gathering-2_5.fbk',
- 'database_character_set': 'NONE',
- 'connection_character_set': 'NONE',
- 'test_type': 'ISQL',
+ 'page_size': '4096',
+ 'test_type': 'Python',
  'init_script':
   """
+    create or alter procedure sp_fill_fix_tab as begin end;
+    create or alter procedure sp_fill_gtt_del_rows as begin end;
+    create or alter procedure sp_fill_gtt_sav_rows as begin end;
+
+    recreate view v_field_len as
+    select rf.rdb$relation_name as rel_name, f.rdb$field_length as fld_len
+    from rdb$relation_fields rf
+    join rdb$fields f on rf.rdb$field_source = f.rdb$field_name
+    ;
+
+    recreate table t_fix_tab(
+      s1 varchar(50)
+      -- unique using index t_fix_tab_s1
+    );
+
+    recreate global temporary table t_gtt_del_rows(
+      s1 varchar(50)
+      -- unique using index t_gtt_del_rows_s1
+    ) on commit DELETE rows;
+    
+    recreate global temporary table t_gtt_sav_rows(
+      s1 varchar(50)
+      -- unique using index t_gtt_sav_rows_s1
+    ) on commit PRESERVE rows;
+    
+    commit;
+
+    set term ^;
+    create or alter procedure sp_fill_fix_tab(a_rows int) as
+        declare k int;
+        declare w int;
+    begin
+        k=a_rows;
+        select v.fld_len from v_field_len v where v.rel_name=upper('t_fix_tab') into w;
+        while(k>0) do insert into t_fix_tab(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    create or alter procedure sp_fill_gtt_del_rows(a_rows int) as
+        declare k int;
+        declare w int;
+    begin
+        k=a_rows;
+        select v.fld_len from v_field_len v where v.rel_name=upper('t_gtt_del_rows') into w;
+        while(k>0) do insert into t_gtt_del_rows(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    create or alter procedure sp_fill_gtt_sav_rows(a_rows int) as
+        declare k int;
+        declare w int;
+    begin
+        k=a_rows;
+        select v.fld_len from v_field_len v where v.rel_name=upper('t_gtt_sav_rows') into w;
+        while(k>0) do insert into t_gtt_sav_rows(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+    end
+    ^
+    set term ;^
+    commit;
   """,
  'test_script':
   """
-    -- Here we define constants for comparison of ratio between fetches and marks
-    -- when operation is done on: 1) fixed tab; 2) GTT with on commit PRESERVE rows
-    -- and 3) GTT with on commit DELETE rows.
-    -- Values of these constants have been obtained after multiple (>=5) runs on
-    -- FB 2.5 and 3.0, they are the same on SS/SC/CS and equal to 2.7 and 2.2.
-    -- Number for fetches and marks for fixed table and session-level GTT
-    -- rows should be always GREATER than for transaction-level GTT at least on
-    -- that constants:
-   
-    set term ^;
-    execute block as
-    begin
-      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES', '2.5');
-      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS',   '2.0');
-    end
-    ^
-    set term ;^
+import os
+import subprocess
+import time
+from fdb import services
+from subprocess import Popen
 
-    recreate table t_fix(
-      s1 varchar(200)
-      unique using index t_fix_s1
-    );
-    
-    recreate global temporary table t_gtt_sav_rows(
-      s1 varchar(200)
-      unique using index t_gtt_sav_rows_s
-    ) on commit PRESERVE rows;
-    
-    
-    recreate global temporary table t_gtt_del_rows(
-      s1 varchar(200)
-      unique using index t_gtt_del_rows_s
-    ) on commit DELETE rows;
-    
-    commit;
-    
-    alter sequence g_gather_stat restart with 0;
-    execute procedure sp_truncate_stat;
-    commit;
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    set term ^;
-    execute block as
-        declare n int = 5000;
-        declare k int;
-    begin
-        k=n;
-        while(k>0) do insert into t_fix(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
-    end
-    ^
-    set term ;^
-    rollback; ----------------- (1)
-    
-    
-    execute procedure sp_gather_stat;  ------- catch statistics AFTER measured statement(s)
-    commit;
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    set term ^;
-    execute block as
-        declare n int = 5000;
-        declare k int;
-    begin
-        k=n;
-        while(k>0) do insert into t_gtt_sav_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
-    end
-    ^
-    set term ;^
-    rollback; ----------------- (2)
-    
-    
-    execute procedure sp_gather_stat; ------- catch statistics AFTER measured statement(s)
-    commit;
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    
-    set term ^;
-    execute block as
-        declare n int = 5000;
-        declare k int;
-    begin
-        k=n;
-        while(k>0) do insert into t_gtt_del_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
-    end
-    ^
-    set term ;^
-    
-    rollback; ----------------- (3)
-    
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    set list on;
-        
-    -- Show results:
-    -- =============
-    select
-         iif( fix_tab_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches ) as gtt_del_vs_fix_tab_fetches
-        ,iif( fix_tab_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks ) as gtt_del_vs_fix_tab_marks
-        ,iif( gtt_ssn_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches) as gtt_del_vs_gtt_sav_fetches
-        ,iif( gtt_ssn_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks) as gtt_del_vs_gtt_sav_marks
-    from (
-        select
-            1.000 * fix_tab_pg_fetches / gtt_trn_pg_fetches fix_tab_to_gtt_trn_fetches
-           ,1.000 * fix_tab_pg_marks / gtt_trn_pg_marks fix_tab_to_gtt_trn_marks
-           ,1.000 * gtt_ssn_pg_fetches / gtt_trn_pg_fetches gtt_ssn_to_gtt_trn_fetches
-           ,1.000 * gtt_ssn_pg_marks / gtt_trn_pg_marks gtt_ssn_to_gtt_trn_marks
-           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES') as numeric(7,2) ) min_profit_for_fetches
-           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS') as numeric(7,2) ) min_profit_for_marks
-        from (
-            select
-                 max( iif(rowset = 1, page_fetches, null) ) fix_tab_pg_fetches
-                ,max( iif(rowset = 1, page_marks, null) ) fix_tab_pg_marks
-                ,max( iif(rowset = 2, page_fetches, null) ) gtt_ssn_pg_fetches
-                ,max( iif(rowset = 2, page_marks, null) ) gtt_ssn_pg_marks
-                ,max( iif(rowset = 3, page_fetches, null) ) gtt_trn_pg_fetches
-                ,max( iif(rowset = 3, page_marks, null) ) gtt_trn_pg_marks
-            from v_agg_stat
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+# Obtain engine version:
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+db_conn.close()
+
+# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
+# via to FB services API by services.connect() - see FB tracker, PYFB-69
+# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+# fb_home = services.connect(host='localhost').get_home_directory()
+
+if engine.startswith('2.5'):
+  fb_home = fb_home + 'bin'+os.sep
+
+
+# Change FW to OFF in order to speed up initial data filling:
+##################
+db_file="$(DATABASE_LOCATION)bugs.core_3537.fdb"
+
+fn_nul = open(os.devnull, 'w')
+
+subprocess.call([ fb_home+"fbsvcmgr", "localhost:service_mgr",
+                  "action_properties", "prp_write_mode", "prp_wm_async",
+                  "dbname", db_file ],
+                  stdout = fn_nul,
+                  stderr = subprocess.STDOUT
+               )
+
+fn_nul.close()
+
+
+
+# ::: NB ::: Trace config file format in 3.0 differs from 2.5 one:
+# 1) header section must be enclosed in "[" and "]",
+# 2) parameter-value pairs must be separated with '=' sign:
+#    services
+#    {
+#      parameter =  value
+#    }
+
+if engine.startswith('2.5'):
+    txt = '''# Generated auto, do not edit!
+      <database %[\\\\\\\\/]security?.fdb>
+          enabled false
+      </database>
+
+      <database %[\\\\\\\\/]bugs.core_3537.fdb>
+          enabled true
+          time_threshold 0
+          log_transactions true
+          #log_procedure_finish true
+          print_perf true
+      </database>
+    '''
+else:
+    txt = '''# Generated auto, do not edit!
+      database=%[\\\\\\\\/]security?.fdb
+      {
+          enabled = false
+      }
+      database=%[\\\\\\\\/]bugs.core_3537.fdb
+      {
+          enabled = true
+          time_threshold = 0
+          log_transactions = true
+          print_perf = true
+      }
+    '''
+
+f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_3537.cfg'), 'w')
+f_trc_cfg.write(txt)
+f_trc_cfg.close()
+
+NUM_ROWS_TO_BE_ADDED = 45000
+
+con1 = fdb.connect(dsn=dsn)
+cur1=con1.cursor()
+
+# Make initial data filling into PERMANENT table for retrieving later number of data pages
+# (it should be the same for any kind of tables, including GTTs):
+cur1.callproc('sp_fill_fix_tab', (NUM_ROWS_TO_BE_ADDED,))
+con1.commit()
+
+# ##############################################################
+# S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
+# ##############################################################
+
+f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_3537.log'), "w")
+f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_3537.err'), "w")
+
+p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
+
+time.sleep(1)
+
+cur1.callproc('sp_fill_gtt_sav_rows', (NUM_ROWS_TO_BE_ADDED,))
+con1.rollback()
+cur1.callproc('sp_fill_gtt_del_rows', (NUM_ROWS_TO_BE_ADDED,))
+con1.rollback()
+con1.close()
+
+
+# ####################################################
+# G E T  A C T I V E   T R A C E   S E S S I O N   I D
+# ####################################################
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+
+f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_3537.lst'), 'w')
+subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
+f_trc_lst.close()
+
+# !!! DO NOT REMOVE THIS LINE !!!
+time.sleep(1)
+
+trcssn=0
+with open( f_trc_lst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+f.close()
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+
+# ####################################################
+# S E N D   R E Q U E S T    T R A C E   T O   S T O P
+# ####################################################
+if trcssn>0:
+    fn_nul = open(os.devnull, 'w')
+    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    fn_nul.close()
+    # DO NOT REMOVE THIS LINE:
+    time.sleep(2)
+
+p_trace.terminate()
+f_trc_log.close()
+f_trc_err.close()
+
+###################
+# Obtain statistics for table T_FIX_TAB in order to estimate numberof data pages
+###################
+
+f_stat_log = open( os.path.join(context['temp_directory'],'tmp_stat_3537.log'), 'w')
+f_stat_err = open( os.path.join(context['temp_directory'],'tmp_stat_3537.err'), 'w')
+
+subprocess.call( [ fb_home+"gstat", dsn, "-t",  't_fix_tab'.upper() ],
+                 stdout = f_stat_log,
+                 stderr = f_stat_err
+               )
+f_stat_log.close()
+f_stat_err.close()
+
+# Following files should be EMPTY:
+#################
+
+f_list=[f_stat_err, f_trc_err]
+for i in range(len(f_list)):
+   f_name=f_list[i].name
+   if os.path.getsize(f_name) > 0:
+       with open( f_name,'r') as f:
+           for line in f:
+               print("Unexpected STDERR, file "+f_name+": "+line)
+       f.close()
+
+
+dp_cnt=-1
+with open( f_stat_log.name,'r') as f:
+  for line in f:
+    if 'data pages' in line.lower():
+       # Data pages: 1098, data page slots: 1098, average fill: 74% ==> 1098
+       dp_cnt = int(line.replace(',',' ').split()[2])
+       
+f.close()
+
+gtt_sav_fetches=-1
+gtt_sav_marks = -1
+gtt_del_fetches=-1
+gtt_del_marks = -1
+gtt_del_trace = ''
+gtt_sav_trace = ''
+
+with open( f_trc_log.name,'r') as f:
+  for line in f:
+    if 'fetch' in line:
+       # 2.5.7:
+       # ['370', 'ms,', '1100', 'read(s),', '1358', 'write(s),', '410489', 'fetch(es),', '93294', 'mark(s)']
+       # ['2', 'ms,', '1', 'read(s),', '257', 'write(s),', '1105', 'fetch(es),', '1102', 'mark(s)']
+       # 3.0.2:
+       # 618 ms, 1 read(s), 2210 write(s), 231593 fetch(es), 92334 mark(s)
+       # 14 ms, 1109 write(s), 7 fetch(es), 4 mark(s)
+       words = line.split()
+       for k in range(len(words)):
+         if words[k].startswith('fetch'):
+           if gtt_sav_fetches == -1:
+             gtt_sav_fetches = int( words[k-1] )
+             gtt_sav_trace = line.strip()
+           else:
+             gtt_del_fetches = int( words[k-1] )
+             gtt_del_trace = line.strip()
+
+         if words[k].startswith('mark'):
+           if gtt_sav_marks==-1:
+             gtt_sav_marks = int( words[k-1] )
+           else:
+             gtt_del_marks = int( words[k-1] )
+
+                                                                        #  2.5.7      3.0.2, 4.0.0
+                                                                        # ---------------------
+'''
+fetches2rows_gtt_sav = (1.00 * gtt_sav_fetches / NUM_ROWS_TO_BE_ADDED,   9.1219,      5.1465  )
+fetches2rows_gtt_del = (1.00 * gtt_del_fetches / NUM_ROWS_TO_BE_ADDED,   0.0245,      0.00015 )
+marks2rows_gtt_sav = (1.00 * gtt_sav_marks / NUM_ROWS_TO_BE_ADDED,       2.0732,      2.05186 )
+marks2rows_gtt_del = (1.00 * gtt_del_marks / NUM_ROWS_TO_BE_ADDED,       0.0245,      0.000089 )
+                                                                   
+fetches2dp_gtt_sav = (1.00 * gtt_sav_fetches / dp_cnt,                   373.85,      209.776 )
+fetches2dp_gtt_del = (1.00 * gtt_del_fetches / dp_cnt,                   1.0063,      0.00634 )
+marks2dp_gtt_sav = (1.00 * gtt_sav_marks / dp_cnt,                       84.9672,     83.6358 )
+marks2dp_gtt_del = (1.00 * gtt_del_marks / dp_cnt,                       1.0036,      0.00362 )
+'''
+                                                                           #  2.5.7      3.0.2, 4.0.0
+                                                                           # ------------------------
+check_data={
+   'fetches2rows_gtt_sav' : (1.00 * gtt_sav_fetches / NUM_ROWS_TO_BE_ADDED,   9.1219,      5.1465  )
+  ,'fetches2rows_gtt_del' : (1.00 * gtt_del_fetches / NUM_ROWS_TO_BE_ADDED,   0.0245,      0.00015 )
+  ,'marks2rows_gtt_sav' : (1.00 * gtt_sav_marks / NUM_ROWS_TO_BE_ADDED,       2.0732,      2.05186 )
+  ,'marks2rows_gtt_del' : (1.00 * gtt_del_marks / NUM_ROWS_TO_BE_ADDED,       0.0245,      0.000089 )
+  ,'fetches2dp_gtt_sav' : (1.00 * gtt_sav_fetches / dp_cnt,                   373.85,      209.776 )
+  ,'fetches2dp_gtt_del' : (1.00 * gtt_del_fetches / dp_cnt,                   1.0063,      0.00634 )
+  ,'marks2dp_gtt_sav' : (1.00 * gtt_sav_marks / dp_cnt,                       84.9672,     83.6358 )
+  ,'marks2dp_gtt_del' : (1.00 * gtt_del_marks / dp_cnt,                       1.0036,      0.00362 )
+}
+
+
+i = 1 if engine.startswith('2.5') else 2
+mult = 1.05
+fail = False
+for k, v in sorted(check_data.iteritems()):
+  msg = ( 'Check ' + k + ': ' + 
+          ( 'OK' if v[i]/mult <=v[0] <= v[i]*mult
+            else 'value '+str(v[0])+' not in range '+str(v[i]) + ' +/-'+str(mult*100-100)+'%'
+          )
         )
-    );
+  print(msg)
+  failed_flag = ('not in range' in msg)
+
+if failed_flag:
+   print('Trace for GTT PRESERVE rows: ' + gtt_sav_trace)
+   print('Trace for GTT DELETE   rows: ' + gtt_del_trace)
+
+# CLEANUP
+#########
+
+f_list=[f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_stat_log, f_stat_err]
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
   """,
  'expected_stdout': 
   """
-    GTT_DEL_VS_FIX_TAB_FETCHES      WINS >= 2.50 times
-    GTT_DEL_VS_FIX_TAB_MARKS        WINS >= 2.00 times
-    GTT_DEL_VS_GTT_SAV_FETCHES      WINS >= 2.50 times
-    GTT_DEL_VS_GTT_SAV_MARKS        WINS >= 2.00 times
-  """
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'database': 'Restore',
- 'backup_file': 'mon-stat-gathering-3_0.fbk',
- 'database_character_set': 'NONE',
- 'connection_character_set': 'NONE',
- 'test_type': 'ISQL',
- 'init_script':
-  """
+    Check fetches2dp_gtt_del: OK
+    Check fetches2dp_gtt_sav: OK
+    Check fetches2rows_gtt_del: OK
+    Check fetches2rows_gtt_sav: OK
+    Check marks2dp_gtt_del: OK
+    Check marks2dp_gtt_sav: OK
+    Check marks2rows_gtt_del: OK
+    Check marks2rows_gtt_sav: OK
   """,
- 'test_script':
+ 'expected_stderr': 
   """
-    -- Here we define constants for comparison of ratio between fetches and marks
-    -- when operation is done on: 1) fixed tab; 2) GTT with on commit PRESERVE rows
-    -- and 3) GTT with on commit DELETE rows.
-    -- Values of these constants have been obtained after multiple (>=5) runs on
-    -- FB 2.5 and 3.0, and they are the same on SS/SC/CS and equal to 2.7 and 2.2.
-    -- Number for fetches and marks for fixed table and session-level GTT
-    -- rows should be always GREATER than for transaction-level GTT at least on
-    -- that constants.
-
-    set term ^;
-    execute block as
-    begin
-      -- 17.12.2016: since ~25-nov-2016, builds 4.0.0.459 and 3.0.2.32641,
-      -- number of fetches was significantly reduced (Vldas states that for ALL kinds of tables).
-      -- Threshold should be reduced also. Value = 2.5 is replaced with 2.4 (see tests result page):
-      -- See also letter from Vlad 17.12.2016 12:18
-      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES', '2.4');
-      rdb$set_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS',   '2.0');
-    end
-    ^
-    set term ;^
-
-    recreate table t_fix(
-      s1 varchar(200)
-      unique using index t_fix_s1
-    );
-    
-    recreate global temporary table t_gtt_sav_rows(
-      s1 varchar(200)
-      unique using index t_gtt_sav_rows_s
-    ) on commit PRESERVE rows;
-    
-    
-    recreate global temporary table t_gtt_del_rows(
-      s1 varchar(200)
-      unique using index t_gtt_del_rows_s
-    ) on commit DELETE rows;
-    
-    commit;
-    
-    alter sequence g_gather_stat restart with 0;
-    execute procedure sp_truncate_stat;
-    commit;
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    set term ^;
-    execute block as
-        declare n int = 5000;
-        declare k int;
-    begin
-        k=n;
-        while(k>0) do insert into t_fix(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
-    end
-    ^
-    set term ;^
-    rollback; ----------------- (1)
-    
-    
-    execute procedure sp_gather_stat;  ------- catch statistics AFTER measured statement(s)
-    commit;
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    set term ^;
-    execute block as
-        declare n int = 5000;
-        declare k int;
-    begin
-        k=n;
-        while(k>0) do insert into t_gtt_sav_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
-    end
-    ^
-    set term ;^
-    rollback; ----------------- (2)
-    
-    
-    execute procedure sp_gather_stat; ------- catch statistics AFTER measured statement(s)
-    commit;
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    
-    set term ^;
-    execute block as
-        declare n int = 5000;
-        declare k int;
-    begin
-        k=n;
-        while(k>0) do insert into t_gtt_del_rows(s1) values( rpad('', 200, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
-    end
-    ^
-    set term ;^
-    
-    rollback; ----------------- (3)
-    
-    
-    execute procedure sp_gather_stat; ------- catch statistics BEFORE measured statement(s)
-    commit;
-    
-    set list on;
-        
-    -- Show results:
-    -- =============
-    select
-         iif( fix_tab_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches ) as gtt_del_vs_fix_tab_fetches
-        ,iif( fix_tab_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||fix_tab_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks ) as gtt_del_vs_fix_tab_marks
-        ,iif( gtt_ssn_to_gtt_trn_fetches > min_profit_for_fetches, 'WINS >= ' || min_profit_for_fetches || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_fetches||' times instead of min = ' || min_profit_for_fetches) as gtt_del_vs_gtt_sav_fetches
-        ,iif( gtt_ssn_to_gtt_trn_marks   > min_profit_for_marks,   'WINS >= ' || min_profit_for_marks   || ' times' ,'LOOSES: '||gtt_ssn_to_gtt_trn_marks  ||' times instead of min = ' || min_profit_for_marks) as gtt_del_vs_gtt_sav_marks
-    from (
-        select
-            1.000 * fix_tab_pg_fetches / gtt_trn_pg_fetches fix_tab_to_gtt_trn_fetches
-           ,1.000 * fix_tab_pg_marks / gtt_trn_pg_marks fix_tab_to_gtt_trn_marks
-           ,1.000 * gtt_ssn_pg_fetches / gtt_trn_pg_fetches gtt_ssn_to_gtt_trn_fetches
-           ,1.000 * gtt_ssn_pg_marks / gtt_trn_pg_marks gtt_ssn_to_gtt_trn_marks
-           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_FETCHES') as numeric(7,2) ) min_profit_for_fetches
-           ,cast( rdb$get_context('USER_SESSION', 'MIN_PROFIT_FOR_MARKS') as numeric(7,2) ) min_profit_for_marks
-        from (
-            select
-                 max( iif(rowset = 1, page_fetches, null) ) fix_tab_pg_fetches
-                ,max( iif(rowset = 1, page_marks, null) ) fix_tab_pg_marks
-                ,max( iif(rowset = 2, page_fetches, null) ) gtt_ssn_pg_fetches
-                ,max( iif(rowset = 2, page_marks, null) ) gtt_ssn_pg_marks
-                ,max( iif(rowset = 3, page_fetches, null) ) gtt_trn_pg_fetches
-                ,max( iif(rowset = 3, page_marks, null) ) gtt_trn_pg_marks
-            from v_agg_stat_main
-        )
-    );
-  """,
- 'expected_stdout': 
-  """
-    GTT_DEL_VS_FIX_TAB_FETCHES      WINS >= 2.40 times
-    GTT_DEL_VS_FIX_TAB_MARKS        WINS >= 2.00 times
-    GTT_DEL_VS_GTT_SAV_FETCHES      WINS >= 2.40 times
-    GTT_DEL_VS_GTT_SAV_MARKS        WINS >= 2.00 times
   """
 }
 ]
