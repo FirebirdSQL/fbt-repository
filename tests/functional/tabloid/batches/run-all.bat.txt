@@ -101,50 +101,74 @@ for /d %%s in ( %fblst% ) do (
             (
                 for /f "tokens=*" %%a in ('type !fp!\firebird.conf') do (
                     set line=%%a
-                    echo !line! | findstr /i /c:servermode 1>nul
+                    echo !line! | findstr /i ^
+                          /c:ServerMode ^
+                          /c:DefaultDbCachePages ^
+                          /c:FileSystemCacheThreshold ^
+                          /c:ExternalFileAccess ^
+                          /c:AuthServer ^
+                          /c:AuthClient ^
+                          /c:WireCrypt ^
+                          /c:UserManager ^
+                         1>nul
                     if not errorlevel 1 (
-                        echo !line! | findstr /i /c:comment 1>nul
+                        echo !line! | findstr /i /c:"temply_commented" 1>nul
                         if errorlevel 1 (
-                            set line=### TEMPLY COMMENTED BY QA DAILY BATCH ### !line!
+                            set line=### !date! !time! TEMPLY_COMMENTED BY QA DAILY RUN BATCH ### !line!
                             echo !line!
-                            if /i .%%u.==.cs. (
-                                echo ServerMode=Classic
-                            ) else if /i .%%u.==.sc. (
-                                echo ServerMode=SuperClassic
-                            ) else (
-                                echo ServerMode=Super
-                            )
                         )
                     ) else (
-                        echo !line! | findstr /i /c:DefaultDbCachePages 1>nul
-                        if not errorlevel 1 (
-                            echo !line! | findstr /i /c:comment 1>nul
-                            if errorlevel 1 (
-                                set line=### TEMPLY COMMENTED BY QA DAILY BATCH ### !line!
-                                echo !line!
-                            )
-                        ) else (
-                            echo !line!
-                        )
-                    )
-
-                    echo !line! | findstr /i /c:ExternalFileAccess 1>nul
-                    if not errorlevel 1 (
-                            set line=### TEMPLY COMMENTED BY QA DAILY BATCH ### !line!
-                            echo !line!
+                        echo !line!
                     )
                 )
 
+                echo # Following parameters were temporarily assigned for tests run
+                echo # by %~dpnx0, !date! !time!:
+                if /i .%%s.==.fb25_tmp. (
+                    @rem NOTE: for FB 2.5 we need to specify 'FileSystemCacheThreshold' without suffixes like 'K', 'M' etc
+                    echo FileSystemCacheThreshold = 65535
+                    if /i .%%u.==.cs. (
+                        echo DefaultDbCachePages = 384
+                    ) else if /i .%%u.==.sc. (
+                        echo DefaultDbCachePages = 384
+                    ) else (
+                        echo DefaultDbCachePages = 5000
+                    )
+                ) else (
+                    if /i .%%u.==.cs. (
+                        echo ServerMode=Classic
+                        echo DefaultDbCachePages = 384
+                    ) else if /i .%%u.==.sc. (
+                        echo ServerMode=SuperClassic
+                        echo DefaultDbCachePages = 384
+                    ) else (
+                        echo ServerMode=Super
+                        echo DefaultDbCachePages = 5000
+                    )
+                    echo FileSystemCacheThreshold = 65535K
+                    echo AuthServer = Legacy_Auth,Srp
+                    echo AuthClient = Legacy_Auth,Srp,Win_Sspi
+                    echo WireCrypt = Disabled
+                    echo UserManager = Legacy_UserManager
+                )
                 echo ExternalFileAccess = Full
+
             ) > !fbconf_new!
         
             set job_failed_flag=1
-            
+	            
             set msg=Temply replace !fp!\firebird.conf with !fbconf_new!
             call :sho "!msg!" !joblog!
 
-            copy !fbconf_new! !fp!\firebird.conf 2>&1 1>>!joblog!
-            dir !fp!\firebird.conf | findstr /i /c:firebird 2>&1 1>>!joblog!
+            (
+                copy !fbconf_new! !fp!\firebird.conf
+                dir /-c !fp!\firebird.conf | findstr /i /c:firebird
+                echo.
+                echo Check content of !fp!\firebird.conf that will be applied for this QA run:
+                echo --------------------------------------
+                findstr /r /c:"^^[^^#;]" !fp!\firebird.conf 
+                echo --------------------------------------
+            ) 2>&1 1>>!joblog!
             del !fbconf_new!
 
             set msg=Trying to START service %%s using TEMPORARY created firebird.conf, architecture=%%u
