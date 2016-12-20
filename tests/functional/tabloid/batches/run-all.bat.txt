@@ -75,8 +75,12 @@ for /d %%s in ( %fblst% ) do (
     for /f "tokens=3" %%k in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\FirebirdServer%%s ^| findstr /i /c:"ImagePath"') do (
         set fn=%%k
         set fp=%%~dpk
+        set fb_home=!fp!
+        set fbv=30
         if /i .%%s.==.fb25_tmp. (
+            @rem E:\FB25.TMPINSTANCE\bin ==> E:\FB25.TMPINSTANCE
             for %%m in ("!fp:~0,-1!") do set fp=%%~dpm
+            set fbv=25
         )
         @rem Remove trailing backslash:
         set fp=!fp:~0,-1!
@@ -93,6 +97,12 @@ for /d %%s in ( %fblst% ) do (
 
             @rem Trying to STOP service if it is active. Terminate job if service can not be stopped.
             call :try_to_stop_fb %%s !joblog!
+           
+            @rem 20.12.2016. Check that no FB processes from !fb_home! remains running.
+            @rem All such processes could alive after launch QA with checking FB in Classic mode.
+            @rem We have to KILL all of them, and this is done in subroutine 'kill_orphan_fb'.
+
+            call :kill_orphan_fb !fbv! !fb_home! !joblog!
 
             set msg=Generate temporary firebird.conf for use in service %%s with architecture=%%u
             call :sho "!msg!" !joblog!
@@ -328,7 +338,9 @@ goto final
 
     set msg=Extract BEFORE fbt_run first 10 rows with previous runs
     call :sho "!msg!" !joblog!
-    echo set count on; select r.created, r.arch, r.build from runs r order by 1 desc rows 10; | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
+    @rem echo set count on; select r.created, r.arch, r.build from runs r order by 1 desc rows 10; | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
+    echo set count on; select first 10 * from (select r.arch, cast(r.build as int) build, max(r.created) as last_checked from runs r group by 1,2 order by 3 desc); ^
+    | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
 
     (
         echo.
@@ -402,7 +414,8 @@ goto final
     set msg=Extract AFTER fbt_run first 10 rows with previous runs
     call :sho "!msg!" !joblog!
 
-    echo set count on; select r.created, r.arch, r.build from runs r order by 1 desc rows 10; | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
+    echo set count on; select first 10 * from (select r.arch, cast(r.build as int) build, max(r.created) as last_checked from runs r group by 1,2 order by 3 desc); ^
+    | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
 
     set msg=BACKUP database with results
     call :sho "!msg!" !joblog!
@@ -556,6 +569,77 @@ endlocal & goto:eof
             call :sho "!msg!" !joblog!
         )
         @rem end of block starting service !fbs!
+endlocal & goto:eof
+
+:kill_orphan_fb
+
+    setlocal
+    set fbv=%1
+    set fb_home=%2
+    set log=%3
+    set tmp=!logdir!\%~n0.tmp
+    set failed_to_kill=1
+
+    @rem --- Added 20.12.2016 ---
+    @rem Check for processes 'firebird.exe' ('fb_inet_server.exe' for 2.5) that can remain running 
+    @rem after finished QA-tests-run daily batch for Classic mode, and kill them (they keep 'fbclient.dll' opened)
+    set fb_process=firebird.exe
+    if .!fbv!.==.25. (
+        set fb_process=fb_inet_server.exe
+    )
+    set msg="Check for 'orphan' !fb_process! that can remain after last QA test in Classic mode."
+    call :sho !msg! !log!
+
+    wmic process where "name='!fb_process!'" get ProcessID, ExecutablePath | more | findstr /i /c:!fb_home! 2>&1 1>!tmp!
+    if not errorlevel 1 (
+        for /f "tokens=1-2 delims= " %%a in ('findstr /i /c:!fb_home! !tmp!') do (
+            set msg="Found running FB process, possibly remained after QA tests finish."
+            call :sho !msg! !log!
+
+            set msg="%%a, pid=%%b - will try to kill it."
+            call :sho !msg! !log!
+
+            set run_cmd=taskkill /pid %%b /t /f
+            call :sho "Command: !run_cmd!" !log!
+            !run_cmd! 2>&1 1>>!tmp!
+        )
+        set msg="Result of taskkill:"
+        call :sho !msg! !log!
+        type !tmp!
+        (
+            echo ------------------ start of list ---------------
+            type !tmp!
+            echo ------------------ end of list -----------------
+        ) >>!log!
+
+        set msg="Check that no more FB processes from !fb_home! home are running:"
+        call :sho !msg! !log!
+        (
+            echo ------------------ start of list ---------------
+            echo ### NO ROWS SHOULD BE HERE WITH !fb_process! ###
+            wmic process where "name='!fb_process!'" get ProcessID, ExecutablePath | more | findstr /i /c:!fb_home!
+            if not errorlevel 1 (
+                set failed_to_kill=1
+            ) else (
+                set failed_to_kill=0
+            )
+            echo ------------------ end of list -----------------
+        ) 2>&1 1>!tmp!
+        type !tmp!
+        type !tmp!>>!log!
+    ) else (
+        set msg="No running processes with name !fb_process! from home !fb_home! detected."
+        call :sho !msg! !log!
+        set failed_to_kill=0
+    )
+
+    if .!failed_to_kill!.==.1. (
+        set msg="Could NOT kill 'orphan' !fb_process! that remains after QA test in Classic mode. Batch terminated."
+        call :sho !msg! !log!
+        goto final
+    )
+    @rem --- 20.12.2016 end of block for killing FB 'orphan' processes which could remain after QA run in Classic mode ---
+
 endlocal & goto:eof
 
 :haltHelper
