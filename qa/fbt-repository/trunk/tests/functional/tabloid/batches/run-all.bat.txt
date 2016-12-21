@@ -7,7 +7,7 @@ set logdir=e:\temp\logs.qa
 set joblog=!logdir!\%~n0.log
 
 set fblst=fb40_tmp,fb30_tmp
-set fbars=ss,sc,cs
+set fbars=cs,sc,ss
 
 set job_failed_flag=0
 
@@ -590,16 +590,27 @@ endlocal & goto:eof
     set msg="Check for 'orphan' !fb_process! that can remain after last QA test in Classic mode."
     call :sho !msg! !log!
 
-    wmic process where "name='!fb_process!'" get ProcessID, ExecutablePath | more | findstr /i /c:!fb_home! 2>&1 1>!tmp!
+    @rem wmic process where "name='!fb_process!'" get ProcessID, ExecutablePath | more | findstr /i /c:!fb_home! 2>&1 1>!tmp!
+    wmic process where "name='!fb_process!'" get ProcessID, ExecutablePath, CreationDate | more | findstr /i /c:!fb_home! 2>&1 1>!tmp!
     if not errorlevel 1 (
-        for /f "tokens=1-2 delims= " %%a in ('findstr /i /c:!fb_home! !tmp!') do (
+        @rem for /f "tokens=1-2 delims= " %%a in ('findstr /i /c:!fb_home! !tmp!') do (
+        for /f "tokens=1-3 delims= " %%a in ('findstr /i /c:!fb_home! !tmp!') do (
             set msg="Found running FB process, possibly remained after QA tests finish."
             call :sho !msg! !log!
 
-            set msg="%%a, pid=%%b - will try to kill it."
+            set dts=%%a
+            set dts_date=!dts:~0,8!
+            set dts_time=!dts:~8,9!
+            set hr=!dts:~8,2!
+            set mi=!dts:~10,2!
+            set ss=!dts:~12,5!
+            set pid=%%c
+            set img=%%b
+            set msg="Try to kill: !img!, pid=!pid!, started at: !dts_date! !hr!:!mi!:!ss!"
+            @rem set msg="%%a, pid=%%b - will try to kill it."
             call :sho !msg! !log!
 
-            set run_cmd=taskkill /pid %%b /t /f
+            set run_cmd=taskkill /pid !pid! /t /f
             call :sho "Command: !run_cmd!" !log!
             !run_cmd! 2>&1 1>>!tmp!
         )
@@ -632,7 +643,7 @@ endlocal & goto:eof
         call :sho !msg! !log!
         set failed_to_kill=0
     )
-
+    del !tmp! 2>nul
     if .!failed_to_kill!.==.1. (
         set msg="Could NOT kill 'orphan' !fb_process! that remains after QA test in Classic mode. Batch terminated."
         call :sho !msg! !log!
