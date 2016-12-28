@@ -336,10 +336,10 @@ goto final
         call :sho "!msg!" !joblog!
     )
 
-    set msg=Extract BEFORE fbt_run first 10 rows with previous runs
+    set msg=Extract BEFORE fbt_run first rows with previous runs
     call :sho "!msg!" !joblog!
     @rem echo set count on; select r.created, r.arch, r.build from runs r order by 1 desc rows 10; | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
-    echo set count on; select first 10 * from (select r.arch, cast(r.build as int) build, max(r.created) as last_checked from runs r group by 1,2 order by 3 desc); ^
+    echo set count on; select first 20 * from (select r.arch, cast(r.build as int) build, max(r.created) as last_checked from runs r group by 1,2 order by 3 desc); ^
     | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
 
     (
@@ -411,10 +411,10 @@ goto final
 
     @rem temply commented: fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbv%.fdb import 2>&1 | mtee /t /+ %log%
 
-    set msg=Extract AFTER fbt_run first 10 rows with previous runs
+    set msg=Extract AFTER fbt_run first rows with previous runs
     call :sho "!msg!" !joblog!
 
-    echo set count on; select first 10 * from (select r.arch, cast(r.build as int) build, max(r.created) as last_checked from runs r group by 1,2 order by 3 desc); ^
+    echo set count on; select first 20 * from (select r.arch, cast(r.build as int) build, max(r.created) as last_checked from runs r group by 1,2 order by 3 desc); ^
     | !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 2>&1 1>>!joblog!
 
     set msg=BACKUP database with results
