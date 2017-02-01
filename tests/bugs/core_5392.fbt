@@ -10,18 +10,21 @@
    We determine FB arch, and if it is SuperServer then change FW to OFF, add rows into table and 
    perform statements that should raise internal FB CC.
    If no errors occures then ISQL log should contain number of affected rows.
-   If internal FB CC will occur again then... we should NOT be able to interrupt this test at all :(
-
+   If internal FB CC will occur again then control will be returned to fbtest after ~2 minutes.
+   
    For SS test lasts about 40 seconds, for SC/CS it should pass instantly because we SKIP entire test
    for both SC and CS architectures and just print 'OK' for matching expected_stdout.
 
    Confirmed bug on  WI-T4.0.0.462, minimal number of rows for reproducing is ~98000.
    Checked on WI-V3.0.2.32643,  WI-T4.0.0.463 - works fine.
+   -------
+   01-feb-2017: confirmed bugcheck on 2.5.7.27030 (only with WF = OFF), fix on 2.5.7.27038.
+   Changed min-version to 2.5.7.
  """,
-'min_versions': '3.0.2',
+'min_versions': '2.5.7',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'Python',
  'init_script':
@@ -105,6 +108,9 @@ if fb_arch == 'SS':
     db_conn.close()
 
     dbname='$(DATABASE_LOCATION)bugs.core_5392.fdb'
+
+    # NB: do _not_ remove changing of FW to OFF in 2.5.7 (Ivan said that FW on 2.5.6 was ON, see 15/Dec/16 01:07 PM).
+    # Bucgcheck is reproduced on 2.5.7.27030 only when FW = OFF.
     fn_nul = open(os.devnull, 'w')
     subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr", 
                       "action_properties", "dbname", dbname, 
@@ -140,10 +146,13 @@ if fb_arch == 'SS':
         rollback;
 
         set count on;
-        -- this lead to decompression overran buffer (179), file: sqz.cpp line: 282
+        -- Following UPDATE statement leads to:
+        -- 1) on 3.0: decompression overran buffer (179), file: sqz.cpp line: 282
+        -- 2) on 2.5.7.27030: decompression overran buffer (179), file: sqz.cpp line: 228
+        -- Then FB waits (or is doing?) somewhat about 2 minutes abd after this 
+        -- control is returned to fbtest.
         update test set a=3; 
         commit;
-        --show database;
     ''' % locals()
 
     sql_cmd=open(os.path.join(context['temp_directory'],'tmp_core_5392.sql'), 'w')
@@ -184,8 +193,7 @@ if fb_arch == 'SS':
 
     # Cleanup
     #########
-    f_list=[sql_cmd, sql_log, sql_err]
-
+    f_list=(sql_cmd, sql_log, sql_err)
     
     for i in range(len(f_list)):
        if os.path.isfile(f_list[i].name):
