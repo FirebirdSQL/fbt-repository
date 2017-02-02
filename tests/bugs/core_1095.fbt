@@ -6,6 +6,16 @@
 'description':
  """
    Checked on WI-V3.0.2.32670, WI-T4.0.0.503 - all fine.
+   NOTE. Plan with table name (instead of alias 'R_CHK') in 2nd line was:
+   ===
+     PLAN (R_CHK NATURAL)
+     PLAN (RDB$DATABASE NATURAL) <<<< ??
+     PLAN (R_OUT NATURAL)
+   ===
+   Fixed 28.01.2017 11:51 ("Preserve the alias after the relation/procedure node copying").
+   https://github.com/FirebirdSQL/firebird/commit/36b86a02e5df20d82855fe1af00bac27022bbf8e
+   https://github.com/FirebirdSQL/firebird/commit/cbe9ac071f187e7766c2a67fdf47683604361059
+   Checked on WI-V3.0.2.32677, WI-T4.0.0.519
  """,
 'min_versions': '3.0.2',
 'versions': [
@@ -36,7 +46,7 @@
       : table:   owner:
 
     PLAN (R_CHK NATURAL)
-    PLAN (RDB$DATABASE NATURAL)
+    PLAN (R_CHK NATURAL)
     PLAN (R_OUT NATURAL)
 
     OUTPUT message field count: 1
