@@ -2,7 +2,7 @@
 'id': 'bugs.core_5447',
 'qmid': None,
 'tracker_id': 'CORE-5447',
-'title': "EXECUTE STATEMENT <e> when <e> starts with '--' (comment) issues "-Unexpected end of command - line 1, column <NNN>", value <NNN> is invalid (2.5 ... 4.0) and can change randomly (only in 3.0, 4.0)",
+'title': "EXECUTE STATEMENT <e> when <e> starts with '--' issues -Unexpected ... column <NNN>, value <NNN> is invalid and can change randomly",
 'description': 
  """
    We run EB that is show in the ticket three times, with redirection STDOUT and STDERR to separate files.
