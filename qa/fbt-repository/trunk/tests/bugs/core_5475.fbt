@@ -5,7 +5,7 @@
 'title': "Cache physical numbers of often used data pages to reduce number of fetches of pointer pages",
 'description': 
  """
-   For FB 2.5 we verify that one may to suppress messages like TRACE_INIT, TRACE_FINI.
+   For FB 2.5 we verify that one may to suppress messages like TRACE_INIT/FINI ("log_initfini false")
    Also, by default no more warnings should appear in the trace.
 
    For FB 3.0 and above we check that trace log contains only those gdscodes which we expect.
