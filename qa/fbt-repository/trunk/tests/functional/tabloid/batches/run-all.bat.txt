@@ -18,6 +18,7 @@ set zipext=7z
 set pyp=C:\Python27
 
 md !logdir! 2>nul
+::taskkill /fi "SERVICES eq FirebirdServerfb40_tmp" /f /im * 
 
 if exist !joblog!  (
   del !joblog!
@@ -208,8 +209,16 @@ for /d %%s in ( %fblst% ) do (
             set msg=Restore original file !fp!\firebird.conf
             call :sho "!msg!" !joblog!
 
-            copy !fp!\firebird.conf.previous !fp!\firebird.conf  2>&1 1>>!joblog!
-            dir !fp!\firebird.conf | findstr /i /c:firebird 2>&1 1>>!joblog!
+            (
+                copy !fp!\firebird.conf.previous !fp!\firebird.conf
+                dir !fp!\firebird.conf | findstr /i /c:firebird
+
+                echo Check content of ORIGINAL !fp!\firebird.conf that was in use before this QA run:
+                echo --------------------------------------
+                findstr /r /c:"^^[^^#;]" !fp!\firebird.conf 
+                echo --------------------------------------
+            ) 2>&1 1>>!joblog!
+
 
             @rem Original firebird.conf restored, no we can clear flag:
             set job_failed_flag=0
@@ -487,12 +496,13 @@ endlocal & goto:eof
     setlocal
     set fbs=%1
     set joblog=%2
-
+    set tk_used=0
+:loop4stop
         set cmd_run=sc query FirebirdServer!fbs!
         call :sho "!cmd_run!" !joblog!
         cmd /c !cmd_run! | findstr /i /c:"STOPPED" 1>nul 2>&1
         if errorlevel 1 (
-            set msg=Attempt to stop service FirebirdServer!fbs!
+            set msg=Attempt to stop service FirebirdServer!fbs!, flag of TASKKILL usage: !tk_used!
             call :sho "!msg!" !joblog!
 
             set cmd_run=sc stop FirebirdServer!fbs!
@@ -501,6 +511,9 @@ endlocal & goto:eof
             
             set msg=Wait a few seconds. . .
             call :sho "!msg!" !joblog!
+
+            @rem It's enough to wait no more than 10 seconds. 
+            @rem Otherwise service should be forcely teminated using windows TASKKILL utility.
 
             ping -n 11 127.0.0.1 1>nul
 
@@ -512,6 +525,30 @@ endlocal & goto:eof
             cmd /c !cmd_run! | findstr /i /c:state /c:service_name 1>>!joblog! 2>&1
             cmd /c !cmd_run! | findstr /i /c:"STOPPED" 1>nul 2>&1
             if errorlevel 1 (
+                @rem NB: taskkill should be called with /f switch in order to kill service.
+                @rem E:\FB40.TMPINSTANCE>taskkill /fi "SERVICES eq FirebirdServerfb40_tmp" /f /im *
+                @rem Expected STDOUT should be:
+                @rem SUCCESS: The process with PID 5992 has been terminated.
+
+                if .!tk_used!.==.0. (
+                    
+                    set msg=FAIL: service !fbs! is not in 'STOPPED' state. Try to terminate it using TASKKILL.
+                    call :sho "!msg!" !joblog!
+
+                    taskkill /fi "SERVICES eq FirebirdServer!fbs!" /f /im * 1>>!joblog! 2>&1
+                    set tk_used=1
+                    findstr /i /r /c:"SUCCESS: The process with PID .* terminated" !joblog! 1>nul 2>&1
+                    if not errorlevel 1 (
+                        set msg=Service !fbs! executable was successfully terminated by TASKKILL. Loop to STOP service by SC command.
+                        call :sho "!msg!" !joblog!
+                        goto loop4stop
+                    ) else (
+                        set msg=FAIL: service !fbs! executable can not be terminated using TASKKILL. Job terminated.
+                        call :sho "!msg!" !joblog!
+                        goto final
+                    )
+                )
+
                 set msg=FAIL: service !fbs! is not in 'STOPPED' state. Job terminated.
                 call :sho "!msg!" !joblog!
                 goto final
