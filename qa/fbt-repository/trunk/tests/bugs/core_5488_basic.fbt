@@ -1,0 +1,159 @@
+{
+'id': 'bugs.core_5488',
+'qmid': None,
+'tracker_id': 'CORE-5488',
+'title': 'Timeouts for running SQL statements and idle connections',
+'description':
+ """
+   ::: NB:::
+
+   This is _initial_ test with trivial checks:
+   1) 'heavy query' executed on 'that' DB should be cancelled;
+   2) the same, but passed via ES/EDS, should also be cancelled;
+   Elapsed time should be equal to statement timeout with precise -0.1% / +2%
+   (minus 0.1% - because PC clock can be imprecise!)
+
+   More complex cases will be implemented later.
+
+   Explanations were given by hvlad, see letters from him of 05-mar-2017.
+   Checked on WI-T4.0.0.546.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set list on;
+
+    set statement timeout 1234 millisecond;
+
+    ----------------------------------------------------------------------------------------
+
+    set term ^;
+    execute block as
+    begin
+        rdb$set_context('USER_SESSION','FINISH_DTS', null);
+        rdb$set_context('USER_SESSION','START_DTS', cast('now' as timestamp));
+    end^
+    set term ;^
+
+    select count(*) from rdb$types,rdb$types,rdb$types;
+
+    set term ^;
+    execute block as
+    begin
+        rdb$set_context('USER_SESSION','FINISH_DTS', cast('now' as timestamp));
+    end^
+    set term ;^
+
+
+    select iif( 1.00 * elapsed_ms / sttm_timeout between low_bound and high_bound,  -- sttm_timeout <= 50 + elapsed_ms, 
+                'Acceptable', 
+                'WRONG: sttm_timeout = ' || sttm_timeout 
+                 || ', elapsed_ms = ' || elapsed_ms 
+                 || ', ratio elapsed_ms / sttm_timeout = '|| (1.00 * elapsed_ms / sttm_timeout) 
+                 ||' must belong to [' || low_bound || ' ... '|| high_bound || ']'
+               ) as result0
+    from (
+        select
+            cast(rdb$get_context('SYSTEM','STATEMENT_TIMEOUT') as int) as sttm_timeout,
+            datediff(  millisecond 
+                       from cast( rdb$get_context('USER_SESSION','START_DTS') as timestamp) 
+                         to cast(rdb$get_context('USER_SESSION','FINISH_DTS') as timestamp)
+                    ) elapsed_ms,
+            0.999 as low_bound,
+            1.02 as high_bound
+        from rdb$database
+    );
+
+    ----------------------------------------------------------------------------------------
+
+    set term ^;
+    execute block as
+    begin
+        rdb$set_context('USER_SESSION','FINISH_DTS', null);
+        rdb$set_context('USER_SESSION','START_DTS', cast('now' as timestamp));
+    end
+    ^
+
+    execute block returns(cnt1 int, returned_gds1 int)  as
+      declare p varchar(20) = 'masterkey';
+    begin
+
+      begin
+          --execute statement ('select cast(? as int) / cast(? as int) from rdb$database') (1, 0) on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME') as user current_user password :p role right( uuid_to_char(gen_uuid()), 12 ) into cnt1;
+
+          execute statement 'select count(*) from rdb$types,rdb$types,rdb$types'
+          on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+          as user current_user password :p role right( uuid_to_char(gen_uuid()), 12 )
+          into cnt1;
+      when any do 
+          begin
+              -- Control MUST come here after statement will be interruptec (cancelled) in EDS.
+              -- gdscode should be = 335544926.
+              returned_gds1 = gdscode;
+              rdb$set_context('USER_SESSION','WHEN_BLOCK_DTS', cast('now' as timestamp));
+          end
+      end
+      if (returned_gds1 is null) then
+          rdb$set_context('USER_SESSION','FINISH_DTS',cast('now' as timestamp)); -- should remain NULL.
+
+      suspend; -- control MUST come here, but: 'cnt1' will remain undefined, 'returned_gds1'  will be 335544926.
+
+    end
+    ^
+    set term ;^
+
+    select iif( 1.00 * elapsed_ms / sttm_timeout between low_bound and high_bound,
+                'Acceptable', 
+                'WRONG: sttm_timeout = ' || sttm_timeout 
+                 || ', elapsed_ms = ' || elapsed_ms 
+                 || ', ratio elapsed_ms / sttm_timeout = '|| (1.00 * elapsed_ms / sttm_timeout) 
+                 ||' must belong to [' || low_bound || ' ... '|| high_bound || ']'
+               ) as result1
+           ,when_block_dts -- expected: "OK, NOT null"
+           ,end_of_eb_dts -- expected: null
+    from (
+        select
+            cast(rdb$get_context('SYSTEM','STATEMENT_TIMEOUT') as int) as sttm_timeout,
+            datediff(  millisecond 
+                       from cast( rdb$get_context('USER_SESSION','START_DTS') as timestamp) 
+                         to cast(rdb$get_context('USER_SESSION','WHEN_BLOCK_DTS') as timestamp)
+                    ) elapsed_ms
+            ,iif( rdb$get_context('USER_SESSION','WHEN_BLOCK_DTS') is not null,'OK, NOT null','BAD: NULL') when_block_dts
+            ,rdb$get_context('USER_SESSION','FINISH_DTS') end_of_eb_dts -- expected: NULL
+            ,0.999 as low_bound
+            ,1.02 as high_bound
+        from rdb$database
+    );
+
+  """,
+ 'expected_stdout': 
+  """
+    RESULT0                         Acceptable
+
+    CNT1                            <null>
+    RETURNED_GDS1                   335544926
+    RESULT1                         Acceptable
+    WHEN_BLOCK_DTS                  OK, NOT null
+    END_OF_EB_DTS                   <null>
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = HY008
+    operation was cancelled
+    -Attachment level timeout expired.
+
+    Statement failed, SQLSTATE = HY008
+    operation was cancelled
+    -Attachment level timeout expired.
+  """
+}
+]
+}
