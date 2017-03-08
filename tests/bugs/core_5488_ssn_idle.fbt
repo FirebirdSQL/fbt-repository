@@ -1,0 +1,238 @@
+{
+'id': 'bugs.core_5488_ssn_idle',
+'qmid': None,
+'tracker_id': 'CORE-5488',
+'title': 'Timeouts for running SQL statements and idle connections',
+'description':
+ """
+   We create .sql script with 
+   1) SET SESSION IDLE TIMEOUT with small delay N (in seconds);
+   2) two trivial statements that are separated by artificial delay with T > N.
+      Both statements are trivial: select <literal> from rdb$database.
+
+   This delay is done by isql 'SHELL' command and its form depens on OS:
+   * shell ping 127.0.0.1 -- for Windows
+   * shell sleep -- for Linux.
+   
+   Befor .sql we launch trace with logging events for parsing them at final stage of test.
+
+   When this .sql script is launched and falls into delay, session timeout must be triggered
+   and second statement should raise exception.
+   We redirect ISQL output to separate logs and expect that:
+   * log of STDOUT contains all except result of 2nd statement (which must fail);
+   * log of STDERR contains exception SQLSTATE = 08003 / connection shutdown / -Idle timeout expired
+
+   Trace log should contain only following events:
+   attach to DB, start Tx, first statement finish, rollback Tx and detach DB.
+
+   ::: NB:::
+   No events related to SECOND statement should be in the trace log.
+
+   Checked on WI-4.0.0.550 -- works fine.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+import os
+import re
+import subprocess
+import time
+from fdb import services
+from subprocess import Popen
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+fbv=db_conn.firebird_version # 'WI-...' ==> Windows; 'LI-' ==> Linux
+db_conn.close()
+
+# 2017-03-08T17:36:33.6870 (3720:00D22BD0) ATTACH_DATABASE | START_TRANSACTION | EXECUTE_STATEMENT_FINISH | ...
+trace_dts_pattern=re.compile('20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{4}\s+\(\w{4}:\w{8}\)')
+
+ssn_idle_timeout=1
+shell_sleep_sec=ssn_idle_timeout + 2
+if fbv.startswith('WI-'):
+    shell_sleep_cmd='shell ping -n %(shell_sleep_sec)s 127.0.0.1 > nul' % locals()
+else:
+    shell_sleep_cmd='shell sleep %(shell_sleep_sec)s > /dev/null' % locals()
+
+sql='''
+    set list on;
+    set bail on;
+    set echo on;
+
+    set session idle timeout %(ssn_idle_timeout)s second;
+
+    select 1 as point_1 from rdb$database;
+    %(shell_sleep_cmd)s;
+    select 2 as point_2 from rdb$database;
+    quit;
+''' % locals()
+
+f_sql_cmd=open( os.path.join(context['temp_directory'],'tmp_c5488_run_ssn_idle.sql'), 'w')
+f_sql_cmd.write(sql)
+f_sql_cmd.close()
+
+txt = '''# Generated auto, do not edit!
+      database=%[\\\\\\\\/]security?.fdb
+      {
+          enabled = false
+      }
+      database=%[\\\\\\\\/]bugs.core_5488_ssn_idle.fdb
+      {
+          enabled = true
+          time_threshold = 0
+          log_initfini   = false
+          log_warnings = false
+          log_errors = true
+          log_connections = true
+          log_transactions = true
+          log_statement_finish = true
+      }
+'''
+
+f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_ssn_idle.cfg'), 'w')
+f_trc_cfg.write(txt)
+f_trc_cfg.close()
+
+# ##############################################################
+# S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
+# ##############################################################
+
+f_trc_log=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_ssn_idle.log'), "w")
+f_trc_err=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_ssn_idle.err'), "w")
+
+p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],
+                 stdout=f_trc_log,
+                 stderr=f_trc_err
+               )
+
+time.sleep(1)
+
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_c5488_run_ssn_idle.log'), 'w')
+f_isql_err=open( os.path.join(context['temp_directory'],'tmp_c5488_run_ssn_idle.err'), 'w')
+
+######################
+# S T A R T    I S Q L
+######################
+subprocess.call( [fb_home+'isql', dsn, '-q', '-n', '-i', f_sql_cmd.name],
+                 stdout=f_isql_log,
+                 stderr=f_isql_err
+               )
+f_isql_log.close()
+f_isql_err.close()
+
+
+# ####################################################
+# G E T  A C T I V E   T R A C E   S E S S I O N   I D
+# ####################################################
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+
+f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_c5488_trc_ssn_idle.lst'), 'w')
+subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
+f_trc_lst.close()
+
+# !!! DO NOT REMOVE THIS LINE !!!
+time.sleep(1)
+
+trcssn=0
+with open( f_trc_lst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+f.close()
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+
+
+
+# ####################################################
+# S E N D   R E Q U E S T    T R A C E   T O   S T O P
+# ####################################################
+if trcssn>0:
+    fn_nul = open(os.devnull, 'w')
+    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    fn_nul.close()
+    # DO NOT REMOVE THIS LINE:
+    time.sleep(2)
+
+p_trace.terminate()
+f_trc_log.close()
+f_trc_err.close()
+
+
+# Output of TRACE results:
+##########################
+with open(f_trc_log.name, 'r') as f:
+    for line in f:
+        if trace_dts_pattern.match(line):
+            print( ''.join( ( 'TRCLOG: ', line.strip().split()[-1] ) ) )
+
+# Following file should be EMPTY:
+################
+f_list=(f_trc_err,)
+for i in range(len(f_list)):
+   f_name=f_list[i].name
+   if os.path.getsize(f_name) > 0:
+       with open( f_name,'r') as f:
+           for line in f:
+               print("Unexpected TRCERR, file "+f_name+": "+line)
+
+
+# Output of ISQL results
+################
+with open(f_isql_log.name, 'r') as f:
+    for line in f:
+        if line.split():
+            print( ''.join( ( 'SQLLOG: ', line.strip() ) ) )
+
+with open(f_isql_err.name, 'r') as f:
+    for line in f:
+        if line.split():
+            print( ''.join( ( 'SQLERR: ', line.strip() ) ) )
+
+
+# CLEANUP
+#########
+f_list=(f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_sql_cmd, f_isql_log, f_isql_err )
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout': 
+  """
+    TRCLOG: ATTACH_DATABASE
+    TRCLOG: START_TRANSACTION
+    TRCLOG: EXECUTE_STATEMENT_FINISH
+    TRCLOG: ROLLBACK_TRANSACTION
+    TRCLOG: DETACH_DATABASE
+    SQLLOG: set session idle timeout second;
+    SQLLOG: select 1 as point_1 from rdb$database;
+    SQLLOG: POINT_1                         1
+    SQLLOG: select 2 as point_2 from rdb$database;
+    SQLERR: Statement failed, SQLSTATE = 08003
+    SQLERR: connection shutdown
+    SQLERR: -Idle timeout expired.
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[ ('timeout .* second', 'timeout second'), ('.*After line [\d]+.*', ''), ('.*shell.*','')]
+}
+]
+}
