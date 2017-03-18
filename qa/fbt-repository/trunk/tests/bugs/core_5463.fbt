@@ -87,8 +87,8 @@
     ID_ALWAYS                       33
     ID_DEFAULT                      -7654321
     ID_ALWAYS                       7654321
-    ID_DEFAULT                      -99
-    ID_DEFAULT                      -121
+    ID_DEFAULT                      -55
+    ID_DEFAULT                      -77
   """,
  'expected_stderr': 
   """
