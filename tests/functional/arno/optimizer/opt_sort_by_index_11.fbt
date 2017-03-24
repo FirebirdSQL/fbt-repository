@@ -16,7 +16,9 @@
    (actual and expected), otherwise only text about matching will appear - but NO plan content
    because it depends on FB version.
 
-   Checked on WI-V2.5.6.26970, WI-V3.0.0.32358
+   Checked on WI-V2.5.6.26970
+   3.0.0.32358 -- plan was invalid
+   3.0.2.32708, 4.0.0.572 -- changed expected plan string after letter from dimitr, 21-mar-2017 09:08
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -42,6 +44,14 @@ for row in c1:
 db_conn.close()
 
 sql_cmd='''
+    --set list on;
+    --show version;
+    --show database;
+    --set echo on;
+    --select * from mon$attachments where mon$attachment_id = current_connection;
+    --commit;
+    --set echo off;
+
     create or alter procedure pr_filltable_53 as begin end;
     recreate table table_53 (
         id1 int,
@@ -91,25 +101,26 @@ sql_cmd='''
     order by t53.id2 asc, t53.id1 asc;
 '''
 
-# Result: file opt_sort_by_index_11.sql is extracted into context['temp_directory']
+f_isql_cmd=open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.tmp'), 'w')
+f_isql_cmd.write(sql_cmd)
+f_isql_cmd.close()
 
-f_sql=open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.tmp'), 'w')
-f_sql.write(sql_cmd)
-f_sql.close()
+f_isql_log = open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.log'), 'w')
 
-f_log = open( os.path.join(context['temp_directory'],'opt_sort_by_index_11.log'), 'w')
-
-subprocess.call( ["isql", dsn, "-i", f_sql.name],\
-                 stdout=f_log, \
+subprocess.call( ["isql", dsn, "-i", f_isql_cmd.name],
+                 stdout=f_isql_log,
                  stderr=subprocess.STDOUT
                )
-f_log.close()
+f_isql_log.close()
 
 time.sleep(1)
 
 plan_25 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC INDEX (I_TABLE_53_ID1_ID2_ASC))'
-plan_30 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC)'
-with open(f_log.name) as f:
+
+# changed after letter from dimitr, 21-mar-2017 09:08:
+plan_30 = 'PLAN (T53 ORDER I_TABLE_53_ID2_ID1_ASC INDEX (I_TABLE_53_ID1_ASC))'
+
+with open(f_isql_log.name) as f:
     for line in f:
         if line.upper().startswith('PLAN ('):
             if engine.startswith('2.'):
@@ -119,20 +130,24 @@ with open(f_log.name) as f:
 
             # Remove trailing whitespaces and newline character:
             if line.upper().rstrip() == plan_expected:
-                print( 'Actual plan plan coincides with the expected.' )
+                print( 'Actual and expected plans are equal.' )
             else:
                 print( 'Actual plan: '+line+' - differs from expected: '+plan_expected)
 f.close()
 
-if os.path.isfile(f_log.name):
-    os.remove(f_log.name)
-if os.path.isfile(f_sql.name):
-    os.remove(f_sql.name)
+# CLEANUP
+#########
+f_list=(f_isql_cmd, f_isql_log)
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
 
   """,
  'expected_stdout': 
   """
-    Actual plan plan coincides with the expected.
+    Actual and expected plans are equal.
   """,
  'expected_stderr': 
   """
