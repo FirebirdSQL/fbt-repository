@@ -12,9 +12,17 @@
     Refactored 17.12.2016 after encountering CORE-5424 ("restore process is impossible when trace ..."):
     added checking of STDERR logs for all fbsvcmgr actions.
 
+    -----------------------------------------
+    Updated 27.03.2017: moved artificial delay (1 sec) at proper place.
+    It should be just after
+    subprocess.call('fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop', ...)
+    and BEFORE 'p_trace.terminate()' command.
+    -----------------------------------------
+
     Test time (approx):
     2.5.7.27030: SC = 3" 
     3.0.232644 and 4.0.0.463:  SS = SC = 6"; CS = 15"
+    Checked on 2.5.8.27056, CLASSIC server: 3.6" (27-03-2017)
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -47,7 +55,7 @@ fb_home = services.connect(host='localhost', user= user_name, password= user_pas
 # fb_home = services.connect(host='localhost').get_home_directory()
 
 if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
+  fb_home += 'bin'+os.sep
 
 db_conn.close()
 
@@ -160,10 +168,17 @@ f.close()
 # ####################################################
 # S E N D   R E Q U E S T    T R A C E   T O   S T O P
 # ####################################################
-if trcssn>0:
-    fn_nul = open(os.devnull, 'w')
-    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
-    fn_nul.close()
+#if trcssn>0:
+
+fn_nul = open(os.devnull, 'w')
+subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+fn_nul.close()
+
+# ::: NB ::: Artificial delay, Added 27.03.2017.
+# Do NOT remove this line otherwise record with 'database restore' may not appear 
+# in the final trace log (file buffer is flushed not instantly).
+time.sleep(1) 
+
 
 # Doc about Popen.terminate():
 # https://docs.python.org/2/library/subprocess.html
@@ -179,9 +194,6 @@ if trcssn>0:
 p_trace.terminate()
 f_trc_log.close()
 f_trc_err.close()
-
-# !!! DO NOT REMOVE THIS LINE !!!
-time.sleep(1)
 
 # Should be EMPTY:
 
@@ -212,11 +224,13 @@ f.close()
 # CLEANUP
 #########
 
-f_list=[f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_run_log, f_run_err]
+f_list=(f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_run_log, f_run_err)
+
 
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
+
 
 if os.path.isfile(tmpbkp):
      os.remove(tmpbkp)
