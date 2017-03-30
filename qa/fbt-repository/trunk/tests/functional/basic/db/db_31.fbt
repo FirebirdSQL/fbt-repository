@@ -8081,6 +8081,24 @@
 
     RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
     RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IDLE_TIMEOUT                                                                                                                                                                                                                                            
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$IDLE_TIMER                                                                                                                                                                                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
     RDB$PRIVILEGE                   D     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               MON$IO_STATS                                                                                                                                                                                                                                                
@@ -8267,6 +8285,24 @@
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENT_TIMEOUT                                                                                                                                                                                                                                       
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               MON$STATEMENT_TIMER                                                                                                                                                                                                                                         
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
 
     RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
     RDB$GRANTOR                     <null>
@@ -12309,7 +12345,8 @@
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 17
 
-    Records affected: 681
+
+    Records affected: 685
   """
 }
 ]
