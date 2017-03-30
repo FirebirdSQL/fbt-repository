@@ -8208,6 +8208,69 @@ Records affected: 150
   """,
  'expected_stdout': 
   """
+
+    RDB$FIELD_NAME                  MON$IDLE_TIMEOUT                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                4
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  8
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   1
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$153                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  MON$IDLE_TIMER                                                                                                                                                                                                                                              
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                8
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  35
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$154                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
     RDB$FIELD_NAME                  MON$SEC_DATABASE                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$VALIDATION_BLR              <null>
@@ -8237,6 +8300,68 @@ Records affected: 150
     RDB$CHARACTER_SET_ID            2
     RDB$FIELD_PRECISION             <null>
     RDB$SECURITY_CLASS              SQL$142                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  MON$STATEMENT_TIMEOUT                                                                                                                                                                                                                                       
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                4
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  8
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   1
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$155                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  MON$STATEMENT_TIMER                                                                                                                                                                                                                                         
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                8
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  35
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$156                                                                                                                                                                                                                                                     
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
     RDB$FIELD_NAME                  RDB$ACL                                                                                                                                                                                                                                                     
@@ -12937,7 +13062,7 @@ Records affected: 150
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
 
-    Records affected: 152
+    Records affected: 156
   """,
   'substitutions': [
     ('RDB\$DEFAULT_VALUE.*',''),
