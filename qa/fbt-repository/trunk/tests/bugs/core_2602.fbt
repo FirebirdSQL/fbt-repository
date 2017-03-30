@@ -3,7 +3,20 @@
 'qmid': None,
 'tracker_id': 'CORE-2602',
 'title': 'Attachments using NONE charset may cause reads from MON$ tables to fail',
-'description': 'When an attachment using NONE charset uses non-ASCII characters that go to MON$ tables, selects from MON$ tables (in other attachments) fail.',
+'description': 
+ """
+   We create four attachments: first pair with charsets = none & utf8; second pair - similar.
+   Then we run query that contains non-ascii charaters in 1st attachment of 1st pair (c1none).
+   Attachments 3 and 4 (which have charsets NONE and UTF8) obtain mon$sql_text for 1st attachment.
+   They both should receive text like "select '123????456' ..." -- i.e. with quote marks instead non-ascii characters.
+   Then we close 1st attachment, do commit in 2nd and 3rd ("monitoring") attachments.
+   Finally, we run again query with non-ascii chars in attachment which have charset = 'UTF8' (r1utf8).
+   When we obtain mon$sql_text for this attachment in att. 3 & 4, we should get there:
+   * in 3rd attachment:  u"select '123\\u0413\\u040e\\u0413\\xa9456' from mon$database"
+   * in 4th attachment:  u"select '123\\xe1\\xe9456' from mon$database"
+
+   Checked on: WI-V2.5.8.27056; WI-V3.0.2.32708; WI-T4.0.0.580.
+ """,
 'min_versions': '2.5',
 'versions': [
 {
@@ -11,26 +24,86 @@
  'platform': 'All',
  'database_character_set': 'UTF8',
  'connection_character_set': 'UTF8',
- 'page_size': '4096',
  'test_type': 'Python',
- 'test_script': """ #
-c = db_conn.cursor()
-con2 = kdb.connect(dsn=dsn,user=user_name,password=user_password,charset='utf8')
-c2 = con2.cursor()
+ 'test_script': """
+import os
+import fdb
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
-c.execute("select '123áé456' from rdb$database")
-c2.execute("SELECT MON$SQL_TEXT FROM MON$STATEMENTS")
-#print(c2.fetchall())
-printData(c2)
+db_conn.close()
 
-con2.close()
+c1none=fdb.connect(dsn=dsn,charset='none')
+c1utf8=fdb.connect(dsn=dsn,charset='utf8')
 
+c2none=fdb.connect(dsn=dsn,charset='none')
+c2utf8=fdb.connect(dsn=dsn,charset='utf8')
+
+r1none = c1none.cursor()
+r1utf8 = c1utf8.cursor()
+
+r2none = c2none.cursor()
+r2utf8 = c2utf8.cursor()
+
+# When an attachment using NONE charset uses non-ASCII characters that go to MON$ tables, 
+# selects from MON$ tables (in other attachments) fail.
+# The solution for this problem is to replace (only with attachments using NONE) non-ASCII 
+# characters that go to MON$ to question marks.
+   
+r1none.execute("select '123áé456' from mon$database")
+
+sql='''
+select 
+    --s.mon$attachment_id,
+    iif(s.mon$attachment_id = current_connection, 'this', 'othr') as attach, 
+    iif(s.mon$sql_text like '%123%456%', s.mon$sql_text, '') as sql_text, 
+    a.mon$character_set_id as charset_id, 
+    trim(c.rdb$character_set_name) as charset_name
+from mon$statements s
+join mon$attachments a on s.mon$attachment_id = a.mon$attachment_id
+join rdb$character_sets c on a.mon$character_set_id = c.rdb$character_set_id
+where 
+    s.mon$attachment_id != current_connection 
+    and not s.mon$sql_text containing 'mon$statements'
+'''
+
+r2none.execute(sql)
+for r in r2none:
+  print('r2none',r)
+
+r2utf8.execute(sql)
+for r in r2utf8:
+  print('r2utf8',r)
+
+c1none.close()
+#----------------------------
+
+r1utf8.execute("select '123áé456' from mon$database")
+
+c2none.commit()
+c2utf8.commit()
+
+r2none.execute(sql)
+for r in r2none:
+  print('r2none', r)
+
+r2utf8.execute(sql)
+for r in r2utf8:
+  print('r2utf8', r)
+
+c1utf8.close()
+#---------------------------
+
+c2none.close()
+c2utf8.close()
 """,
- 'expected_stdout': """MON$SQL_TEXT
-------------
-SELECT MON$SQL_TEXT FROM MON$STATEMENTS
-select '123áé456' from rdb$database
-"""
+ 'expected_stdout': 
+  """
+    r2none (u'othr', u"select '123????456' from mon$database", 0, u'NONE')
+    r2utf8 (u'othr', u"select '123????456' from mon$database", 0, u'NONE')
+    r2none (u'othr', u"select '123\\u0413\\u040e\\u0413\\xa9456' from mon$database", 4, u'UTF8')
+    r2utf8 (u'othr', u"select '123\\xe1\\xe9456' from mon$database", 4, u'UTF8')
+  """
 }
 ]
 }
