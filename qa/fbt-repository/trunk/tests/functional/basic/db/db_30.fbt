@@ -2969,9 +2969,9 @@
     DDL of table rdb$types:         
 
 
-    RDB$FIELD_NAME                  (RDB$FIELD_NAME) CHAR(63) CHARACTER SET UTF8 Nullable 
+    RDB$FIELD_NAME                  (RDB$FIELD_NAME) CHAR(63) Nullable 
     RDB$TYPE                        (RDB$GENERIC_TYPE) SMALLINT Nullable 
-    RDB$TYPE_NAME                   (RDB$TYPE_NAME) CHAR(63) CHARACTER SET UTF8 Nullable 
+    RDB$TYPE_NAME                   (RDB$TYPE_NAME) CHAR(63) Nullable 
     RDB$DESCRIPTION                 (RDB$DESCRIPTION) BLOB segment 80, subtype TEXT CHARACTER SET UTF8 Nullable 
     RDB$SYSTEM_FLAG                 (RDB$SYSTEM_FLAG) SMALLINT Not Null 
 
@@ -4643,7 +4643,6 @@
 
 
     Records affected: 277
-
   """
 }
 ]
