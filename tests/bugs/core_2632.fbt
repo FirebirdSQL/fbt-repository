@@ -17,13 +17,20 @@
     set list on;
     set blob all;
     select 1 as k from mon$database;
-    select mon$sql_text as sql_text_blob from mon$statements;
+    set count on;
+
+    select s.mon$sql_text as sql_text_blob 
+    from mon$statements s
+    where s.mon$sql_text NOT containing 'rdb$auth_mapping' -- added 30.03.2017 (4.0.0.x)
+    ;
   """,
   'expected_stdout':
   """
     K                               1
     SQL_TEXT_BLOB
     select 1 as k from mon$database
+
+    Records affected: 1
   """,
   'substitutions':[('SQL_TEXT_BLOB.*', 'SQL_TEXT_BLOB')]
 }
