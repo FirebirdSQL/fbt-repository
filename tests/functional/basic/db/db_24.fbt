@@ -16998,6 +16998,7 @@
   """,
  'expected_stdout': 
   """
+
     RDB$FIELD_NAME                  MON$ATTACHMENT_ID                                                                                                                                                                                                                                           
     RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
     RDB$FIELD_SOURCE                RDB$ATTACHMENT_ID                                                                                                                                                                                                                                           
@@ -17448,6 +17449,50 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    11
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$IDLE_TIMEOUT                                                                                                                                                                                                                                            
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                MON$IDLE_TIMEOUT                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              20
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    20
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$IDLE_TIMER                                                                                                                                                                                                                                              
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                MON$IDLE_TIMER                                                                                                                                                                                                                                              
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              21
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    21
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -18790,6 +18835,72 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    0
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$STATEMENT_TIMEOUT                                                                                                                                                                                                                                       
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                MON$STATEMENT_TIMEOUT                                                                                                                                                                                                                                       
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              22
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    22
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$STATEMENT_TIMEOUT                                                                                                                                                                                                                                       
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                MON$STATEMENT_TIMEOUT                                                                                                                                                                                                                                       
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              8
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    8
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$STATEMENT_TIMER                                                                                                                                                                                                                                         
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                MON$STATEMENT_TIMER                                                                                                                                                                                                                                         
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              9
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    9
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -27228,7 +27339,8 @@
     RDB$GENERATOR_NAME              <null>
     RDB$IDENTITY_TYPE               <null>
 
-    Records affected: 465
+
+    Records affected: 470
   """,
   'substitutions': [
       ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
