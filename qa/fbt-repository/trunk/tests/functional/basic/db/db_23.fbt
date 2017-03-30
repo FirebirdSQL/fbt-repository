@@ -2334,22 +2334,39 @@ RDB$RELATION_TYPE               3
   """
 
     RDB$FIELD_NAME                  RDB$DBKEY_LENGTH                                                                                                                                                                                                                                            
+
     RDB$FIELD_NAME                  RDB$DEFAULT_CLASS                                                                                                                                                                                                                                           
+
     RDB$FIELD_NAME                  RDB$DESCRIPTION                                                                                                                                                                                                                                             
+
     RDB$FIELD_NAME                  RDB$EXTERNAL_DESCRIPTION                                                                                                                                                                                                                                    
+
     RDB$FIELD_NAME                  RDB$EXTERNAL_FILE                                                                                                                                                                                                                                           
+
     RDB$FIELD_NAME                  RDB$FIELD_ID                                                                                                                                                                                                                                                
+
     RDB$FIELD_NAME                  RDB$FLAGS                                                                                                                                                                                                                                                   
+
     RDB$FIELD_NAME                  RDB$FORMAT                                                                                                                                                                                                                                                  
+
     RDB$FIELD_NAME                  RDB$OWNER_NAME                                                                                                                                                                                                                                              
+
     RDB$FIELD_NAME                  RDB$RELATION_ID                                                                                                                                                                                                                                             
+
     RDB$FIELD_NAME                  RDB$RELATION_NAME                                                                                                                                                                                                                                           
+
     RDB$FIELD_NAME                  RDB$RELATION_TYPE                                                                                                                                                                                                                                           
+
     RDB$FIELD_NAME                  RDB$RUNTIME                                                                                                                                                                                                                                                 
+
     RDB$FIELD_NAME                  RDB$SECURITY_CLASS                                                                                                                                                                                                                                          
+
     RDB$FIELD_NAME                  RDB$SQL_SECURITY                                                                                                                                                                                                                                            
+
     RDB$FIELD_NAME                  RDB$SYSTEM_FLAG                                                                                                                                                                                                                                             
+
     RDB$FIELD_NAME                  RDB$VIEW_BLR                                                                                                                                                                                                                                                
+
     RDB$FIELD_NAME                  RDB$VIEW_SOURCE                                                                                                                                                                                                                                             
 
 
@@ -3174,7 +3191,7 @@ RDB$RELATION_TYPE               3
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
-    RDB$FIELD_ID                    20
+    RDB$FIELD_ID                    23
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
@@ -3206,7 +3223,7 @@ RDB$RELATION_TYPE               3
     RDB$SYSTEM_FLAG                 1
     RDB$DBKEY_LENGTH                8
     RDB$FORMAT                      0
-    RDB$FIELD_ID                    8
+    RDB$FIELD_ID                    10
     RDB$FLAGS                       <null>
     RDB$RELATION_TYPE               3
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
@@ -3424,6 +3441,7 @@ RDB$RELATION_TYPE               3
     DESCR_BLOB_ID                   <null>
     RUNTIME_BLOB_ID                 <null>
     EXT_DESCR_BLOB_ID               <null>
+
 
     Records affected: 50
   """,
