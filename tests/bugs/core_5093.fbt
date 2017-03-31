@@ -195,7 +195,11 @@ for i in range(len(f_list)):
  'expected_stderr':
   """
   """,
-  'substitutions':[('.*TABLE: T1.*', ''), ('.*MESSAGE FIELD COUNT.*', '')]
+  'substitutions':[
+      ('DATABASE: LOCALHOST.*BUGS.CORE_5093.FDB.*', ''),
+      ('.*TABLE: T1.*', ''), 
+      ('.*MESSAGE FIELD COUNT.*', '')
+   ]
 }
 ]
 }
