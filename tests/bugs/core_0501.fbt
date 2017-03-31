@@ -3,7 +3,31 @@
 'qmid': None,
 'tracker_id': 'CORE-501',
 'title': 'Problem with COALESCE',
-'description': 'It tests many problems Adriano found when fixing CORE-501, CORE-1343 and CORE-2041.',
+'description': 
+ """ 
+    It tests many problems Adriano found when fixing CORE-501, CORE-1343 and CORE-2041.
+    
+    31.03.2017.
+    Refactored code for 3.0+: use Python in order to remove auxiliary whitespaces and 
+    see both STDOUT and STDERR in the same file. 
+    
+    ::: NB :::
+    Some strange message about diff. can appear (only on Classic architecture)
+    when script performs last statement:
+    ===
+        SET SQLDA_DISPLAY ON;
+        select coalesce(1 + cast(? as integer), 2 + cast(? as integer))
+        from rdb$database
+        where coalesce(3 + cast(? as bigint), null) = 0;
+    ===
+    Instead of:
+         "-Wrong number of parameters (expected 3, got 0)" 
+    ISQL fails with:
+         "-No SQLDA for input values provided".
+
+    Added 'SET ECHO ON' at the start of script - it may help with sear4ch for the reason of this.
+    Checked on: WI-T4.0.0.494, WI-V3.0.2.32643, WI-V3.0.3.32712
+ """,
 'min_versions': '2.5.0',
 'versions': [
 {
@@ -944,17 +968,30 @@ Dynamic SQL Error
  'init_script': 
   """
   """,
- 'test_type': 'ISQL',
+ 'test_type': 'Python',
  'test_script': 
   """
+import os
+import subprocess
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+
+sql='''
     set list on;
+    set echo on;
+    --set bail on;
     create sequence s1;
     
     create table t1 (
-      n integer primary key,
-      x integer,
-      cn computed by (coalesce(n + 0, null)),
-      cx computed by (coalesce(x + 0, null))
+        n integer primary key,
+        x integer,
+        cn computed by (coalesce(n + 0, null)),
+        cx computed by (coalesce(x + 0, null))
     );
     
     -- test update or insert
@@ -1164,11 +1201,16 @@ Dynamic SQL Error
     select bc from t1 order by n;
     
     -- test parameters
+
+    set echo on;
     set sqlda_display on;
-    
+    --------------------------------------------------------------
     select coalesce(1 + cast(? as integer), 2 + cast(? as integer))
       from rdb$database
       where coalesce(3 + cast(? as bigint), null) = 0;
+    --------------------------------------------------------------
+    
+    exit;
 
     -- This (last) statement will raise exception related to SQLDA.
     -- Old error messages:
@@ -1178,315 +1220,484 @@ Dynamic SQL Error
     --     -SQLDA error
     --     -Wrong number of parameters (expected 3, got 0)
     -- (replacement with new text was approved by dimitr, letter 24-feb-2016 22:01).
+'''
+
+f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_0501.sql') , 'w')
+f_sql_chk.write(sql)
+f_sql_chk.close()
+
+f_sql_log=open( os.path.join(context['temp_directory'],'tmp_0501.log'), 'w')
+subprocess.call( [ fb_home+'isql', dsn, '-i', f_sql_chk.name], stdout = f_sql_log, stderr = subprocess.STDOUT)
+f_sql_log.close()
+
+
+with open( f_sql_log.name,'r') as f:
+  for line in f:
+    if line.split():
+      print( ' '.join(line.split()) )
+      #print(line)
+f.close()
+
+# CLEANUP
+#########
+
+f_list=(f_sql_chk, f_sql_log)
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+
   """,
  'expected_stdout': 
   """
-    N                               1
-    X                               10
-    CN                              1
-    CX                              10
-    N                               2
-    X                               20
-    CN                              2
-    CX                              20
-    N                               3
-    X                               30
-    CN                              3
-    CX                              30
-    
-    GEN_ID                          3
-    
-    N                               1
-    X                               100
-    CN                              1
-    CX                              100
-    N                               2
-    X                               200
-    CN                              2
-    CX                              200
-    N                               3
-    X                               30
-    CN                              3
-    CX                              30
-    
-    GEN_ID                          3
-    
-    N                               1
-    X                               100
-    CN                              1
-    CX                              100
-    VCN                             1
-    N                               2
-    X                               200
-    CN                              2
-    CX                              200
-    VCN                             2
-    N                               3
-    X                               30
-    CN                              3
-    CX                              30
-    VCN                             3
-    
-    N                               1
-    X                               100
-    CN                              1
-    CX                              100
-    N                               2
-    X                               200
-    CN                              2
-    CX                              200
-    N                               3
-    X                               300
-    CN                              3
-    CX                              300
-    N                               4
-    X                               40
-    CN                              4
-    CX                              40
-    
-    N                               1
-    X                               100
-    CN                              1
-    CX                              100
-    VCN                             1
-    N                               2
-    X                               200
-    CN                              2
-    CX                              200
-    VCN                             2
-    N                               3
-    X                               300
-    CN                              3
-    CX                              300
-    VCN                             3
-    N                               4
-    X                               40
-    CN                              4
-    CX                              40
-    VCN                             4
-    N                               1008
-    X                               88
-    CN                              1008
-    CX                              88
-    VCN                             1008
-    
-    COAL_01                         1
-    COAL_01                         2
-    COAL_01                         3
-    COAL_01                         4
-    COAL_01                         1008
-    
-    COAL_02                         1
-    COAL_02                         2
-    COAL_02                         3
-    COAL_02                         4
-    COAL_02                         1008
-    
-    COAL_03                         1
-    COAL_03                         2
-    COAL_03                         3
-    COAL_03                         4
-    COAL_03                         1008
-    
-    COAL_04                         1
-    COAL_04                         2
-    COAL_04                         3
-    COAL_04                         4
-    COAL_04                         1008
-    
-    COAL_05                         1
-    COAL_05                         2
-    COAL_05                         3
-    COAL_05                         4
-    
-    COAL_06                         10
-    COAL_06                         20
-    COAL_06                         30
-    COAL_06                         40
-    COAL_06                         10080
-    
-    COAL_07A                        30
-    COAL_07B                        3000
-    COAL_07A                        20
-    COAL_07B                        2000
-    COAL_07A                        10
-    COAL_07B                        1000
-    COAL_07A                        10080
-    COAL_07B                        880
-    COAL_07A                        40
-    COAL_07B                        400
-    
-    COAL_08A                        10080
-    COAL_08B                        880
-    COAL_08A                        40
-    COAL_08B                        400
-    COAL_08A                        30
-    COAL_08B                        3000
-    COAL_08A                        20
-    COAL_08B                        2000
-    COAL_08A                        10
-    COAL_08B                        1000
-    
-    CASE_GROUP_BY_01                1
-    CASE_GROUP_BY_01                2
-    CASE_GROUP_BY_01                3
-    CASE_GROUP_BY_01                4
-    CASE_GROUP_BY_01                1008
-    
-    CASE_GROUP_BY_02                1
-    CASE_GROUP_BY_02                2
-    CASE_GROUP_BY_02                3
-    CASE_GROUP_BY_02                4
-    CASE_GROUP_BY_02                1008
-    
-    CASE_GROUP_BY_03                1
-    CASE_GROUP_BY_03                2
-    CASE_GROUP_BY_03                3
-    CASE_GROUP_BY_03                4
-    
-    CASE_GROUP_BY_04                1008
-    CASE_GROUP_BY_04                4
-    CASE_GROUP_BY_04                3
-    CASE_GROUP_BY_04                2
-    CASE_GROUP_BY_04                1
-    
-    V2_N                            1
-    V2_X1                           2
-    V2_X2                           3
-    V2_N                            2
-    V2_X1                           3
-    V2_X2                           4
-    V2_N                            3
-    V2_X1                           4
-    V2_X2                           5
-    V2_N                            4
-    V2_X1                           5
-    V2_X2                           6
-    V2_N                            1008
-    V2_X1                           1009
-    V2_X2                           1010
-    
-    V3_N                            1
-    V3_X1                           14
-    V3_X2                           26
-    V3_N                            2
-    V3_X1                           16
-    V3_X2                           28
-    V3_N                            3
-    V3_X1                           18
-    V3_X2                           30
-    V3_N                            4
-    V3_X1                           20
-    V3_X2                           32
-    V3_N                            1008
-    V3_X1                           2028
-    V3_X2                           2040
-    
-    V4_N                            1
-    V4_X1                           1
-    V4_X2                           3
-    V4_N                            2
-    V4_X1                           1
-    V4_X2                           3
-    V4_N                            3
-    V4_X1                           1
-    V4_X2                           3
-    V4_N                            4
-    V4_X1                           1
-    V4_X2                           3
-    V4_N                            1008
-    V4_X1                           1
-    V4_X2                           3
-    
-    N                               1
-    X1                              14
-    X2                              26
-    N                               2
-    X1                              16
-    X2                              28
-    N                               3
-    X1                              18
-    X2                              30
-    N                               4
-    X1                              20
-    X2                              32
-    N                               1008
-    X1                              2028
-    X2                              2040
-    N                               1
-    X1                              14
-    X2                              26
-    N                               2
-    X1                              16
-    X2                              28
-    N                               3
-    X1                              18
-    X2                              30
-    N                               4
-    X1                              20
-    X2                              32
-    N                               1008
-    X1                              2028
-    X2                              2040
-    
-    BC                              -1
-    
-    INPUT message field count: 3
-    01: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4
-      :  name:   alias:
-      : table:   owner:
-    02: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4
-      :  name:   alias:
-      : table:   owner:
-    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
-      :  name:   alias:
-      : table:   owner:
-    OUTPUT message field count: 1
-    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
-      :  name: COALESCE  alias: COALESCE
-      : table:   owner:
-  """,
- 'expected_stderr': 
-  """
+    --set bail on;
+    create sequence s1;
+    create table t1 (
+    n integer primary key,
+    x integer,
+    cn computed by (coalesce(n + 0, null)),
+    cx computed by (coalesce(x + 0, null))
+    );
+    -- test update or insert
+    update or insert into t1 values (next value for s1, 10);
+    update or insert into t1 values (next value for s1, 20);
+    update or insert into t1 values (next value for s1, 30);
+    select * from t1;
+    N 1
+    X 10
+    CN 1
+    CX 10
+    N 2
+    X 20
+    CN 2
+    CX 20
+    N 3
+    X 30
+    CN 3
+    CX 30
+    -- test sequence value after update or insert
+    select gen_id(s1, 0) from rdb$database;
+    GEN_ID 3
+    -- test update or insert using coalesce
+    update or insert into t1
+    values (coalesce((select first 1 n from t1 order by n), null), coalesce(40 + 60, 0));
+    -- test update or insert in PSQL
+    set term ^ ;
+    execute block returns (n integer, x integer, cn integer, cx integer)
+    as
+    declare z integer = 200;
+    begin
+    update or insert into t1
+    values (coalesce((select first 1 skip 1 n from t1 order by n), null), :z);
+    for select n, x, cn, cx from t1 into n, x, cn, cx do
+    suspend;
+    end^
+    N 1
+    X 100
+    CN 1
+    CX 100
+    N 2
+    X 200
+    CN 2
+    CX 200
+    N 3
+    X 30
+    CN 3
+    CX 30
+    set term ; ^
+    select gen_id(s1, 0) from rdb$database;
+    GEN_ID 3
+    -- test view
+    create view v1 as
+    select t1.*, coalesce(n + 0, null) vcn from t1;
+    select * from v1;
+    N 1
+    X 100
+    CN 1
+    CX 100
+    VCN 1
+    N 2
+    X 200
+    CN 2
+    CX 200
+    VCN 2
+    N 3
+    X 30
+    CN 3
+    CX 30
+    VCN 3
+    -- test update or insert into a view
+    update or insert into v1 values (next value for s1, 40);
+    -- test update or insert into a view in PSQL
+    set term ^ ;
+    execute block returns (n integer, x integer, cn integer, cx integer)
+    as
+    declare z integer = 300;
+    begin
+    update or insert into v1 values ((select first 1 skip 2 n from t1 order by n), :z);
+    for select n, x, cn, cx from v1 into n, x, cn, cx do
+    suspend;
+    end^
+    N 1
+    X 100
+    CN 1
+    CX 100
+    N 2
+    X 200
+    CN 2
+    CX 200
+    N 3
+    X 300
+    CN 3
+    CX 300
+    N 4
+    X 40
+    CN 4
+    CX 40
+    -- test view trigger
+    create trigger v1_bi before insert on v1
+    as
+    declare z integer = 1000;
+    begin
+    insert into t1 values (coalesce(new.n + :z, null), new.x);
+    end^
+    set term ; ^
+    insert into v1 values (8, 88);
+    select * from v1;
+    N 1
+    X 100
+    CN 1
+    CX 100
+    VCN 1
+    N 2
+    X 200
+    CN 2
+    CX 200
+    VCN 2
+    N 3
+    X 300
+    CN 3
+    CX 300
+    VCN 3
+    N 4
+    X 40
+    CN 4
+    CX 40
+    VCN 4
+    N 1008
+    X 88
+    CN 1008
+    CX 88
+    VCN 1008
+    -- test coalesce
+    select coalesce(n * 1, null) coal_01 from v1;
+    COAL_01 1
+    COAL_01 2
+    COAL_01 3
+    COAL_01 4
+    COAL_01 1008
+    select coalesce(n * 1, null) coal_02 from t1 group by coalesce(n * 1, null);
+    COAL_02 1
+    COAL_02 2
+    COAL_02 3
+    COAL_02 4
+    COAL_02 1008
+    select coalesce(n * 1, null) coal_03 from v1 group by coalesce(n * 1, null);
+    COAL_03 1
+    COAL_03 2
+    COAL_03 3
+    COAL_03 4
+    COAL_03 1008
+    select coalesce(n * 1, null) coal_04 from v1 group by 1;
+    COAL_04 1
+    COAL_04 2
+    COAL_04 3
+    COAL_04 4
+    COAL_04 1008
+    select coalesce(n * 1, null) coal_05 from v1 group by 1 having coalesce(n * 1, null) < 100;
+    COAL_05 1
+    COAL_05 2
+    COAL_05 3
+    COAL_05 4
+    select coalesce(n * 10, null) coal_06 from v1 order by 1;
+    COAL_06 10
+    COAL_06 20
+    COAL_06 30
+    COAL_06 40
+    COAL_06 10080
+    select coalesce(n * 10, null) coal_07a, coalesce(x * 10, null) coal_07b from v1 order by 2 desc, 1 desc;
+    COAL_07A 30
+    COAL_07B 3000
+    COAL_07A 20
+    COAL_07B 2000
+    COAL_07A 10
+    COAL_07B 1000
+    COAL_07A 10080
+    COAL_07B 880
+    COAL_07A 40
+    COAL_07B 400
+    select coalesce(n * 10, null) coal_08a, coalesce(x * 10, null) coal_08b from v1 order by 1 desc, 2 desc;
+    COAL_08A 10080
+    COAL_08B 880
+    COAL_08A 40
+    COAL_08B 400
+    COAL_08A 30
+    COAL_08B 3000
+    COAL_08A 20
+    COAL_08B 2000
+    COAL_08A 10
+    COAL_08B 1000
+    -- test case
+    select case n * 1 when 1 then n * 1 else n + 0 end case_group_by_01
+    from v1
+    group by case n * 1 when 1 then n * 1 else n + 0 end;
+    CASE_GROUP_BY_01 1
+    CASE_GROUP_BY_01 2
+    CASE_GROUP_BY_01 3
+    CASE_GROUP_BY_01 4
+    CASE_GROUP_BY_01 1008
+    select case n * 1 when 1 then n * 1 else n + 0 end case_group_by_02
+    from v1 group by 1;
+    CASE_GROUP_BY_02 1
+    CASE_GROUP_BY_02 2
+    CASE_GROUP_BY_02 3
+    CASE_GROUP_BY_02 4
+    CASE_GROUP_BY_02 1008
+    select case n * 1 when 1 then n * 1 else n + 0 end case_group_by_03
+    from v1
+    group by 1
+    having case n * 1 when 1 then n * 1 else n + 0 end < 100;
+    CASE_GROUP_BY_03 1
+    CASE_GROUP_BY_03 2
+    CASE_GROUP_BY_03 3
+    CASE_GROUP_BY_03 4
+    select case n * 1 when 1 then n * 1 else n + 0 end case_group_by_04
+    from v1
+    order by 1 desc;
+    CASE_GROUP_BY_04 1008
+    CASE_GROUP_BY_04 4
+    CASE_GROUP_BY_04 3
+    CASE_GROUP_BY_04 2
+    CASE_GROUP_BY_04 1
+    ---------------------------
+    -- test non-valid statements
+    select coalesce(n * 1, null) non_valid_01
+    from v1
+    group by 1 having coalesce(n * 0, null) < 100;
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Invalid expression in the HAVING clause (neither an aggregate function nor a part of the GROUP BY clause)
-
+    select case n * 1 when 1 then n * 1 else n + 0 end non_valid_02
+    from v1
+    group by case n * 1 when 1 then n * 1 else n + 1 end;
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Invalid expression in the select list (not contained in either an aggregate function or the GROUP BY clause)
-
+    select case n * 1 when 1 then n * 1 else n + 0 end non_valid_03
+    from v1
+    group by 1
+    having case n * 1 when 1 then n * 1 else n + 1 end < 100;
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Invalid expression in the HAVING clause (neither an aggregate function nor a part of the GROUP BY clause)
-
+    ---------------------------
+    set term ^ ;
+    create procedure p1 returns (n integer)
+    as
+    begin
+    select coalesce(n * 1, null) from t1 group by coalesce(n * 1, null) into n;
+    suspend;
+    end^
+    set term ; ^
+    commit;
+    -- set blob all;
+    -- select rdb$procedure_blr from rdb$procedures where rdb$procedure_name = 'P1';
+    ---------------------------
+    -- test coalesce in view condition
+    create view v2 as
+    select t1.n v2_n, coalesce(n + 1, null) v2_x1, coalesce(n + 2, null) v2_x2
+    from t1
+    where coalesce(0 + 0, null) = coalesce(0 + 0, null);
+    select * from v2;
+    V2_N 1
+    V2_X1 2
+    V2_X2 3
+    V2_N 2
+    V2_X1 3
+    V2_X2 4
+    V2_N 3
+    V2_X1 4
+    V2_X2 5
+    V2_N 4
+    V2_X1 5
+    V2_X2 6
+    V2_N 1008
+    V2_X1 1009
+    V2_X2 1010
+    -- test coalesce in view using distinct
+    create view v3 as
+    select distinct
+    t1.n v3_n,
+    coalesce(n + 1, null) + coalesce(n + 11, null) v3_x1,
+    coalesce(n + 2, null) + coalesce(n + 22, null) v3_x2
+    from t1;
+    select * from v3;
+    V3_N 1
+    V3_X1 14
+    V3_X2 26
+    V3_N 2
+    V3_X1 16
+    V3_X2 28
+    V3_N 3
+    V3_X1 18
+    V3_X2 30
+    V3_N 4
+    V3_X1 20
+    V3_X2 32
+    V3_N 1008
+    V3_X1 2028
+    V3_X2 2040
+    -- test coalesce with subselect with coalesce in view
+    create view v4 as
+    select
+    t1.n v4_n,
+    coalesce((select coalesce(0 + 1, null) from rdb$database), null) v4_x1,
+    coalesce((select coalesce(2 + 1, null) from rdb$database), null) v4_x2
+    from t1;
+    select * from v4;
+    V4_N 1
+    V4_X1 1
+    V4_X2 3
+    V4_N 2
+    V4_X1 1
+    V4_X2 3
+    V4_N 3
+    V4_X1 1
+    V4_X2 3
+    V4_N 4
+    V4_X1 1
+    V4_X2 3
+    V4_N 1008
+    V4_X1 1
+    V4_X2 3
+    -- test coalesce in view using union
+    create view v5 (n, x1, x2) as
+    select
+    t1.n v5_n,
+    coalesce(n + 1, null) + coalesce(n + 11, null) v5_x1,
+    coalesce(n + 2, null) + coalesce(n + 22, null) v5_x2
+    from t1
+    union all
+    select
+    t1.n,
+    coalesce(n + 1, null) + coalesce(n + 11, null),
+    coalesce(n + 2, null) + coalesce(n + 22, null)
+    from t1;
+    select * from v5;
+    N 1
+    X1 14
+    X2 26
+    N 2
+    X1 16
+    X2 28
+    N 3
+    X1 18
+    X2 30
+    N 4
+    X1 20
+    X2 32
+    N 1008
+    X1 2028
+    X2 2040
+    N 1
+    X1 14
+    X2 26
+    N 2
+    X1 16
+    X2 28
+    N 3
+    X1 18
+    X2 30
+    N 4
+    X1 20
+    X2 32
+    N 1008
+    X1 2028
+    X2 2040
+    -- test constraint
+    alter table t1
+    add constraint t1_n check (coalesce(n + 0, null) < 10),
+    add constraint t1_cx check (coalesce(cx + 0, null) < 10);
+    insert into t1 values (5, 5);
+    insert into t1 values (50, 5);
     Statement failed, SQLSTATE = 23000
     Operation violates CHECK constraint T1_N on view or table T1
     -At trigger 'CHECK_1'
-
+    insert into t1 values (5, 50);
     Statement failed, SQLSTATE = 23000
     Operation violates CHECK constraint T1_CX on view or table T1
     -At trigger 'CHECK_3'
-
+    -- test domain constraint
+    create domain dc1 as integer check (coalesce(value + 0, null) < 10);
+    create domain dc2 as integer check (coalesce(value + 0, null) < 10);
+    alter table t1
+    add dc1 dc1,
+    add dc2 dc2;
+    insert into t1 (n, dc1) values (6, 6);
+    insert into t1 (n, dc2) values (7, 7);
+    insert into t1 (n, dc1) values (8, 10);
     Statement failed, SQLSTATE = 23000
     validation error for column "T1"."DC1", value "10"
-
+    insert into t1 (n, dc2) values (8, 10);
     Statement failed, SQLSTATE = 23000
     validation error for column "T1"."DC2", value "10"
-
+    -- add bad computed expression with coalesce
+    alter table t1
+    add bc computed by (coalesce(n / (n - 2), null));
+    select bc from t1 order by n;
+    BC -1
     Statement failed, SQLSTATE = 22012
     arithmetic exception, numeric overflow, or string truncation
-    -Integer divide by zero.  The code attempted to divide an integer value by an integer divisor of zero.
-
+    -Integer divide by zero. The code attempted to divide an integer value by an integer divisor of zero.
+    -- test parameters
+    set echo on;
+    set sqlda_display on;
+    --------------------------------------------------------------
+    select coalesce(1 + cast(? as integer), 2 + cast(? as integer))
+    from rdb$database
+    where coalesce(3 + cast(? as bigint), null) = 0;
+    INPUT message field count: 3
+    01: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4
+    : name: alias:
+    : table: owner:
+    02: sqltype: 496 LONG Nullable scale: 0 subtype: 0 len: 4
+    : name: alias:
+    : table: owner:
+    03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
+    : name: alias:
+    : table: owner:
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
+    : name: COALESCE alias: COALESCE
+    : table: owner:
     Statement failed, SQLSTATE = 07002
     Dynamic SQL Error
     -SQLDA error
     -Wrong number of parameters (expected 3, got 0)
+    --------------------------------------------------------------
+    exit;
+
   """,
-  'substitutions': [('=.*','')]
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [
+      ('After line [0-9]+ in file.*', '')
+  ]
 }
 ]
 }
