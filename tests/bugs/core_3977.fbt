@@ -5,6 +5,8 @@
 'title': 'DELETE FROM MON$STATEMENTS does not interrupt a longish fetch',
 'description':
  """
+   Refactored 08-may-2017.
+   Checked on 2.5.8.27061,  3.0.2.32708 and 4.0.0.633 (Classic & Super).
  """,
 'min_versions': '2.5.3',
 'versions': [
@@ -25,31 +27,37 @@ import subprocess
 from subprocess import Popen
 import time
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
 
 ##############################################
 # Script for ISQL that will do 'heavy select':
 
-sql_cmd='''
-alter sequence g restart with 0;
-commit;
+usr=user_name
+pwd=user_password
 
-set term ^;
-execute block as
-    declare x int;
-begin
-    for 
-        execute statement ('select gen_id(g,1) from rdb$types,rdb$types,rdb$types')
-        on external 
-            rdb$get_context('SYSTEM','DB_NAME')
-            as user 'SYSDBA' password 'masterkey'
-        into x
-    do begin
+sql_cmd='''
+    alter sequence g restart with 0;
+    commit;
+
+    set term ^;
+    execute block as
+        declare x int;
+    begin
+        for 
+            execute statement ('select gen_id(g,1) from rdb$types,rdb$types,rdb$types')
+            on external 
+                rdb$get_context('SYSTEM','DB_NAME')
+                as user '%(usr)s' password '%(pwd)s'
+            into x
+        do begin
+        end
     end
-end
-^
-set term ;^
-'''
+    ^
+    set term ;^
+''' % locals()
 
 f_query_to_be_killedcmd=open( os.path.join(context['temp_directory'],'tmp_isql_3977.sql'), 'w')
 f_query_to_be_killedcmd.write(sql_cmd)
@@ -60,9 +68,9 @@ f_query_to_be_killedcmd.close()
 
 f_query_to_be_killedlog=open( os.path.join(context['temp_directory'],'tmp_isql_3977.log'), 'w')
 
-p_heavy_dml = Popen( [ "isql" , dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_query_to_be_killedcmd.name ], \
-                     stdout=f_query_to_be_killedlog, \
-                     stderr=subprocess.STDOUT \
+p_heavy_dml = Popen( [ "isql" , dsn, "-i", f_query_to_be_killedcmd.name ],
+                     stdout=f_query_to_be_killedlog,
+                     stderr=subprocess.STDOUT
                    )
 
 # Here we have to wait for sure that ISQL could establish its connect and starts DML 
@@ -73,16 +81,38 @@ time.sleep(2)
 ######################################
 # Run 2nd isql and issue there DELETE FROM MON$ATATSMENTS command. First ISQL process should be terminated for short time.
 
+v_mon_sttm_sql='''
+    commit; 
+    set list on; 
+
+    select * 
+    from mon$statements 
+    where 
+        mon$attachment_id != current_connection
+        and mon$sql_text containing 'gen_id('
+    --order by mon$stat_id
+    ; 
+
+    set count on; 
+
+    delete from mon$statements 
+    where 
+        mon$attachment_id != current_connection
+        and mon$sql_text containing 'gen_id('
+    --order by mon$stat_id
+    ;
+    quit;
+'''
+
 f_delete_from_mon_sttm_sql=open( os.path.join(context['temp_directory'],'tmp_dels_3977.sql'), 'w')
-f_delete_from_mon_sttm_sql.write('commit; set list on; select * from mon$statements where mon$attachment_id != current_connection; set count on; delete from mon$statements where mon$attachment_id != current_connection; quit;')
-#f_delete_from_mon_sttm_sql.write('commit; set count on; delete from mon$statements where mon$attachment_id != current_connection; quit;')
+f_delete_from_mon_sttm_sql.write(v_mon_sttm_sql)
 f_delete_from_mon_sttm_sql.close()
 
 f_delete_from_mon_sttm_log=open( os.path.join(context['temp_directory'],'tmp_dels_3977.log'), 'w')
 
-subprocess.call( ["isql", dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_delete_from_mon_sttm_sql.name ], \
-                     stdout=f_delete_from_mon_sttm_log, \
-                     stderr=subprocess.STDOUT \
+subprocess.call( ["isql", dsn, "-i", f_delete_from_mon_sttm_sql.name ],
+                     stdout=f_delete_from_mon_sttm_log,
+                     stderr=subprocess.STDOUT
                    )
 
 f_delete_from_mon_sttm_log.close()
@@ -91,7 +121,8 @@ p_heavy_dml.terminate()
 f_query_to_be_killedlog.close()
 
 #########################################
-# Run checking query: what is resuling value of sequence 'g' ? (it must be > 0 and < total number of records to be handled).
+# Run checking query: what is resuling value of sequence 'g' ?
+# (it must be > 0 and < total number of records to be handled).
 
 sql_cmd='''
 --set echo on;
@@ -114,24 +145,26 @@ f_check_result_cmd.close()
 
 f_check_result_log=open( os.path.join(context['temp_directory'],'tmp_chkr_3977.log'), 'w')
 
-subprocess.call( ["isql", dsn, "-user" , "SYSDBA" , "-password", "masterkey", "-i", f_check_result_cmd.name ], \
-                     stdout=f_check_result_log, \
-                     stderr=subprocess.STDOUT \
+subprocess.call( ["isql", dsn, "-i", f_check_result_cmd.name ],
+                     stdout=f_check_result_log,
+                     stderr=subprocess.STDOUT
                    )
 
 f_check_result_log.close()
 
 with open(f_delete_from_mon_sttm_log.name) as f:
-  print( f.read() )
-f.close()
+  for line in f:
+    if not 'EXECUTE STATEMENT' in line.upper():
+       print('DEL FROM MON$STTM: ', ' '.join(line.upper().split()) )
 
 with open(f_query_to_be_killedlog.name) as f:
-  print( f.read() )
-f.close()
+  for line in f:
+    print('QUERY THAT KILLED: ', ' '.join(line.upper().split()) )
 
 with open(f_check_result_log.name) as f:
-  print( f.read() )
-f.close()
+  for line in f:
+    print('CHECK RESULTS LOG: ', ' '.join(line.upper().split()) )
+
 
 time.sleep(1)
 
@@ -139,6 +172,7 @@ time.sleep(1)
 ########################
 # Cleanup
 
+'''
 if os.path.isfile(f_query_to_be_killedcmd.name):
     os.remove(f_query_to_be_killedcmd.name)
 if os.path.isfile(f_query_to_be_killedlog.name):
@@ -153,18 +187,51 @@ if os.path.isfile(f_check_result_cmd.name):
     os.remove(f_check_result_cmd.name)
 if os.path.isfile(f_check_result_log.name):
     os.remove(f_check_result_log.name)
+'''
+
+
+f_list=(f_query_to_be_killedcmd, f_query_to_be_killedlog, f_delete_from_mon_sttm_sql, f_delete_from_mon_sttm_log, f_check_result_cmd, f_check_result_log )
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+# TODO. 08-MAY-2017.
+# NB: there are valuable differences betwen 2.5.x and 4.0 output!
+# Check it later. Currently I left only minimal common filter 
+# for output be suitable both for 2.5.x and 4.0
+
+# following are old output and substitutions, do NOT remove these lines until final version of this test will be implemented:
+############################################
+'''
+    DEL FROM MON$STTM:  MON$STATE 1
+    DEL FROM MON$STTM:  EXECUTE STATEMENT ('SELECT GEN_ID(G,1) FROM RDB$TYPES,RDB$TYPES,RDB$TYPES')
+    DEL FROM MON$STTM:  MON$STATE 2
+    DEL FROM MON$STTM:  SELECT GEN_ID(G,1) FROM RDB$TYPES,RDB$TYPES,RDB$TYPES
+    DEL FROM MON$STTM:  RECORDS AFFECTED: 2
+    QUERY THAT KILLED:  STATEMENT FAILED, SQLSTATE = 42000
+    QUERY THAT KILLED:  335544794 : OPERATION WAS CANCELLED
+    QUERY THAT KILLED:  STATEMENT : SELECT GEN_ID(G,1) FROM RDB$TYPES,RDB$TYPES,RDB$TYPES
+    QUERY THAT KILLED:  335544794 : OPERATION WAS CANCELLED
+    QUERY THAT KILLED:  STATEMENT : SELECT GEN_ID(G,1) FROM RDB$TYPES,RDB$TYPES,RDB$TYPES
+    CHECK RESULTS LOG:  RESULT_MSG OK: QUERY WAS INTERRUPTED IN THE MIDDLE POINT.
+    CHECK RESULTS LOG:  RECORDS AFFECTED: 1
+,
+  'substitutions':[('^((?!MON\$STATE |GEN_ID|RECORDS AFFECTED:|SQLSTATE =|CANCEL|RESULT_MSG).)*$','')]
+'''
 
   """,
  'expected_stdout': 
   """
-    Records affected: 2
-    RESULT_MSG                      OK: query was interrupted in the middle point.
-    Records affected: 1
+    DEL FROM MON$STTM:  RECORDS AFFECTED: 2
+    CHECK RESULTS LOG:  RESULT_MSG OK: QUERY WAS INTERRUPTED IN THE MIDDLE POINT.
+    CHECK RESULTS LOG:  RECORDS AFFECTED: 1
   """,
  'expected_stderr': 
   """
   """,
- 'substitutions':[('^((?!Records affected:|RESULT_MSG).)*$','')]
+  'substitutions':[
+      ('^((?!RECORDS AFFECTED:|RESULT_MSG).)*$','')
+  ]
 }
 ]
 }
