@@ -3910,6 +3910,18 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
+    RDB$TYPE                        24
+    RDB$TYPE_NAME                   DECIMAL(16)                                                                                                                                                                                                                                                 
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
+    RDB$TYPE                        25
+    RDB$TYPE_NAME                   DECIMAL(34)                                                                                                                                                                                                                                                 
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
     RDB$TYPE                        27
     RDB$TYPE_NAME                   DOUBLE                                                                                                                                                                                                                                                      
     RDB$DESCRIPTION                 <null>
@@ -4641,8 +4653,7 @@
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
-
-    Records affected: 277
+    Records affected: 279
   """
 }
 ]
