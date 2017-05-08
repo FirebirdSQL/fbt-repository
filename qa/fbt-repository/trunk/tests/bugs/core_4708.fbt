@@ -70,14 +70,20 @@
         ,(select count(*) from r2)
         ,(select count(*) from r2)
         --,(select count(*) from r2)
-    from mon$statements 
-    where mon$attachment_id = current_connection;
+    from mon$statements s
+    where 
+    s.mon$attachment_id = current_connection
+    -- 08-may-2017: need for 4.0 Classic! 
+    -- Currently there is also query with RDB$AUTH_MAPPING data in mon$statements:
+    and s.mon$sql_text containing 'select 1 as i'
+    ;
+    -- Table "MON$STATEMENTS" Full Scan
   """,
  'expected_stdout': 
   """
     MON_EXPLAINED_PLAN_LEN          MORE THAN 32K
     MON_EXPLAINED_PLAN_TAIL         0:4
-    Table "MON$STATEMENTS" Full Scan
+    MON$STATEMENTS" as "S" Full Scan
     COUNT                           1
     COUNT                           1
     COUNT                           1
