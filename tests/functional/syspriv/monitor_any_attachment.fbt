@@ -60,11 +60,14 @@
     execute block returns(
         who_am_i rdb$user,
         who_else_here rdb$user,
-        what_he_is_doing varchar(50)
+        what_he_is_doing varchar(250)
     ) as
         declare another_user varchar(31);
+        declare v_other_sttm varchar(40);
     begin
-        execute statement 'select current_user from rdb$database' 
+        v_other_sttm = 'select current_user from rdb$database';
+
+        execute statement (v_other_sttm)
         on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
         as user 'SYSDBA' password 'masterkey'
         into another_user;
@@ -74,8 +77,18 @@
                 current_user,
                 a.mon$user,
                 s.mon$sql_text
-            from mon$attachments a join mon$statements s using(mon$attachment_id)
-            where a.mon$user<>current_user and a.mon$system_flag is distinct from 1 
+            from mon$attachments a 
+            join mon$statements s using(mon$attachment_id)
+            where 
+                a.mon$user<>current_user 
+                and a.mon$system_flag is distinct from 1 
+                -- NB: for Classic 4.0 we should prevent output from:
+                -- SELECT 
+                --     RDB$MAP_USING, RDB$MAP_PLUGIN, RDB$MAP_DB, 
+                --     RDB$MAP_FROM_TYPE, RDB$MAP_FROM, RDB$MAP_TO_TYPE, RDB$MAP_TO 
+                -- FROM RDB$AUTH_MAPPING
+                -- -- so we add filter on s.mon$sql_text:
+                and s.mon$sql_text containing :v_other_sttm
             into who_am_i, who_else_here, what_he_is_doing
         do 
             suspend;
