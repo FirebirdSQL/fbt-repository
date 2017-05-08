@@ -28,6 +28,11 @@
                   +--- three white-spaces here (after 'g')
    ===    
    No such effect on builds >= 2.1.3.18185.
+
+   Refactored 08-may-2067: replaced buggy "folder.replace()" with bulk of backslashes ("\") with locals() usage.
+   Checked again on Classic for: WI-V3.0.2.32708, WI-T4.0.0.633 
+   (added expression to WHERE-block to filter out record from mon$statements with RDB$AUTH_MAPPING data).
+
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -48,52 +53,65 @@ db_conn.close()
 import codecs
 
 #non_ascii_query="select 'gång' from rdb$database"
-non_ascii_query=u"select 'g\u00E5ng' from rdb$database"
+non_ascii_query=u"select 'g\u00E5ng' as non_ascii_literal from rdb$database"
 
-f_python_txt='''\
-# coding: latin-1
+f_sql_txt=\
+'''
+    set count on;
+    set list on; 
+    set blob all;
+    select sql from non_ascii;
+    select s.mon$sql_text as sql_text_blob_id
+    from mon$statements s
+    where
+        s.mon$attachment_id<>current_connection
+        and s.mon$sql_text containing 'non_ascii_literal'
+    ;
+'''
+
+tmppath=context['temp_directory']
+user_name='SYSDBA'
+user_password='masterkey'
+dbnm=dsn
+
+
+f_mon_sql = os.path.join(tmppath, 'tmp_2531_w1252.sql')
+
+f_sql = open( f_mon_sql, 'w')
+f_sql.write(f_sql_txt)
+f_sql.close()
+
+f_mon_log = os.path.join(tmppath, 'tmp_2531_w1252.log')
+
+
+f_python_txt=\
+'''# coding: latin-1
 import os
 import fdb
 import subprocess
 
-dbnm='%s'
-att1 = fdb.connect(dsn=dbnm, user='%s', password='%s', charset='win1252')
-
-cur1=att1.cursor()
-cur1.execute("recreate table non_ascii(sql varchar(255) character set win1252)")
+att1 = fdb.connect(dsn=r'%(dbnm)s', user='%(user_name)s', password='%(user_password)s', charset='win1252')
+att1.execute_immediate("recreate table non_ascii(sql varchar(255) character set win1252)")
 att1.commit()
 
-#txt="select 'g\u00E5ng' from rdb$database"
-txt="%s"
+txt="%(non_ascii_query)s"
 
+cur1=att1.cursor()
 cur1.execute( "insert into non_ascii(sql) values('%%s')"  %% txt.replace("'","''")  )
 att1.commit()
 
 cur1.prep(txt)
 
-f_mon_sql = open( os.path.join( '%s', 'tmp_2531_w1252.sql'), 'w')
-f_sql_txt="set heading off;  "\
-    +"select sql from non_ascii; "\
-    +"set list on; set blob all; "\
-    +"select s.mon$sql_text as sql_text_blob_id"\
-    +" from mon$statements s"\
-    +" where"\
-    +" s.mon$attachment_id<>current_connection"\
-    +"    and s.mon$sql_text is not null"\
-    +";"
-
-f_mon_sql.write(f_sql_txt)
-f_mon_sql.close()
-
-f_mon_log = open( os.path.join( '%s', 'tmp_2531_w1252.log'), 'w')
-subprocess.call(["isql", dbnm, "-user", 'SYSDBA', "-password", "masterkey", "-ch", "utf8", "-i", f_mon_sql.name], stdout = f_mon_log)
-f_mon_log.close()
+f_log = open( r'%(f_mon_log)s', 'w')
+subprocess.call(["isql", r'%(dbnm)s', "-user", '%(user_name)s', "-password", "%(user_password)s", "-ch", "utf8", "-i", r"%(f_mon_sql)s" ], stdout = f_log)
+f_log.close()
 
 att1.commit()
 att1.close()
-os.remove(f_mon_sql.name)
+os.remove( r"%(f_mon_sql)s" )
 
-''' % ( dsn.replace('\\\\', '\\\\\\\\'), user_name, user_password, non_ascii_query, context['temp_directory'].replace('\\\\', '\\\\\\\\'), context['temp_directory'].replace('\\\\', '\\\\\\\\') )
+''' %locals()
+
 
 #####################################################################
 ### Create temporary Python script with code page = Windows-1252, ###
@@ -114,11 +132,15 @@ f.close()
 
 os.remove(f_python_run.name)
 os.remove(f_python_log)
+
   """,
  'expected_stdout':
   """
-    select 'gång' from rdb$database                                                                                                                                                                                                                                 
-    select 'gång' from rdb$database  
+    SQL                             select 'gång' as non_ascii_literal from rdb$database
+    Records affected: 1
+
+    select 'gång' as non_ascii_literal from rdb$database
+    Records affected: 1
   """,
   'substitutions':[('SQL_TEXT_BLOB_ID .*','')]
 }
