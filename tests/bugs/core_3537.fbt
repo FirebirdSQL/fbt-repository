@@ -21,7 +21,7 @@
    All ratios should belong to some range with +/-5% of possible difference from one run to another.
    Concrete values of ratio were found after several runs on 2.5.7, 3.0.2 & 4.0.0
 
-   Checked on 2.5.7.27030 (SS/SC), WI-V3.0.2.32644 (SS/SC/CS) and WI-T4.0.0.468 (SS/SC).
+   Checked on 2.5.7.27030 (SS/SC), WI-V3.0.2.32644 (SS/SC/CS) and WI-T4.0.0.468 (SS/SC); 4.0.0.633 (CS/SS)
 
    Notes.
    1. We can estimate volume of UNDO changes in trace statistics for ROLLBACK event.
@@ -38,6 +38,8 @@
  'test_type': 'Python',
  'init_script':
   """
+set bail on;
+set echo on;
     create or alter procedure sp_fill_fix_tab as begin end;
     create or alter procedure sp_fill_gtt_del_rows as begin end;
     create or alter procedure sp_fill_gtt_sav_rows as begin end;
@@ -72,7 +74,13 @@
     begin
         k=a_rows;
         select v.fld_len from v_field_len v where v.rel_name=upper('t_fix_tab') into w;
-        while(k>0) do insert into t_fix_tab(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+        while(k>0) do 
+        begin
+            insert into t_fix_tab(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) );
+            if (mod(k-1, 5000) = 0) then
+                rdb$set_context('USER_SESSION','DBG_FILL_FIX_TAB',a_rows - k); -- to be watched in the trace log (4DEBUG)
+            k = k - 1;
+        end
     end
     ^
     create or alter procedure sp_fill_gtt_del_rows(a_rows int) as
@@ -81,7 +89,14 @@
     begin
         k=a_rows;
         select v.fld_len from v_field_len v where v.rel_name=upper('t_gtt_del_rows') into w;
-        while(k>0) do insert into t_gtt_del_rows(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+        while(k>0) do 
+        begin
+            insert into t_gtt_del_rows(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) );
+            if (mod(k-1, 5000) = 0) then
+                rdb$set_context('USER_SESSION','DBG_FILL_GTT_DEL',a_rows - k); -- to be watched in the trace log (4DEBUG)
+            k = k - 1;
+        end
+        rdb$set_context('USER_SESSION','DBG_FILL_GTT_DEL',a_rows);
     end
     ^
     create or alter procedure sp_fill_gtt_sav_rows(a_rows int) as
@@ -90,7 +105,14 @@
     begin
         k=a_rows;
         select v.fld_len from v_field_len v where v.rel_name=upper('t_gtt_sav_rows') into w;
-        while(k>0) do insert into t_gtt_sav_rows(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) ) returning :k-1 into k;
+        while(k>0) do 
+        begin
+            insert into t_gtt_sav_rows(s1) values( rpad('', :w, uuid_to_char(gen_uuid()) ) );
+            if (mod(k-1, 5000) = 0) then
+                rdb$set_context('USER_SESSION','DBG_FILL_GTT_SAV',a_rows - k); -- to be watched in the trace log (4DEBUG)
+            k = k - 1;
+        end
+        rdb$set_context('USER_SESSION','DBG_FILL_GTT_SAV',a_rows);
     end
     ^
     set term ;^
@@ -157,7 +179,7 @@ if engine.startswith('2.5'):
           enabled true
           time_threshold 0
           log_transactions true
-          #log_procedure_finish true
+          log_initfini false
           print_perf true
       </database>
     '''
@@ -173,6 +195,10 @@ else:
           time_threshold = 0
           log_transactions = true
           print_perf = true
+
+          #log_connections = true
+          #log_context = true
+          log_initfini = false
       }
     '''
 
@@ -180,7 +206,9 @@ f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_3537.cfg'), 'w
 f_trc_cfg.write(txt)
 f_trc_cfg.close()
 
+############################
 NUM_ROWS_TO_BE_ADDED = 45000
+############################
 
 con1 = fdb.connect(dsn=dsn)
 cur1=con1.cursor()
@@ -189,6 +217,7 @@ cur1=con1.cursor()
 # (it should be the same for any kind of tables, including GTTs):
 cur1.callproc('sp_fill_fix_tab', (NUM_ROWS_TO_BE_ADDED,))
 con1.commit()
+con1.close()
 
 # ##############################################################
 # S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
@@ -201,8 +230,14 @@ p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_st
 
 time.sleep(1)
 
+con1 = fdb.connect(dsn=dsn)
+cur1=con1.cursor()
 cur1.callproc('sp_fill_gtt_sav_rows', (NUM_ROWS_TO_BE_ADDED,))
 con1.rollback()
+con1.close()
+
+con1 = fdb.connect(dsn=dsn)
+cur1=con1.cursor()
 cur1.callproc('sp_fill_gtt_del_rows', (NUM_ROWS_TO_BE_ADDED,))
 con1.rollback()
 con1.close()
@@ -242,6 +277,7 @@ if trcssn>0:
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
     time.sleep(2)
+
 
 p_trace.terminate()
 f_trc_log.close()
@@ -361,11 +397,12 @@ if failed_flag:
 # CLEANUP
 #########
 
-f_list=[f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_stat_log, f_stat_err]
+f_list=(f_trc_cfg, f_trc_log, f_trc_err, f_stat_log, f_stat_err, f_trc_lst)
 
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
+
 
   """,
  'expected_stdout': 
