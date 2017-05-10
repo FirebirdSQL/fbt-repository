@@ -208,7 +208,7 @@ f_online_sys_err.close()
 # Check:
 ########
 
-f_list=[
+f_list=(
     f_dbshut_u01_log,
     f_dbshut_u01_err,
     f_dbshut_sys_log,
@@ -217,7 +217,7 @@ f_list=[
     f_online_u01_err,
     f_online_sys_log,
     f_online_sys_err
-]
+)
 
 # Only f_dbshut_u01_err and f_online_u01_err must contain single message.
 # All other files from f_list must be EMPTY:
@@ -233,7 +233,6 @@ for i in range(len(f_list)):
 ##########
 
 runProgram('isql',[dsn, '-user', user_name, '-pas', user_password], 'drop user u01; commit;')
-
   """,
   'expected_stdout':
   """
@@ -270,6 +269,7 @@ runProgram('isql',[dsn, '-user', user_name, '-pas', user_password], 'drop user u
   """,
   'substitutions':[
       ('.* access to database.*', 'access to database'),
+      ('.* -Some database.*', ''),
       ('335544528 : database.* shutdown', '335544528 : database shutdown'),
       ('Data source : Firebird::localhost:.*', 'Data source : Firebird::localhost:'),
       ('-At block line: [\d]+, col: [\d]+', '-At block line')
