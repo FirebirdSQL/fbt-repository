@@ -26,6 +26,8 @@
 
    Checked on WI-V3.0.2.32620 (SS/SC/CS), 4.0.0.420 (SS/SC).
    Total time of test run is ~25 seconds (data filling occupies about 3 seconds).
+
+   11.05.2017: checked on WI-T4.0.0.638 - added filtering to messages about shutdown state, see comments below.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -392,6 +394,15 @@ f_diff_txt.close()
    connection shutdown
    Point after GFIX -SWEEP.
 '''
+
+# 11.05.2017, FB 4.0 only!
+# Following messages can appear after 'connection shutdown'
+# (letter from dimitr, 08-may-2017 20:41):
+#   isc_att_shut_killed: Killed by database administrator
+#   isc_att_shut_idle: Idle timeout expired
+#   isc_att_shut_db_down: Database is shutdown
+#   isc_att_shut_engine: Engine is shutdown
+
 with open( f_gfix_log.name,'r') as f:
     for line in f:
         if line.strip():
@@ -492,7 +503,7 @@ time.sleep(1)
 # Cleanup.
 ###############################
 
-f_list=[f_work_sql,f_work_log,f_work_err,f_fblog_before,f_trccfg,f_trclog,f_trcerr,f_wait_sql,f_wait_log,f_wait_err,f_gfix_log,f_trclst,f_db_reset_log,f_fblog_after,f_diff_txt]
+f_list=(f_work_sql,f_work_log,f_work_err,f_fblog_before,f_trccfg,f_trclog,f_trcerr,f_wait_sql,f_wait_log,f_wait_err,f_gfix_log,f_trclst,f_db_reset_log,f_fblog_after,f_diff_txt)
 
 for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
@@ -518,6 +529,7 @@ for i in range(len(f_list)):
      ('TRACE_LOG:.* SWEEP_START','TRACE_LOG: SWEEP_START'),
      ('TRACE_LOG:.* SWEEP_FAILED','TRACE_LOG: SWEEP_FAILED'),
      ('TRACE_LOG:.* ERROR AT JPROVIDER::ATTACHDATABASE','TRACE_LOG: ERROR AT JPROVIDER::ATTACHDATABASE'),
+     ('.*KILLED BY DATABASE ADMINISTRATOR.*', ''),
      ('TRACE_LOG:.*GFIX.EXE.*','TRACE_LOG: GFIX.EXE'),
      ('OIT [0-9]+','OIT'),
      ('OAT [0-9]+','OAT'),
