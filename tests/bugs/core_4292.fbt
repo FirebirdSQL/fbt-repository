@@ -12,6 +12,7 @@
     query MON$ tables at all (until this 'complex query' preparing finish).
 
     Checked on WI-V3.0.0.32081, SS / SC / CS. Result: all fine.
+    11.05.2017: checked on WI-T4.0.0.638 - added filtering to messages about shutdown state, see comments below.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -29,6 +30,9 @@ import subprocess
 from subprocess import Popen
 import time
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
 
 hang_sql=open(os.path.join(context['files_location'],'core_4292.sql'),'r')
@@ -41,9 +45,7 @@ hang_log.close()
 hang_log=open(hang_log.name, "w")
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql" , dsn , "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , hang_sql.name], \
-                stdout=hang_log, stderr=subprocess.STDOUT \
-              )
+p_hang = Popen(["isql", dsn, "-i", hang_sql.name], stdout=hang_log, stderr=subprocess.STDOUT )
 
 time.sleep(4)
 
@@ -66,6 +68,15 @@ script=\
    ;
 '''
 
+# 11.05.2017, FB 4.0 only!
+# Following messages can appear after 'connection shutdown'
+# (letter from dimitr, 08-may-2017 20:41):
+#   isc_att_shut_killed: Killed by database administrator
+#   isc_att_shut_idle: Idle timeout expired
+#   isc_att_shut_db_down: Database is shutdown
+#   isc_att_shut_engine: Engine is shutdown
+
+
 kill_sql=open( os.path.join(context['temp_directory'],'tmp_kill_4292.sql'), 'w')
 kill_sql.write(script)
 kill_sql.close()
@@ -78,9 +89,8 @@ kill_log.close()
 kill_log=open(kill_log.name, "w")
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_kill = Popen(["isql" , dsn, "-user" , "SYSDBA" , "-password" , "masterkey" , "-i" , kill_sql.name], \
-                stdout=kill_log, stderr=subprocess.STDOUT \
-              )
+
+p_kill = Popen(["isql" , dsn, "-i" , kill_sql.name], stdout=kill_log, stderr=subprocess.STDOUT )
 
 # Make delay at least on 6 seconds after that point.
 # Otherwise temp database will not be removed and we get:
@@ -125,7 +135,10 @@ os.remove(hang_log.name)
  'expected_stderr': 
   """
   """,
-  'substitutions': [('.*line.*','')]
+  'substitutions': [
+      ('.*line.*',''),
+      ('.*Killed by database administrator.*', ''),
+   ]
 }
 ]
 }
