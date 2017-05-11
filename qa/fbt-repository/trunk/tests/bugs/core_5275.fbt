@@ -20,6 +20,8 @@
    1) compare content of old/new firebird.log (difference): it should NOT contain line "consistency check";
    2) run database online validation: it should NOT report any error in the database.
 
+   11.05.2017: checked on WI-T4.0.0.638 (both SS and CS).
+
    PS. This test (and CORE- ticket) has been created after wrong initial implementation of test for CORE-1746.
  """,
 'min_versions': '2.5.6',
@@ -248,6 +250,14 @@ for i in range(len(tx_param)):
                                  )
     f_kill_att_log.close()
 
+    # 11.05.2017, FB 4.0 only!
+    # Following messages can appear after 'connection shutdown'
+    # (letter from dimitr, 08-may-2017 20:41):
+    #   isc_att_shut_killed: Killed by database administrator
+    #   isc_att_shut_idle: Idle timeout expired
+    #   isc_att_shut_db_down: Database is shutdown
+    #   isc_att_shut_engine: Engine is shutdown
+
     # do NOT remove this delay, otherwise ISQL logs in 2.5.x will contain NO text with error message
     # STATEMENT FAILED, SQLSTATE = 08003 / CONNECTION SHUTDOWN:
     time.sleep(1)
@@ -346,7 +356,7 @@ with open( f_validate_err.name,'r') as f:
 f.close()
 time.sleep(1)
 
-f_list=[f_validate_log, f_validate_err, f_kill_att_sql, f_fblog_before, f_fblog_after, f_diff_txt]
+f_list=(f_validate_log, f_validate_err, f_kill_att_sql, f_fblog_before, f_fblog_after, f_diff_txt)
 
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
@@ -392,6 +402,7 @@ for i in range(len(f_list)):
   'substitutions':[
       ('0: CREATE INDEX LOG: RDB_EXPR_BLOB.*', '0: CREATE INDEX LOG: RDB_EXPR_BLOB'),
       ('BULK_INSERT_START.*', 'BULK_INSERT_START'),
+      ('.*KILLED BY DATABASE ADMINISTRATOR.*', ''),
       ('BULK_INSERT_FINISH.*', 'BULK_INSERT_FINISH'),
       ('CREATE_INDX_START.*', 'CREATE_INDX_START'),
       ('AFTER LINE.*', 'AFTER LINE'),
