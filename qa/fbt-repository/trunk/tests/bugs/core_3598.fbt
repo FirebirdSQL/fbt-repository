@@ -17,11 +17,14 @@
    
    ##########################
    NB: implementation for 2.5 was deferred because its output does not contain per-table block for ROLLBACK event.
+   11.05.2017: TEMPLY REPLACED 'min_versions': '2.5.2' with '3.0' because trace for 3.0+ always contains auxiliary
+   Tx with TIL = RC (see sample of trace log below).
+   Checked on 3.0.3.32721 (SS, CS), 4.0.0.638 (SS, CS)
  """,
-'min_versions': '2.5.2',
+'min_versions': '3.0',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'Python',
  'init_script':
@@ -36,6 +39,8 @@ import os
 import subprocess
 from subprocess import Popen
 import time
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
@@ -45,7 +50,9 @@ db_conn.close()
 sqltxt='''set list on;select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database;'''
 sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_3598.log'), 'w')
 sqllog.close()
-runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-o',sqllog.name],sqltxt)
+
+runProgram('isql',[dsn,'-q','-o',sqllog.name],sqltxt)
+
 with open( sqllog.name,'r') as f:
     for line in f:
         i=1
@@ -58,12 +65,16 @@ with open( sqllog.name,'r') as f:
 f.close()
 
 txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
-<database %[\\\\\\\\/]bugs.core_3598.fdb>
-  enabled true
-  log_transactions true
-  print_perf true
-  time_threshold 0 
-</database>
+    <database %[\\\\\\\\/]security?.fdb>
+        enabled false
+    </database>
+    <database %[\\\\\\\\/]bugs.core_3598.fdb>
+        enabled true
+        log_transactions true
+        print_perf true
+        time_threshold 0 
+        log_initfini false
+    </database>
 '''
 
 # NOTES ABOUT TRACE CONFIG FOR 3.0:
@@ -72,13 +83,19 @@ txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
 #    element "<. . .>" have no attribute value set
 
 txt30 = '''# Trace config, format for 3.0. Generated auto, do not edit!
-database=%[\\\\\\\\/]bugs.core_3598.fdb
-{
-  enabled = true
-  log_transactions = true
-  print_perf = true
-  time_threshold = 0 
-}
+    database=%[\\\\\\\\/]security?.fdb
+    {
+        enabled = false
+    }
+
+    database=%[\\\\\\\\/]bugs.core_3598.fdb
+    {
+        enabled = true
+        log_transactions = true
+        print_perf = true
+        time_threshold = 0 
+        log_initfini = false
+    }
 '''
 trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_3598.cfg'), 'w')
 if engine.startswith('2.5'):
@@ -97,10 +114,7 @@ trclst.close()
 
 f_trclog=open(trclog.name,'w')
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_trace=Popen(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-               "action_trace_start",\
-                "trc_cfg", trccfg.name],\
-                stdout=f_trclog, stderr=subprocess.STDOUT)
+p_trace=Popen(["fbsvcmgr", "localhost:service_mgr", "action_trace_start", "trc_cfg", trccfg.name], stdout=f_trclog, stderr=subprocess.STDOUT)
 
 # Wait! Trace session is initialized not instantly!
 time.sleep(1)
@@ -110,21 +124,47 @@ time.sleep(1)
 
 sqltxt=\
 '''
-insert into tfix(id) values(1);
-commit;
-insert into tfix(id) values(2);
-rollback;
-insert into gtt_ssn(id) values(1);
-commit;
-insert into gtt_ssn(id) values(2);
-rollback;
-insert into gtt_tra(id) values(1);
-commit;
-insert into gtt_tra(id) values(2);
-rollback;
+    insert into tfix(id) values(1);
+    commit;
+    insert into tfix(id) values(2);
+    rollback;
+    insert into gtt_ssn(id) values(1);
+    commit;
+    insert into gtt_ssn(id) values(2);
+    rollback;
+    insert into gtt_tra(id) values(1);
+    commit;
+    insert into gtt_tra(id) values(2);
+    rollback;
 '''
 
-runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-n'],sqltxt)
+# !!! NB !!! 11.05.2017
+# Command switch "-n" does NOT help to prevent "auxiliary" Tx and its rollback, TIL=RC (3.0.2 & 4.0)
+# Trace logs in current FB versions looks like this:
+'''
+	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
+	C:\MIX\firebird\fb30\isql.exe:288
+		(TRA_14, CONCURRENCY | WAIT | READ_WRITE)
+
+2017-05-11T17:28:04.0000 (3264:014B2558) START_TRANSACTION
+	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
+	C:\MIX\firebird\fb30\isql.exe:288
+		(TRA_15, READ_COMMITTED | NO_REC_VERSION | WAIT | READ_WRITE)
+
+2017-05-11T17:28:04.0000 (3264:014B2558) ROLLBACK_TRANSACTION
+	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
+	C:\MIX\firebird\fb30\isql.exe:288
+		(TRA_15, READ_COMMITTED | NO_REC_VERSION | WAIT | READ_WRITE)
+      0 ms, 1 read(s), 1 write(s), 1 fetch(es), 1 mark(s) <<<<<< THIS TX DID APPEAR IN RECENT FB 3.0 & 4.0
+
+2017-05-11T17:28:04.0000 (3264:014B2558) COMMIT_TRANSACTION
+	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
+	C:\MIX\firebird\fb30\isql.exe:288
+		(TRA_14, CONCURRENCY | WAIT | READ_WRITE)
+      0 ms, 1 read(s), 4 write(s), 1 fetch(es), 1 mark(s) <<<<<<<<<< THIS IS TX WHICH WAS STARTED BY US
+'''
+
+runProgram('isql',[dsn,'-n'],sqltxt)
 
 # do NOT remove this otherwise trace log can contain only message about its start before being closed!
 time.sleep(2)
@@ -134,10 +174,7 @@ time.sleep(2)
 
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 f_trclst=open(trclst.name,'w')
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_trace_list"],\
-                 stdout=f_trclst, stderr=subprocess.STDOUT
-               )
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_list"],stdout=f_trclst, stderr=subprocess.STDOUT)
 f_trclst.close()
 
 trcssn=0
@@ -155,11 +192,7 @@ f.close()
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
 f_trclst=open(trclst.name,'a')
 f_trclst.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_trace_stop",\
-                 "trc_id",trcssn],\
-                 stdout=f_trclst, stderr=subprocess.STDOUT
-               )
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_stop","trc_id",trcssn],stdout=f_trclst, stderr=subprocess.STDOUT)
 f_trclst.close()
 
 # Terminate child process of launched trace session (though it should already be killed):
@@ -175,9 +208,11 @@ perf_header='Table                             Natural     Index    Update    In
 i=0
 with open( trclog.name,'r') as f:
     for line in f:
+        
         if ' ms,' in line and ('fetch' in line or 'mark' in line): # One of these always WILL be in trace statistics.
             print('Statement statistics detected.')
             i =  i +1
+            '''
             if engine.startswith('2.5') and (i==2 or i==4):
 
                 # Dummy emulation of output in 2.5 for it will match to 3.0 - see comment by hvlad in the ticket, 21/Jan/16 11:26 AM:
@@ -190,6 +225,7 @@ with open( trclog.name,'r') as f:
                     print('Found table statistics for: TFIX')
                 else:
                     print('Found table statistics for: GTT_SSN')
+            '''
         if ' '.join(line.split()).upper() == ' '.join(perf_header.split()).upper():
             print('Performance block detected.')
         if line.startswith('TFIX') or line.startswith('GTT_SSN') or line.startswith('GTT_TRA'):
@@ -200,18 +236,16 @@ f.close()
 ##########
 time.sleep(1)
 
-if os.path.isfile(sqllog.name):
-    os.remove(sqllog.name)
-if os.path.isfile(trccfg.name):
-    os.remove(trccfg.name)
-if os.path.isfile(trclst.name):
-    os.remove(trclst.name)
-if os.path.isfile(trclog.name):
-    os.remove(trclog.name)
+f_list=(sqllog, trccfg, trclst, trclog)
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
 
   """,
  'expected_stdout': 
   """
+    Statement statistics detected.
     Statement statistics detected.
     Statement statistics detected.
     Performance block detected.
