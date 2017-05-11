@@ -11,25 +11,26 @@
  'platform': 'All',
  'database_character_set': 'UTF8',
  'connection_character_set': 'UTF8',
- 'page_size': '4096',
  'test_type': 'Python',
- 'test_script': """#
+ 'test_script': 
+  """\
 c = db_conn.cursor()
 con2 = kdb.connect(dsn=dsn,user=user_name,password=user_password)
 c2 = con2.cursor()
 
 c.execute("select _dos850 '123áé456' from rdb$database")
-c2.execute("SELECT MON$SQL_TEXT FROM MON$STATEMENTS")
-printData(c2)
+c2.execute("select mon$sql_text from mon$statements s where s.mon$sql_text containing '_dos850'")
+#printData(c2)
+for r in c2:
+  print(r[0])
 
 con2.close()
-
-""",
- 'expected_stdout': """MON$SQL_TEXT
-------------
-SELECT MON$SQL_TEXT FROM MON$STATEMENTS
-select _dos850 X'313233C3A1C3A9343536' from rdb$database
-"""
+  """,
+ 'expected_stdout': 
+  """
+    select mon$sql_text from mon$statements s where s.mon$sql_text containing '_dos850'
+    select _dos850 X'313233C3A1C3A9343536' from rdb$database
+  """
 }
 ]
 }
