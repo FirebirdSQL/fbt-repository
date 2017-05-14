@@ -3911,13 +3911,13 @@
 
     RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
     RDB$TYPE                        24
-    RDB$TYPE_NAME                   DECIMAL(16)                                                                                                                                                                                                                                                 
+    RDB$TYPE_NAME                   DECFLOAT(16)                                                                                                                                                                                                                                                
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
     RDB$TYPE                        25
-    RDB$TYPE_NAME                   DECIMAL(34)                                                                                                                                                                                                                                                 
+    RDB$TYPE_NAME                   DECFLOAT(34)                                                                                                                                                                                                                                                
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
@@ -4652,6 +4652,7 @@
     RDB$TYPE_NAME                   UNIQUE                                                                                                                                                                                                                                                      
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
+
 
     Records affected: 279
   """
