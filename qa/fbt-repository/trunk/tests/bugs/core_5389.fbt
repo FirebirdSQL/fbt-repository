@@ -1,0 +1,147 @@
+{
+'id': 'bugs.core_5389',
+'qmid': None,
+'tracker_id': 'CORE-5389',
+'title': "Querry cannot be executed if win1251 characters used in field aliases",
+'description':
+ """
+    Test prepares file that will serve as input SQL script and will have CYRYLLIC names for field aliases.
+    File has name = 'tmp_non_ascii_chk_5389.sql' and is encoded to windows-1251 codepage.
+    Checked on 4.0.0.639.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'Windows',
+ 'test_type': 'Python',
+ 'connection_character_set': 'UTF8',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import time
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+non_ascii_ddl=u'''\
+    set list on;
+    select 
+       '' as "ФИО"
+      ,'' as "Д.рождения"
+      ,'' as "Город"
+      ,'' as "Расшифровка выступлений"
+    from rdb$database;
+'''
+
+f_checksql=open( os.path.join(context['temp_directory'],'tmp_non_ascii_chk_5389.sql'), 'w')
+f_checksql.write( non_ascii_ddl.encode('windows-1251') )
+f_checksql.close()
+
+###########################################################################################################
+###  check-1:  attempt to apply DDL with non-ascii characters __WITHOUT__ charset specifying (for ISQL) ###
+###########################################################################################################
+
+f_apply_cset_none_log = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_none.log'), 'w')
+f_apply_cset_none_err = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_none.err'), 'w')
+
+subprocess.call( ["isql", dsn, "-i", f_checksql.name ],
+                 stdout = f_apply_cset_none_log,
+                 stderr = f_apply_cset_none_err
+               )
+
+f_apply_cset_none_log.close()
+f_apply_cset_none_err.close()
+
+#############################################################################################################
+###  check-2:  attempt to apply DDL with non-ascii characters ___WITH___ specifying: ISQL ... -ch WIN1251 ###
+#############################################################################################################
+
+f_apply_cset_1251_log = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_1251.log'), 'w')
+f_apply_cset_1251_err = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_1251.err'), 'w')
+
+subprocess.call( ["isql", dsn, "-i", f_checksql.name, "-ch", "win1251" ],
+                 stdout = f_apply_cset_1251_log,
+                 stderr = f_apply_cset_1251_err
+               )
+
+f_apply_cset_1251_log.close()
+
+# This file should NOT contain any errors:
+f_apply_cset_1251_err.close()
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+
+# CHECK RESULTS:
+################
+               
+# This stdout log should contain only ONE statement (create collation <non_ascii_name> ...),
+# this DDL failed and caused ISQL to immediately terminate:
+with open( f_apply_cset_none_log.name, 'r') as f:
+    for line in f:
+        out_txt='STDLOG WHEN CSET=NONE: ';
+        if line.strip():
+            print( out_txt+line.strip().decode("cp1251").encode('utf8') )
+f.close()
+
+
+with open( f_apply_cset_none_err.name, 'r') as f:
+    for line in f:
+        out_txt='STDERR WHEN CSET=NONE: ';
+        if line.strip():
+            print( out_txt+line.strip().decode("cp1251").encode('utf8') )
+        
+f.close()
+
+
+with open( f_apply_cset_1251_log.name, 'r') as f:
+    for line in f:
+        out_txt='STDLOG WHEN CSET=WIN1251: ';
+        if line.strip():
+            print( out_txt+line.strip().decode("cp1251").encode('utf8') )
+f.close()
+
+with open( f_apply_cset_1251_err.name, 'r') as f:
+    for line in f:
+        out_txt='STDERR WHEN CSET=WIN1251: ';
+        if line.strip():
+            print( out_txt+line.strip().decode("cp1251").encode('utf8') )
+f.close()
+
+
+#####################################################################
+# Cleanup:
+
+f_list=(f_apply_cset_none_log, f_apply_cset_none_err, f_apply_cset_1251_log, f_apply_cset_1251_err)
+'''
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+'''
+  """,
+ 'expected_stdout': 
+  """
+    STDERR WHEN CSET=NONE: Statement failed, SQLSTATE = 22018
+    STDERR WHEN CSET=NONE: arithmetic exception, numeric overflow, or string truncation
+    STDERR WHEN CSET=NONE: -Cannot transliterate character between character sets
+    STDLOG WHEN CSET=WIN1251: ФИО
+    STDLOG WHEN CSET=WIN1251: Д.рождения
+    STDLOG WHEN CSET=WIN1251: Город
+    STDLOG WHEN CSET=WIN1251: Расшифровка выступлений  
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[('.*After line [0-9]+ in file .*', '')]
+}
+]
+}
