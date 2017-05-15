@@ -72,24 +72,25 @@ sys.stderr = se
 
 with open( fn_log,'r') as f:
   for line in f:
+    line=line.replace('SQL> ', '').replace('CON> ', '').rstrip()
     if line.split():
-      print('STDOUT: '+line)
+      print(line)
 
 with open( fn_err,'r') as f:
   for line in f:
     if line.split():
-      print('STDERR: '+line)
+      print(line)
 
 os.remove(fn_log)
 os.remove(fn_err)
-      
+
   """,
  'expected_stdout': 
   """
-    STDOUT: CONNECTION_CSET                 WIN1250
-    STDOUT: DB_DEFAULT_CSET                 WIN1251
-    STDERR: Statement failed, SQLSTATE = 22018
-    STDERR: Cannot transliterate character between character sets  
+    CONNECTION_CSET                 WIN1250
+    DB_DEFAULT_CSET                 WIN1251
+    Statement failed, SQLSTATE = 22018
+    Cannot transliterate character between character sets  
   """,
  'expected_stderr': 
   """
