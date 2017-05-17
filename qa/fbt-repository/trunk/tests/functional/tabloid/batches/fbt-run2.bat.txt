@@ -11,6 +11,7 @@ set tmp2=%~dpn0.2.tmp
 set res_ok=%~dpn0.success.tmp
 set res_warn=%~dpn0.warning.tmp
 set res_fail=%~dpn0.fail.tmp
+set res_skip=%~dpn0.skip.tmp
 
 set pbk=%path%
 
@@ -23,7 +24,7 @@ if "%1"=="" (
   goto final
 )
 
-for /d %%a in (!log!,!tmp1!,!tmp2!,!res_ok!,!res_warn!,!res_fail!) do (
+for /d %%a in (!log!,!tmp1!,!tmp2!,!res_ok!,!res_warn!,!res_fail!,!res_skip!) do (
   del %%a 2>nul
 )
 
@@ -200,7 +201,9 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                     call :sho "Start check instance !svcname!" !log!
                     set pre_checks_done=1
                 ) else (
-                    call :sho ".S.K.I.P. checking instance !svcname!: its version = ^|!fb_vers!^| - is OLDER than min_vers=^|!min_vers!^|" !log!
+                    @rem call :sho ".S.K.I.P. checking instance !svcname!: its version = ^|!fb_vers!^| - is OLDER than min_vers=^|!min_vers!^|" !log!
+                    set msg=!svcname!, build !fb_vers!: SKIPPED, version is OLDER than min_vers=!min_vers!
+                    call :sho "!msg!" !res_skip!
                 )
                
                 if !pre_checks_done! EQU 1 (
@@ -209,11 +212,11 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                     @rem -------------------------
                     set path=!bindir!;%pbk%
                     del results.trf 2>nul
+
                     set fbt_cmd=fbt_run -b "!bindir!" -o localhost/!fb_port! !cdprefix!.!fbt_name!
                     @rem -c "!bindir!\fbclient.dll"
 
-                    echo !time! !fbt_cmd!
-                    echo !time! !fbt_cmd! >>!log!
+                    call :sho "!fbt_cmd!" !log!
 
                     set success=0
                     cmd /c !fbt_cmd! 1>!tmp2! 2>&1
@@ -233,8 +236,9 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                               call :sho "%%u" !log!
                             )
 
-                            set msg=!time! !svcname!, build !fb_vers!: OK, !elapsed_sec!s.
-                            echo !msg!>>!res_ok!
+                            set msg=!svcname!, build !fb_vers!: OK, !elapsed_sec!s.
+                            call :sho "!msg!" !res_ok!
+
                         ) else (
                             set msg=### AMBIGOUS ###
                             call :sho "!msg!" !log!
@@ -245,24 +249,33 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                             )
                             call :sho "----------------------------------------------------" !log!
 
-                            set msg=!time! !svcname!, build !fb_vers!: WARNING, could not found 'Passes: 1' in the log.
-                            echo !msg!>>!res_warn!
+                            @rem set msg=!date! !time! !svcname!, build !fb_vers!: WARNING, could not found 'Passes: 1' in the log.
+                            @rem echo !msg!>>!res_warn!
+                            
+                            set msg=!svcname!, build !fb_vers!: WARNING, could not found 'Passes: 1' in the log.
+                            call :sho "!msg!" !res_warn!
                         )
                     ) else (
                         set msg=### FAILED ###
                         call :sho "!msg!" !log!
-                        call :sho ---------------------------------------------------- !log!
-                        @echo on
-                        dir /-c results.trf | findstr /i /c:"results"
-                        fbt_view -d results.trf
-                        @echo off
-                        for /f "tokens=*" %%u in ('fbt_view -d results.trf') do (
+                        set vsign=0
+                        for /f "tokens=*" %%u in ('findstr /v /c:"-----" /c:"=====" !tmp2!') do (
+                          set utxt=%%u
+                          if !vsign! EQU 1 (
+                              if NOT .!utxt!.==.. (
+                                  call :sho "!utxt!" !!log!
+                              )
+                          )
+                          set uchk=!utxt:%~n1=!
+                          if !vsign! EQU 0 if NOT !uchk!==!utxt! set vsign=1
+                        )
+                        for /f "tokens=*" %%u in ('fbt_view -d results.trf ^| findstr /v /b /c:"-----" /c:"====="') do (
                           call :sho "%%u" !log!
                         )
                         call :sho ---------------------------------------------------- !log!
 
-                        set msg=!time! !svcname!, build !fb_vers!: FAILED.
-                        echo !msg!>>!res_fail!
+                        set msg=!svcname!, build !fb_vers!: FAILED.
+                        call :sho "!msg!" !res_fail!
 
                     )
                     set path=%pbk%
@@ -271,20 +284,12 @@ for /f "tokens=2" %%a in (!tmp1!) do (
 
 
             ) else (
-                set msg=WARNING: SKIP because port !fb_port! is not in listened.
-                call :sho "!msg!" !log!
-
-                set msg=!time! !svcname!: !msg!
-                echo !msg!>>!res_warn!
-
+                set msg=WARNING: SKIP check of !svcname! because port !fb_port! is not in listened.
+                call :sho "!msg!" !res_warn!
             )
         ) else (
-            set msg=### ERROR ### FB config: !fbcfg! - does NOT exist.
-            call :sho "!msg!" !log!
-
-            set msg=!time! !svcname!: !msg!
-            echo !msg!>>!res_fail!
-
+            set msg=### ERROR ### !svcname! FB config: !fbcfg! - does NOT exist.
+            call :sho "!msg!" !res_fail!
         )
 
         call :sho ----------------------------------------------- !log!
@@ -301,84 +306,90 @@ if exist !res_ok! (
     call :sho "1. SUCCESSFULLY FINISHED:" !log!
     call :sho ------------------------- !log!
     type !res_ok!
-    @rem for /f "tokens=*" %%u in (!res_ok!) do (
-    @rem     call :sho "%%u" !log!
-    @rem )
+    type !res_ok!>>!log!
     call :sho ------------------------- !log!
-    del !res_ok!
 ) else (
-    call :sho "1. ### NO SUCCESS found. All services FAILED ###" !log!
+    call :sho "1. ### NO SUCCESS ###. All services either failed or not processed." !log!
 )
 
 if exist !res_warn! (
     call :sho "2. FINISHED WITH WARNINGS:" !log!
     call :sho ------------------------- !log!
     type !res_warn!
-    @rem for /f "tokens=*" %%u in (!res_warn!) do (
-    @rem     call :sho "%%u" !log!
-    @rem )
+    type !res_warn!>>!log!
     call :sho ------------------------- !log!
-    del !res_warn!
 ) else (
     call :sho "2. NO results with warnings." !log!
 )
 
+if exist !res_skip! (
+    call :sho "3. MISSING CHECKS:" !log!
+    call :sho ------------------------- !log!
+    type !res_skip!
+    type !res_skip!>>!log!
+    call :sho ------------------------- !log!
+) else (
+    call :sho "3. NO missed checks." !log!
+)
+
 if exist !res_fail! (
-    call :sho "3. FINISHED WITH ## FAIL ##:" !log!
+    call :sho "4. FINISHED WITH ## FAIL ##:" !log!
     call :sho ------------------------- !log!
     type !res_fail!
-    @rem for /f "tokens=*" %%u in (!res_fail!) do (
-    @rem     call :sho "%%u" !log!
-    @rem )
+    type !res_fail!>>!log!
     call :sho ------------------------- !log!
-    del !res_fail!
 ) else (
-    call :sho "3. NO results with fails." !log!
+    call :sho "4. NO results with fails." !log!
+)
+
+
+for /d %%a in (!tmp1!,!tmp2!,!res_ok!,!res_warn!,!res_fail!,!res_skip!) do (
+  del %%a 2>nul
 )
 
 
 goto final
-
+@rem -----------------------------------------------------------------------------------------
 
 :sho
     setlocal
     set msg=%1
     set log=%2
     if .!log!.==.. (
-        echo Internal func "sho": missed argument for log file.
+        echo Internal func sho: missed argument for log file.
         exit
-    ) else (
-        @rem echo msg=^|!msg!^|
-        set chr_beg=!msg:~0,1!
-        set chr_end=!msg:~-1!
-        @rem echo chr_beg=^|!chr_beg!^|
-        @rem echo chr_end=^|!chr_end!^|
-        set chr_txt=!chr_beg:"=!
-        if NOT .!chr_beg!.==.!chr_txt!. (
-            set msg=!msg:~1!
-        )
-        set chr_txt=!chr_end:"=!
-        @rem echo chr_txt=^|!chr_txt!^|
-        if NOT .!chr_end!.==.!chr_txt!. (
-            set msg=!msg!`
-            set msg=!msg:"`=!
-        )
-        set msg=!time! !msg!
-        @echo !msg!
-        @echo !msg!>>%log%
-        
-        if .1.==.0. (
-            @rem ___old___
-            set tmp=!%1:"=!
-            set result=0
-            if not "!tmp!"=="!tmp: =!" set result=1
-            if .!result!.==.1. set msg=!msg:"=!
-            set txt=!time! !msg!
+    ) 
 
-            @echo !txt!
-            @echo !txt!>>%log%
-        )
+    @rem echo msg=^|!msg!^|
+    set chr_beg=!msg:~0,1!
+    set chr_end=!msg:~-1!
+    @rem echo chr_beg=^|!chr_beg!^|
+    @rem echo chr_end=^|!chr_end!^|
+    set chr_txt=!chr_beg:"=!
+    if NOT .!chr_beg!.==.!chr_txt!. (
+        set msg=!msg:~1!
     )
+    set chr_txt=!chr_end:"=!
+    @rem echo chr_txt=^|!chr_txt!^|
+    if NOT .!chr_end!.==.!chr_txt!. (
+        set msg=!msg!`
+        set msg=!msg:"`=!
+    )
+
+    set ts=!time!
+    for /f "tokens=1-4 delims=:.," %%a in ("!ts!") do (
+      set /a hh=%%a
+      set mi=%%b
+      set ss=%%c
+      set us=%%d
+    )
+    if !hh! LEQ 9 (
+      set hh=0!hh!
+    )
+    set msg=!date! !hh!:!mi!:!ss! !msg!
+    @echo !msg!
+    @echo !msg!>>%log%
+
 endlocal & goto:eof
 
 :final
