@@ -3,7 +3,16 @@
 'qmid': None,
 'tracker_id': 'CORE-2303',
 'title': ' Include PLAN in mon$statements',
-'description': '',
+'description': 
+ """
+    21-05-2017:
+    fb30Cs, build 3.0.3.32725: OK, 1.406ss.
+    fb30SC, build 3.0.3.32725: OK, 0.828ss.
+    FB30SS, build 3.0.3.32725: OK, 0.829ss.
+    FB40CS, build 4.0.0.645: OK, 1.718ss.
+    FB40SC, build 4.0.0.645: OK, 0.968ss.
+    FB40SS, build 4.0.0.645: OK, 0.969ss.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -20,14 +29,16 @@
     commit;
     select
         (select sign(count(*)) from rdb$relations r)
-       ,s.mon$explained_plan
+       ,s.mon$explained_plan as mon_explained_blob_id
     from mon$statements s
-    where s.mon$transaction_id = current_transaction;
+    where 
+    s.mon$transaction_id = current_transaction
+    and s.mon$sql_text containing 'from mon$statements' -- prevent from RDB$AUTH record, 4.0 Classic
+    ;
   """,
  'expected_stdout': 
   """
     SIGN                            1
-    MON$EXPLAINED_PLAN              0:2
     
     Select Expression
         -> Singularity Check
@@ -37,7 +48,7 @@
         -> Filter
             -> Table "MON$STATEMENTS" as "S" Full Scan
   """,
-  'substitutions': [ ('MON$EXPLAINED_PLAN.*', 'MON$EXPLAINED_PLAN') ]
+  'substitutions': [ ('MON_EXPLAINED_BLOB_ID .*', '') ]
 }
 ]
 }
