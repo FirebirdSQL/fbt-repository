@@ -3,13 +3,24 @@
 'qmid': None,
 'tracker_id': 'CORE-4747',
 'title': ' Error "invalid BLOB ID" can occur when retrieving MON$STATEMENTS.MON$SQL_TEXT using ES/EDS and db_connect argument is not specified',
-'description': '',
-'min_versions': '3.0',
+'description':
+ """
+    21.05.2017:
+        FB25Cs, build 2.5.8.27062: OK, 0.703ss.
+        FB25SC, build 2.5.8.27062: OK, 0.406ss.
+        fb25sS, build 2.5.8.27062: OK, 0.468ss.
+        fb30Cs, build 3.0.3.32725: OK, 2.516ss.
+        fb30SC, build 3.0.3.32725: OK, 1.438ss.
+        FB30SS, build 3.0.3.32725: OK, 1.016ss.
+        FB40CS, build 4.0.0.645: OK, 2.172ss.
+        FB40SC, build 4.0.0.645: OK, 1.250ss.
+        FB40SS, build 4.0.0.645: OK, 1.172ss.
+ """,
+'min_versions': '2.5.6',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'init_script': 
   """
   """,
@@ -21,14 +32,19 @@
     
     recreate table test(sid int, tid int, txt blob);
     commit;
-    insert into test(sid, tid, txt) select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s rows 1;
+
+    -- NB, 21.05.2017: 4.0 Classic now has record in mon$statements with data from RDB$AUTH_MAPPING table.
+    -- We have to prevent appearance of this row in resultset which is to be analyzed, thus adding clause:
+    -- "where s.mon$sql_text containing 'test' ..."
+
+    insert into test(sid, tid, txt) select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$sql_text containing 'test' rows 1;
     commit;
     
     set term ^;
     execute block returns( msg varchar(10), running_stt_id int, running_trn_id int, running_stt_text blob) as
         declare v_dbname varchar(255);
         declare v_stt1 varchar(1024) = 'select t.sid, t.tid, t.txt from test t';
-        declare v_stt2 varchar(1024) = 'select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$transaction_id = current_transaction rows 1';
+        declare v_stt2 varchar(1024) = 'select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$sql_text containing ''test'' and s.mon$transaction_id = current_transaction rows 1';
         declare v_usr rdb$user = 'sysdba';
         declare v_pwd varchar(20) = 'masterkey';
         declare v_trn int;
@@ -59,13 +75,13 @@
     RUNNING_STT_ID                  111
     RUNNING_TRN_ID                  219
     RUNNING_STT_TEXT                91:0
-    insert into test(sid, tid, txt) select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s rows 1
+    insert into test(sid, tid, txt) select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$sql_text containing 'test' rows 1
     
     MSG                             point-2
     RUNNING_STT_ID                  140
     RUNNING_TRN_ID                  224
     RUNNING_STT_TEXT                0:1
-    select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$transaction_id = current_transaction rows 1
+    select s.mon$statement_id, s.mon$transaction_id, s.mon$sql_text from mon$statements s where s.mon$sql_text containing 'test' and s.mon$transaction_id = current_transaction rows 1
   """,
   'substitutions': [
      ('RUNNING_STT_ID[ ]+[0-9]+','RUNNING_STT_ID'),
