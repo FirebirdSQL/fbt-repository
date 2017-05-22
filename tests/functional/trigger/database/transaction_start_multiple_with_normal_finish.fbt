@@ -1,75 +1,117 @@
 {
-'id': 'functional.trigger.database.transactionstart_02',
-'qmid': 'functional.trigger.database.transactionstart_02',
+'id': 'functional.trigger.database.transaction_start_multiple_with_normal_finish',
+'qmid': '',
 'tracker_id': 'CORE-745',
 'title': 'Multiple triggers on start transaction',
-'description': 'This tests normal operation of database TRANSACTION START trigger hen there are more of them.',
+
+'description': 
+ """
+    This tests normal operation of database TRANSACTION START trigger when:
+    1) more than one such triggers are defined
+    2) NO exception raise within any trigger during its work, i.e. all of them shoudl finish Ok
+
+    Triggers must work within the same Tx as "parent" statement (which launched this Tx).
+
+    Results (22-05-2017):
+        build 2.5.8.27062: OK, 0.704ss.
+        build 2.5.8.27062: OK, 0.468ss.
+        build 2.5.8.27062: OK, 0.453ss.
+        build 3.0.3.32725: OK, 1.906ss.
+        build 3.0.3.32725: OK, 1.094ss.
+        build 3.0.3.32725: OK, 1.016ss.
+        build 4.0.0.645: OK, 2.188ss.
+        build 4.0.0.645: OK, 1.281ss.
+        build 4.0.0.645: OK, 1.203ss.
+ """,
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '2.1',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'init_script': """SET AUTODDL OFF;
-create table LOG (ID integer, MSG varchar(100));
-create generator LOGID;
-set term ^;
-create trigger LOG_BI for LOG active before insert position 0
-as
-begin
-  if (new.ID is null) then
-    new.ID = gen_id(LOGID,1);
-end ^
-
-create trigger ONTRANSSART1 on TRANSACTION START position 0
-as
-begin
-  insert into LOG (MSG) values ('Start transaction tg1');
-end ^
-
-create trigger ONTRANSSART2 on TRANSACTION START position 10
-as
-begin
-  insert into LOG (MSG) values ('Start transaction tg2');
-end ^
-
-
-set term ;^
-
-commit;
-""",
+ 'init_script': 
+  """
+  """,
  'test_type': 'ISQL',
- 'test_script': """SELECT * FROM LOG;
-ROLLBACK;
-SELECT * FROM LOG;
-COMMIT;
-SELECT * FROM LOG;
-""",
- 'expected_stdout': """
-          ID MSG
-============ ===============================================================================
-           1 Start transaction tg1
-           2 Start transaction tg2
+ 'test_script': 
+  """
+    set bail on;
+    set list on;
 
+    recreate table trg_log(id integer, trg_tx int default current_transaction, rows_inserted_before int);
+    commit;
 
-          ID MSG
-============ ===============================================================================
-           5 Start transaction tg1
-           3 Start transaction tg1
-           4 Start transaction tg2
-           6 Start transaction tg2
+    set autoddl off;
 
+    set term ^;
 
-          ID MSG
-============ ===============================================================================
-           5 Start transaction tg1
-           3 Start transaction tg1
-           4 Start transaction tg2
-           6 Start transaction tg2
-           7 Start transaction tg1
-           8 Start transaction tg2
-           9 Start transaction tg1
-          10 Start transaction tg2
+    execute block as
+      declare n int;
+      declare i int = 1;
+      declare ddl varchar(255);
+    begin
+      
+      rdb$set_context('USER_SESSION','TRIGGERS_TO_CREATE', 5); -- <<< ---------------- HOW MANY TRIGGERS ARE DEFINED
 
-"""
+      n = cast( rdb$get_context('USER_SESSION','TRIGGERS_TO_CREATE') as int);
+      while ( i <= n ) do
+      begin
+        ddl = 'create or alter trigger trg_start_tx_'|| i ||' on transaction start position 0 as '
+              || 'begin '
+              || '  insert into trg_log(id, rows_inserted_before) values('|| i ||',  (select count(*) from trg_log) ); '
+              || 'end'
+        ;
+        execute statement (ddl);
+        i = i + 1;
+      end
+    end
+    ^
+    set term ;^
+
+    --select current_timestamp from rdb$database;
+    commit;
+    --select current_timestamp from rdb$database;
+
+    -- Following 'select' sttm leads to implicit Tx start ==> two triggers will be fired before eecution of this statement.
+    -- Table trg_log should contain TWO records and they both had to be created within current Tx:
+
+    select count(distinct id) as triggers_fired_just_now
+    from trg_log where trg_tx = current_transaction;
+
+    select id,rows_inserted_before from trg_log order by id;
+
+    rollback;
+
+    -- Previous rollback should remove from trg_log all rows that were inserted there by triggers:
+    select count(distinct id) as rows_after_rollback
+    from trg_log where trg_tx is distinct from current_transaction;
+
+    commit;
+
+    -- Previous commit should save in trg_log two records that were inserted there by triggers:
+    select count(distinct id) as rows_after_commit
+    from trg_log where trg_tx is distinct from current_transaction;
+  """,
+ 'expected_stdout': 
+  """
+    TRIGGERS_FIRED_JUST_NOW         5
+
+    ID                              1
+    ROWS_INSERTED_BEFORE            0
+    ID                              2
+    ROWS_INSERTED_BEFORE            1
+    ID                              3
+    ROWS_INSERTED_BEFORE            2
+    ID                              4
+    ROWS_INSERTED_BEFORE            3
+    ID                              5
+    ROWS_INSERTED_BEFORE            4
+
+    ROWS_AFTER_ROLLBACK             0
+    ROWS_AFTER_COMMIT               5
+  """,
+  'expected_stderr':
+  """
+  """
 }
 ]
 }
