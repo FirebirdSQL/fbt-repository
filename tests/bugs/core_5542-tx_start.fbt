@@ -7,12 +7,12 @@
  """
     Note. This test does check only for 'TRANSACTION START' case.
     Resuls for 22.05.2017:
-        build 3.0.3.32725: OK, 2.234ss.
-        build 3.0.3.32725: OK, 1.469ss.
-        build 3.0.3.32725: OK, 1.468ss.
-        build 4.0.0.645: OK, 2.547ss.
-        build 4.0.0.645: OK, 1.719ss.
-        build 4.0.0.645: OK, 1.797ss.
+        fb30Cs, build 3.0.3.32725: OK, 1.969ss.
+        fb30SC, build 3.0.3.32725: OK, 1.422ss.
+        FB30SS, build 3.0.3.32725: OK, 1.453ss.
+        FB40CS, build 4.0.0.645: OK, 2.313ss.
+        FB40SC, build 4.0.0.645: OK, 1.593ss.
+        FB40SS, build 4.0.0.645: OK, 1.578ss.
  """,
 'min_versions': '3.0',
 'versions': [
