@@ -89,6 +89,7 @@ cd %~dp0
 @rem One need to remove it otherwise fbt_run will raise exception 'file exists' when try to create
 @rem again temp database with the SAME name:
 
+set /a svcfound=0
 
 sc queryex state= all| findstr /i /r /c:"service_name.*firebird" | findstr /v /i /c:"FirebirdGuardian" > !tmp1!
 for /f "tokens=2" %%a in (!tmp1!) do (
@@ -114,6 +115,7 @@ for /f "tokens=2" %%a in (!tmp1!) do (
 
       call :sho "Analyze service: !svcname!" !log!
 
+      set /a svcfound=!svcfound!+1
       @rem REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\!svcname! | findstr /i /c:"ImagePath"
 
       for /f "tokens=*" %%i in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\!svcname! ^| findstr /i /c:"ImagePath"') do (
@@ -302,46 +304,51 @@ for /f "tokens=2" %%a in (!tmp1!) do (
 echo.
 call :sho "Check results:" !log!
 call :sho "##############" !log!
-if exist !res_ok! (
-    call :sho "1. SUCCESSFULLY FINISHED:" !log!
-    call :sho ------------------------- !log!
-    type !res_ok!
-    type !res_ok!>>!log!
-    call :sho ------------------------- !log!
-) else (
-    call :sho "1. ### NO SUCCESS ###. All services either failed or not processed." !log!
-)
 
-if exist !res_warn! (
-    call :sho "2. FINISHED WITH WARNINGS:" !log!
-    call :sho ------------------------- !log!
-    type !res_warn!
-    type !res_warn!>>!log!
-    call :sho ------------------------- !log!
+if !svcfound! EQU 0 (
+    call :sho "^>^>^>^>^>^>^>^> ERROR. NOTHING WAS DONE: NO SERVICE FOUND ^<^<^<^<^<^<^<^<" !log!
+    call :sho "Check 2nd input argument: ^|%2^|" !log!
 ) else (
-    call :sho "2. NO results with warnings." !log!
-)
+    if exist !res_ok! (
+        call :sho "1. SUCCESSFULLY FINISHED:" !log!
+        call :sho ------------------------- !log!
+        type !res_ok!
+        type !res_ok!>>!log!
+        call :sho ------------------------- !log!
+    ) else (
+        call :sho "1. ### NO SUCCESS ###. All services either failed or not processed." !log!
+    )
 
-if exist !res_skip! (
-    call :sho "3. MISSING CHECKS:" !log!
-    call :sho ------------------------- !log!
-    type !res_skip!
-    type !res_skip!>>!log!
-    call :sho ------------------------- !log!
-) else (
-    call :sho "3. NO missed checks." !log!
-)
+    if exist !res_warn! (
+        call :sho "2. FINISHED WITH WARNINGS:" !log!
+        call :sho ------------------------- !log!
+        type !res_warn!
+        type !res_warn!>>!log!
+        call :sho ------------------------- !log!
+    ) else (
+        call :sho "2. NO results with warnings." !log!
+    )
 
-if exist !res_fail! (
-    call :sho "4. FINISHED WITH ## FAIL ##:" !log!
-    call :sho ------------------------- !log!
-    type !res_fail!
-    type !res_fail!>>!log!
-    call :sho ------------------------- !log!
-) else (
-    call :sho "4. NO results with fails." !log!
-)
+    if exist !res_skip! (
+        call :sho "3. MISSING CHECKS:" !log!
+        call :sho ------------------------- !log!
+        type !res_skip!
+        type !res_skip!>>!log!
+        call :sho ------------------------- !log!
+    ) else (
+        call :sho "3. NO missed checks." !log!
+    )
 
+    if exist !res_fail! (
+        call :sho "4. FINISHED WITH ## FAIL ##:" !log!
+        call :sho ------------------------- !log!
+        type !res_fail!
+        type !res_fail!>>!log!
+        call :sho ------------------------- !log!
+    ) else (
+        call :sho "4. NO results with fails." !log!
+    )
+)
 
 for /d %%a in (!tmp1!,!tmp2!,!res_ok!,!res_warn!,!res_fail!,!res_skip!) do (
   del %%a 2>nul
