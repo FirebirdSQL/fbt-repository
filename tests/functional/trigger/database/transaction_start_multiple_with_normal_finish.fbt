@@ -12,16 +12,16 @@
 
     Triggers must work within the same Tx as "parent" statement (which launched this Tx).
 
-    Results (22-05-2017):
-        build 2.5.8.27062: OK, 0.704ss.
-        build 2.5.8.27062: OK, 0.468ss.
-        build 2.5.8.27062: OK, 0.453ss.
-        build 3.0.3.32725: OK, 1.906ss.
-        build 3.0.3.32725: OK, 1.094ss.
-        build 3.0.3.32725: OK, 1.016ss.
-        build 4.0.0.645: OK, 2.188ss.
-        build 4.0.0.645: OK, 1.281ss.
-        build 4.0.0.645: OK, 1.203ss.
+    Results (23-05-2017):
+        FB25Cs, build 2.5.8.27062: OK, 1.688ss.
+        FB25SC, build 2.5.8.27062: OK, 0.469ss.
+        fb25sS, build 2.5.8.27062: OK, 1.265ss.
+        fb30Cs, build 3.0.3.32726: OK, 2.938ss.
+        fb30SC, build 3.0.3.32726: OK, 2.250ss.
+        FB30SS, build 3.0.3.32726: OK, 1.937ss.
+        FB40CS, build 4.0.0.649: OK, 3.718ss.
+        FB40SC, build 4.0.0.649: OK, 1.875ss.
+        FB40SS, build 4.0.0.649: OK, 1.984ss.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -71,11 +71,22 @@
     commit;
     --select current_timestamp from rdb$database;
 
-    -- Following 'select' sttm leads to implicit Tx start ==> two triggers will be fired before eecution of this statement.
-    -- Table trg_log should contain TWO records and they both had to be created within current Tx:
+    -- Following 'select' sttm leads to implicit Tx start ==> all db-level triggers 'on transaction start' will be fired 
+    -- before engine begin to execute this statement.
+    -- Table trg_log should contain rdb$get_context('USER_SESSION','TRIGGERS_TO_CREATE') records and they all had to be 
+    -- created within current Tx:
 
-    select count(distinct id) as triggers_fired_just_now
-    from trg_log where trg_tx = current_transaction;
+    select iif( count(distinct t.id) = max(t.expected_count),
+                'EXPECTED.', 
+                'WRONG: ' || count(distinct id) || ' instead of ' || max(t.expected_count)
+              ) as triggers_fired_count
+    from 
+    (
+        select t.id, t.trg_tx, cast( rdb$get_context('USER_SESSION','TRIGGERS_TO_CREATE') as int) as expected_count
+        from trg_log t
+    ) t
+    where trg_tx = current_transaction
+    ;
 
     select id,rows_inserted_before from trg_log order by id;
 
@@ -88,12 +99,20 @@
     commit;
 
     -- Previous commit should save in trg_log two records that were inserted there by triggers:
-    select count(distinct id) as rows_after_commit
-    from trg_log where trg_tx is distinct from current_transaction;
+    select iif( count(distinct t.id) = max(expected_count), 
+                'EXPECTED.', 
+                'WRONG: ' || count(distinct id) || ' instead of ' || max(t.expected_count)
+              ) as rows_after_commit
+    from 
+    (
+        select t.id, t.trg_tx, cast( rdb$get_context('USER_SESSION','TRIGGERS_TO_CREATE') as int) as expected_count
+        from trg_log t
+    ) t
+    where trg_tx is distinct from current_transaction;
   """,
  'expected_stdout': 
   """
-    TRIGGERS_FIRED_JUST_NOW         5
+    TRIGGERS_FIRED_COUNT            EXPECTED.
 
     ID                              1
     ROWS_INSERTED_BEFORE            0
@@ -107,7 +126,7 @@
     ROWS_INSERTED_BEFORE            4
 
     ROWS_AFTER_ROLLBACK             0
-    ROWS_AFTER_COMMIT               5
+    ROWS_AFTER_COMMIT               EXPECTED.
   """,
   'expected_stderr':
   """
