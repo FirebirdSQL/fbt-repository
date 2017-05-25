@@ -1,0 +1,110 @@
+{
+'id': 'functional.datatypes.decfloat-binding-to-other-types',
+'qmid': None,
+'tracker_id': 'CORE-5535',
+'title': 
+ """
+   Test ability for DECFLOAT values to be represented as other data types (char, double, bigint).
+ """,
+'description': 
+ """
+    See CORE-5535 and doc\sql.extensions\README.data_types:
+    ---
+    SET DECFLOAT BIND <bind-type> - controls how are DECFLOAT values represented in outer
+    world (i.e. in messages or in XSQLDA). Valid binding types are: NATIVE (use IEEE754
+    binary representation), CHAR/CHARACTER (use ASCII string), DOUBLE PRECISION (use
+    8-byte FP representation - same as used for DOUBLE PRECISION fields) or BIGINT
+    with possible comma-separated SCALE clause (i.e. 'BIGINT, 3').
+    ---
+    FB40SS, build 4.0.0.651: OK, 0.921s.
+
+    ::: NB ::::
+    Temply deferred check of "set decfloat bind bigint, 3" when value has at least one digit in floating part.
+    Also, one need to check case when we try to bind to BIGINT value that is too big for it (say, more than 19 digits).
+    Waiting for reply from Alex, letters 25.05.2017 21:12 & 21:22.
+ """,
+'min_versions': '4.0.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set sqlda_display on;
+
+    set decfloat bind char;
+    select 
+        123456789012345678901234567890.1234 -- must be shown in SQLDA as: sqltype: 452 TEXT ... charset: 2 ASCII
+    from rdb$database;
+
+    set decfloat bind double precision;
+    select 
+        123456789012345678901234567890.1234 -- must be shown in SQLDA as: sqltype: 480 DOUBLE ... len: 8
+    from rdb$database;
+
+    set decfloat bind bigint;
+    select 
+        1234567890123456789.1234 -- must be shown in SQLDA as: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+    from rdb$database;
+
+
+    set decfloat bind bigint, 0;
+    select 
+        1234567890123456789.1234 -- must be shown in SQLDA as: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+    from rdb$database;
+
+    quit;
+
+    -- deferred:
+    /*
+    set decfloat bind bigint, 3;
+    select 
+        1234567890123456789.1 -- 
+    from rdb$database;
+
+    Currently FAILS with:
+    ======================
+    Statement failed, SQLSTATE = 22000
+    Decimal float invalid operation.  An indeterminant error occurred during an operation.
+
+    */
+  """,
+  'expected_stdout':
+  """
+    INPUT message field count: 0
+    OUTPUT message field count: 1
+    01: sqltype: 452 TEXT scale: 0 subtype: 0 len: 42 charset: 2 ASCII
+      :  name: CONSTANT  alias: CONSTANT
+      : table:   owner: 
+    CONSTANT                        123456789012345678901234567890.1234       
+
+    INPUT message field count: 0
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: CONSTANT
+      : table:   owner: 
+    CONSTANT                        1.234567890123457e+29
+
+    INPUT message field count: 0
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: CONSTANT
+      : table:   owner: 
+    CONSTANT                        1234567890123456789
+
+    INPUT message field count: 0
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: CONSTANT
+      : table:   owner: 
+    CONSTANT                        1234567890123456789
+
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
