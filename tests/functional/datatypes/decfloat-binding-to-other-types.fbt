@@ -55,52 +55,82 @@
         1234567890123456789.1234 -- must be shown in SQLDA as: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
     from rdb$database;
 
-    quit;
 
-    -- deferred:
-    /*
+    -- Alex' samples, letter 25.05.2017 21:56
     set decfloat bind bigint, 3;
-    select 
-        1234567890123456789.1 -- 
-    from rdb$database;
+    select cast(1234.5678 as decfloat(16)) from rdb$database; -- 1234.568
 
-    Currently FAILS with:
-    ======================
-    Statement failed, SQLSTATE = 22000
-    Decimal float invalid operation.  An indeterminant error occurred during an operation.
 
-    */
+    set decfloat bind bigint, 8;
+    select cast(1234.5678 as decfloat(16)) from rdb$database; -- 1234.56780000
+
   """,
   'expected_stdout':
   """
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
     01: sqltype: 452 TEXT scale: 0 subtype: 0 len: 42 charset: 2 ASCII
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
+
     CONSTANT                        123456789012345678901234567890.1234       
 
+
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
     01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
+
     CONSTANT                        1.234567890123457e+29
 
+
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
+
     CONSTANT                        1234567890123456789
 
+
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
+
     CONSTANT                        1234567890123456789
 
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: -3 subtype: 0 len: 8
+      :  name: CAST  alias: CAST
+      : table:   owner: 
+
+    CAST                            1234.568
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: -8 subtype: 0 len: 8
+      :  name: CAST  alias: CAST
+      : table:   owner: 
+
+    CAST                            1234.56780000
   """,
   'expected_stderr':
   """
