@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_5545',
+'id': 'bugs.core_5550',
 'qmid': None,
 'tracker_id': 'CORE-5550',
 'title': 'Computed decimal field in a view has wrong RDB$FIELD_PRECISION',
