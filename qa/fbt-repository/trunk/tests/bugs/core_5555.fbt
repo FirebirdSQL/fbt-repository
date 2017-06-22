@@ -1,0 +1,78 @@
+{
+'id': 'bugs.core_5555',
+'qmid': None,
+'tracker_id': 'CORE-5555',
+'title': '3.0 error handling for SELECT WITH LOCK breaks compatibility with 2.5',
+'description':
+ """
+    30SS, build 3.0.3.32738: OK, 0.938s.
+    40SS, build 4.0.0.680: OK, 1.109s.
+    See also http://tracker.firebirdsql.org/browse/CORE-4473
+ """,
+'min_versions': '3.0.3',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+
+    recreate table test(x int, y int);
+    insert into test(x, y) values(1, 2);
+    commit;
+
+    set transaction no wait;
+
+    set term ^;
+    execute block as
+      declare c int;
+    begin
+      execute statement ('select current_transaction from test where x = ? and 1=1 with lock') (1) 
+          on external 'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
+          as user 'sysdba' password 'masterkey'
+      into c;
+    end
+    ^
+
+    execute block returns(gds_on_update int) as
+    begin
+        begin
+            update test set y = -y where x = 1 and 2=2;
+        when any do
+            begin
+                gds_on_update = gdscode;
+            end
+        end
+        suspend;
+    end
+    ^
+
+    execute block returns(gds_on_select_with_lock int) as
+        declare c int;
+    begin
+        begin
+            select y from test where x = 1 and 3=3 with lock into c;
+        when any do
+            begin
+                gds_on_select_with_lock = gdscode;
+            end
+        end
+        suspend;
+    end
+    ^
+    set term ;^
+    quit;
+  """,
+  'expected_stdout':
+  """
+    GDS_ON_UPDATE                   335544336
+    GDS_ON_SELECT_WITH_LOCK         335544336
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
