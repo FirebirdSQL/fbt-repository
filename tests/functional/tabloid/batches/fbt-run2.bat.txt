@@ -44,7 +44,7 @@ set find_what=%~dp0
 set fbt_full=%~dp1%~nx1
 
 if not exist !fbt_full! (
-    call :sho "ERROR in command-line arguments: no such file: !fbt_full!".
+    call :sho "ERROR in command-line arguments: no such file: !fbt_full!". !log!
     goto final
 )
 
@@ -97,10 +97,10 @@ for /f "tokens=2" %%a in (!tmp1!) do (
   del .\tmp\!cdprefix!.!fbt_name!.fdb 2>nul
   if exist .\tmp\!cdprefix!.!fbt_name!.fdb (
       set msg=FATAL ERROR: CAN NOT REMOVE FILE .\tmp\!cdprefix!.!fbt_name!.fdb 
-      call :sho "!msg!"
+      call :sho "!msg!" !log!
 
       set msg="This file is still opened from previous test run."
-      call :sho "!msg!"
+      call :sho "!msg!" !log!
       goto final
 
   )
@@ -232,13 +232,13 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                             for /f "tokens=5" %%u in ('findstr /i /r /c:"Ran [0-9]* tests in" !tmp2!') do (
                               set elapsed_sec=%%u
                             )
-                            set msg=fbt_res: SUCCESS, done for !elapsed_sec!s.
+                            set msg=fbt_res: SUCCESS, done for !elapsed_sec!.
                             call :sho "!msg!" !log!
                             for /f "tokens=*" %%u in ('fbt_view -d results.trf') do (
                               call :sho "%%u" !log!
                             )
 
-                            set msg=!svcname!, build !fb_vers!: OK, !elapsed_sec!s.
+                            set msg=!svcname!, build !fb_vers!: OK, !elapsed_sec!.
                             call :sho "!msg!" !res_ok!
 
                         ) else (
@@ -263,6 +263,12 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                         set vsign=0
                         for /f "tokens=*" %%u in ('findstr /v /c:"-----" /c:"=====" !tmp2!') do (
                           set utxt=%%u
+
+                          @rem 24.05.2017: fbt_view can produce special characters like: "<", ">" and "&"!
+                          set utxt=!utxt:^&=^&amp;!
+                          set utxt=!utxt:^<=^&lt;!
+                          set utxt=!utxt:^>=^&gt;!
+
                           if !vsign! EQU 1 (
                               if NOT .!utxt!.==.. (
                                   call :sho "!utxt!" !!log!
@@ -271,6 +277,7 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                           set uchk=!utxt:%~n1=!
                           if !vsign! EQU 0 if NOT !uchk!==!utxt! set vsign=1
                         )
+
                         for /f "tokens=*" %%u in ('fbt_view -d results.trf ^| findstr /v /b /c:"-----" /c:"====="') do (
                           call :sho "%%u" !log!
                         )
@@ -364,6 +371,7 @@ goto final
     set log=%2
     if .!log!.==.. (
         echo Internal func sho: missed argument for log file.
+        echo Arg. #1 = ^|%1^|
         exit
     ) 
 
@@ -393,6 +401,7 @@ goto final
     if !hh! LEQ 9 (
       set hh=0!hh!
     )
+
     set msg=!date! !hh!:!mi!:!ss! !msg!
     @echo !msg!
     @echo !msg!>>%log%
