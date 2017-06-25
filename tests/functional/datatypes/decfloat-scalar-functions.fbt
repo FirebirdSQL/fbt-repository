@@ -5,7 +5,10 @@
 'title': 
  """
    Test common math functions that should work with DECFLOAT datatype.
-   FB40SS, build 4.0.0.651: OK, 1.110s.
+   4.0.0.680: OK, 0.891s.
+   4.0.0.651: FAILED on SIGN() with:
+       Statement failed, SQLSTATE = 22003
+       Decimal float overflow.  The exponent of a result is greater than the magnitude allowed.
  """,
 'description': 
  """
@@ -60,6 +63,8 @@
     select power(n1,-1.0000000000/log10(n1)) from c
     union all
     select sqrt(n1) from c
+    union all
+    select sign(-n1) from c -- added 25.06.2017
     ;
 
 
@@ -80,6 +85,7 @@
     N1                                                                    1024
     N1                                    0.1000000000000000000000000000000000
     N1                                                1.00000000000000000E+512
+    N1                                                                      -1
   """,
   'expected_stderr':
   """
