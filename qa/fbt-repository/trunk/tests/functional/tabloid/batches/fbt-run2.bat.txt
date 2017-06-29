@@ -40,8 +40,11 @@ if .%2.==.. (
 )
 
 set find_what=%~dp0
-@rem set fbt_full=%~dp1%1
-set fbt_full=%~dp1%~nx1
+if "%~x1"=="" (
+    set fbt_full=%~dp1%~n1.fbt
+) else (
+    set fbt_full=%~dp1%~nx1
+)
 
 if not exist !fbt_full! (
     call :sho "ERROR in command-line arguments: no such file: !fbt_full!". !log!
