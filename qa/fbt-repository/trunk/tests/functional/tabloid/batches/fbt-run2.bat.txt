@@ -282,7 +282,15 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                         )
 
                         for /f "tokens=*" %%u in ('fbt_view -d results.trf ^| findstr /v /b /c:"-----" /c:"====="') do (
-                          call :sho "%%u" !log!
+
+                          set utxt=%%u
+                          set utxt=!utxt:^&=^&amp;!
+                          set utxt=!utxt:^<=^&lt;!
+                          set utxt=!utxt:^>=^&gt;!
+
+                          call :sho "!utxt!" !!log!
+
+                          @rem call :sho "%%u" !log!
                         )
                         call :sho ---------------------------------------------------- !log!
 
