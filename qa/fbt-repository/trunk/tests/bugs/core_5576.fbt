@@ -1,0 +1,163 @@
+{
+'id': 'bugs.core_5576',
+'qmid': '',
+'tracker_id': 'CORE-5576',
+'title': 'Bugcheck on queries containing WITH LOCK clause',
+'description': 
+ """ 
+   We create database as it was show in the ticket and do backup and restore of it.
+   Then we run checking query - launch isql two times and check that 2nd call of ISQL
+   does not raise bugcheck. Finally we run online validation against this DB.
+
+   Neither test query nor validation should raise any output in the STDERR.
+
+   Confirmed bug on 4.0.0.684 and 3.0.3.32743, got:
+   ===
+       Statement failed, SQLSTATE = XX000
+       internal Firebird consistency check (decompression overran buffer (179), file: sqz.cpp line: 282)
+       Statement failed, SQLSTATE = XX000
+       internal Firebird consistency check (can't continue after bugcheck)
+   ===
+   Results after fix:
+   fb30Cs, build 3.0.3.32746: OK, 6.328s.
+   fb30SC, build 3.0.3.32746: OK, 3.469s.
+   FB30SS, build 3.0.3.32746: OK, 3.172s.
+   FB40CS, build 4.0.0.685: OK, 5.954s.
+   FB40SC, build 4.0.0.685: OK, 3.781s.
+   FB40SS, build 4.0.0.685: OK, 2.828s.
+ """,
+'min_versions': '3.0.3',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+      recreate table test (
+          i integer not null primary key,
+          d char(1024) computed by ('qwert'),
+          s varchar(8192)
+      );
+      insert into test values (1, 'format1opqwertyuiopqwertyuiop');
+      commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': """
+
+import os
+import subprocess
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+# Obtain engine version:
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+
+db_conn.close()
+
+# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
+# via to FB services API by services.connect() - see FB tracker, PYFB-69
+# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+# fb_home = services.connect(host='localhost').get_home_directory()
+
+if engine.startswith('2.5'):
+  fb_home = fb_home + 'bin'+os.sep
+
+
+
+f_bkrs_err = open( os.path.join(context['temp_directory'],'tmp_backup_restore_5576.err'), 'w')
+f_bkup_tmp = os.path.join(context['temp_directory'],'tmp_5576.fbk')
+f_rest_tmp = os.path.join(context['temp_directory'],'tmp_5576.fdb')
+
+if os.path.isfile(f_bkup_tmp):
+    os.remove(f_bkup_tmp)
+if os.path.isfile(f_rest_tmp):
+    os.remove(f_rest_tmp)
+
+fn_nul = open(os.devnull, 'w')
+subprocess.call( [fb_home+"gbak", "-b", dsn, f_bkup_tmp ],
+                 stdout = fn_nul,
+                 stderr = f_bkrs_err
+               )
+
+subprocess.call( [fb_home+"gbak", "-rep", f_bkup_tmp, 'localhost:'+f_rest_tmp ],
+                 stdout = fn_nul,
+                 stderr = f_bkrs_err
+               )
+
+f_bkrs_err.close()
+fn_nul.close()
+
+
+script='''set list on;select 1 x1 from test where i=1 with lock;'''
+
+# Checking query (it did produce bugcheck before fix):
+################
+runProgram('isql',['localhost:'+f_rest_tmp],script)
+runProgram('isql',['localhost:'+f_rest_tmp],script) # ---------- launch isql SECOND time!
+
+
+f_val_log=open( os.path.join(context['temp_directory'],'tmp_val_5576.log'), "w")
+f_val_err=open( os.path.join(context['temp_directory'],'tmp_val_5576.err'), "w")
+
+subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+                 "action_validate",
+                 "dbname", f_rest_tmp
+                ],
+                stdout=f_val_log,
+                stderr=f_val_err)
+f_val_log.close()
+f_val_err.close()
+
+with open( f_val_log.name,'r') as f:
+    print(f.read())
+f.close()
+
+
+# Check that neither restore nor validation raised errors:
+###################
+f_list=(f_bkrs_err, f_val_err)
+for i in range(len(f_list)):
+    with open( f_list[i].name,'r') as f:
+        for line in f:
+            if line.split():
+                print( 'UNEXPECTED STDERR in file '+f_list[i].name+': '+line.upper() )
+
+
+# Cleanup
+#########
+
+f_list=(f_bkrs_err, f_val_log, f_val_err)
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+os.remove(f_bkup_tmp)
+os.remove(f_rest_tmp)
+
+
+  """,
+ 'expected_stdout': 
+  """
+    X1                              1
+    X1                              1
+    Validation started
+    Relation 128 (TEST)
+      process pointer page    0 of    1
+    Index 1 (RDB$PRIMARY1)
+    Relation 128 (TEST) is ok
+    Validation finished
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[
+      ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
+      ('Relation [0-9]{3,4}','Relation')
+  ]
+},
+]
+}
