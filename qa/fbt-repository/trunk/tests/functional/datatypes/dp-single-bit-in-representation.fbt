@@ -1,0 +1,38 @@
+{
+'id': 'functional.datatypes.dp-single-bit-in-representation',
+'qmid': None,
+'tracker_id': '',
+'title': 'Check result of EXP() which can be represented only by one ("last") significant bit',
+'description': 
+ """
+    build 2.5.8.27067: OK, 0.640s.
+    build 3.0.3.32794: OK, 0.844s.
+    build 4.0.0.700: OK, 0.922s.
+    (2.5.8 was checked bot on Win32 and POSIX amd64; all others - only on Win32)
+ """,
+'min_versions': '2.5.8',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+    set list on;
+    select iif(exp(-745.1332191)=0.0, 0, 1) as still_has_bits from rdb$database;
+    select iif(exp(-745.1332192)=0.0, 0, 1) as still_has_bits from rdb$database;
+  """,
+ 'expected_stdout':
+  """
+    STILL_HAS_BITS                  1
+    STILL_HAS_BITS                  0
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
