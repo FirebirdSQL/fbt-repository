@@ -16998,7 +16998,6 @@
   """,
  'expected_stdout': 
   """
-
     RDB$FIELD_NAME                  MON$ATTACHMENT_ID                                                                                                                                                                                                                                           
     RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
     RDB$FIELD_SOURCE                RDB$ATTACHMENT_ID                                                                                                                                                                                                                                           
@@ -17295,6 +17294,50 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    14
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$CONNECTION_COMPRESSED                                                                                                                                                                                                                                   
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                RDB$BOOLEAN                                                                                                                                                                                                                                                 
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              23
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    23
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$CONNECTION_ENCRYPTED                                                                                                                                                                                                                                    
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                RDB$BOOLEAN                                                                                                                                                                                                                                                 
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              24
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    24
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -27340,7 +27383,8 @@
     RDB$IDENTITY_TYPE               <null>
 
 
-    Records affected: 470
+    Records affected: 472
+
   """,
   'substitutions': [
       ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
