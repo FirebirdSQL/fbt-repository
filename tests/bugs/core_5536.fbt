@@ -1,0 +1,41 @@
+{
+'id': 'bugs.core_5536',
+'qmid': None,
+'tracker_id': 'CORE-5536',
+'title': 'Connections compressed and encrypted in MON$ATTACHMENTS table',
+'description':
+ """
+     3.0.3 is NOT checked because currently one may use only Legacy_Auth method in fbtest framedwork
+     and there is no difference in output of MON$REMOTE_VERSION field: in any case this field will contain 
+     'Legacy_Auth' string without any details.
+     In 4.0.0 we check only presense of boolean fields MON$CONNECTION_COMPRESSED and MON$CONNECTION_ENCRYPTED.
+
+     Result: FB40SS, build 4.0.0.728: OK, 0.797s.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select 1 as Ok
+    from mon$attachments 
+    where 
+        MON$CONNECTION_COMPRESSED in (false, true)
+        and MON$CONNECTION_ENCRYPTED in (false, true)
+    rows 1
+    ;
+  """,
+  'expected_stdout':
+  """
+    OK                              1
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
