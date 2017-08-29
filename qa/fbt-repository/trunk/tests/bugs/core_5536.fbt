@@ -5,10 +5,12 @@
 'title': 'Connections compressed and encrypted in MON$ATTACHMENTS table',
 'description':
  """
-     3.0.3 is NOT checked because currently one may use only Legacy_Auth method in fbtest framedwork
-     and there is no difference in output of MON$REMOTE_VERSION field: in any case this field will contain 
-     'Legacy_Auth' string without any details.
-     In 4.0.0 we check only presense of boolean fields MON$CONNECTION_COMPRESSED and MON$CONNECTION_ENCRYPTED.
+     :::NB::: 3.0.3 currently is NOT checked: MON$REMOTE_VERSION field has no changes
+     when use different values of 'WireCrypt' and 'WireCompression' parameters 
+     (checked on WI-V3.0.3.32798).
+
+     In 4.0.0 we check only presense of boolean fields MON$CONNECTION_COMPRESSED 
+     and MON$CONNECTION_ENCRYPTED.
 
      Result: FB40SS, build 4.0.0.728: OK, 0.797s.
  """,
