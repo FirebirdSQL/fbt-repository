@@ -37,6 +37,36 @@ sql_chk='''
     set list on; -- !! do NOT remove this "duplicate" statement, otherwise data will be shown as when set list OFF !! Incredible... 8-O
     set list on;
     select * from test;
+
+    commit;
+    -----------------------------------
+    -- Following sample was discussed with dimitr 29.06.2016.
+    -- Statement failed, SQLSTATE = 22001
+    -- arithmetic exception, numeric overflow, or string truncation
+    -- -string right truncation
+    -- -expected length 10, actual 17
+    set term ^;
+    create or alter function get_mnemonic (
+        afield_name type of column rdb$types.rdb$field_name,
+        atype type of column rdb$types.rdb$type)
+    returns type of column rdb$types.rdb$type_name 
+    as
+    begin
+      return (select rdb$type_name
+              from rdb$types
+              where
+                  rdb$field_name = :afield_name
+                  and rdb$type = :atype
+              order by rdb$type_name
+             );
+    end
+    ^
+    set term ;^
+    commit;
+
+    set list on;
+
+    select get_mnemonic('MON$SHUTDOWN_MODE', 1) as mnemonic from rdb$database;
 '''
 
 runProgram('isql',[dsn, '-ch', 'utf8'],sql_chk)
@@ -47,6 +77,7 @@ runProgram('isql',[dsn, '-ch', 'utf8'],sql_chk)
     C                               ab
     C                               qw
     C                               er
+    MNEMONIC                        MULTI_USER_SHUTDOWN
   """,
  'expected_stderr': 
   """
