@@ -31,7 +31,7 @@
     grant select on v_check to public;
 
     commit;
-    connect '$(DSN)' user sysdba password 'masterke';
+    connect '$(DSN)' user sysdba password 'masterkey';
     create or alter user u01 password '123' revoke admin role;
     revoke all on all from u01;
     commit;
