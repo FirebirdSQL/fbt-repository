@@ -1,8 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion enableextensions
 cd /d %~dp0
-set isc_user=sysdba
-set isc_password=masterkey
+set isc_user=
+set isc_password=
+set dba_user=SYSDBA
+set dba_pswd=masterkey
 set logdir=e:\temp\logs.qa
 set joblog=!logdir!\%~n0.log
 
@@ -13,13 +15,25 @@ set sql=!logdir!\%~n0.sql
 @rem List of FB sevices which we use here for test runs:
 set fblst=fb40_tmp,fb30_tmp
 
-set fblst=fb30_tmp,fb40_tmp
-
 @rem List of architectures to be checked:
 set fbars=SS,CS
 
 @rem List of auth protocols to be checked:
 set auths=Srp,Legacy_Auth
+
+set svnup=1
+set usedb=1
+
+@rem #####################   T E M P L Y   ###################
+if .1.==.0. (
+    set fblst=fb40_tmp
+    set fbars=CS
+    set auths=Legacy_Auth
+    set svnup=0
+    set usedb=1
+)
+@rem #########################################################
+
 
 set job_failed_flag=0
 
@@ -70,10 +84,14 @@ if not errorlevel 1 (
     taskkill /f /t /im mtee.exe 2>&1 1>!joblog!
 )
 
-set msg=Trying to update tests using svn.
-call :sho "!msg!" !joblog!
-
-!svnbin! up 2>&1 1>>!joblog!
+if .!svnup!. EQU 0 (
+    set msg=Trying to update tests using svn.
+    call :sho "!msg!" !joblog!
+    !svnbin! up 2>&1 1>>!joblog!
+) else (
+    set msg=SKIP updating tests using svn - variable 'svnup' NOT equals to 1.
+    call :sho "!msg!" !joblog!
+)
 
 @rem # # # # # # # # # # # # # # # # # # # #     O U T E R     L O O P   # # # # # # # # # # # # # # # # # # # # 
 
@@ -116,8 +134,9 @@ for /d %%s in ( %fblst% ) do (
                 goto final
             )
 
-            set fb_port=UNKNOWN
-            call :get_fb_port !fp! fb_port
+            set fb_major_vers=unknown
+            set /a fb_port=0
+            call :get_fb_port !fp! !joblog! fb_port
 
             for /d %%u in ( %fbars% ) do (
 
@@ -140,6 +159,7 @@ for /d %%s in ( %fblst% ) do (
                     type !tmp!
                     type !tmp!>>!joblog!
                     call :sho "You have to shutdown application which is listening on port !fb_port!. Job terminated." !joblog!
+                    goto final
                 ) else (
                     call :sho "Check passed OK: no application is listening on port !fb_port!" !joblog!"
                 )
@@ -243,9 +263,13 @@ for /d %%s in ( %fblst% ) do (
                 if  /i .%%p.==.Srp. (
                     @rem We need always to INITIALIZE securityN.fdb when use Srp auth.
                     for /f %%x in ('dir /b !fp!\security3.fdb !fp!\security4.fdb') do (
-                        set sec_init_cmd="echo set bail on; create or alter user sysdba password 'masterkey'; commit; set list on; set count on; select sec$user_name,sec$plugin from sec$users; ^| !fp!\isql -q -user SYSDBA -password 1 !fp!\%%x"
+                        set sec_init_cmd="echo set bail on; create or alter user !dba_user! password '!dba_pswd!'; commit; set list on; set count on; select sec$user_name,sec$plugin from sec$users; ^| !fp!\isql -q -user !dba_user! !fp!\%%x"
                         call :sho "We need to INITIALIZE securityN.fdb when use 'Srp' auth" !joblog! 
-                        call :sho "Command: !sec_init_cmd!" !joblog!
+                        echo !date! !time! Command: !sec_init_cmd!>!tmp!
+                        type !tmp!
+                        type !tmp!>>!joblog!
+                        call :sho "Command: !sec_init_cmd:^|=^^|!" !joblog!
+                        
                         cmd /c !sec_init_cmd! 1>>!joblog! 2>!err!
                         for /f %%a in ("!err!") do (
                             if %%~za GTR 0 (
@@ -274,22 +298,26 @@ for /d %%s in ( %fblst% ) do (
                 call :sho "!msg!" !joblog!
                 call :try_to_start_fb %%s !joblog!
 
-                call :sho "Trying to create and drop temp DB with name '!tmp!'" !joblog!
+
+                set tdb=!logdir!\!random!
+                set tdb=!tdb!!random!.fdb
+                call :sho "Trying to create and drop temp DB with name '!tdb!'" !joblog!
                 del !tmp! 2>nul
                 (
                     echo set bail on;
                     echo set list on; 
                     echo set count on;
                     echo set echo on;
-                    echo create database 'localhost:!tmp!' user 'SYSDBA' password 'masterkey';
-                    echo show database;
-                    echo select * from mon$database;
-                    echo select * from mon$attachments where mon$attachment_id = current_connection; 
+                    echo create database 'localhost:!tdb!' user '!dba_user!' password '!dba_pswd!';
+                    echo --show database;
+                    echo --select * from mon$database;
+                    echo --select * from mon$attachments where mon$attachment_id = current_connection; 
+                    echo select rdb$get_context('SYSTEM','ENGINE_VERSION'^) as fb_major_version from rdb$database;
                     echo commit; 
                     echo drop database;
                 ) > !sql!
 
-                set make_tmp_db=!fp!\isql -q -z -i !sql!
+                set make_tmp_db=!fp!\isql -q -z -i !sql! -user !dba_user! -pas !dba_pswd!
                 call :sho "Command: !make_tmp_db!" !joblog!
 
                 (
@@ -299,10 +327,11 @@ for /d %%s in ( %fblst% ) do (
                     echo --------------------------------
                 ) >>!joblog!
                 
-                cmd /c "!make_tmp_db!" 1>>!joblog! 2>!err!
+                cmd /c "!make_tmp_db!" 1>!tmp! 2>!err!
+
                 del !sql!
 
-                for /f %%a in ("!err!") do (
+                for /f %%a in (!err!) do (
                     if %%~za GTR 0 (
                         (
                             echo Error while trying to create and drop temp DB
@@ -316,10 +345,14 @@ for /d %%s in ( %fblst% ) do (
                         )
                         del !tmp!
                         goto final
-                    ) else (
-                        call :sho "Temp DB was created and dropped SUCCESSFULLY" !joblog!
                     )
                 )
+
+                call :sho "Temp DB '!tdb!' was created and dropped SUCCESSFULLY" !joblog!
+                for /f "tokens=2" %%x in ('findstr /i /c:"fb_major_version" !tmp!') do (
+                  set fb_major_vers=%%x
+                )
+                call :sho "Detected FB major version: !fb_major_vers!" !joblog!
 
                 (
                     echo.
@@ -334,7 +367,7 @@ for /d %%s in ( %fblst% ) do (
                 @rem ##################################
                 @rem ###     R U N    T E S T S     ###
                 @rem ##################################
-                call :run_fbtest !fp! !joblog! %%p
+                call :run_fbtest !fp! !joblog! %%p %usedb%
 
                 (
                     echo.
@@ -344,6 +377,11 @@ for /d %%s in ( %fblst% ) do (
 
                 set msg=Finish fbt_run for %%s, architecture '%%u', auth plugin '%%p'
                 call :sho "!msg!" !joblog!
+
+                echo .................######### CHECK PROCESSES AFTER ITER DONE #####################..................
+                echo ....... DEBUG EXIT .......
+                exit
+                @rem pause
 
                 set msg=Restore original file !fp!\firebird.conf
                 call :sho "!msg!" !joblog!
@@ -383,10 +421,27 @@ for /d %%s in ( %fblst% ) do (
             call :sho "!msg!" !joblog!
 
         )
-        @rem end of: 'for /d %%p in ( %auths% )'
+        @rem end of: 'for /d %%p in ( %auths% )'-- finish for both auth plugins (Srp and Legacy)
 
     )
     @rem end of "for /f "tokens=3" %%k in ('REG.EXE ..."
+
+    set msg=Get overall results for fb_major_vers=!fb_major_vers!, build=!fbbuild! - for all architectures and all auth plugins.
+    call :sho "!msg!" !joblog!
+    
+    @rem if .!fb_major_vers:~0,2!.==.30. (
+
+    echo !fb_major_vers! | findstr /b /i /c:"3.">nul
+    if NOT errorlevel 1 (
+        set fbmver=30
+    ) else (
+        set fbmver=40
+    )
+
+    echo CHECK COMMAND: !fp!\isql.exe localhost:%~dp0archive\fbt_run_outcomes_!fbmver!.fdb -pag 9999 -user !dba_user! -pas !dba_pswd! -i %~dp0run-all-get-results.sql
+
+    !fp!\isql.exe localhost:%~dp0archive\fbt_run_outcomes_!fbmver!.fdb -pag 9999 -user !dba_user! -pas !dba_pswd! -i %~dp0run-all-get-results.sql 2>&1  >>!joblog!
+
 )
 @rem end of "for /d %%s in ( %fblst% ) do"
 
@@ -399,6 +454,7 @@ goto final
 :get_fb_port
     setlocal
     set fbc=%1
+    set joblog=%2
 
     set /a fbport=0
     set fbconf_path=!fbc!
@@ -410,34 +466,35 @@ goto final
     )
 
     if exist !fbconf_path!\firebird.conf (
+        call :sho "Parsing config: '!fbconf_path!\firebird.conf'" !joblog!
         findstr /i /c:"RemoteServicePort" !fbconf_path!\firebird.conf >nul
         if errorlevel 1 (
            set /a fbport=3050
            call :sho "String 'RemoteServicePort' not present in !fbconf_path!\firebird.conf; use default port number 3050" !joblog!
         ) else (
+            call :sho "Found string 'RemoteServicePort' in !fbconf_path!\firebird.conf" !joblog!
             for /f "tokens=1-2 delims==" %%a in ('findstr /i /c:"RemoteServicePort" !fbconf_path!\firebird.conf') do (
                 echo %%a | findstr /c:"#">nul
                 if not errorlevel 1 (
                     set /a fbport=3050
+                    call :sho "Parameter is commented, we use default value: !fbport!" !joblog!
                 ) else (
                     set /a fbport=%%b
+                    call :sho "Parameter is NOT commented, its value: !fbport!" !joblog!
                 )
             )
-            if .!fbport!.==.. (
-                set msg=Can not parse content in !fbconf_path!\firebird.conf. Job terminated.
+            if !fbport! EQU 0 (
+                set msg=Could not parse content in !fbconf_path!\firebird.conf. Job terminated.
                 call :sho "!msg!" !joblog!
                 goto final
-            ) else (
-                set msg=Detect line with port=!fbport! in !fbconf_path!\firebird.conf
-                call :sho "!msg!" !joblog!
             )
         )
     ) else (
-        set msg=Can not find firebird.conf in specified path=!fbc!. Job terminated.
+        set msg=Could not find firebird.conf in specified path=!fbc!. Job terminated.
         call :sho "!msg!" !joblog!
         goto final
     )
-    endlocal & set /a "%~2=%fbport%"
+    endlocal & set /a "%~3=%fbport%"
 
 goto:eof
 
@@ -446,8 +503,7 @@ goto:eof
     set fbc=%1
     set joblog=%2
     set fbauth=%3
-
-    @rem %%s %%u %%p
+    set usedb=%4
 
     set path=!fbc!;%path%
     echo Check path=!path!>>!joblog!
@@ -482,14 +538,14 @@ goto:eof
     set msg=Attempt to determine FB architecture and version: try to create temp DB using port=!port!
     call :sho "!msg!" !joblog!
     for /f "tokens=1-3 delims='(), " %%a in ('!pyp!\python %~dp0run-all-get-fb-arch.py !port!') do (
-        set fba=%%a
-        set fbv=%%b
-        set fbv=!fbv:.=!
-        set fbv=!fbv: =!
-        set fbb=%%c
-        set fbb=!fbb:.=_!
+        set fbarch=%%a
+        set fbmver=%%b
+        set fbmver=!fbmver:.=!
+        set fbmver=!fbmver: =!
+        set fbbuild=%%c
+        set fbbuild=!fbbuild:.=_!
     )
-    set msg=Detected FB arch=!fba!, engine=!fbv!, port=!port!, build=!fbb!
+    set msg=Detected FB arch=!fbarch!, engine=!fbmver!, port=!port!, build=!fbbuild!
     call :sho "!msg!" !joblog!
 
     if exist %~dp0tmp\*.fdb (
@@ -505,7 +561,7 @@ goto:eof
     @rem ###  Create folder for storing results. Sample:      ###
     @rem ###  E:\QA\fbt-repo\archive\analyze\4_0_0_737.SS.Srp ###
     @rem ########################################################
-    set analyze_dir=%~dp0archive\analyze\!fbb!.!fba!.!fbauth!
+    set analyze_dir=%~dp0archive\analyze\!fbbuild!.!fbarch!.!fbauth!
 
     set msg=Detailed results see in folder: !analyze_dir!\
     call :sho "!msg!" !joblog!
@@ -513,14 +569,13 @@ goto:eof
     md !analyze_dir! 2>nul
     if exist !analyze_dir!\*.html del !analyze_dir!\*.html 2>>!joblog!
 
-    set log=!logdir!\%~n0_!fbv!_!fba!.log
-    set sql=!logdir!\%~n0_!fbv!_!fba!.sql
-    set err=!logdir!\%~n0_!fbv!_!fba!.log
-    set tmp=!logdir!\%~n0_!fbv!_!fba!.tmp
+    set fbtlog=!logdir!\%~n0_!fbmver!_!fbarch!_!fbauth!.log
+    set sql=!logdir!\%~n0_!fbmver!_!fbarch!_!fbauth!.sql
+    set err=!logdir!\%~n0_!fbmver!_!fbarch!_!fbauth!.err
+    set tmp=!logdir!\%~n0_!fbmver!_!fbarch!_!fbauth!.tmp
 
-    del !log! 2>nul
-    del !err! 2>nul
-    for /d %%g in (!log!,!err!) do (
+    for /d %%g in (!fbtlog!,!err!,!tmp!,!sql!) do (
+        del %%g 2>>!joblog!
         if exist %%g (
             echo File %%g can not be deleted - probably it is still opened by another process. Job terminated.
             goto final
@@ -533,46 +588,69 @@ goto:eof
     @rem )
 
     if exist %~dp0tmp\bugs.core_*.fdb del %~dp0tmp\bugs.core_*.fdb 2>>!joblog!
-
-    set msg=Trying to RESTORE test results from previously created .fbk
-    call :sho "!msg!" !joblog!
-
-
-    if exist %~dp0archive\fbt_run_outcomes_%fbv%.fdb del %~dp0archive\fbt_run_outcomes_%fbv%.fdb
-    set cmd_run=!fbc!\gbak -se localhost/!port!:service_mgr -rep -st tdrw -v %~dp0archive\fbt_run_outcomes_%fbv%.fbk %~dp0archive\fbt_run_outcomes_%fbv%.fdb
-    call :sho "Run: !cmd_run!" !joblog!
-    cmd /c !cmd_run! 2>&1 1>>!log!
-
-    findstr /i /c:"gbak: ERROR" !log! >>!log!
-    if not errorlevel 1 (
-        set msg=ERROR occured during restoring process! Job terminated.
+  
+    if !usedb! EQU 1 (
+        set msg=Trying to RESTORE test results from previously created .fbk
         call :sho "!msg!" !joblog!
-        goto final
-    ) else (
+
+        if exist %~dp0archive\fbt_run_outcomes_%fbmver%.fdb del %~dp0archive\fbt_run_outcomes_%fbmver%.fdb
+        set cmd_run=!fbc!\gbak -user !dba_user! -pas !dba_pswd! -se localhost/!port!:service_mgr -rep -st tdrw -v %~dp0archive\fbt_run_outcomes_%fbmver%.fbk %~dp0archive\fbt_run_outcomes_%fbmver%.fdb
+        call :sho "Run: !cmd_run!" !joblog!
+
+        cmd /c !cmd_run! 2>!err! 1>!tmp!
+
+        set /a errsize=0
+        for /f %%a in ("!err!") do set errsize=%%~za
+        echo errsize=!errsize!
+        if !errsize! EQU 0 (
+            findstr /i /c:"gbak: ERROR" !tmp! >!err!
+            for /f %%a in ("!err!") do set errsize=%%~za
+        )
+
+        if !errsize! GTR 0 (
+            set msg=ERROR occured during restoring process. Job terminated.
+            call :sho "!msg!" !joblog!
+            call :sho ----------------------------------------------- !joblog!
+            for /f "tokens=*" %%a in (!err!) do (
+               call :sho "%%a" !joblog!
+            )
+            call :sho ----------------------------------------------- !joblog!
+            goto final
+        )
+
         set msg=OK. Restore successful.
         call :sho "!msg!" !joblog!
+
+        del !tmp!
+        del !err!
+
+
+        set msg=Extract BEFORE fbt_run first rows with previous runs
+        call :sho "!msg!" !joblog!
+        (
+            echo set count on; 
+            echo set echo on;
+            echo select first 20 * 
+            echo from (
+            echo         select 
+            echo             r.arch, 
+            echo             cast(r.build as int^) build, 
+            echo             r.person as used_plugin, 
+            echo             count(*^) as number_of_checks,
+            echo             max(r.created^) as last_checked 
+            echo         from runs r 
+            echo         group by 1,2,3 
+            echo         order by last_checked desc
+            echo      ^);
+        ) > !sql!
+
+        !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbmver%.fdb -q -z -pag 999999 -i !sql!  -user !dba_user! -pas !dba_pswd! 2>&1 1>>!joblog!
+
+    ) else (
+        set msg=SKIP restoring DB with tests history from .fbk because variable 'usedb' is NOT equals 1.
+        call :sho "!msg!" !joblog!
     )
-
-    set msg=Extract BEFORE fbt_run first rows with previous runs
-    call :sho "!msg!" !joblog!
-    (
-        echo set count on; 
-        echo set echo on;
-        echo select first 20 * 
-        echo from (
-        echo         select 
-        echo             r.arch, 
-        echo             cast(r.build as int^) build, 
-        echo             r.person as used_plugin, 
-        echo             count(*^) as number_of_checks,
-        echo             max(r.created^) as last_checked 
-        echo         from runs r 
-        echo         group by 1,2,3 
-        echo         order by last_checked desc
-        echo      ^);
-    ) > !sql!
-
-    !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 -i !sql! 2>&1 1>>!joblog!
+    @rem end of: "if usedb=1 / 0" - use database for storing results or skip from this.
 
     (
         echo.
@@ -583,39 +661,42 @@ goto:eof
     set msg=Running tests
     call :sho "!msg!" !joblog!
 
-    set cmd_run=!pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fba! -p plugin_!fbauth!  --skip run-all-excluded-tests-list.txt -c !fbc!\fbclient.dll
+    set cmd_run=!pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fbarch! -p plugin_!fbauth!  --skip run-all-excluded-tests-list.txt -c !fbc!\fbclient.dll
 
     @rem 4debug: 
-    @rem set cmd_run=!pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fba! -p plugin_!fbauth! bugs.core_5133 -c !fbc!\fbclient.dll
+    @rem set cmd_run=!pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fbarch! -p plugin_!fbauth! bugs.core_5133 -c !fbc!\fbclient.dll
 
+     call :sho "Launch 'fbt_run', command:" !joblog!
     if exist !mteebin! (
-       set cmd_run="!cmd_run! 2^>^&1 ^| !mteebin! /t /+ !log!"
-       echo !cmd_run! >>!joblog!
-       call :sho "Run: !cmd_run!" !joblog!
-       cmd /c !cmd_run!
+        set cmd_run="!cmd_run! 2^>^&1 ^| !mteebin! /t /+ !fbtlog!"
+        echo !date! !time! !cmd_run! >!tmp!
+        type !tmp!
+        type !tmp!>>!joblog!
+        cmd /c !cmd_run!
     ) else (
-       call :sho "Run: !cmd_run!" !joblog!
-       cmd /c !cmd_run! 2>&1 1>>!log!
+        call :sho "!cmd_run!" !joblog!
+        cmd /c !cmd_run! 2>&1 1>>!fbtlog!
     )
 
 
-    @rem 4debug: cmd /c !pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fba! bugs.core_5133 -c !fbc!\fbclient.dll 2>&1 1>>!log!
+    @rem 4debug: cmd /c !pyp!\Scripts\fbt_run -v -b !fbc! -o localhost/!port! -a !fbarch! bugs.core_5133 -c !fbc!\fbclient.dll 2>&1 1>>!fbtlog!
 
     (
         echo.
-        echo Check results of fbt_run.
-        set cmd_run=findstr /i /r /c:"Ran [0-9]* tests" !log!
+        echo Check results for build=!fbbuild! engine=!fbmver! arch=!fbarch! auth=!fbauth!
+        echo ########################################################################
+        set cmd_run=findstr /i /r /c:"FAIL:" /c:"SKIPPED:" /c:"ERROR:"  /c:"Ran [0-9]* tests" !fbtlog!
         echo Run: !cmd_run!
-        echo ------------- results beg ------------
+        echo.
         cmd /c !cmd_run!
-        echo ------------- results end ------------
+        echo ------------------------------------------------------------------------
         echo.
 
         echo Evaluate suffix for archive file.
         set fails=0
         set errors=0
         set skipped=0
-        for /f "tokens=1-8 delims=() " %%a in ('findstr /r /c:"(fails=[1-9])" /c:"(errors=[1-9]*)" /c:"(skipped=[1-9]*)" !log!') do (
+        for /f "tokens=1-8 delims=() " %%a in ('findstr /r /c:"(fails=[1-9])" /c:"(errors=[1-9]*)" /c:"(skipped=[1-9]*)" !fbtlog!') do (
             if not .%%c.==.. set /a "%%c"
             if not .%%d.==.. set /a "%%d"
             if not .%%e.==.. set /a "%%e"
@@ -639,36 +720,58 @@ goto:eof
         @echo off
     ) >>!joblog!
     
-    set msg=Save results in DB
-    call :sho "!msg!" !joblog!
-
-    set cmd_run=!pyp!\Scripts\fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbv%.fdb import
-    call :sho "Run: !cmd_run!" !joblog!
-    cmd /c !cmd_run! 2>&1 1>>!joblog!
-
-
-    @rem temply commented: fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbv%.fdb import 2>&1 | mtee /t /+ %log%
-
-    set msg=Extract AFTER fbt_run first rows with previous runs
-    call :sho "!msg!" !joblog!
-
-    !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbv%.fdb -q -z -pag 999999 -i !sql! 2>&1 1>>!joblog!
-
-    set msg=BACKUP database with results
-    call :sho "!msg!" !joblog!
-
-    set cmd_run=!fbc!\gbak -b -se localhost/!port!:service_mgr -v -st tdrw %~dp0archive\fbt_run_outcomes_%fbv%.fdb %~dp0archive\fbt_run_outcomes_%fbv%.fbk
-    call :sho "Run: !cmd_run!" !joblog!
-    cmd /c !cmd_run! 2>&1 1>>!log!
-    findstr /i /c:"gbak: ERROR" !log! >>!joblog!
-    if not errorlevel 1 (
-        set msg=ERROR occured during backup process! Job terminated.
+    
+    if !usedb! EQU 1 (
+        set msg=Save results in DB
         call :sho "!msg!" !joblog!
-        goto final
+
+        set cmd_run=!pyp!\Scripts\fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbmver%.fdb import
+        call :sho "Run: !cmd_run!" !joblog!
+        cmd /c !cmd_run! 2>&1 1>>!joblog!
+
+        @rem fbt_db -o localhost/!port! -d %~dp0archive\fbt_run_outcomes_%fbmver%.fdb import 2>&1 | mtee /t /+ %fbtlog%
+
+        set msg=Extract AFTER fbt_run first rows with previous runs
+        call :sho "!msg!" !joblog!
+
+        !fbc!\isql localhost/!port!:%~dp0archive\fbt_run_outcomes_%fbmver%.fdb -q -z -pag 999999 -i !sql!  -user !dba_user! -pas !dba_pswd! 2>&1 1>>!joblog!
+
+        set msg=BACKUP database with results
+        call :sho "!msg!" !joblog!
+
+        set cmd_run=!fbc!\gbak -b -user !dba_user! -pas !dba_pswd! -se localhost/!port!:service_mgr -v -st tdrw %~dp0archive\fbt_run_outcomes_%fbmver%.fdb %~dp0archive\fbt_run_outcomes_%fbmver%.fbk
+        call :sho "Run: !cmd_run!" !joblog!
+
+        cmd /c !cmd_run! 2>!err! 1>!tmp!
+
+        set /a errsize=0
+        for /f %%a in ("!err!") do set errsize=%%~za
+        echo errsize=!errsize!
+        if !errsize! EQU 0 (
+            findstr /i /c:"gbak: ERROR" !tmp! >!err!
+            for /f %%a in ("!err!") do set errsize=%%~za
+        )
+
+        if !errsize! GTR 0 (
+            set msg=ERROR occured during backup DB with run results. Job terminated.
+            call :sho "!msg!" !joblog!
+            call :sho ----------------------------------------------- !joblog!
+            for /f "tokens=*" %%a in (!err!) do (
+               call :sho "%%a" !joblog!
+            )
+            call :sho ----------------------------------------------- !joblog!
+            goto final
+        ) else (
+            set msg=OK. Backup successful.
+            call :sho "!msg!" !joblog!
+            del !tmp!
+            del !err!
+        )
     ) else (
-        set msg=OK. Backup successful.
+        set msg=SKIP saving results in DB plus backup because variable 'usedb' is NOT equals 1.
         call :sho "!msg!" !joblog!
     )
+    @rem end of "if !usedb! EQU 1 / 0"  - saving results to DB or SKIP this.
 
     set msg=ANALYZE results of test runs
     call :sho "!msg!" !joblog!
@@ -686,30 +789,58 @@ goto:eof
     dir  /-c !analyze_dir!\results.trf | findstr /i /c:results 2>&1 1>>!joblog!
     del %~dp0results.trf 2>>!joblog!
 
-    echo Packing results from !analyze_dir!\*.* into archive !analyze_dir!!zip_suff!
+    set zipdts=19000101000000
+    call :get_ansi_dts zipdts
+
+    set zipname=!analyze_dir:.=_!!zip_suff!.!zipdts!.!zipext!
+    if exist !zipname! del !zipname!
+    
+    set msg=Packing results from !analyze_dir!\*.* into archive '!zipname!'
     call :sho "!msg!" !joblog!
 
-    set cmd_run=!zipbin! u -r -bd -ssw -mx=9 !analyze_dir:.=_!!zip_suff!.!zipext! !analyze_dir!\*.* !log!
+    set cmd_run=!zipbin! u -r -bd -ssw -mx=9 !zipname! !analyze_dir!\*.* !fbtlog! !joblog!
     call :sho "Run: !cmd_run!" !joblog!
-    cmd /c !cmd_run! 2>&1 1>>!joblog!
 
-    if .1.==.0. (
+    set pack_ok=0
+    cmd /c !cmd_run! 2>&1 1>!tmp!
+
+    findstr /i /c:"Everything is Ok" !tmp! >nul
+    if not errorlevel 1 (
+        call :sho "Packing process seems to be finished SUCCESSFULLY." !joblog!
+        for /f %%a in ("!zipname!") do set zipsize=%%~za
+        call :sho "Size of !zipname!: !zipsize!" !joblog!
+
+        call :sho "Verifying intergity of !zipname!" !joblog!
+        !zipbin! t !zipname! | findstr /i /c:"everything is ok" /c:"testing" /c:"errors:" /c:"error:" >!tmp!
+        findstr /i /c:"everything is ok" !tmp! 2>&1 1>>!joblog!
         if not errorlevel 1 (
-            rd /q /s !analyze_dir!
-            del !log!
-        ) else (
-           echo errorlevel detected.
+            call :sho "File integrity verified SUCCESSFULLY." !joblog!
+            set pack_ok=1
         )
     )
 
-    @rem echo End of iter &pause
+    if !pack_ok! EQU 0 (
+        call :sho "Packing process finished with ERRORS." !joblog!
+        call :sho --------------------------------------- !joblog!
+        for /f "tokens=*" %%a in (!tmp!) do (
+            call :sho "%%a" !joblog!
+        )
+        call :sho --------------------------------------- !joblog!
+        goto final
+    )
 
+    for /d %%g in (!err!,!tmp!,!sql!) do (
+        if exist %%g del %%g 2>>!joblog!
+    )
+
+
+    @rem echo End of iter &pause
 
 endlocal & goto:eof
 
 @rem ######################################################################################################
 
-@rem echo alter table annotations drop annotation, add annotation blob character set none;|C:\MIX\firebird\fb30\isql /:C:\MIX\firebird\QA\fbt-repo\archive\FBT_RUN_OUTCOMES_30.FDB
+@rem echo alter table annotations drop annotation, add annotation blob character set none;|C:\MIX\firebird\fb30\isql /:C:\MIX\firebird\QA\fbt-repo\archive\FBT_RUN_OUTCOMES_30.FDB  -user !dba_user! -pas !dba_pswd!
 
 
 :sho
@@ -922,6 +1053,30 @@ endlocal & goto:eof
     @rem --- 20.12.2016 end of block for killing FB 'orphan' processes which could remain after QA run in Classic mode ---
 
 endlocal & goto:eof
+
+:get_ansi_dts
+    setlocal
+    set vbs=%~dpn0.tmp.vbs
+    set tmp=%~dpn0.tmp.tmp
+    (
+        @echo 'Usage: cscript ^/^/nologo ^<this_file.vbs^>
+        @echo WScript. echo timeStamp(now(^)^)
+        @echo function timeStamp( d ^)
+        @echo     timeStamp = Year(d^) ^& _
+        @echo     right("0" ^& Month(d^),2^) ^& _
+        @echo     right("0" ^& Day(d^),2^) ^& "_" ^& _
+        @echo     right("0" ^& Hour(d^),2^) ^& _
+        @echo     right("0" ^& Minute(d^),2^) ^& _
+        @echo     right("0" ^& Second(d^),2^)
+        @echo end Function
+    ) >!vbs!
+    %systemroot%\system32\cscript //nologo !vbs! >!tmp!
+    set /p edts=<!tmp!
+    del !vbs!
+    del !tmp!
+    endlocal & set "%~1=%edts%"
+goto:eof
+
 
 :haltHelper
 ()
