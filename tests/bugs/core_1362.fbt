@@ -9,21 +9,49 @@
 {
  'firebird_version': '2.5.0',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': """create table test (col1 double precision);
-
--- works
-insert into test values (1.79769313486231570E+308);
-""",
+ 'init_script': 
+  """
+  """,
  'test_type': 'ISQL',
- 'test_script': """-- too big, should err
-insert into "TEST" ( "COL1" ) values ( 1.79769313486232e+308 ) ;
-commit;
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 22003
-arithmetic exception, numeric overflow, or string truncation
--numeric value is out of range
-"""
+ 'test_script': 
+  """
+    recreate table test (col1 double precision);
+    commit;
+    -- this should PASS:
+    insert into test values( 1.79769313486231570E+308 );
+    -- this is too big, should raise exception:
+    insert into test values( 1.79769313486232e+308 );
+    commit;
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 22003
+    arithmetic exception, numeric overflow, or string truncation
+    -numeric value is out of range
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table test (col1 double precision);
+    commit;
+    -- this should PASS:
+    insert into test values( 1.79769313486231570E+308 );
+    -- this is too big, should raise exception:
+    insert into test values( 1.79769313486232e+308 );
+    commit;
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 22003
+    Decimal float overflow.  The exponent of a result is greater than the magnitude allowed.
+  """
 }
 ]
 }
