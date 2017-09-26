@@ -28,6 +28,13 @@
    Total time of test run is ~25 seconds (data filling occupies about 3 seconds).
 
    11.05.2017: checked on WI-T4.0.0.638 - added filtering to messages about shutdown state, see comments below.
+   26.09.2017: adjusted expected_stdout section to current FB 3.0+ versions: firebird.log now does contain info
+   about DB name which was swept (see CORE-5610, "Provide info about database (or alias) which was in use...")
+   Checked on:
+        30Cs, build 3.0.3.32805: OK, 34.937s.
+        30SS, build 3.0.3.32805: OK, 21.063s.
+        40CS, build 4.0.0.748: OK, 31.313s.
+        40SS, build 4.0.0.748: OK, 22.578s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -89,7 +96,8 @@ fn_nul.close()
 
 f_work_sql=open( os.path.join(context['temp_directory'],'tmp_work_4337.sql'), 'w')
 
-sql_dml='''
+sql_dml=\
+'''
     set list on;
     select current_time from rdb$database;
     recreate table t(s01 varchar(4000));
@@ -123,6 +131,7 @@ sql_dml='''
     --show database;
     quit;
 '''
+
 f_work_sql.write(sql_dml)
 f_work_sql.close()
 
@@ -141,6 +150,7 @@ f_work_err.close()
 '''
 
 temply disabled, see CORE-5385:
+"Attempt to change number of buffers in DB header leads to crash (either using gfix -b ... or fbsvcmgr prp_page_buffers ... ). Only 4.0 SuperServer is affected."
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 fn_nul = open(os.devnull, 'w')
@@ -515,17 +525,18 @@ for i in range(len(f_list)):
     POINT BEFORE GFIX -SWEEP.
     CONNECTION SHUTDOWN
     POINT AFTER GFIX -SWEEP.
-    ISQL LOG:                                 WAITING FOR GFIX START SWEEP
-    ISQL LOG:                                 STARTING TO DELETE GFIX PROCESS FROM MON$ATTACHMENTS
+    ISQL LOG: WAITING FOR GFIX START SWEEP
+    ISQL LOG: STARTING TO DELETE GFIX PROCESS FROM MON$ATTACHMENTS
     ISQL LOG: RECORDS AFFECTED: 1
-    ISQL LOG:                                 FINISHED DELETING GFIX PROCESS FROM MON$ATTACHMENTS
+    ISQL LOG: FINISHED DELETING GFIX PROCESS FROM MON$ATTACHMENTS
     TRACE_LOG: SWEEP_FAILED
     FIREBIRD.LOG: + SWEEP IS STARTED BY SYSDBA
     FIREBIRD.LOG: + OIT, OAT, OST, NEXT
-    FIREBIRD.LOG: + ERROR DURING SWEEP:
+    FIREBIRD.LOG: + ERROR DURING SWEEP OF BUGS.CORE_4337.FDB
     FIREBIRD.LOG: + CONNECTION SHUTDOWN
   """,
   'substitutions':[
+     ('[ ]+',' '),
      ('TRACE_LOG:.* SWEEP_START','TRACE_LOG: SWEEP_START'),
      ('TRACE_LOG:.* SWEEP_FAILED','TRACE_LOG: SWEEP_FAILED'),
      ('TRACE_LOG:.* ERROR AT JPROVIDER::ATTACHDATABASE','TRACE_LOG: ERROR AT JPROVIDER::ATTACHDATABASE'),
@@ -534,7 +545,8 @@ for i in range(len(f_list)):
      ('OIT [0-9]+','OIT'),
      ('OAT [0-9]+','OAT'),
      ('OST [0-9]+','OST'),
-     ('NEXT [0-9]+','NEXT')
+     ('NEXT [0-9]+','NEXT'),
+     ('FIREBIRD.LOG:.* ERROR DURING SWEEP OF .*BUGS.CORE_4337.FDB.*', 'ERROR DURING SWEEP OF BUGS.CORE_4337.FDB')
    ]
 
 }                                                                                                      
