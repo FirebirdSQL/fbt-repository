@@ -6,7 +6,7 @@
 'description': 
  """
    We create four attachments: first pair with charsets = none & utf8; second pair - similar.
-   Then we run query that contains non-ascii charaters in 1st attachment of 1st pair (c1none).
+   Then we run query that contains non-ascii characters in 1st attachment of 1st pair (its name is "c1none" - see below).
    Attachments 3 and 4 (which have charsets NONE and UTF8) obtain mon$sql_text for 1st attachment.
    They both should receive text like "select '123????456' ..." -- i.e. with quote marks instead non-ascii characters.
    Then we close 1st attachment, do commit in 2nd and 3rd ("monitoring") attachments.
