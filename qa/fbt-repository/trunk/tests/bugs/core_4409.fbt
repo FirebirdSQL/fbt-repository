@@ -1,0 +1,237 @@
+{
+'id': 'bugs.core_4409',
+'qmid': None,
+'tracker_id': 'CORE-4409',
+'title': 'Enhancement in precision of calculations with NUMERIC/DECIMAL',
+'description':
+ """
+   Checked on 4.0.0.767: OK, 0.828s.
+   Reproduced wrong result on 4.0.0.748.
+   See also letter to Alex, 12-jul-2017 09:49 (prototype for this test).
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set sqlda_display on;
+    set echo on;
+
+    select cast( 1e-308 as double precision ) positive_zero_e_308 from rdb$database;
+    select cast( 1e-309 as double precision ) positive_zero_e_309 from rdb$database;
+    select cast( 1e-310 as double precision ) positive_zero_e_310 from rdb$database;
+
+    select cast( 1e-320 as double precision ) positive_zero_e_320 from rdb$database;
+    select cast( 1e-321 as double precision ) positive_zero_e_321 from rdb$database;
+    select cast( 1e-322 as double precision ) positive_zero_e_322 from rdb$database;
+
+    select cast( 1e-323 as double precision ) positive_zero_e_323 from rdb$database;
+    select cast( 3.70550e-324 as double precision ) positive_zero_e324a from rdb$database;
+    select cast( 3.70549234380e-324 as double precision ) positive_zero_e324b from rdb$database;
+    select cast( 3.70549234381e-324 as double precision ) positive_zero_e324c from rdb$database;
+    select cast( 3.70548e-324 as double precision ) positive_zero_e324d from rdb$database;
+    select cast( 1e-324 as double precision ) positive_zero_e324e from rdb$database;
+    select cast( 1e-6176 as double precision ) positive_zero_e324f from rdb$database;
+    select cast( 1e-6177 as double precision ) positive_zero_e324g from rdb$database;
+
+    select cast( 1.79769313486231e+308 as double precision ) positive_inf_e308a from rdb$database;
+    select cast( 1.79769313486232e+308 as double precision ) positive_inf_e308b from rdb$database;
+  """,
+  'expected_stdout':
+  """
+        select cast( 1e-308 as double precision ) positive_zero_e_308 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_308
+      : table:   owner: 
+
+    POSITIVE_ZERO_E_308             9.999999999999999e-309
+
+
+        select cast( 1e-309 as double precision ) positive_zero_e_309 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_309
+      : table:   owner: 
+
+        select cast( 1e-310 as double precision ) positive_zero_e_310 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_310
+      : table:   owner: 
+
+
+        select cast( 1e-320 as double precision ) positive_zero_e_320 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_320
+      : table:   owner: 
+
+        select cast( 1e-321 as double precision ) positive_zero_e_321 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_321
+      : table:   owner: 
+
+        select cast( 1e-322 as double precision ) positive_zero_e_322 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_322
+      : table:   owner: 
+
+
+        select cast( 1e-323 as double precision ) positive_zero_e_323 from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E_323
+      : table:   owner: 
+
+        select cast( 3.70550e-324 as double precision ) positive_zero_e324a from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E324A
+      : table:   owner: 
+
+        select cast( 3.70549234380e-324 as double precision ) positive_zero_e324b from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E324B
+      : table:   owner: 
+
+        select cast( 3.70549234381e-324 as double precision ) positive_zero_e324c from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E324C
+      : table:   owner: 
+
+        select cast( 3.70548e-324 as double precision ) positive_zero_e324d from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E324D
+      : table:   owner: 
+
+        select cast( 1e-324 as double precision ) positive_zero_e324e from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E324E
+      : table:   owner: 
+
+        select cast( 1e-6176 as double precision ) positive_zero_e324f from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_ZERO_E324F
+      : table:   owner: 
+
+        select cast( 1e-6177 as double precision ) positive_zero_e324g from rdb$database;
+
+        select cast( 1.79769313486231e+308 as double precision ) positive_inf_e308a from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_INF_E308A
+      : table:   owner: 
+
+    POSITIVE_INF_E308A              1.797693134862310e+308
+
+
+        select cast( 1.79769313486232e+308 as double precision ) positive_inf_e308b from rdb$database;
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name: CAST  alias: POSITIVE_INF_E308B
+      : table:   owner: 
+  """,
+  'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+
+    Statement failed, SQLSTATE = 22003
+    Decimal float overflow.  The exponent of a result is greater than the magnitude allowed.
+  """
+}
+]
+}
