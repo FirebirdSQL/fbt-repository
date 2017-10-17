@@ -14,7 +14,7 @@
    Because we have dozen of different running processes, one need to distinguish records in the table for every of attachments.
    But values of current_connection are not suitable: they are unknown outside of DB connection, i.e. at the moment when we
    just return from DB attachment we still need to know some number that was 'linked' to just finished connection process.
-   For this purpose ROLES are used in this test: we generate them beforehand (ee 'init_test' section) and when create new
+   For this purpose ROLES are used in this test: we generate them beforehand (see 'init_test' section) and when create new
    attachment then specify ROLE in its arguments: 'R_000' for 1st spawned python process, 'R_001' for 2nd etc.
    Value of current_role will be written by DB-trigger in the table LOG4DETACH.
    When attachment finishes and control is returned to Python child process, we catch current timestamp again and save it
@@ -42,7 +42,7 @@
 
    23.11.2016
    Increased threshold to 6000 ms instead of old 5000 ms -- see 
-   http://web.firebirdsql.org/download/prerelease/results/archive/3.0.2.32630/bugs.core_5034.html )
+   http://web.firebirdsql.org/download/prerelease/results/archive/3.0.2.32630/bugs.core_5034.html
  """   ,
 'min_versions': '3.0',
 'versions': [
