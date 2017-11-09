@@ -1,0 +1,74 @@
+{
+'id': 'bugs.core_5647',
+'qmid': '',
+'tracker_id': 'CORE-5647',
+'title': 'Increase number of formats/versions of views from 255 to 32K',
+'description': 
+ """ 
+   FB40SS, build 4.0.0.789: OK, 3.828s (SS, CS).
+   Older version issued:
+        Statement failed, SQLSTATE = 54000
+        unsuccessful metadata update
+        -TABLE VW1
+        -too many versions
+   NB: we have to change FW to OFF in order to increase speed of this test run thus use test_type = Python.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': """
+import os
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+runProgram('gfix',[dsn,'-w','async'])
+
+script='''
+    set bail on;
+    set list on;
+    set term ^;
+    execute block returns(ret_code smallint) as
+        declare n int = 300;
+    begin
+        while (n > 0) do
+          begin
+            if (mod(n, 2) = 0) then
+              begin
+                in autonomous transaction do
+                  begin
+                    execute statement 'create or alter view vw1 (dump1) as select 1 from rdb$database';
+                  end
+              end
+            else
+              begin
+                in autonomous transaction do
+                  begin
+                    execute statement 'create or alter view vw1 (dump1, dump2) as select 1, 2 from rdb$database';
+                  end
+              end
+            n = n - 1;
+          end
+          ret_code = -abs(n);
+          suspend;
+    end ^
+    set term ;^
+    quit;
+'''
+runProgram('isql',[dsn],script)
+  """,
+ 'expected_stdout': 
+  """
+    RET_CODE                        0
+  """,
+ 'expected_stderr': 
+  """
+  """
+},
+]
+}
