@@ -16,6 +16,11 @@
    https://github.com/FirebirdSQL/firebird/commit/36b86a02e5df20d82855fe1af00bac27022bbf8e
    https://github.com/FirebirdSQL/firebird/commit/cbe9ac071f187e7766c2a67fdf47683604361059
    Checked on WI-V3.0.2.32677, WI-T4.0.0.519
+   Checked again 22.11.2017:
+      3.0.3.32837: OK, 2.781s.
+      3.0.3.32838: OK, 1.438s.
+      4.0.0.800: OK, 2.547s.
+      4.0.0.801: OK, 1.640s.
  """,
 'min_versions': '3.0.2',
 'versions': [
@@ -34,6 +39,23 @@
     -- Statement failed, SQLSTATE = HY004
     -- Unsupported field type specified in BETWEEN predicate.
     select 3 from rdb$database r_out where ((select count(*) from rdb$database r_chk) between ? and ?);
+
+    ----------------------------------------------------------
+
+    -- Following sample is from CORE-5596 (added 22.11.2017).
+    -- On 2.5.x it issues:
+    --   Statement failed, SQLSTATE = XX000
+    --   internal Firebird consistency check ((CMP) copy: cannot remap (221), file: cmp.cpp line: 3091)
+    select 1
+    from rdb$database
+    where
+        iif(
+             exists( select 1 from rdb$database )
+           , 0e0
+           , 0e0
+           )
+        between ? and ?
+    ;
   """,
   'expected_stdout':
   """
@@ -53,6 +75,26 @@
     01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner:
+
+
+
+    INPUT message field count: 2
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name:   alias:
+      : table:   owner:
+    02: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+      :  name:   alias:
+      : table:   owner:
+
+    PLAN (RDB$DATABASE NATURAL)
+    PLAN (RDB$DATABASE NATURAL)
+    PLAN (RDB$DATABASE NATURAL)
+
+    OUTPUT message field count: 1
+    01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
+      :  name: CONSTANT  alias: CONSTANT
+      : table:   owner:
+
   """,
   'expected_stderr':
   """
