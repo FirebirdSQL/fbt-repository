@@ -1,0 +1,61 @@
+{
+'id': 'bugs.core_4492',
+'qmid': None,
+'tracker_id': 'CORE-4492',
+'title': 'OR/IN predicates for RDB$DBKEY lead to NATURAL plan',
+'description':
+ """
+     Checked on: 4.0.0.804: OK, 1.063s.
+     Two questions remain to be cleared:
+
+     Q1. 
+       select 1 from rdb$relations where rdb$db_key is not distinct from ?;
+       PLAN (RDB$RELATIONS NATURAL) -- Why ?
+
+     Q2.
+       select 1 from rdb$relations a join rdb$relations b using ( rdb$db_key );
+       Statement failed, SQLSTATE = 42000 / -Token unknown /  -rdb$db_key ==> Why ?
+
+     Sent letter to dimitr, 25.11.2017 22:42. Waiting for reply.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set bail on;
+
+    recreate view v_unioned as
+    select rdb$relation_id as rel_id, rdb$db_key as db_key from rdb$relations
+    union all
+    select rdb$relation_id, rdb$db_key from rdb$relations
+    ;
+
+    set planonly;
+    --set echo on;
+
+    select 1 from rdb$relations where rdb$db_key in (?, ?);
+    select 2 from rdb$relations a join rdb$relations b on a.rdb$db_key = b.rdb$db_key;
+    select 3 from v_unioned v where v.db_key in (?, ?);
+    select 4 from v_unioned a join v_unioned b on a.db_key = b.db_key;
+
+  """,
+ 'expected_stdout': 
+  """
+    PLAN (RDB$RELATIONS INDEX ())
+    PLAN JOIN (A NATURAL, B INDEX ())
+    PLAN (V RDB$RELATIONS INDEX (), V RDB$RELATIONS INDEX ())
+    PLAN HASH (B RDB$RELATIONS NATURAL, B RDB$RELATIONS NATURAL, A RDB$RELATIONS NATURAL, A RDB$RELATIONS NATURAL)
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
