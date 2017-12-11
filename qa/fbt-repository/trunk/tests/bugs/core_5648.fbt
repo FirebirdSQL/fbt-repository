@@ -31,10 +31,10 @@
         4.0.0.748: OK, 25.984s (Classic)
         4.0.0.789: OK, 24.406s (SuperClassic and SuperServer, 08-nov-2017).
  """,
-'min_versions': '2.5.5',
+'min_versions': '3.0.3',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'init_script':
   """
