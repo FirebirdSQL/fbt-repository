@@ -120,7 +120,9 @@
 
     SQL warning code = -104
     -CTE "B" is not used in query
-
+    -CTE "C" is not used in query
+    -CTE "D" is not used in query
+    
     Statement failed, SQLSTATE = 42S02
     Dynamic SQL Error
     -SQL error code = -204
