@@ -6,13 +6,14 @@
 'description':
  """
     Checked on:
-        3.0.3.32852: OK, 2.187s.
-        4.0.0.830: OK, 1.453s.
+        25SC, build 2.5.8.27088: OK, 0.344s.
+        30SS, build 3.0.3.32856: OK, 0.968s.
+        40SS, build 4.0.0.834: OK, 1.875s.
  """,
-'min_versions': '3.0.3',
+'min_versions': '2.5.8',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
  'init_script':
@@ -47,6 +48,11 @@
     select c a from c a
     ; 
 
+    -- Two samples from CORE-5655:
+    with cte as (select sign(t.rdb$relation_id) ct from rdb$database t) select ct.ct from cte ct;
+    select e.ct from (select d.ct from (select sign(t.rdb$relation_id) ct from rdb$database t) d) e;
+
+
   """,
  'expected_stdout': 
   """
@@ -54,6 +60,9 @@
 
     A                               0
     A                               1
+
+    CT                              1
+    CT                              1
   """,
  'expected_stderr': 
   """
