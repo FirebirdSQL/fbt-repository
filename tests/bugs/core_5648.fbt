@@ -176,7 +176,7 @@ f.close()
 with open( f_eds_to_local_host_err.name,'r') as f:
   for line in f:
       if line.split():
-        print('UNEXPECTED STDERR in '+f_eds_to_local_host_err+': '+line)
+        print('UNEXPECTED STDERR in '+f_eds_to_local_host_err.name+': '+line)
 f.close()
 
 with open( f_db_reset_log.name,'r') as f:
