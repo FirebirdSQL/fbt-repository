@@ -1,0 +1,232 @@
+{
+'id': 'bugs.core_5706',
+'qmid': None,
+'tracker_id': 'CORE-5706',
+'title': "FBSVCMGR connects to server as OS user name rather than value of ISC_USER environment variable",
+'description': 
+ """
+  We create trace config with following INVALID content:
+    database = (%[\\/](security[[:digit:]]).fdb|(security.db))
+    enabled = false
+    {
+    }
+
+    database =
+    {
+      enabled = true
+      log_connections = true
+    }
+
+  Then we run another fbsvcmgr with passing 'action_trace_list' argument to it. 
+  This immediately should cause raise error in the 1st (trace) session:
+      1  Trace session ID 1 started
+      2  Error creating trace session for database "C:\MIX\FIREBIRD\FB30\SECURITY3.FDB":
+      3  error while parsing trace configuration
+      4  Trace parameters are not present
+  NOTE.
+  It was encountered that in FB 3.0.3 Classic lines 2..4 appear TWICE. See note in the ticket, 16/Jan/18 05:08 PM
+  Checked on:
+     3.0.3.32876 (SS, CS)
+     4.0.0.852  (SS, CS)
+ """,
+'min_versions': '3.0.3',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+import os
+import subprocess
+from subprocess import Popen
+import difflib
+import time
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+cur1 = db_conn.cursor()
+cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
+for row in cur1:
+    engine = row[0]
+
+db_conn.close()
+
+def svc_get_fb_log( engine, f_fb_log ):
+
+  import subprocess
+
+  if engine.startswith('2.5'):
+      get_firebird_log_key='action_get_ib_log'
+  else:
+      get_firebird_log_key='action_get_fb_log'
+
+  subprocess.call([ "fbsvcmgr",
+                    "localhost:service_mgr",
+                    get_firebird_log_key
+                  ],
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+
+
+txt30 = r'''\
+# Trace config, format for 3.0. Generated auto, do not edit!
+database = (%[\\\\/](security[[:digit:]]).fdb|(security.db))
+enabled = false
+{
+}
+
+database =
+{
+  enabled = true
+  log_connections = true
+}
+'''
+
+fn_trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_5706.cfg'), 'w')
+fn_trccfg.write(txt30)
+fn_trccfg.close()
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5706_fblog_before.txt'), 'w')
+svc_get_fb_log( engine, f_fblog_before )
+f_fblog_before.close()
+
+
+# ##############################################################
+# S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
+# ##############################################################
+
+fn_trclog=open( os.path.join(context['temp_directory'],'tmp_trace_5706.log'), 'w')
+p_trace = Popen(["fbsvcmgr" , "localhost:service_mgr" , "action_trace_start" , "trc_cfg" , fn_trccfg.name], stdout=fn_trclog, stderr=subprocess.STDOUT)
+
+# We run here ISQL only in order to "wake up" trace session and force it to raise error in its log:
+runProgram('isql', [ dsn, '-q', '-n' ], 'quit;')
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5706_fblog_after.txt'), 'w')
+svc_get_fb_log( engine, f_fblog_after )
+f_fblog_after.close()
+
+
+# _!_!_!_!_!_!_!_!_!_! do NOT reduce this delay: firebird.log get new messages NOT instantly !_!_!_!_!_!_!_!_
+# Currently firebird.log can stay with OLD content if heavy concurrent workload exists on the same host!
+time.sleep(1)
+
+# ####################################################
+# G E T  A C T I V E   T R A C E   S E S S I O N   I D
+# ####################################################
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
+
+fn_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_5706.lst'), 'w')
+subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_list"], stdout=fn_trclst, stderr=subprocess.STDOUT)
+fn_trclst.close()
+
+# Do not remove this line.
+time.sleep(1)
+
+trcssn=0
+with open( fn_trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+f.close()
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+
+# ####################################################
+# S E N D   R E Q U E S T    T R A C E   T O   S T O P
+# ####################################################
+if trcssn > 0:
+    fn_nul = open(os.devnull, 'w')
+    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_stop","trc_id", trcssn], stdout=fn_nul)
+    fn_nul.close()
+
+p_trace.terminate()
+fn_trclog.close()
+
+
+# Do not remove this line.
+time.sleep(2)
+
+# Compare firebird.log versions BEFORE and AFTER this test:
+######################
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5706_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+# Check logs:
+#############
+
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+'):
+            print( 'UNEXPECTED DIFF IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
+
+# NB! Lines starting from 2nd in the following error block:
+# Trace session ID 1 started
+# Error creating trace session for database "C:\MIX\FIREBIRD\FB30\SECURITY3.FDB":
+# error while parsing trace configuration
+# 	line 2: error while compiling regular expression "(%[\/](security3).fdb|(security.db))"
+# - are duplicated in FB 3.0.3 Classic.
+# For this reason we collect all UNIQUE messages in the set() and output then only such distinct list.
+
+trc_unique_msg=set()
+with open( fn_trclog.name,'r') as f:
+    for line in f:
+        #if line.split():
+        if 'error' in line.lower():
+            trc_unique_msg.add( ' '.join(line.split()).upper() )
+
+for p in sorted(trc_unique_msg):
+    print(p)
+
+time.sleep(1)
+
+# CLEAN UP
+##########
+f_list=( 
+     fn_trclog
+    ,fn_trclst
+    ,fn_trccfg
+    ,f_fblog_before
+    ,f_fblog_after
+    ,f_diff_txt
+)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout': 
+  """
+    ERROR CREATING TRACE SESSION FOR DATABASE
+    ERROR WHILE PARSING TRACE CONFIGURATION
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[('FOR DATABASE.*','FOR DATABASE'),  ('.*REGULAR EXPRESSION.*','REGULAR EXPRESSION ERROR'), ('TRACE SESSION ID [0-9]+ STARTED', 'TRACE SESSION ID STARTED') ]
+}
+]
+}
