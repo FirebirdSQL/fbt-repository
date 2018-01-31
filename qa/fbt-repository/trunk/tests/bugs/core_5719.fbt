@@ -1,0 +1,159 @@
+{
+'id': 'bugs.core_5719',
+'qmid': None,
+'tracker_id': 'CORE-5719',
+'title': 'FB >= 3 crashes when restoring backup made by FB 2.5.',
+'description':
+  """
+  Confirmed crash on:
+      3.0.3.32387
+      4.0.0.861
+  Works fine on:
+      FB30SS, build 3.0.3.32897: OK, 3.891s.
+      FB40SS, build 4.0.0.872: OK, 4.421s.
+  """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import time
+import zipfile
+import difflib
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+def svc_get_fb_log( f_fb_log ):
+
+  import subprocess
+
+  subprocess.call( [ "fbsvcmgr",
+                     "localhost:service_mgr",
+                     "action_get_fb_log"
+                   ],
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core5719-ods-11_2.zip') )
+tmpfbk = 'core5719-ods-11_2.fbk'
+zf.extract( tmpfbk, '$(DATABASE_LOCATION)')
+zf.close()
+
+tmpfbk='$(DATABASE_LOCATION)'+tmpfbk
+tmpfdb='$(DATABASE_LOCATION)'+'tmp_5719_check_restored.fdb'
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5719_fblog_before.txt'), 'w')
+svc_get_fb_log( f_fblog_before )
+f_fblog_before.close()
+
+
+f_restore_log=open( os.path.join(context['temp_directory'],'tmp_5719_check_restored.log'), 'w')
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+                       "action_restore",
+                       "bkp_file", tmpfbk,
+                       "dbname", tmpfdb,
+                       "res_replace",
+                       "verbose"
+                      ],
+                      stdout=f_restore_log, 
+                      stderr=subprocess.STDOUT)
+f_restore_log.close()
+
+time.sleep(1)
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5719_fblog_after.txt'), 'w')
+svc_get_fb_log( f_fblog_after )
+f_fblog_after.close()
+
+
+f_validation_log=open( os.path.join(context['temp_directory'],'tmp_5719_validation.log'), 'w')
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+                       "action_validate",
+                       "dbname", tmpfdb,
+                      ],
+                      stdout=f_validation_log, 
+                      stderr=subprocess.STDOUT)
+f_validation_log.close()
+
+# Compare firebird.log versions BEFORE and AFTER this test:
+######################
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5719_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+# Check logs:
+#############
+with open( f_restore_log.name,'r') as f:
+    for line in f:
+        if 'Error'.upper() in line.upper():
+            print( 'UNEXPECTED ERROR IN RESTORE LOG: ' + (' '.join(line.split()).upper()) )
+
+with open( f_validation_log.name,'r') as f:
+    for line in f:
+        if 'Error'.upper() in line.upper():
+            print( 'UNEXPECTED ERROR IN VALIDATION LOG: ' + (' '.join(line.split()).upper()) )
+
+
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+'):
+            print( 'UNEXPECTED DIFF IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
+
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+os.remove( tmpfbk )
+os.remove( tmpfdb )
+
+f_list=( 
+     f_restore_log
+    ,f_validation_log
+    ,f_fblog_before
+    ,f_fblog_after
+    ,f_diff_txt
+)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
