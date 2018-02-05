@@ -2965,7 +2965,6 @@
   """,
  'expected_stdout': 
   """
-
     DDL of table rdb$types:         
 
 
@@ -4462,6 +4461,12 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
+    RDB$TYPE                        24
+    RDB$TYPE_NAME                   GET_DBCRYPT_KEY_NAME                                                                                                                                                                                                                                        
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
     RDB$TYPE                        22
     RDB$TYPE_NAME                   GRANT_REVOKE_ANY_DDL_RIGHT                                                                                                                                                                                                                                  
     RDB$DESCRIPTION                 <null>
@@ -4654,7 +4659,7 @@
     RDB$SYSTEM_FLAG                 1
 
 
-    Records affected: 279
+    Records affected: 280
   """
 }
 ]
