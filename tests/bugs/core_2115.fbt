@@ -226,6 +226,7 @@ if filecmp.cmp( sql_long_plans_chk, sql_long_plans_res.name):
 else:
   print("Found at least one MISMATCH with original plans.")
 
+'''
 if os.path.isfile(sql_long_plans_qry):
     os.remove(sql_long_plans_qry)
 
@@ -234,6 +235,19 @@ if os.path.isfile(sql_long_plans_chk):
 
 if os.path.isfile(sql_long_plans_res.name):
     os.remove(sql_long_plans_res.name)
+'''
+
+f_list=( 
+     sql_long_plans_qry
+    ,sql_long_plans_chk 
+    ,sql_long_plans_res
+)
+
+'''
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+'''
 
   """,
  'expected_stdout': 
