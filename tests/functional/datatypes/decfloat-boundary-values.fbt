@@ -60,15 +60,16 @@
     MAX_DF34_FOR_NEG_SCOPE                                          -1.0E-6143
     MIN_DF34_FOR_POS_SCOPE                                           1.0E-6143
     MAX_DF34_FOR_POS_SCOPE           9.999999999999999999999999999999999E+6144
-    ZERO_MIN_DF16_FOR_NEG                                               0E+369
-    ZERO_MAX_DF16_FOR_NEG                                               0E-384
-    ZERO_MIN_DF16_FOR_POS                                               0E-384
-    ZERO_MAX_DF16_FOR_POS                                               0E+369
+    ZERO_MIN_DF16_FOR_NEG                            0E+369
+    ZERO_MAX_DF16_FOR_NEG                            0E-384
+    ZERO_MIN_DF16_FOR_POS                            0E-384
+    ZERO_MAX_DF16_FOR_POS                            0E+369
     ZERO_MIN_DF34_FOR_NEG                                              0E+6111
     ZERO_MAX_DF34_FOR_NEG                                              0E-6144
     ZERO_MIN_DF34_FOR_POS                                              0E-6144
     ZERO_MAX_DF34_FOR_POS                                              0E+6111
- """
+ """,
+ 'substitutions':[ ('[\s]+', ' ') ]
 }
 ]
 }
