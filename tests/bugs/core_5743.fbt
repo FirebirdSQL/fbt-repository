@@ -38,10 +38,17 @@
     group by 1
     ;
 
+    -- sample from CORE-5749:
+    select 'my constant ' as dsc, count( * )
+    from rdb$relations a
+    where a.rdb$system_flag = 99
+    group by 1
+    ;
   """,
  'expected_stdout': 
   """
     PLAN SORT (JOURNAL_CAISSE INDEX (JOURNAL_CAISSE_IDX))
+    PLAN SORT (A NATURAL)
   """,
  'expected_stderr': 
   """
