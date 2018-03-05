@@ -3,7 +3,12 @@
 'qmid': '',
 'tracker_id': 'CORE-805',
 'title': 'Privileges of dynamic statements in SP',
-'description': '',
+'description': 
+ """
+    2.5.9.27107: OK, 0.562s.
+    3.0.4.32924: OK, 2.360s.
+    4.0.0.916: OK, 1.406s.
+ """,
 'min_versions': '2.5.0',
 'versions': [
 {
@@ -59,7 +64,7 @@
     
     revoke all on all from john_senior;
     revoke all on all from mick_junior;
-    -- revoke all on all from role_for_mick; -- COMMENTED TEMPLY, error "Revoke all on all from role <R> -- failed with "SQL role <R> does not exist in security database"", see core-4831
+    revoke all on all from role_for_mick; --restored as uncommented statement, 05.03.2018
     commit;
     
     grant select on test to procedure sp_test;
@@ -68,6 +73,15 @@
     grant execute on procedure sp_test to procedure sp_main;
     grant role_for_mick to mick_junior;
     commit;
+
+    -- result:
+    -- 1) table TEST can be queried only by procedure sp_test;
+    -- 2) procedure sp_test is called only from another procedure - sp_main - and only via ES
+    -- 3) procedure sp_main can be called:
+    -- 2.1) directly by user john_senior (no role required to him);
+    -- 2.2) indirectly by ROLE 'role_for_mick' which is granted to user 'mick_junior'.
+
+    -- Both these users should be able to see data of table 'TEST':
     
     set list on;
     
@@ -100,8 +114,6 @@
     WHAT_IS_MY_ROLE                 NONE
     ID                              1
     X                               100
-    
-    
     
     WHO_AM_I                        MICK_JUNIOR
     WHAT_IS_MY_ROLE                 ROLE_FOR_MICK
