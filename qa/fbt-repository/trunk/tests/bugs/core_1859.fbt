@@ -1,0 +1,89 @@
+{
+'id': 'bugs.core_1859',
+'qmid': None,
+'tracker_id': 'CORE-1859',
+'title': 'Arithmetic overflow or division by zero has occurred. in MAX function',
+'description':
+  """
+  """,
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import time
+import zipfile
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_1859.zip') )
+tmpfbk = 'core_1859.fbk'
+zf.extract( tmpfbk, '$(DATABASE_LOCATION)')
+zf.close()
+
+tmpfbk='$(DATABASE_LOCATION)'+tmpfbk
+tmpfdb='$(DATABASE_LOCATION)'+'tmp_arith_error_1859.fdb'
+
+f_restore_log=open( os.path.join(context['temp_directory'],'tmp_arith_error_1859.log'), 'w')
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+                       "action_restore",
+                       "bkp_file", tmpfbk,
+                       "dbname", tmpfdb,
+                       "res_replace"
+                      ],
+                      stdout=f_restore_log, 
+                      stderr=subprocess.STDOUT)
+f_restore_log.close()
+
+# should be empty:
+##################
+with open( f_restore_log.name,'r') as f:
+  for line in f:
+      if line.split():
+        print('UNEXPECTED STDERR in '+f_restore_log.name+': '+line)
+
+
+sqltxt='''
+    set list on;
+    select count(*) 
+    from ( 
+        select p.rdb$parameter_name pname, max(p.rdb$procedure_name) pnmax 
+        from rdb$procedure_parameters p 
+        group by 1
+    );
+'''
+
+runProgram('isql', [ 'localhost:'+tmpfdb,'-q' ], sqltxt)
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+os.remove(f_restore_log.name)
+os.remove(tmpfdb)
+os.remove(tmpfbk)
+
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
