@@ -5,6 +5,21 @@
 'title': 'Arithmetic overflow or division by zero has occurred. in MAX function',
 'description':
   """
+    Confirmed bug on 2.1.0.17798 - got:
+    ===
+        Statement failed, SQLCODE = -802
+        arithmetic exception, numeric overflow, or string truncation
+    ===
+    Checked on: 2.1.1.17910 -- no error, and also:
+        2.5.9.27107: OK, 9.562s.
+        3.0.4.32924: OK, 17.468s.
+        4.0.0.916: OK, 20.219s.
+
+    Note. Warnings are issued during restore process:
+        gbak: WARNING:function DATETOSTR is not defined
+        gbak: WARNING:    module name or entrypoint could not be found
+    - we have to ignore these messages from analysis.
+    Restore on 2.1.x lasts about 12-13 seconds.
   """,
 'min_versions': '2.5.0',
 'versions': [
@@ -50,9 +65,11 @@ f_restore_log.close()
 ##################
 with open( f_restore_log.name,'r') as f:
   for line in f:
-      if line.split():
+      if 'gbak: ERROR:' in line:
         print('UNEXPECTED STDERR in '+f_restore_log.name+': '+line)
 
+#UNEXPECTED STDERR in C:\MIX\firebird\QA\fbt-repo\tmp\tmp_arith_error_1859.log: gbak: WARNING:function DATETOSTR is not defined
+#UNEXPECTED STDERR in C:\MIX\firebird\QA\fbt-repo\tmp\tmp_arith_error_1859.log: gbak: WARNING:    module name or entrypoint could not be found
 
 sqltxt='''
     set list on;
@@ -80,6 +97,7 @@ os.remove(tmpfbk)
   """,
  'expected_stdout': 
   """
+    COUNT                           786
   """,
  'expected_stderr': 
   """
