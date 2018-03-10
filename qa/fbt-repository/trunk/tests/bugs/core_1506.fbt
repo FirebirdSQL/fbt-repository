@@ -1,0 +1,54 @@
+{
+'id': 'bugs.core_1506',
+'qmid': None,
+'tracker_id': 'CORE-1506',
+'title': 'Server crash with isc_dsql_execute_immediate and zero length string',
+'description': 
+ """
+    Confirmed on 2.1.0.17798, got:
+        Error while executing SQL statement:
+        \n- SQLCODE: -902
+        \n- Unable to complete network request to host "localhost".
+        \n- Error reading data from the connection.
+        -902, 335544721)
+    firebird.log contains only this:
+        CSPROG	Sat Mar 10 19:13:29 2018
+        	INET/inet_error: read errno = 10054
+
+    Checked on:
+        2.5.9.27107: OK, 0.297s.
+        3.0.4.32924: OK, 1.562s.
+        4.0.0.918: OK, 1.735s.
+
+    NB: FB 3.+ contain TWO messages with almost the same text about SQLSTATE = -104. 
+    Second line is filtered out - see 'substitutions' section.
+ """,
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+try:
+    db_conn.execute_immediate('')
+except Exception, e:
+    print( e[0] )
+  """,
+ 'expected_stdout': 
+  """
+    Error while executing SQL statement:
+    - SQLCODE: -104
+    - Unexpected end of command
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [('- SQL error code.*', '')]
+}
+]
+}
