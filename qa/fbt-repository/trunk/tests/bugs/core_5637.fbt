@@ -1,0 +1,161 @@
+{
+'id': 'bugs.core_5637',
+'qmid': None,
+'tracker_id': 'CORE-5637',
+'title': 'string right truncation on restore of security db',
+'description':
+  """
+    Confirmed bug on 4.0.0.838, got:
+        gbak: ERROR:arithmetic exception, numeric overflow, or string truncation
+        gbak: ERROR:    string right truncation
+        gbak: ERROR:    expected length 10, actual 13
+        gbak: ERROR:gds_$send failed
+        ...
+    Checked on:
+        4.0.0.918: OK, 6.516s.
+  """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import time
+import zipfile
+import difflib
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+def svc_get_fb_log( f_fb_log ):
+
+  import subprocess
+
+  subprocess.call( [ "fbsvcmgr",
+                     "localhost:service_mgr",
+                     "action_get_fb_log"
+                   ],
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+
+zf = zipfile.ZipFile( os.path.join(context['files_location'],'core5637.zip') )
+tmpfbk = 'core5637-security3.fbk'
+zf.extract( tmpfbk, '$(DATABASE_LOCATION)')
+zf.close()
+
+tmpfbk='$(DATABASE_LOCATION)'+tmpfbk
+tmpfdb='$(DATABASE_LOCATION)'+'tmp_5637_check_restored.fdb'
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5637_fblog_before.txt'), 'w')
+svc_get_fb_log( f_fblog_before )
+f_fblog_before.close()
+
+
+f_restore_log=open( os.path.join(context['temp_directory'],'tmp_5637_check_restored.log'), 'w')
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+                       "action_restore",
+                       "bkp_file", tmpfbk,
+                       "dbname", tmpfdb,
+                       "res_replace",
+                       "verbose"
+                      ],
+                      stdout=f_restore_log, 
+                      stderr=subprocess.STDOUT)
+f_restore_log.close()
+
+time.sleep(1)
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5637_fblog_after.txt'), 'w')
+svc_get_fb_log( f_fblog_after )
+f_fblog_after.close()
+
+
+f_validation_log=open( os.path.join(context['temp_directory'],'tmp_5637_validation.log'), 'w')
+subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+                       "action_validate",
+                       "dbname", tmpfdb,
+                      ],
+                      stdout=f_validation_log, 
+                      stderr=subprocess.STDOUT)
+f_validation_log.close()
+
+# Compare firebird.log versions BEFORE and AFTER this test:
+######################
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5637_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+# Check logs:
+#############
+with open( f_restore_log.name,'r') as f:
+    for line in f:
+        if 'Error'.upper() in line.upper():
+            print( 'UNEXPECTED ERROR IN RESTORE LOG: ' + (' '.join(line.split()).upper()) )
+
+with open( f_validation_log.name,'r') as f:
+    for line in f:
+        if 'Error'.upper() in line.upper():
+            print( 'UNEXPECTED ERROR IN VALIDATION LOG: ' + (' '.join(line.split()).upper()) )
+
+
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+'):
+            print( 'UNEXPECTED DIFF IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
+
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+os.remove( tmpfbk )
+os.remove( tmpfdb )
+
+f_list=( 
+     f_restore_log
+    ,f_validation_log
+    ,f_fblog_before
+    ,f_fblog_after
+    ,f_diff_txt
+)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+
+
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
