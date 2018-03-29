@@ -23,7 +23,13 @@
     
     set list on;
     set transaction no wait;
-    select sec$user_name from sec$users where sec$user_name = 'SYSDBA';
+    select sec$user_name 
+    from sec$users where sec$user_name = 'SYSDBA' 
+    -- NB: TWO rows can be returned if security_db was initialized with SYSDBA login using plugin Srp 
+    -- (beside already existing SYSDBA account that was created using Legacy_UserManager)
+    -- We have to limit output by any of these rows:
+    rows 1 
+    ;
     
     set term ^;
     execute block returns(connect_from rdb$user, connect_diff smallint) as
