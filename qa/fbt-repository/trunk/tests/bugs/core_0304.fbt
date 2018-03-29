@@ -5,6 +5,10 @@
 'title': ' ANY user can drop procedures, generators, exceptions.',
 'description':
  """
+    fb30Cs, build 3.0.4.32924: OK, 4.406s.
+    FB30SS, build 3.0.4.32939: OK, 1.563s.
+    FB40CS, build 4.0.0.918: OK, 3.875s.
+    FB40SS, build 4.0.0.943: OK, 1.953s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -50,7 +54,7 @@
     -- All following statements should FAIL if current user is not SYSDBA:
 
     execute procedure sp_test;
-
+    
     show sequence g_test;
 
     alter domain dm_test set default 123;
@@ -60,6 +64,7 @@
     alter domain dm_test drop not null;
 
     alter trigger test_bi inactive;
+
 
     alter table test add z int;
 
@@ -82,6 +87,7 @@
     drop exception e_test;
 
     drop function strlen;
+
 
     drop collation name_coll;
 
@@ -120,7 +126,7 @@
     Statement failed, SQLSTATE = 28000
     unsuccessful metadata update
     -ALTER TRIGGER TEST_BI failed
-    -no permission for ALTER access to DATABASE
+    -no permission for ALTER access to TABLE TEST
 
     Statement failed, SQLSTATE = 28000
     unsuccessful metadata update
@@ -162,10 +168,12 @@
     -DROP PROCEDURE SP_TEST failed
     -no permission for DROP access to PROCEDURE SP_TEST
 
+
     Statement failed, SQLSTATE = 28000
     unsuccessful metadata update
     -DROP SEQUENCE G_TEST failed
     -no permission for DROP access to GENERATOR G_TEST
+
 
     Statement failed, SQLSTATE = 28000
     unsuccessful metadata update
@@ -181,6 +189,7 @@
     unsuccessful metadata update
     -DROP COLLATION NAME_COLL failed
     -no permission for DROP access to COLLATION NAME_COLL
+
   """
 }
 ]
