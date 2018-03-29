@@ -23,6 +23,7 @@
     -- Decimal float divide by zero.  The code attempted to divide a DECFLOAT value by zero.
     set decfloat traps to;
     set list on;
+    set count on;
     select 
         i 
        ,n
