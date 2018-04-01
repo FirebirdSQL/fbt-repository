@@ -1,0 +1,179 @@
+{
+'id': 'bugs.core_4451',
+'qmid': None,
+'tracker_id': 'CORE-4451',
+'title': 'Allow output to trace explain plan form.',
+'description': 
+ """
+ """,
+'min_versions': '3.0.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+    recreate table test(x int);
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import subprocess
+from subprocess import Popen
+import time
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+
+fdb_file='$(DATABASE_LOCATION)bugs.core_4451.fdb'
+
+db_conn.close()
+
+#####################################################################
+# Prepare config for trace session that will be launched by call of FBSVCMGR:
+
+txt = '''\
+    database= # %[\\\\\\\\/]bugs.core_4451.fdb
+    {
+        enabled = true
+        time_threshold = 0 
+        log_initfini = false
+        print_plan = true
+        explain_plan = true
+        log_statement_prepare = true
+        include_filter=%(from|join)[[:whitespace:]]test%
+    }
+'''
+trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_4451.cfg'), 'w')
+trc_cfg.write(txt)
+trc_cfg.close()
+trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_4451.log'), 'w')
+trc_log.close()
+trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_4451.lst'), 'w')
+trc_lst.close()
+
+#sys.stdout.flush()
+#os._exit(0)
+
+#####################################################################
+# Async. launch of trace session using FBSVCMGR action_trace_start:
+
+trc_log=open(trc_log.name, "w")
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
+                    "action_trace_start",
+                    "trc_cfg", trc_cfg.name
+                  ],
+                  stdout=trc_log, 
+                  stderr=subprocess.STDOUT
+                )
+
+# Wait! Trace session is initialized not instantly!
+time.sleep(2)
+
+#####################################################################
+
+# Determine active trace session ID (for further stop):
+
+trc_lst=open(trc_lst.name, "w")
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "action_trace_list"],
+                 stdout=trc_lst, stderr=subprocess.STDOUT
+               )
+trc_lst.close()
+
+# Session ID: 5 
+#   user:   
+#   date:  2015-08-27 15:24:14 
+#   flags: active, trace 
+
+trcssn=0
+with open( trc_lst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+
+# Result: `trcssn` is ID of active trace session. 
+# We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
+if trcssn==0:
+    print("Error parsing trace session ID.")
+    os.remove(fdb_file)
+    os.exit(0)
+
+#####################################################################
+
+# Preparing script for ISQL:
+
+sql_cmd='''select count(*) from test;'''
+
+so=sys.stdout
+se=sys.stderr
+
+sys.stdout = open(os.devnull, 'w')
+sys.stderr = sys.stdout
+
+runProgram('isql',[dsn],sql_cmd)
+
+sys.stdout = so
+sys.stderr = se
+
+# do NOT reduce this delay!
+time.sleep(2)
+
+#####################################################################
+
+# Stop trace session:
+
+trc_lst=open(trc_lst.name, "a")
+trc_lst.seek(0,2)
+subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+                   "action_trace_stop",
+                   "trc_id",trcssn
+                 ],
+                 stdout=trc_lst, 
+                 stderr=subprocess.STDOUT
+               )
+trc_lst.close()
+
+p_svcmgr.terminate()
+trc_log.close()
+
+# do NOT remove this delay:
+time.sleep(1)
+
+show_line = 0
+with open(trc_log.name) as f:
+    for line in f:
+        show_line = ( show_line + 1 if ('^' * 79) in line or show_line>0 else show_line )
+        if show_line > 1:
+            print(line)
+
+# do NOT remove this delay:
+time.sleep(1)
+
+# cleanup:
+f_list = (trc_lst, trc_cfg, trc_log)
+for f in f_list:
+     os.remove(f.name)
+
+  """,
+ 'expected_stdout':
+  """
+    Select Expression
+    -> Aggregate
+    -> Table "TEST" Full Scan
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[('[ \t]+', ' '), ('[ \t]+[\d]+[ \t]+ms', '')]
+}
+]
+}
