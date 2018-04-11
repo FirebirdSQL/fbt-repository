@@ -13,7 +13,8 @@
    b) change data by issuing INSERT /  UPDATE / DELETE statements; also try SELECT ... WITH LOCK;
    c) change metadata: add column, alter column (drop NULL constraint, add new contraint, add DEFAULT value),
                        drop column;
-   d) aux. actions: create index for ST and DROP this ST.
+   d) aux. actions: attempt to drop ST. 
+      *** 11-apr-2018: EXCLUDED attempt to create  index on ST: now it is allowed, see CORE-5746 ***
    e) make indirect changes: apply ALTER SEQUENCE statement for system generators
 
    Test contains following statements and procedures:
@@ -37,6 +38,11 @@
    6) two calls of sp_run_vulnerable_expressions: one for non-privileged user and second for user with role RDB$ADMIN.
    7) select values of raised gdscodes (distinct) in order to check that only ONE gdscode occured (335544926).
    8) select expressions that were PASSED without exceptions.
+
+   Checked on:
+       3.0.4.32947: OK, SS: 22s, CS: 37s
+       4.0.0.955: OK,   SS: 35s, CS: 33s
+
  """,
 'min_versions': '3.0',
 'versions': [
@@ -535,14 +541,15 @@
 				   ,n.ret_dbkey
 				from c2
 				cross join(
-							  select 'I' as op, 10 as ord_pos, 1 as ret_dbkey from rdb$database -- DML, insert
+					select 'I' as op, 10 as ord_pos, 1 as ret_dbkey from rdb$database -- DML, insert
 					union all select 'L',       20,            0 from rdb$database -- DML, select WITH LOCK
 					union all select 'D',       40,            1 from rdb$database -- DML, delete
 					union all select 'A',       50,            0 from rdb$database -- DDL, add column
 					union all select 'N',       60,            0 from rdb$database -- DDL, alter column set NULL flag
 					union all select 'C',       65,            0 from rdb$database -- DDL, alter column add new constraint on it
 					union all select 'F',       70,            0 from rdb$database -- DDL, alter column set DEFAULT value
-					union all select 'X',       75,            0 from rdb$database -- DDL, CREATE INDEX
+					-- ### commented 11-04-2018: no need anymore because now one may to create index on system tables:
+					-- ### union all select 'X',       75,            0 from rdb$database -- DDL, CREATE INDEX
 					union all select 'K',       80,            0 from rdb$database -- DDL, drop column
 					union all select 'Z',       90,            0 from rdb$database -- DDL, drop RDB$-table
 				) n
@@ -717,6 +724,8 @@
 	-- result: table 'vulnerable_on_sys_tables ' will be filled up by ~1560 rows.
 
 	-----------------------------
+	commit;
+	set transaction no wait;
 
 	-- ###################################################################################
         --                 R U N    A S   N O N - P R I V I L E G E D    U S E R 
@@ -734,6 +743,9 @@
 		   ||'. Expressions that passes WITHOUT errors:' as msg 
 	from rdb$database
 	;
+
+	commit; -- 11-04-2018, do not remove!
+	set transaction no wait;
 
 	set list on;
 	select count(*) as "-- count_of_passed: "
@@ -759,6 +771,7 @@
 		   ||'. Expressions that passes WITHOUT errors:' as msg 
 	from rdb$database
 	;
+	commit; -- 11-04-2018, do not remove!
 
 	set list on;
 	select count(*) as "-- count_of_passed: "
@@ -783,13 +796,12 @@
   """,
  'expected_stdout':
   """
-    -- Executed with role: NONE. Expressions that passes WITHOUT errors:                 
+    -- Executed with role: NONE. Expressions that passes WITHOUT errors:
     -- count_of_passed:             0
     -- gdscode list for blocked:    335544926
 
-    -- Executed with role: RDB$ADMIN. Expressions that passes WITHOUT errors:            
+    -- Executed with role: RDB$ADMIN. Expressions that passes WITHOUT errors:
     -- count_of_passed:             23
-
     VULNERABLE_EXPR                 insert into RDB$BACKUP_HISTORY(RDB$BACKUP_ID , RDB$TIMESTAMP , RDB$BACKUP_LEVEL , RDB$GUID , RDB$SCN , RDB$FILE_NAME) values(null, null, null, null, null, null) returning rdb$db_key; -- length of returned rdb$dbkey=8
     VULNERABLE_EXPR                 delete from RDB$DB_CREATORS t  rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
     VULNERABLE_EXPR                 insert into RDB$DB_CREATORS(RDB$USER , RDB$USER_TYPE) values(null, null) returning rdb$db_key; -- length of returned rdb$dbkey=8
@@ -813,7 +825,6 @@
     VULNERABLE_EXPR                 update RDB$TYPES t  set t.RDB$TYPE = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
     VULNERABLE_EXPR                 update RDB$TYPES t  set t.RDB$TYPE_NAME = 'C' where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
     VULNERABLE_EXPR                 update RDB$TYPES t  set t.RDB$TYPE_NAME = null where coalesce(rdb$system_flag,0)=0 rows 1 returning t.rdb$db_key; -- length of returned rdb$dbkey=8
-
     -- gdscode list for blocked:    335544926
   """,
  'expected_stderr':
