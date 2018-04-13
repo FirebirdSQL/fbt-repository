@@ -32,6 +32,7 @@ fb_home = services.connect(host='localhost', user= user_name, password= user_pas
 
 db_conn.close()
 
+thisdb='$(DATABASE_LOCATION)'+'bugs.core_5790.fdb'
 tmpfdb='$(DATABASE_LOCATION)'+'tmp_5790.tmp'
 tmpusr='tmp$c5790'
 
@@ -45,7 +46,14 @@ sql_txt='''
     commit;
     connect 'localhost:%(tmpfdb)s' user %(tmpusr)s password '123';
     drop database;
-    quit;
+    rollback;
+    connect '%(thisdb)s';
+    drop user %(tmpusr)s;
+    commit;
+    --set list on;
+    --set count on;
+    --set echo on;
+    --select current_user, s.* from sec$users s where sec$user_name not containing 'SYSDBA';
 ''' % locals()
 
 f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_5790.sql'), 'w')
@@ -65,6 +73,7 @@ with open(f_isql_log.name,'r') as f:
         print('UNEXPECTED STDOUT: '+line)
 
 f_list = (f_isql_log,f_isql_cmd)
+
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
