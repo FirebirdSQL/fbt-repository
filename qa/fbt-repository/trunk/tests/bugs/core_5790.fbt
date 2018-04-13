@@ -1,0 +1,81 @@
+{
+'id': 'bugs.core_5790',
+'qmid': None,
+'tracker_id': 'CORE-5790',
+'title': '',
+'description':
+ """
+   Confirmed bug on 3.0.4.32924
+   Works fine on:
+       3.0.4.32947: OK, 2.906s.
+       4.0.0.955: OK, 3.453s.
+ """,
+'min_versions': '3.0.4',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import subprocess
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+db_conn.close()
+
+tmpfdb='$(DATABASE_LOCATION)'+'tmp_5790.tmp'
+tmpusr='tmp$c5790'
+
+if os.path.isfile(tmpfdb):
+    os.remove(tmpfdb)
+sql_txt='''
+    create database 'localhost:%(tmpfdb)s';
+    create or alter user %(tmpusr)s password '123';
+    commit;
+    grant drop database to tmp$c5790;
+    commit;
+    connect 'localhost:%(tmpfdb)s' user %(tmpusr)s password '123';
+    drop database;
+    quit;
+''' % locals()
+
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_5790.sql'), 'w')
+f_isql_cmd.write(sql_txt)
+f_isql_cmd.close()
+
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_5790.log'), 'w')
+subprocess.call( [ fb_home+'isql', '-q', '-i', f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT )
+f_isql_log.close()
+
+if os.path.isfile(tmpfdb):
+    print('Database file was NOT deleted!')
+    os.remove(tmpfdb)
+
+with open(f_isql_log.name,'r') as f:
+    for line in f:
+        print('UNEXPECTED STDOUT: '+line)
+
+f_list = (f_isql_log,f_isql_cmd)
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
