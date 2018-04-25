@@ -2,7 +2,7 @@
 'id': 'bugs.core_5790',
 'qmid': None,
 'tracker_id': 'CORE-5790',
-'title': '',
+'title': "User with DROP DATABASE privilege can't drop database",
 'description':
  """
    Confirmed bug on 3.0.4.32924
