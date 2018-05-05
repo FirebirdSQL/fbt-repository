@@ -7,19 +7,6 @@
 'min_versions': None,
 'versions': [
 {
- 'firebird_version': '2.5.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': """SELECT MON$ODS_MAJOR, MON$ODS_MINOR, MON$SQL_DIALECT FROM MON$DATABASE;
-""",
- 'expected_stdout': """
-MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
-============= ============= ===============
-           11             2               3
-
-"""
-},
-{
  'firebird_version': '2.1',
  'platform': 'All',
  'test_type': 'ISQL',
@@ -33,35 +20,24 @@ MON$ODS_MAJOR MON$ODS_MINOR MON$SQL_DIALECT
 """
 },
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 
   """
     set list on;
-    select mon$ods_major, mon$ods_minor, mon$sql_dialect from mon$database; 
+    -- Refactored 05-may-2018, to be universal for all possible ODS numbers:
+    select 
+          iif( mon$ods_major similar to '[[:digit:]]{1,2}', 'YES', 'NO!') as "ods_major_looks_ok ?"
+        , iif( mon$ods_minor similar to '[[:digit:]]{1,2}', 'YES', 'NO!') as "ods_minor_looks_ok ?"
+        , iif( mon$sql_dialect similar to '[[:digit:]]{1}', 'YES', 'NO!') as "sql_dialect_looks_ok ?"
+    from mon$database;
   """,
  'expected_stdout': 
  """
-    MON$ODS_MAJOR                   12
-    MON$ODS_MINOR                   0
-    MON$SQL_DIALECT                 3
- """
-},
-{
- 'firebird_version': '4.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    set list on;
-    select mon$ods_major, mon$ods_minor, mon$sql_dialect from mon$database; 
-  """,
- 'expected_stdout': 
- """
-    MON$ODS_MAJOR                   13
-    MON$ODS_MINOR                   0
-    MON$SQL_DIALECT                 3
+    ods_major_looks_ok ?            YES
+    ods_minor_looks_ok ?            YES
+    sql_dialect_looks_ok ?          YES
  """
 }
 ]
