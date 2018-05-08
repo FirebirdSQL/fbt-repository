@@ -127,7 +127,7 @@ Transaction -.*""",'')]
  'test_type': 'ISQL',
  'test_script':
   """
-    show database; -- changed ODS to 13.0, at the beginning of june-2016.
+    show database; -- changed ODS to 13.0, at the beginning of june-2016; changed ODS to 13.2 at the beg of may-2018
   """,
  'expected_stdout': 
   """
@@ -150,7 +150,8 @@ Transaction -.*""",'')]
      ('PAGE_SIZE .*','PAGE_SIZE'), 
      ('Sweep.*','Sweep'), 
      ('Transaction -.*','Transaction'),
-     ('Number of DB pages.*','Number of DB pages')
+     ('Number of DB pages.*','Number of DB pages'),
+     ('ODS = 13.*', 'ODS = 13')
   ]
 }
 ]
