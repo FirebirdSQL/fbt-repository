@@ -12,6 +12,66 @@
     We check cases when SP count rows using equality (=), IN and BETWEEN expr.
     When we pass NULLs then procedure should produce zero or low value (<100) of indexed reads.
     When we pass not null value then SP should produce IR with number ~ 1/3 of total rows in the table.
+
+    FB30SS, build 3.0.4.32972: OK, 2.734s.
+    FB40SS, build 4.0.0.977: OK, 3.234s.
+
+    15.05.2018. TODO LATER, using Python:
+
+    Alternate code for possible checking (use trace with and ensure that only IR will occur when input arg is not null):
+
+        set term ^;
+        execute block as
+        begin
+          begin execute statement 'drop sequence g'; when any do begin end end
+        end
+        ^
+        set term ;^
+        commit;
+        create sequence g;
+        commit;
+
+        create or alter procedure sp_test as begin end;
+        commit;
+        recreate table test(x int, y int);
+        commit;
+
+        insert into test select mod( gen_id(g,1), 123), mod( gen_id(g,1), 321)  from rdb$types,rdb$types rows 10000;
+        commit;
+
+        create index test_x on test(x);
+        create index test_x_plus_y_asc on test computed by ( x - y );
+        create descending index test_x_plus_y_dec on test computed by ( x+y );
+        commit;
+
+        set term ^;
+        create or alter procedure sp_test( i1 int default null, i2 int default null ) as 
+            declare n int;
+            declare s_x varchar(1000);
+            declare s_y varchar(1000);
+        begin 
+            s_x = 'select count(*) from test where x = :input_arg or :input_arg is null';
+            s_y = 'select count(*) from test where x + y <= :input_sum  and   x - y >= :input_arg or :input_sum is null';
+            execute statement (s_x) ( input_arg := :i1 ) into n;
+            execute statement (s_y) ( input_arg := :i1, input_sum := :i2 ) into n;
+        end
+        ^
+        set term ;^
+        commit;
+
+        execute procedure sp_test( 65, 99 );
+
+    Trace log should contain following statistics for two ES:
+
+        Table                              Natural     Index
+        *****************************************************
+        TEST                                              82
+
+        Table                              Natural     Index
+        *****************************************************
+        TEST                                              90
+
+
   """,
 'min_versions': '3.0',
 'versions': [
