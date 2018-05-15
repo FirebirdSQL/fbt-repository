@@ -93,19 +93,39 @@ fb_home = fb_home.strip()
 
 dts = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 dbconf_bak = fb_home+'databases_'+dts+'.bak'
+fbconf_bak = fb_home+'firebird_'+dts+'.bak'
 
 shutil.copy2( fb_home+'databases.conf', dbconf_bak )
+shutil.copy2( fb_home+'firebird.conf', fbconf_bak )
 
 tmp_fdb=os.path.join(context['temp_directory'],'tmp_4964.fdb')
 
 f_dbconf=open(fb_home+'databases.conf','a')
 f_dbconf.seek(0, 2)
-f_dbconf.write("\\n\\n# Created temply by fbtest, CORE-4964. Should be removed auto:")
+f_dbconf.write("\\n\\n# Temporarily added by fbtest, CORE-4964. Should be removed auto:")
 f_dbconf.write("\\n#" + '='*60 )
 f_dbconf.write("\\ntmp_alias_4964_"+dts+" = " + tmp_fdb )
 f_dbconf.write("\\n{\\n  SecurityDatabase = $(dir_conf)/firebird.msg\\n}")
 f_dbconf.write("\\n#" + '='*60 )
 f_dbconf.close()
+
+
+f_fbconf=open(fb_home+'firebird.conf','r')
+fbconf_content=f_fbconf.readlines()
+f_fbconf.close()
+for i,s in enumerate( fbconf_content ):
+    if s.lower().lstrip().startswith( 'wirecrypt'.lower() ):
+        fbconf_content[i] = '# <temply commented> ' + s
+
+fbconf_content.append('\\n# Temporarily added by fbtest, CORE-4964. Should be removed auto:')
+fbconf_content.append("\\n#" + '='*30 )
+fbconf_content.append('\\nWireCrypt = Disabled')
+fbconf_content.append("\\n#" + '='*30 )
+
+f_fbconf=open(fb_home+'firebird.conf','w')
+f_fbconf.writelines( fbconf_content )
+f_fbconf.close()
+
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
@@ -129,7 +149,11 @@ f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_after
 svc_get_fb_log( f_fblog_after )
 f_fblog_after.close()
 
+
+# RESTORE original config:
+##########################
 shutil.copy2( dbconf_bak, fb_home+'databases.conf' )
+shutil.copy2( fbconf_bak , fb_home+'firebird.conf')
 
 with open( f_connect_log.name,'r') as f:
     for line in f:
@@ -194,7 +218,7 @@ for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
 os.remove(dbconf_bak)
-
+os.remove(fbconf_bak)
   """,
  'expected_stdout':
   """
