@@ -1,0 +1,230 @@
+{
+'id': 'bugs.core_4998',
+'qmid': None,
+'tracker_id': 'CORE-4998',
+'title': 'Both client and server could not close connection after failed authentification',
+'description': 
+ """
+    Reproduced on 3.0.0.32136 RC1 with firebird.conf:
+        AuthServer = Legacy_Auth,Srp
+        AuthClient = Srp,Legacy_Auth
+    ::: NB-1 ::: 
+    In order to get this environment for client test temp-ly CHANGES firebird.conf
+    Test will restore original firebird.conf in the end.
+
+    ::: NB-2 ::: 
+    We have to prepare auxiliary Python script to be executed in SEPARATE (NEW!) execution context,
+    otherwise firebird.log is filled with messages "errno = 10054" only after this test completely finished.
+    See variable 'other_exec_context_python_file' - it points to this temp .py file.
+    This aux Python script is called like this:
+        os.system( other_exec_context_python_file )
+
+    It contains three attempts to make connection with invalid passwords. 
+    Exceptions ('Your user/password not defined...') are suppressed, we need only make these attempts to check
+    that no new records withh be added to firebird.log (as it is confirmed to be in 3.0.0.32136 RC1).
+    
+    File firebird.log is compared BEFORE and AFTER os.system( other_exec_context_python_file ).
+    No new messages related to 10054 error should occur during this test in firebird.log.
+
+    3.0.0.32366 RC2 - works OK.
+
+    Also checked on:
+        30Cs, build 3.0.4.32972: OK, 6.172s.
+        30SS, build 3.0.4.32972: OK, 4.375s.
+        40CS, build 4.0.0.955: OK, 7.281s.
+        40SS, build 4.0.0.977: OK, 4.704s.
+ """,
+'min_versions': '3.0.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+import os
+import subprocess
+import difflib
+import datetime
+import time
+import re
+import shutil
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+THIS_DSN = dsn
+DBAUSR = user_name
+
+db_conn.close()
+
+def svc_get_fb_log( f_fb_log ):
+
+  global subprocess
+
+  subprocess.call( [ "fbsvcmgr",
+                     "localhost:service_mgr",
+                     "action_get_fb_log"
+                   ],
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+
+#################################################################################################
+
+
+f_svc_log=open( os.path.join(context['temp_directory'],'tmp_svc_4998.log'), 'w')
+subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "info_get_env"], stdout=f_svc_log, stderr=subprocess.STDOUT)
+f_svc_log.close()
+
+# Result: f_svc_log contains line like this:
+# Server root: C:\1INSTALL\FIREBIRD\fb30sS\
+# NB: though it is unlikely, but path can contain spaces!
+
+fb_home=''
+with open( f_svc_log.name,'r') as f:
+    for line in f:
+        i=1
+        for word in line.split():
+            if i > 2:
+                fb_home = fb_home + word + ' '
+            i=i+1
+        break
+fb_home = fb_home.strip()
+
+# Resut: fb_home is full path to FB instance home (with trailing slash).
+
+###########################################################################################
+
+dts = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+fbconf_bak = fb_home+'firebird_'+dts+'.bak'
+
+shutil.copy2( fb_home+'firebird.conf', fbconf_bak )
+
+f_fbconf=open(fb_home+'firebird.conf','r')
+fbconf_content=f_fbconf.readlines()
+f_fbconf.close()
+for i,s in enumerate( fbconf_content ):
+    if s.lower().lstrip().startswith( 'wirecrypt'.lower() ):
+        fbconf_content[i] = '# <temply commented> ' + s
+    if s.lower().lstrip().startswith( 'AuthClient'.lower() ):
+        fbconf_content[i] = '# <temply commented> ' + s
+
+fbconf_content.append('\\n# Temporarily added by fbtest, CORE-4998. Should be removed auto:')
+fbconf_content.append("\\n#" + '='*30 )
+fbconf_content.append('\\nAuthClient = Srp,Legacy_Auth')
+fbconf_content.append("\\n#" + '='*30 )
+
+f_fbconf=open(fb_home+'firebird.conf','w')
+f_fbconf.writelines( fbconf_content )
+f_fbconf.close()
+
+###########################################################################################
+
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4998_fblog_before.txt'), 'w')
+svc_get_fb_log( f_fblog_before )
+f_fblog_before.close()
+
+other_exec_context_python_text = '''\
+import fdb
+
+for i in range(0,3):
+    con1 = None
+    try:
+        con1 = fdb.connect( dsn = '%(THIS_DSN)s', user = '%(DBAUSR)s', password = 'inv@l1d' + str(i) )
+    except Exception, e:
+        pass
+    finally:
+        if con1:
+            con1.close()
+exit(0)
+''' % locals()
+
+other_exec_context_python_file = os.path.join(context['temp_directory'], 'tmp_core_4998_try_connect_with_invalid_passwords.py')
+
+f = open( other_exec_context_python_file, 'w')
+f.write( other_exec_context_python_text )
+f.close()
+
+
+########################################################################################################
+###    l a u n c h     P y t h o n    i n    a n o t h e r    e x e c u t i o n     c o n t e x t    ###
+########################################################################################################
+os.system( other_exec_context_python_file )
+
+time.sleep(1)
+
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4998_fblog_after.txt'), 'w')
+svc_get_fb_log( f_fblog_after )
+f_fblog_after.close()
+
+
+# RESTORE original config:
+##########################
+shutil.copy2( fbconf_bak , fb_home+'firebird.conf')
+
+
+# Compare firebird.log versions BEFORE and AFTER this test:
+######################
+
+oldfb=open(f_fblog_before.name, 'r')
+newfb=open(f_fblog_after.name, 'r')
+
+difftext = ''.join(difflib.unified_diff(
+    oldfb.readlines(), 
+    newfb.readlines()
+  ))
+oldfb.close()
+newfb.close()
+
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4998_diff.txt'), 'w')
+f_diff_txt.write(difftext)
+f_diff_txt.close()
+
+# INET/inet_error: read errno = 10054
+
+allowed_patterns = (
+     re.compile('\.*inet_error\:{0,1}\s{0,}read\s+errno\s{0,}\={0,}\s{0,}10054\.*', re.IGNORECASE),
+)
+
+with open( f_diff_txt.name,'r') as f:
+    for line in f:
+        if line.startswith('+'):
+            match2some = filter( None, [ p.search(line) for p in allowed_patterns ] )
+            if match2some:
+                print( 'UNEXPECTED TEXT IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
+
+
+
+#####################################################################
+# Cleanup:
+
+# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
+# Exception raised while executing Python test script. exception: WindowsError: 32
+time.sleep(1)
+
+f_list=( 
+     f_svc_log
+    ,f_diff_txt
+    ,f_fblog_before
+    ,f_fblog_after
+)
+
+for i in range(len(f_list)):
+    if os.path.isfile(f_list[i].name):
+        os.remove(f_list[i].name)
+os.remove( other_exec_context_python_file )
+os.remove( fbconf_bak )
+
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
