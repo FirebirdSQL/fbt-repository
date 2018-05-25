@@ -128,7 +128,44 @@ for /f "tokens=2" %%a in (!tmp1!) do (
         set runcmd=%%i
         set runcmd=!runcmd:~24!
         call :sho "Image path: !runcmd!" !log!
+        
+        @rem 25.05.2018:
+        echo !runcmd! | findstr /i /c:" -i" /c:" -x" /c:" -w" >nul
+        if NOT errorlevel 1 (
+            call :sho "Launching command allows ONLY SPECIFIC protocol(s^) to be used for connect." !log!
+            call :sho "We have to check that both XNET and INET are allowed." !log!
+            echo !runcmd! | findstr /i /c:" -i" | findstr /i /c:" -x" > nul
+            if NOT errorlevel 1 (
+                call :sho "Check PASSED: ImagePath *does* allow both XINET and INET to be used for connect." !log!
+            ) else (
+                @rem fbt_run will issue: Can't connect to Firebird - if service ImapePath contains '-i'
+                call :sho "Check FAILED: at least one of XNET or INET is forbidden for usage." !log!
+                (
+                    echo.
+                    echo ###########################################################################
+                    echo ### Service must allow to use both XNET and INET protocols for connect.
+                    echo ### Check ImagePath in HKLM\SYSTEM\CurrentControlSet\Services:
+                    echo ###
+                    echo ### ^|!runcmd!^|
+                    echo ###
+                    echo ### Framework fbtest will not be able to create or work with test database.
+                    echo ### Either remove all additional switches: '-i', '-x' or specify them both.
+                    echo ###########################################################################
+                    echo.
+                    echo.
+                ) >!tmp1!
 
+                for /f "tokens=*" %%p in (!tmp1!) do (
+                    call :sho "%%p" !log!
+                )
+                call :sho "See also:" !log!
+                call :sho "www.sql.ru/forum/actualutils.aspx?action=gotomsg&tid=838190&msg=11620434" !log!
+                goto :final
+            )
+        ) else (
+            call :sho "Service !svcname! allows to use ALL possible protocols: XNET, INET and WNET." !log!
+        )
+       
         echo !runcmd! | findstr /i /c:"\bin\fb_inet_server" /c:"\bin\fbserver" >nul
         if not errorlevel 1 (
             set fbv=LEQ_25
