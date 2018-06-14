@@ -1,0 +1,22 @@
+dba_user=SYSDBA
+dba_pswd=masterkey
+logdir=e:\temp\logs.qa
+
+# List of FB sevices which we use here for test runs:
+fblst=fb40_tmp,fb30_tmp
+
+# List of architectures to be checked:
+fbars=SS,CS
+
+# List of auth protocols to be checked:
+auths=Srp,Legacy_Auth
+
+svnup=1
+usedb=1
+
+svnbin="C:\Program Files (x86)\Subversion\bin\svn.exe"
+mteebin=E:\QA\fbt-repo\mtee.exe
+zipbin=E:\QA\fbt-repo\7za.exe
+zipext=7z
+pyp=C:\Python27
+
