@@ -51,50 +51,35 @@ import datetime
 import time
 import re
 import shutil
+from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+
 THIS_DSN = dsn
 DBAUSR = user_name
 
 db_conn.close()
 
-def svc_get_fb_log( f_fb_log ):
+# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
+# via to FB services API by services.connect() - see FB tracker, PYFB-69
+# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+# Resut: fb_home is full path to FB instance home (with trailing slash).
+#################################################################################################
+
+def svc_get_fb_log( fb_home, f_fb_log ):
 
   global subprocess
 
-  subprocess.call( [ "fbsvcmgr",
+  subprocess.call( [ fb_home + "fbsvcmgr",
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
                    stdout=f_fb_log, stderr=subprocess.STDOUT
                  )
   return
-
-
-#################################################################################################
-
-
-f_svc_log=open( os.path.join(context['temp_directory'],'tmp_svc_4998.log'), 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "info_get_env"], stdout=f_svc_log, stderr=subprocess.STDOUT)
-f_svc_log.close()
-
-# Result: f_svc_log contains line like this:
-# Server root: C:\1INSTALL\FIREBIRD\fb30sS\
-# NB: though it is unlikely, but path can contain spaces!
-
-fb_home=''
-with open( f_svc_log.name,'r') as f:
-    for line in f:
-        i=1
-        for word in line.split():
-            if i > 2:
-                fb_home = fb_home + word + ' '
-            i=i+1
-        break
-fb_home = fb_home.strip()
-
-# Resut: fb_home is full path to FB instance home (with trailing slash).
 
 ###########################################################################################
 
@@ -121,10 +106,13 @@ f_fbconf=open(fb_home+'firebird.conf','w')
 f_fbconf.writelines( fbconf_content )
 f_fbconf.close()
 
+#shutil.copy2( fb_home+'firebird.conf', fb_home+'firebird.conf.tmp.tmp' )
+
+
 ###########################################################################################
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4998_fblog_before.txt'), 'w')
-svc_get_fb_log( f_fblog_before )
+svc_get_fb_log( fb_home, f_fblog_before )
 f_fblog_before.close()
 
 other_exec_context_python_text = '''\
@@ -148,7 +136,6 @@ f = open( other_exec_context_python_file, 'w')
 f.write( other_exec_context_python_text )
 f.close()
 
-
 ########################################################################################################
 ###    l a u n c h     P y t h o n    i n    a n o t h e r    e x e c u t i o n     c o n t e x t    ###
 ########################################################################################################
@@ -157,7 +144,7 @@ os.system( other_exec_context_python_file )
 time.sleep(1)
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4998_fblog_after.txt'), 'w')
-svc_get_fb_log( f_fblog_after )
+svc_get_fb_log( fb_home, f_fblog_after )
 f_fblog_after.close()
 
 
@@ -206,8 +193,7 @@ with open( f_diff_txt.name,'r') as f:
 time.sleep(1)
 
 f_list=( 
-     f_svc_log
-    ,f_diff_txt
+     f_diff_txt
     ,f_fblog_before
     ,f_fblog_after
 )
