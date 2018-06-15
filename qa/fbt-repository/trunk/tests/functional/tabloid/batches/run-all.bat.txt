@@ -1,60 +1,32 @@
+
+
+\\\///
+
 @echo off
 setlocal enabledelayedexpansion enableextensions
 cd /d %~dp0
-
 set isc_user=
 set isc_password=
-
-@rem ++++++++++++++++++++++++++++++++++++++++++
-set err_setenv=0
-set cfg=%~dpn0.conf
-echo !time!. Parsing config file !cfg!.
-
-::::::::::::::::::::::::::::::::
-:::: R E A D    C O N G I G ::::
-::::::::::::::::::::::::::::::::
-
-call :readcfg !cfg! !err_setenv!
-
-@rem pdblst=C:\FB\30SS\firebird.pdb,C:\FB\30SS\fbclient.pdb,C:\FB\30SS\plugins\engine12.pdb
-
-set tdir_access_error=0
-
-md %tmpdir% 2>nul
-set tmp=!logdir!\%~n0.tmp
-if exist !tmp! del !tmp!
-if exist !tmp! (
-    set tdir_access_error=1
-) else (
-    dir . 1>nul 2>!tmp!
-    if NOT exist !tmp! (
-        set tdir_access_error=1
-    ) else if exist !tmp! (
-        del !tmp!
-    )
-)
-
-if !tdir_access_error! EQU 1 (
-    echo Temp directory '%logdir%' can not be accessed for file creation/writing/deleting.
-    echo Check parameter 'logdir' in the config file '!cfg!' and run this batch again.
-    goto final
-)
-@rem ++++++++++++++++++++++++++++++++++++++++++
-
+set dba_user=SYSDBA
+set dba_pswd=masterkey
+set logdir=e:\temp\logs.qa
 set joblog=!logdir!\%~n0.log
+
 set err=!logdir!\%~n0.err
 set tmp=!logdir!\%~n0.tmp
 set sql=!logdir!\%~n0.sql
 
-
 @rem List of FB sevices which we use here for test runs:
-@rem from config: set fblst=fb40_tmp,fb30_tmp
+set fblst=fb40_tmp,fb30_tmp
+
 @rem List of architectures to be checked:
-@rem from config: set fbars=SS,CS
+set fbars=SS,CS
+
 @rem List of auth protocols to be checked:
-@rem from config: set auths=Srp,Legacy_Auth
-@rem from config: set svnup=1
-@rem from config: set usedb=1
+set auths=Srp,Legacy_Auth
+
+set svnup=1
+set usedb=1
 
 @rem #####################   T E M P L Y   ###################
 if .1.==.0. (
@@ -69,11 +41,11 @@ if .1.==.0. (
 
 set job_failed_flag=0
 
-@rem from config: set svnbin="C:\Program Files (x86)\Subversion\bin\svn.exe"
-@rem from config: set mteebin=%~dp0mtee.exe
-@rem from config: set zipbin=%~dp07za.exe
-@rem from config: set zipext=7z
-@rem from config: set pyp=C:\Python27
+set svnbin="C:\Program Files (x86)\Subversion\bin\svn.exe"
+set mteebin=%~dp0mtee.exe
+set zipbin=%~dp07za.exe
+set zipext=7z
+set pyp=C:\Python27
 
 md !logdir! 2>nul
 ::taskkill /fi "SERVICES eq FirebirdServerfb40_tmp" /f /im * 
@@ -88,24 +60,19 @@ if exist !joblog!  (
 )
 
 (
-    echo Current directory and executing batch:
+    echo !date! !time! Current directory and executing batch:
     cd
     echo %~dpnx0
-    echo.
-    echo Check that all necessary binaries exist:
-) > !tmp!
-call :bulksho !tmp! !joblog!
+) 2>&1 >>!joblog!
+type !joblog!
 
-@rem set binlst="!pyp!\python.exe","!pyp!\Scripts\fbt_run.exe","!pyp!\Scripts\fbt_db.exe","!pyp!\Scripts\fbt_analyze.exe","!svnbin!","!mteebin!","!zipbin!"
+call :sho "Check that all necessary binaries exist." !joblog!
+
 for /d %%s in (!pyp!\python.exe,!pyp!\Scripts\fbt_run.exe,!pyp!\Scripts\fbt_db.exe,!pyp!\Scripts\fbt_analyze.exe,!svnbin!,!mteebin!,!zipbin!) do (
-  set fn=%%s
-  set fn=!fn:"=`!
   dir %%s | findstr /i /c:%%~ns 2>&1 1>nul
   if errorlevel 1 (
-      call :sho "Binary file %%s not found. Job terminated." !joblog!
+      echo Binary file %%s not found. Job terminated.
       goto final
-  ) else (
-      call :sho "Found file !fn!" !joblog!
   )
 )
 
@@ -121,10 +88,9 @@ if not errorlevel 1 (
     taskkill /f /t /im mtee.exe 2>&1 1>!joblog!
 )
 
-if !svnup! EQU 1 (
+if .!svnup!. EQU 0 (
     set msg=Trying to update tests using svn.
     call :sho "!msg!" !joblog!
-    
     !svnbin! up 2>&1 1>>!joblog!
 ) else (
     set msg=SKIP updating tests using svn - variable 'svnup' NOT equals to 1.
@@ -401,6 +367,7 @@ for /d %%s in ( %fblst% ) do (
                 set msg=Launch fbt_run for %%s, architecture '%%u', auth plugin '%%p'
                 call :sho "!msg!" !joblog!
 
+
                 @rem ##################################
                 @rem ###     R U N    T E S T S     ###
                 @rem ##################################
@@ -414,6 +381,11 @@ for /d %%s in ( %fblst% ) do (
 
                 set msg=Finish fbt_run for %%s, architecture '%%u', auth plugin '%%p'
                 call :sho "!msg!" !joblog!
+
+                echo .................######### CHECK PROCESSES AFTER ITER DONE #####################..................
+                echo ....... DEBUG EXIT .......
+                exit
+                @rem pause
 
                 set msg=Restore original file !fp!\firebird.conf
                 call :sho "!msg!" !joblog!
@@ -445,15 +417,6 @@ for /d %%s in ( %fblst% ) do (
                     echo ######################## done for %%s, auth plugin='%%p', arch=%%u ##########################
                     echo.
                 ) >>!joblog!
-
-                if .1.==.0. (
-                    (
-                        echo .......................... DEBUG EXIT .............................
-                    )>!tmp!
-                    type !tmp!
-                    type !tmp!>>!joblog!
-                    exit
-                )
 
             )
             @rem end of "for /d %%u in ( %fbars% ) do"
@@ -883,51 +846,8 @@ endlocal & goto:eof
 
 @rem echo alter table annotations drop annotation, add annotation blob character set none;|C:\MIX\firebird\fb30\isql /:C:\MIX\firebird\QA\fbt-repo\archive\FBT_RUN_OUTCOMES_30.FDB  -user !dba_user! -pas !dba_pswd!
 
-:readcfg
-    set cfg=%1
-    set err_setenv=0
-    @rem ::: NB ::: Space + TAB should be inside `^[ ]` pattern!
-    @rem ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    for /F "tokens=*" %%a in ('findstr /i /r /c:"^[ 	]*[a-z,0-9]" %cfg%') do (
-      if "%%a" neq "" (
 
-        @rem Detect whether value of parameter contain quotes or no. If yes than this
-        @rem value should NOT be changed by removing its whitespaces.
-
-          for /F "tokens=1-2 delims==" %%i in ("%%a") do (
-            @rem echo Parsed: param="%%i" _tmp_val_="%%j"
-            set _tmp_par_=%%i
-            call :trim _tmp_par_ !_tmp_par_!
-
-            if "%%j"=="" (
-              set err_setenv=1
-              echo. && echo ### NO VALUE found for parameter "%%i" ### && echo.
-            ) else (
-              for /F "tokens=1" %%p in ("!_tmp_par_!") do (
-                set _tmp_val_=%%j
-                call :trim _tmp_val_ !_tmp_val_!
-                set %%p=!_tmp_val_!
-              )
-            )
-          )
-      )
-    )
-    set _tmp_par_=
-    set _tmp_val_=
-    set %~2 = %err_setenv%
-    @rem if .%err_setenv%.==.1. goto err_setenv
-
-goto:eof
-
-:trim
-    setLocal
-    @rem EnableDelayedExpansion
-    set Params=%*
-    for /f "tokens=1*" %%a in ("!Params!") do endLocal & set %1=%%b
-goto:eof
-
-
-:old_sho
+:sho
     setlocal
     set msg=%1
     set log=%2
@@ -939,55 +859,6 @@ goto:eof
     @echo !txt!
     @echo !txt!>>%log%
 endlocal & goto:eof
-
-:sho
-    setlocal
-    set msg=%1
-    set msg=!msg:`="!
-    set log=%2
-    if .!log!.==.. (
-        echo Internal func sho: missed argument for log file.
-        echo Arg. #1 = ^|%1^|
-        exit
-    ) 
-
-    set left_char=!msg:~0,1!
-    set righ_char=!msg:~-1!
-
-    @rem REMOVE LEADING AND TRAILING DOUBLE QUOTES:
-    @rem ##########################################
-    set result=!left_char:"=!
-    if .!result!.==.. (
-       set result=!righ_char:"=!
-       if .!result!.==.. (
-          set msg=!msg:~1,-1!
-       )
-    )
-
-    set dts=!time!
-    set dts=!dts: =!
-    set dts=10!dts:,=.!
-    set dts=!dts:~-11!
-    set msg=!dts!. !msg!
-    echo !msg!
-    echo !msg!>>!log!
-
-endlocal & goto:eof
-
-:bulksho
-    setlocal
-    set tmp=%1
-    set log=%2
-    for /f "tokens=*" %%a in (!tmp!) do (
-       set line=%%a
-       set line=!line:"=`!
-       call :sho "!line!" !log!
-    )
-    del !tmp!
-endlocal & goto:eof
-
-
-
 
 :try_to_stop_fb
     setlocal
