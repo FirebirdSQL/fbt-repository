@@ -1,0 +1,64 @@
+{
+'id': 'bugs.core_5726',
+'qmid': None,
+'tracker_id': 'CORE-5726',
+'title': "Unclear error message when inserting value exceeding max of dec_fixed decimal",
+'description': 
+ """
+    FB40SS, build 4.0.0.1008: OK, 1.641s.
+ """,
+'min_versions': '4.0.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+    recreate table extdecimal (
+      id integer generated always as identity primary key,
+      dec34_34 decimal(34, 34)
+    );
+    commit;
+  """,
+ 'test_script':
+  """
+import os
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+sql_cmd="insert into extdecimal(dec34_34) values (1)"
+con1=fdb.connect(dsn = dsn)
+cur=con1.cursor()
+try:
+    cur.execute( sql_cmd )
+except Exception,e:
+    for i in e[0].split('\\n'):
+        print('Error text:',i)
+    print('SQL code:',e[1])
+    print('gdscode:',e[2])
+finally:
+    cur.close()
+
+con1.close()
+
+
+  """,
+ 'expected_stdout': 
+  """
+    Error text: Error while executing SQL statement:
+    Error text: - SQLCODE: -901
+    Error text: - Decimal float invalid operation.  An indeterminant error occurred during an operation.
+    Error text: - numeric value is out of range
+    SQL code: -901
+    gdscode: 335545141
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
