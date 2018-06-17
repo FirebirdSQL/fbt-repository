@@ -45,6 +45,7 @@
  'test_type': 'Python',
  'test_script':"""\
 import os
+import sys
 import subprocess
 import difflib
 import datetime
@@ -139,7 +140,12 @@ f.close()
 ########################################################################################################
 ###    l a u n c h     P y t h o n    i n    a n o t h e r    e x e c u t i o n     c o n t e x t    ###
 ########################################################################################################
-os.system( other_exec_context_python_file )
+
+# 17.06.2018. We have to add full path and name of interpretep (e.g. 'C:\\Python27\\python.exe')
+# because it can appear that OS will not be able to recognize how to handle .py files!
+# sys.executable - returns full path to Python exe, 
+
+os.system( sys.executable + ' ' + other_exec_context_python_file )
 
 time.sleep(1)
 
