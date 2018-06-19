@@ -5,7 +5,15 @@
 'title': "Add support for having more than one UserManager in firebird.conf and use them from SQL",
 'description':
  """
-   Line "UserManager = Srp,..." is added since ~MAR-2018 in firebird.conf before every fbt_run launch.
+   Line "UserManager = Srp,..." has been added since ~MAR-2018 in firebird.conf before every fbt_run launch.
+   Initial attempt to use Srp failed for following COREs tests: 2307, 3365, 4200, 4301, 4469 - and error
+   was the same for all of them:
+   ===
+      -Install incomplete, please read chapter "Initializing security
+      database" in Quick Start Guide
+   ===
+   (reply from dimitr, letter 31.05.2015 17:44).
+
    Checked on:
         fb30Cs, build 3.0.4.32972: OK, 0.844s.
         FB30SS, build 3.0.4.32988: OK, 1.203s.
