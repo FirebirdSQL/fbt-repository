@@ -16,7 +16,7 @@ ON DISCONNECT POSITION 0
 AS
 declare variable i integer;
 begin
-  select mon$stat_id from mon$attachments into :i;
+  select mon$stat_id from mon$attachments rows 1 into :i;
 end
 """
 
