@@ -1,0 +1,59 @@
+{
+'id': 'bugs.core_5876',
+'qmid': None,
+'tracker_id': 'CORE-5876',
+'title': 'Provide name of udf function for "arithmetic exception, numeric overflow, or string truncation"',
+'description':
+ """
+   Checked on:
+        FB30SS, build 3.0.4.33020: OK, 1.469s.
+        FB40SS, build 4.0.0.1143: OK, 2.406s.
+ """,
+'min_versions': '3.0.4',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set term ^;
+    execute block as
+    begin
+        execute statement 'drop function substr';
+        when any do begin end
+    end
+    ^
+    set term ;^
+    commit;
+
+    declare external function substr
+    cstring(80), smallint, smallint
+    returns cstring(80)
+    entry_point 'IB_UDF_substr'
+    module_name 'ib_udf.dll'
+    ;
+    commit;
+
+    set heading off;
+    select substr(cast('abc' as char(1500)) || '123', 1, 1000)
+    from rdb$database 
+    ;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 22001
+    arithmetic exception, numeric overflow, or string truncation
+    -string right truncation
+    -expected length 80, actual 1503
+    -UDF: SUBSTR
+  """
+}
+]
+}
