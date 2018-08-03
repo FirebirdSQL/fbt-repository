@@ -4462,7 +4462,7 @@
 
     RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
     RDB$TYPE                        24
-    RDB$TYPE_NAME                   GET_DBCRYPT_KEY_NAME                                                                                                                                                                                                                                        
+    RDB$TYPE_NAME                   GET_DBCRYPT_INFO                                                                                                                                                                                                                                            
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
@@ -4487,6 +4487,12 @@
     RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
     RDB$TYPE                        18
     RDB$TYPE_NAME                   MODIFY_ANY_OBJECT_IN_DATABASE                                                                                                                                                                                                                               
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
+    RDB$TYPE                        25
+    RDB$TYPE_NAME                   MODIFY_EXT_CONN_POOL                                                                                                                                                                                                                                        
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
@@ -4659,7 +4665,7 @@
     RDB$SYSTEM_FLAG                 1
 
 
-    Records affected: 280
+    Records affected: 281
   """
 }
 ]
