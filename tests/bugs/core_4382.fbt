@@ -9,6 +9,7 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
+ 'page_size': '4096',
  'init_script':
   """
     create table g_test (f integer);
