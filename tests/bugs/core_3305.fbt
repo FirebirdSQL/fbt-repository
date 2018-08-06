@@ -9,7 +9,6 @@
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
   """
@@ -38,6 +37,39 @@
     attempted update of read-only column
     Statement failed, SQLSTATE = 42000
     attempted update of read-only column
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    recreate table t(v int);
+    commit;
+    set term ^;
+    create or alter trigger t_ai for t active after insert position 0 as
+    begin
+        new.v = 1;
+    end
+    ^
+    set term ;^
+    commit;
+    insert into t(v) values(123);
+    rollback;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 42000
+    attempted update of read-only column T.V
+    Statement failed, SQLSTATE = 42000
+    attempted update of read-only column T.V
   """
 }
 ]
