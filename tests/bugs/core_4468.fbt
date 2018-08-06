@@ -272,7 +272,8 @@
  'substitutions':[
    ('.*delete record.*','delete record'),
    ('TABLE PLG\$VIEW_USERS','TABLE PLG'), 
-   ('TABLE PLG\$SRP_VIEW', 'TABLE PLG')
+   ('TABLE PLG\$SRP_VIEW', 'TABLE PLG'),
+   ('-OZZY_OSBOURNE is not grantor of (role|Role|ROLE) on RDB\$ADMIN to OZZY_OSBOURNE.', '-OZZY_OSBOURNE is not grantor of ROLE on RDB$ADMIN to OZZY_OSBOURNE.')
  ]
 }
 ]
