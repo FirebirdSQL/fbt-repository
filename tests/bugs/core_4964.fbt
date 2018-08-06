@@ -126,6 +126,7 @@ f_fbconf=open(fb_home+'firebird.conf','w')
 f_fbconf.writelines( fbconf_content )
 f_fbconf.close()
 
+#shutil.copy2( fb_home+'firebird.conf', fb_home+'firebird_conf_changed.txt')
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
@@ -232,7 +233,10 @@ os.remove(fbconf_bak)
  'expected_stderr':
   """
   """,  
-  'substitutions': [('DIFF IN FIREBIRD.LOG: \+ FILE .* IS NOT A VALID DATABASE', 'DIFF IN FIREBIRD.LOG: \+ FILE IS NOT A VALID DATABASE')]
+  'substitutions': [
+      ('DIFF IN FIREBIRD.LOG: \+ FILE .* IS NOT A VALID DATABASE', 'DIFF IN FIREBIRD.LOG: \+ FILE IS NOT A VALID DATABASE'),
+      ('CLIENT_MSG: 335545106L', 'CLIENT_MSG: 335545106')
+  ]
 }
 ]
 }
