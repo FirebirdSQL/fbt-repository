@@ -120,11 +120,12 @@
     Statement failed, SQLSTATE = HY000
     record not found for user: TMP$C3242
     Warning: ALL on ALL is not granted to TMP$C3242.
-    Warning: Execute on FN_REC is not granted to TMP$C3242.
+    Warning: EXECUTE on FN_REC is not granted to TMP$C3242.
   """,
   'substitutions': [
     ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*','')
+    ('record not found for user:.*',''),
+    ('Warning: (execute|Execute|EXECUTE) on FN_REC is not granted to TMP\$C3242', 'Warning: EXECUTE on FN_REC is not granted to TMP$C3242')
   ]
 }
 ]
