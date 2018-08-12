@@ -361,7 +361,10 @@ con.close()
  'expected_stderr': 
   """
   """,
-  'substitutions': [ ('^((?!concurrent transaction number is).)*$','') ]
+  'substitutions': [ 
+      ('^((?!concurrent transaction number is).)*$',''),
+      ('[\-]{0,1}concurrent transaction number is [0-9]+', 'concurrent transaction number is')
+  ]
 
 }
 ]
