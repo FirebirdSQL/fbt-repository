@@ -1,0 +1,64 @@
+{
+'id': 'bugs.core_5896',
+'qmid': None,
+'tracker_id': 'CORE-5896',
+'title': 'NOT NULL constraint is not synchronized after rename column',
+'description':
+ """
+   Confirmed bug on: 4.0.0.1166
+   Checked on: 4.0.0.1172: OK, 1.875s - works fine.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set bail on;
+    set count on;
+    set list on;
+
+    create or alter view v_chk as
+        select rc.rdb$relation_name rel_name, cc.rdb$trigger_name trg_name
+          from rdb$check_constraints cc 
+               join rdb$relation_constraints rc on cc.rdb$constraint_name = rc.rdb$constraint_name 
+               left join rdb$relation_fields rf 
+                  on rc.rdb$relation_name = rf.rdb$relation_name 
+                 and cc.rdb$trigger_name = rf.rdb$field_name 
+         where upper(rc.rdb$constraint_type) = upper('not null') and upper(rc.rdb$relation_name) = upper('TEST')
+    ; 
+    commit;
+
+    recreate table test ( 
+        old_name bigint not null 
+    ); 
+    commit;
+
+    select * from v_chk;
+    commit;
+
+    alter table test alter old_name to new_name;
+    commit;
+
+    select * from v_chk;
+    commit;
+
+  """,
+  'expected_stdout':
+  """
+    REL_NAME                        TEST
+    TRG_NAME                        OLD_NAME
+    Records affected: 1
+
+    REL_NAME                        TEST
+    TRG_NAME                        NEW_NAME
+    Records affected: 1
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
