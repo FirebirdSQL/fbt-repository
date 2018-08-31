@@ -1,0 +1,99 @@
+{
+'id': 'bugs.core_5898',
+'qmid': None,
+'tracker_id': 'CORE-5898',
+'title': 'ROLE not passed in EXECUTE STATEMENT ... ON EXTERNAL',
+'description':
+ """
+   Confirmed bug on: 4.0.0.1172, 3.0.4.33034.
+   Checked on:
+       3.0.4.33041: OK, 2.922s.
+       4.0.0.1190: OK, 2.750s.
+ """,
+'min_versions': '3.0.4',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set bail on;
+    set list on;
+
+    create or alter user tmp$c5898 password '123';
+    commit;
+
+    create role boss;
+    commit;
+    grant boss to tmp$c5898;
+    commit;
+
+    connect '$(DSN)' user 'tmp$c5898' password '123' role 'BOSS';
+    select 
+        'BEFORE CHECKS:' as msg, 
+        mon$user as who_am_i, 
+        mon$role as whats_my_role,
+        mon$remote_protocol what_protocol_im_using
+    from mon$attachments a 
+    where mon$attachment_id=current_connection;
+
+    set echo off;
+    set term ^;
+    execute block
+      returns ( check_no smallint, who_am_i varchar(32), whats_my_role varchar(32), what_protocol_im_using varchar(32))
+    as
+      declare v_dbnm varchar(255);
+      declare v_sttm varchar(255);
+    begin
+      v_dbnm = rdb$get_context('SYSTEM', 'DB_NAME');
+      v_sttm = 'select mon$user,mon$role,mon$remote_protocol from mon$attachments a where mon$attachment_id=current_connection';
+
+      check_no=1;
+      execute statement v_sttm
+          into who_am_i, whats_my_role, what_protocol_im_using;
+      suspend;
+
+
+      check_no=check_no+1;
+      execute statement v_sttm
+          on external :v_dbnm
+          into who_am_i, whats_my_role, what_protocol_im_using;
+      suspend;
+
+    end
+    ^
+    set term ;^ 
+    exit;
+
+    rollback;
+
+    -- cleanup:
+    -- ########
+    connect '$(DSN)' user 'sysdba' password 'masterkey';
+    drop user tmp$c5898;
+    commit;
+  """,
+  'expected_stdout':
+  """
+    MSG                             BEFORE CHECKS:
+    WHO_AM_I                        TMP$C5898
+    WHATS_MY_ROLE                   BOSS
+    WHAT_PROTOCOL_IM_USING          TCPv4
+
+    CHECK_NO                        1
+    WHO_AM_I                        TMP$C5898
+    WHATS_MY_ROLE                   BOSS
+    WHAT_PROTOCOL_IM_USING          TCPv4
+
+    CHECK_NO                        2
+    WHO_AM_I                        TMP$C5898
+    WHATS_MY_ROLE                   BOSS
+    WHAT_PROTOCOL_IM_USING          <null>
+  """,
+  'expected_stderr':
+  """
+  """
+}
+]
+}
