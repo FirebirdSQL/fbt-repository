@@ -1,0 +1,99 @@
+{
+'id': 'bugs.core_5905',
+'qmid': None,
+'tracker_id': 'CORE-5905',
+'title': " Inconsistencies with PSQL FUNCTION vs UDF",
+'description':
+ """
+    Confirmed inconsistence output on: 3.0.4.32972, 4.0.0.875.
+    Checked on:
+        3.0.4.33049: OK, 1.594s.
+        4.0.0.1204: OK, 2.656s.
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0.4',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    create view v_check as
+    select 
+        rf.rdb$function_name as func_name
+       ,rf.rdb$legacy_flag as legacy_flag
+    from rdb$functions rf where rf.rdb$function_name = upper('substrlen')
+    ;
+    commit;
+
+
+    declare external function substrlen
+    	cstring(255), smallint, smallint
+    	returns cstring(255) free_it
+    	entry_point 'IB_UDF_substrlen' module_name 'ib_udf'
+    ;
+    commit;
+
+    set term ^;
+    create procedure sp_main(input_str varchar(255), i smallint, n smallint) as
+        declare s varchar(255);
+    begin
+        s = substrlen( input_str, i, n );
+    end
+    ^
+    set term ;^
+    commit;
+
+    select * from v_check;
+    commit;
+
+    drop function substrlen;
+    commit;
+
+    -----------------------------
+
+    set term ^;
+    alter function substrlen(input_str varchar(255), i smallint, n smallint) returns varchar(255) as
+    begin
+        rdb$set_context('USER_SESSION', 'WAS_PSQL_INVOKED', 'Yes');
+        return substring(input_str from i for n);
+    end
+    ^
+    set term ^;
+    commit;
+
+    select * from v_check;
+    commit;
+
+    drop function substrlen;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    FUNC_NAME                       SUBSTRLEN
+    LEGACY_FLAG                     1
+
+    FUNC_NAME                       SUBSTRLEN
+    LEGACY_FLAG                     0
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 38000
+    unsuccessful metadata update
+    -cannot delete
+    -Function SUBSTRLEN
+    -there are 1 dependencies
+
+    Statement failed, SQLSTATE = 38000
+    unsuccessful metadata update
+    -cannot delete
+    -Function SUBSTRLEN
+    -there are 1 dependencies
+  """
+}
+]
+}
