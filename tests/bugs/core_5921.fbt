@@ -17,7 +17,7 @@
     ===
     Checked on: 4.0.0.1218, 2.578 s.
     ::: NB :::
-    This ISQL-based test does NOT verifies cases when tx is dead or in limbo.
+    This ISQL-based test does NOT verify cases when tx is dead or in limbo.
     Perhaps, Python-based implementation is required and will be created later.
  """,
 'min_versions': '4.0',
