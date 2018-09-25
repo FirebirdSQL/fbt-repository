@@ -8,12 +8,12 @@
     From doc\sql.extensions\README.builtin_functions.txt about rdb$get_transaction_cn() function:
     ===
       ... numbers returned by RDB$GET_TRANSACTION_CN could have values below:
-            -2 - transaction is dead (rolled back)
-            -1 - transaction is in limbo
-             0 - transaction is active,
-             1 - transaction committed before database started |||or less than OIT||| -- additional comment by hvlad, privately, letter 24.09.2018 09:50
-            >1 - transaction committed after database started
-            NULL - given transaction number is NULL or greater than database Next Transaction
+	-2 - transaction is dead (rolled back)
+	-1 - transaction is in limbo
+	 0 - transaction is active,
+	 1 - transaction committed before database started or less than OIT
+	>1 - transaction committed after database started
+	NULL - given transaction number is NULL or greater than database Next Transaction
     ===
     Checked on: 4.0.0.1218, 2.578 s.
     ::: NB :::
@@ -75,6 +75,12 @@
         ,rdb$get_transaction_cn( current_transaction ) as get_tx_c_cn
         ,rdb$get_transaction_cn( null ) as get_tx_nul_cn
         ,rdb$get_transaction_cn( mon$next_transaction + 1 ) as get_tx_nxx_cn
+        -- added 25.09.2018, after commit 
+        -- https://github.com/FirebirdSQL/firebird/commit/7610a76ff3f263177d0a9f7b02cdc1784a0f3402
+        -- all of these columns must contain NULL:
+        ,rdb$get_transaction_cn( mon$next_transaction + (9223372036854775807-mon$next_transaction) ) as get_tx_001_cn
+        ,rdb$get_transaction_cn( 9223372036854775807 ) as get_tx_002_cn
+        ,rdb$get_transaction_cn(-9223372036854775808) as get_tx_003_cn
     from mon$database d;
 
     /*
@@ -109,6 +115,9 @@
 
     GET_TX_NUL_CN                   <null>
     GET_TX_NXX_CN                   <null>
+    GET_TX_001_CN                   <null>
+    GET_TX_002_CN                   <null>
+    GET_TX_003_CN                   <null>
 
     GLOBAL_CN_SIGN                  1
     SNAPSHOT_CN                     1
