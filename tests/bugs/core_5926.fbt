@@ -1,0 +1,95 @@
+{
+'id': 'bugs.core_5926',
+'qmid': None,
+'tracker_id': 'CORE-5926',
+'title': "Attempt to create mapping with non-ascii user name which is encoded in SINGLE-BYTE codepage leads to '-Malformed string'",
+'description':
+ """
+   Reproduced 'malformed string' error on: 3.0.4.33053, 4.0.0.1172.
+   
+   Connection charset was changed from Win-1251 to Win-1252 because FB Textbox has Windows with installed codepage 1252.
+   Code pages 1251 and 1252 have several common characters and two of them are used here:
+   * "The copyright sign", unicode 00A9;
+   * "The registered trademark" symbol, unicode 00AE
+   We use these characters as user name and map it to 'cr' -- see below.
+
+   See also:
+       https://ru.wikipedia.org/wiki/Windows-1251
+       https://en.wikipedia.org/wiki/Windows-1252
+   
+   Checked on:
+     3.0.5.33084: OK, 2.578s.
+     4.0.0.1340: OK, 2.640s.
+
+   ::: NOTE :::
+   In order to run statements with non-ascii (diacritical or special) characters from ISQL:
+   1) open some text editor that supports charset = win1252 and set encoding for new document = WIN1252
+     (e.g. in Notepad++ pull-down menu: "Encoding / Character sets / Baltic / Windows 1252")
+   2) type commands statements that contains diacritical marks (accents) and save to .sql
+   3) open this .sql in FAR editor and ensure that letters with diacritical marks are displayed as SINGLE characters
+   4) run isql -i <script_encoded_in_win1252.sql>
+
+   In order to run this script under fbt_run:
+
+   1) open Notepad++ new .fbt document and set Encoding = "UTF8 without BOM"
+   2) copy-paste text from <script_encoded_in_win1252.sql>, ensure that letters with diacritical marks are readable
+      (it should be pasted here in UTF8 encoding)
+   3) add in `expected_stdout` section required output by copy-paste from result of isql -i <script_encoded_in_win1252.sql>
+      (it should be pasted here in UTF8 encoding)
+   4) save .fbt and ensure that it was saved in UTF8 encoding, otherwise exeption like
+      "UnicodeDecodeError: 'utf8' codec can't decode byte 0xc3 in position NNN: invalid continuation byte"
+      will raise.
+ 
+ """,
+'min_versions': '3.0.5',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'database_character_set': 'WIN1252',
+ 'connection_character_set': 'WIN1252',
+ 'init_script': 
+  """
+    -- ### ONCE AGAIN ###
+    -- 1) for checking this under ISQL following must be encoded in WIN1252
+    -- 2) for running under fbt_run utility following must be encoded in UTF8.
+
+  """,
+ 'test_script': 
+  """
+    create or alter mapping foo using plugin win_sspi from user 'org\©®' to user "org\cr"; 
+    commit;
+    -- show mapping;
+    set count on;
+    set list on;
+    select 
+        rdb$map_name, 
+        rdb$map_using, 
+        rdb$map_plugin, 
+        rdb$map_db, 
+        rdb$map_from_type, 
+        rdb$map_from, 
+        rdb$map_to_type, 
+        rdb$map_to 
+    from rdb$auth_mapping;
+    commit;
+  """,
+ 'expected_stdout':
+  """
+    RDB$MAP_NAME                    FOO
+    RDB$MAP_USING                   P
+    RDB$MAP_PLUGIN                  WIN_SSPI
+    RDB$MAP_DB                      <null>
+    RDB$MAP_FROM_TYPE               USER
+    RDB$MAP_FROM                    org\©®
+    RDB$MAP_TO_TYPE                 0
+    RDB$MAP_TO                      org\cr
+    Records affected: 1
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
