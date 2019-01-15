@@ -16998,6 +16998,7 @@
   """,
  'expected_stdout': 
   """
+
     RDB$FIELD_NAME                  MON$ATTACHMENT_ID                                                                                                                                                                                                                                           
     RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
     RDB$FIELD_SOURCE                RDB$ATTACHMENT_ID                                                                                                                                                                                                                                           
@@ -17306,53 +17307,9 @@
     RDB$GENERATOR_NAME              <null>
     RDB$IDENTITY_TYPE               <null>
 
-    RDB$FIELD_NAME                  MON$CONNECTION_COMPRESSED                                                                                                                                                                                                                                   
-    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
-    RDB$FIELD_SOURCE                RDB$BOOLEAN                                                                                                                                                                                                                                                 
-    RDB$QUERY_NAME                  <null>
-    RDB$BASE_FIELD                  <null>
-    RDB$EDIT_STRING                 <null>
-    RDB$FIELD_POSITION              23
-    RDB$QUERY_HEADER                <null>
-    RDB$UPDATE_FLAG                 0
-    RDB$FIELD_ID                    23
-    RDB$VIEW_CONTEXT                <null>
-    RDB$DESCRIPTION                 <null>
-    RDB$DEFAULT_VALUE               <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$SECURITY_CLASS              <null>
-    RDB$COMPLEX_NAME                <null>
-    RDB$NULL_FLAG                   <null>
-    RDB$DEFAULT_SOURCE              <null>
-    RDB$COLLATION_ID                <null>
-    RDB$GENERATOR_NAME              <null>
-    RDB$IDENTITY_TYPE               <null>
-
-    RDB$FIELD_NAME                  MON$CONNECTION_ENCRYPTED                                                                                                                                                                                                                                    
-    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
-    RDB$FIELD_SOURCE                RDB$BOOLEAN                                                                                                                                                                                                                                                 
-    RDB$QUERY_NAME                  <null>
-    RDB$BASE_FIELD                  <null>
-    RDB$EDIT_STRING                 <null>
-    RDB$FIELD_POSITION              24
-    RDB$QUERY_HEADER                <null>
-    RDB$UPDATE_FLAG                 0
-    RDB$FIELD_ID                    24
-    RDB$VIEW_CONTEXT                <null>
-    RDB$DESCRIPTION                 <null>
-    RDB$DEFAULT_VALUE               <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$SECURITY_CLASS              <null>
-    RDB$COMPLEX_NAME                <null>
-    RDB$NULL_FLAG                   <null>
-    RDB$DEFAULT_SOURCE              <null>
-    RDB$COLLATION_ID                <null>
-    RDB$GENERATOR_NAME              <null>
-    RDB$IDENTITY_TYPE               <null>
-
     RDB$FIELD_NAME                  MON$CREATION_DATE                                                                                                                                                                                                                                           
     RDB$RELATION_NAME               MON$DATABASE                                                                                                                                                                                                                                                
-    RDB$FIELD_SOURCE                RDB$TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$BASE_FIELD                  <null>
     RDB$EDIT_STRING                 <null>
@@ -18240,6 +18197,28 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    3
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$RECORD_IMGC                                                                                                                                                                                                                                             
+    RDB$RELATION_NAME               MON$RECORD_STATS                                                                                                                                                                                                                                            
+    RDB$FIELD_SOURCE                RDB$COUNTER                                                                                                                                                                                                                                                 
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              16
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    16
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -19310,7 +19289,7 @@
 
     RDB$FIELD_NAME                  MON$TIMESTAMP                                                                                                                                                                                                                                               
     RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
-    RDB$FIELD_SOURCE                RDB$TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$BASE_FIELD                  <null>
     RDB$EDIT_STRING                 <null>
@@ -19332,7 +19311,7 @@
 
     RDB$FIELD_NAME                  MON$TIMESTAMP                                                                                                                                                                                                                                               
     RDB$RELATION_NAME               MON$CALL_STACK                                                                                                                                                                                                                                              
-    RDB$FIELD_SOURCE                RDB$TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$BASE_FIELD                  <null>
     RDB$EDIT_STRING                 <null>
@@ -19354,7 +19333,7 @@
 
     RDB$FIELD_NAME                  MON$TIMESTAMP                                                                                                                                                                                                                                               
     RDB$RELATION_NAME               MON$STATEMENTS                                                                                                                                                                                                                                              
-    RDB$FIELD_SOURCE                RDB$TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$BASE_FIELD                  <null>
     RDB$EDIT_STRING                 <null>
@@ -19376,7 +19355,7 @@
 
     RDB$FIELD_NAME                  MON$TIMESTAMP                                                                                                                                                                                                                                               
     RDB$RELATION_NAME               MON$TRANSACTIONS                                                                                                                                                                                                                                            
-    RDB$FIELD_SOURCE                RDB$TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$BASE_FIELD                  <null>
     RDB$EDIT_STRING                 <null>
@@ -19538,6 +19517,50 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    3
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$WIRE_COMPRESSED                                                                                                                                                                                                                                         
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                RDB$BOOLEAN                                                                                                                                                                                                                                                 
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              23
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    23
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$WIRE_ENCRYPTED                                                                                                                                                                                                                                          
+    RDB$RELATION_NAME               MON$ATTACHMENTS                                                                                                                                                                                                                                             
+    RDB$FIELD_SOURCE                RDB$BOOLEAN                                                                                                                                                                                                                                                 
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              24
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    24
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -26194,6 +26217,50 @@
     RDB$GENERATOR_NAME              <null>
     RDB$IDENTITY_TYPE               <null>
 
+    RDB$FIELD_NAME                  RDB$TIME_ZONE_ID                                                                                                                                                                                                                                            
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                RDB$TIME_ZONE_ID                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              0
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    0
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  RDB$TIME_ZONE_NAME                                                                                                                                                                                                                                          
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                RDB$TIME_ZONE_NAME                                                                                                                                                                                                                                          
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              1
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    1
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
     RDB$FIELD_NAME                  RDB$TRANSACTION_DESCRIPTION                                                                                                                                                                                                                                 
     RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                                                                                                                                                                                            
     RDB$FIELD_SOURCE                RDB$TRANSACTION_DESCRIPTION                                                                                                                                                                                                                                 
@@ -27382,9 +27449,7 @@
     RDB$GENERATOR_NAME              <null>
     RDB$IDENTITY_TYPE               <null>
 
-
-    Records affected: 472
-
+    Records affected: 475
   """,
   'substitutions': [
       ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
