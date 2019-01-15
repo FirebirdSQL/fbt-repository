@@ -7,10 +7,9 @@
  """
     Verify content of RDB$TRIGGERS in empty database.
     Checked on:
-        FB25Cs, build 2.5.8.27067: OK, 0.718s.
-        FB25SC, build 2.5.9.27107: OK, 0.468s.
-        FB30SS, build 3.0.4.33021: OK, 1.766s.
-        FB40SS, build 4.0.0.1143: OK, 0.828s.
+        2.5.9.27126: OK, 0.625s.
+        3.0.5.33086: OK, 1.156s.
+        4.0.0.1378: OK, 4.812s.
  """,
 'min_versions': '2.5.7',
 'versions': [
@@ -5046,7 +5045,22 @@ RDB$DEBUG_INFO                  <null>
     RDB$TRIGGER_BLR                 c:b
             	blr_version5,
             	blr_begin,
-            	   blr_leave, 1,
+            	   blr_if,
+            	      blr_any,
+            	         blr_rse, 1,
+            	            blr_relation, 24, 'R','D','B','$','R','E','L','A','T','I','O','N','_','C','O','N','S','T','R','A','I','N','T','S', 3,
+            	            blr_boolean,
+            	               blr_and,
+            	                  blr_not,
+            	                     blr_eql,
+            	                        blr_field, 3, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','T','Y','P','E',
+            	                        blr_literal, blr_text, 8,0, 'N','O','T',32,'N','U','L','L',
+            	                  blr_eql,
+            	                     blr_field, 3, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+            	                     blr_field, 0, 19, 'R','D','B','$','C','O','N','S','T','R','A','I','N','T','_','N','A','M','E',
+            	            blr_end,
+            	      blr_leave, 1,
+            	      blr_end,
             	   blr_end,
             	blr_eoc
 
