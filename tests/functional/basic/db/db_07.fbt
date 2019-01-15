@@ -3,7 +3,14 @@
 'qmid': 'functional.basic.db.db_07',
 'tracker_id': '',
 'title': 'Empty DB - RDB$FIELDS',
-'description': 'Check for correct content of RDB$FIELDS in empty database.',
+'description': 
+ """
+    Check for correct content of RDB$FIELDS in empty database.
+    Checked on:
+        2.5.9.27126: OK, 0.625s.
+        3.0.5.33086: OK, 1.766s.
+        4.0.0.1378: OK, 6.063s.
+ """,
 'min_versions': '2.5.5',
 'versions': [
 {
@@ -8208,7 +8215,6 @@ Records affected: 150
   """,
  'expected_stdout': 
   """
-
     RDB$FIELD_NAME                  MON$IDLE_TIMEOUT                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$VALIDATION_BLR              <null>
@@ -9075,6 +9081,37 @@ Records affected: 150
     RDB$CHARACTER_SET_ID            <null>
     RDB$FIELD_PRECISION             <null>
     RDB$SECURITY_CLASS              SQL$16                                                                                                                                                                                                                                                      
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  RDB$DBTZ_VERSION                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                10
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SUB_TYPE              2
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                0
+    RDB$CHARACTER_SET_ID            2
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$161                                                                                                                                                                                                                                                     
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
     RDB$FIELD_NAME                  RDB$DEBUG_INFO                                                                                                                                                                                                                                              
@@ -12534,6 +12571,130 @@ Records affected: 150
     RDB$SECURITY_CLASS              SQL$55                                                                                                                                                                                                                                                      
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
+    RDB$FIELD_NAME                  RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                12
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  29
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$160                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  RDB$TIME_ZONE_ID                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                4
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  8
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$157                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  RDB$TIME_ZONE_NAME                                                                                                                                                                                                                                          
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                252
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  14
+    RDB$FIELD_SUB_TYPE              3
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            63
+    RDB$COLLATION_ID                0
+    RDB$CHARACTER_SET_ID            4
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$158                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
+    RDB$FIELD_NAME                  RDB$TIME_ZONE_OFFSET                                                                                                                                                                                                                                        
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                2
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  7
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$159                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
     RDB$FIELD_NAME                  RDB$TRANSACTION_DESCRIPTION                                                                                                                                                                                                                                 
     RDB$QUERY_NAME                  <null>
     RDB$VALIDATION_BLR              <null>
@@ -13062,7 +13223,7 @@ Records affected: 150
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
 
-    Records affected: 156
+    Records affected: 161
   """,
   'substitutions': [
     ('RDB\$DEFAULT_VALUE.*',''),
