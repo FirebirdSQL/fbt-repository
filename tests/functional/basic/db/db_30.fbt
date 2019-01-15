@@ -3,7 +3,14 @@
 'qmid': 'functional.basic.db.db_30',
 'tracker_id': '',
 'title': 'Empty DB - RDB$TYPES',
-'description': 'Check for correct content of RDB$TYPES in empty database.',
+'description': 
+ """ 
+    Check for correct content of RDB$TYPES in empty database.
+    Checked on:
+        2.5.9.27126: OK, 0.562s.
+        3.0.5.33086: OK, 1.641s.
+        4.0.0.1378: OK, 5.047s.
+ """,
 'min_versions': '2.5.7',
 'versions': [
 {
@@ -3015,6 +3022,12 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  MON$ISOLATION_MODE                                                                                                                                                                                                                                          
+    RDB$TYPE                        4
+    RDB$TYPE_NAME                   READ_COMMITTED_READ_CONSISTENCY                                                                                                                                                                                                                             
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  MON$ISOLATION_MODE                                                                                                                                                                                                                                          
     RDB$TYPE                        2
     RDB$TYPE_NAME                   READ_COMMITTED_VERSION                                                                                                                                                                                                                                      
     RDB$DESCRIPTION                 <null>
@@ -3969,8 +3982,20 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
+    RDB$TYPE                        28
+    RDB$TYPE_NAME                   TIME WITH TIMEZONE                                                                                                                                                                                                                                          
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
     RDB$TYPE                        35
     RDB$TYPE_NAME                   TIMESTAMP                                                                                                                                                                                                                                                   
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
+    RDB$TYPE                        29
+    RDB$TYPE_NAME                   TIMESTAMP WITH TIMEZONE                                                                                                                                                                                                                                     
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
@@ -4665,7 +4690,8 @@
     RDB$SYSTEM_FLAG                 1
 
 
-    Records affected: 281
+    Records affected: 284
+
   """
 }
 ]
