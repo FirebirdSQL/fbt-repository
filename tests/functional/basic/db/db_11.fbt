@@ -2,39 +2,170 @@
 'id': 'functional.basic.db.db_11',
 'qmid': 'functional.basic.db.db_11',
 'tracker_id': '',
-'title': 'Empty DB - RDB$FUNCTION_ARGUMENTS',
-'description': 'Check for correct content of RDB$FUNCTION_ARGUMENTS in empty database.',
+'title': 'New DB - RDB$FUNCTION_ARGUMENTS',
+'description': 
+ """
+    Check for correct content of RDB$FUNCTION_ARGUMENTS in a new database.
+    Checked on:
+        2.5.9.27126: OK, 0.656s.
+        3.0.5.33086: OK, 1.156s.
+        4.0.0.1378: OK, 5.344s.
+ """,
 'min_versions': None,
 'versions': [
 {
- 'firebird_version': '1.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$FUNCTION_ARGUMENTS;'
-},
-{
- 'firebird_version': '2.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 'select * from RDB$FUNCTION_ARGUMENTS;',
- 'expected_stdout': """
-RDB$FUNCTION_NAME                                                                             RDB$ARGUMENT_POSITION RDB$MECHANISM RDB$FIELD_TYPE RDB$FIELD_SCALE RDB$FIELD_LENGTH RDB$FIELD_SUB_TYPE RDB$CHARACTER_SET_ID RDB$FIELD_PRECISION RDB$CHARACTER_LENGTH
-=============================================================================== ===================== ============= ============== =============== ================ ================== ==================== =================== ====================
-RDB$GET_CONTEXT                                                                                                   0            -1             37               0              255                  0                    0                   0                  255
-RDB$GET_CONTEXT                                                                                                   1             5             37               0               80                  0                    0                   0                   80
-RDB$GET_CONTEXT                                                                                                   2             5             37               0               80                  0                    0                   0                   80
-RDB$SET_CONTEXT                                                                                                   0             0              8               0                4                  0                    0                   0                    0
-RDB$SET_CONTEXT                                                                                                   1             5             37               0               80                  0                    0                   0                   80
-RDB$SET_CONTEXT                                                                                                   2             5             37               0               80                  0                    0                   0                   80
-RDB$SET_CONTEXT                                                                                                   3             5             37               0              255                  0                    0                   0                  255
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+    select *
+    from rdb$function_arguments fa
+    order by fa.rdb$function_name, fa.rdb$argument_position;
+  """,
+ 'expected_stdout': 
+ """
 
-"""
+    RDB$FUNCTION_NAME               RDB$GET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           0
+    RDB$MECHANISM                   -1
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                255
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            255
+
+    RDB$FUNCTION_NAME               RDB$GET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           1
+    RDB$MECHANISM                   5
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                80
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            80
+
+    RDB$FUNCTION_NAME               RDB$GET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           2
+    RDB$MECHANISM                   5
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                80
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            80
+
+    RDB$FUNCTION_NAME               RDB$SET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           0
+    RDB$MECHANISM                   0
+    RDB$FIELD_TYPE                  8
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                4
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            0
+
+    RDB$FUNCTION_NAME               RDB$SET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           1
+    RDB$MECHANISM                   5
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                80
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            80
+
+    RDB$FUNCTION_NAME               RDB$SET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           2
+    RDB$MECHANISM                   5
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                80
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            80
+
+    RDB$FUNCTION_NAME               RDB$SET_CONTEXT                                                                              
+    RDB$ARGUMENT_POSITION           3
+    RDB$MECHANISM                   5
+    RDB$FIELD_TYPE                  37
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_LENGTH                255
+    RDB$FIELD_SUB_TYPE              0
+    RDB$CHARACTER_SET_ID            0
+    RDB$FIELD_PRECISION             0
+    RDB$CHARACTER_LENGTH            255
+
+
+    Records affected: 7
+
+ """
 },
 {
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$FUNCTION_ARGUMENTS;'
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+    select *
+    from rdb$function_arguments fa
+    order by fa.rdb$function_name, fa.rdb$argument_position;
+  """,
+ 'expected_stdout': 
+ """
+    Records affected: 0
+ """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+    select *
+    from rdb$function_arguments fa
+    order by fa.rdb$function_name, fa.rdb$argument_position;
+  """,
+ 'expected_stdout': 
+ """
+    RDB$FUNCTION_NAME               DATABASE_VERSION                                                                                                                                                                                                                                            
+    RDB$ARGUMENT_POSITION           0
+    RDB$MECHANISM                   <null>
+    RDB$FIELD_TYPE                  <null>
+    RDB$FIELD_SCALE                 <null>
+    RDB$FIELD_LENGTH                <null>
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+    RDB$ARGUMENT_NAME               <null>
+    RDB$FIELD_SOURCE                RDB$DBTZ_VERSION                                                                                                                                                                                                                                            
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$ARGUMENT_MECHANISM          <null>
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DESCRIPTION                 <null>
+
+    Records affected: 1
+ """
 }
 ]
 }
