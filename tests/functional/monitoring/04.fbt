@@ -40,7 +40,9 @@ print (c1.fetchall())
         current_user as who_am_i,
         a.mon$user who_else,
         dense_rank()over(partition by a.mon$user order by t.mon$transaction_id) tid_rown,
-        decode( t.mon$isolation_mode, 0,'CONSISTENCY', 1,'SNAPSHOT', 2, 'RC REC_VERS', 3, 'RC NO_REC_VERS' ) as til
+        -- 15.01.2019: removed detailed info about read committed TIL because of read consistency TIL that 4.0 introduces.
+        -- Any record with t.mon$isolation_mode = 4 now is considered just as read committed, w/o any detalization (this not much needed here).
+        decode( t.mon$isolation_mode, 0,'CONSISTENCY', 1,'SNAPSHOT', 2, 'RC', 3, 'RC', 4, 'RC', '?UNKNOWN_TIL?' ) as til
     from mon$transactions t join mon$attachments a using(mon$attachment_id)
     where a.mon$attachment_id <> current_connection
     order by a.mon$user;
@@ -84,37 +86,37 @@ runProgram('isql',[dsn,'-pag','99999','-q','-user','U01','-password','123'],'''
     WHO_AM_I                        U01
     WHO_ELSE                        U01
     TID_ROWN                        1
-    TIL                             RC REC_VERS
+    TIL                             RC
     STEP                            1
     WHO_AM_I                        U01
     WHO_ELSE                        U01
     TID_ROWN                        2
-    TIL                             RC REC_VERS
+    TIL                             RC
     STEP                            2
     WHO_AM_I                        SYSDBA
     WHO_ELSE                        SYSDBA
     TID_ROWN                        1
-    TIL                             RC REC_VERS
+    TIL                             RC
     STEP                            2
     WHO_AM_I                        SYSDBA
     WHO_ELSE                        U01
     TID_ROWN                        1
-    TIL                             RC REC_VERS
+    TIL                             RC
     STEP                            2
     WHO_AM_I                        SYSDBA
     WHO_ELSE                        U01
     TID_ROWN                        2
-    TIL                             RC REC_VERS
+    TIL                             RC
     STEP                            2
     WHO_AM_I                        SYSDBA
     WHO_ELSE                        U02
     TID_ROWN                        1
-    TIL                             RC REC_VERS
+    TIL                             RC
     STEP                            2
     WHO_AM_I                        SYSDBA
     WHO_ELSE                        U02
     TID_ROWN                        2
-    TIL                             RC REC_VERS
+    TIL                             RC
   """
 }
 ]
