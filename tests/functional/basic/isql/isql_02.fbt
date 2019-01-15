@@ -3,7 +3,14 @@
 'qmid': 'functional.basic.isql.isql_02',
 'tracker_id': '',
 'title': 'ISQL - SHOW SYSTEM TABLES',
-'description': 'Check for correct output of SHOW SYSTEM TABLES on empty database.',
+'description':
+  """
+    Check for correct output of "SHOW SYSTEM;" command on empty database.
+    Checked on:
+        2.5.9.27126: OK, 0.484s.
+        3.0.5.33086: OK, 1.031s.
+        4.0.0.1378: OK, 7.547s.
+  """,
 'min_versions': None,
 'versions': [
 {
@@ -278,6 +285,7 @@ Collations:
     RDB$RELATION_FIELDS
     RDB$ROLES
     RDB$SECURITY_CLASSES
+    RDB$TIME_ZONES
     RDB$TRANSACTIONS
     RDB$TRIGGERS
     RDB$TRIGGER_MESSAGES
