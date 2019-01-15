@@ -3,1458 +3,16 @@
 'qmid': 'functional.basic.db.db_16',
 'tracker_id': '',
 'title': 'Empty DB - RDB$INDICES',
-'description': 'Check for correct content of RDB$INDICES in empty database.',
+ 'description': 
+ """
+    Check for correct content of RDB$INDICES in empty database.
+    Checked on:
+        2.5.9.27126: OK, 0.640s.
+        3.0.5.33086: OK, 1.532s.
+        4.0.0.1378: OK, 5.922s.
+  """,
 'min_versions': None,
 'versions': [
-{
- 'firebird_version': '1.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 'select * from RDB$INDICES;',
- 'expected_stdout': """RDB$INDEX_NAME                  RDB$RELATION_NAME               RDB$INDEX_ID RDB$UNIQUE_FLAG   RDB$DESCRIPTION RDB$SEGMENT_COUNT RDB$INDEX_INACTIVE RDB$INDEX_TYPE RDB$FOREIGN_KEY                 RDB$SYSTEM_FLAG RDB$EXPRESSION_BLR RDB$EXPRESSION_SOURCE          RDB$STATISTICS
-=============================== =============================== ============ =============== ================= ================= ================== ============== =============================== =============== ================== ===================== =======================
-
-RDB$INDEX_0                     RDB$RELATIONS                              1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_1                     RDB$RELATIONS                              2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_2                     RDB$FIELDS                                 1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_3                     RDB$RELATION_FIELDS                        1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_4                     RDB$RELATION_FIELDS                        2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_5                     RDB$INDICES                                1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_6                     RDB$INDEX_SEGMENTS                         1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_7                     RDB$SECURITY_CLASSES                       1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_8                     RDB$TRIGGERS                               1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_9                     RDB$FUNCTIONS                              1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_10                    RDB$FUNCTION_ARGUMENTS                     1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_11                    RDB$GENERATORS                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_12                    RDB$RELATION_CONSTRAINTS                   1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_13                    RDB$REF_CONSTRAINTS                        1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_14                    RDB$CHECK_CONSTRAINTS                      1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_15                    RDB$RELATION_FIELDS                        3               1            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_16                    RDB$FORMATS                                1               0            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_17                    RDB$FILTERS                                1               0            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_18                    RDB$PROCEDURE_PARAMETERS                   1               1            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_19                    RDB$CHARACTER_SETS                         1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-
-RDB$INDEX_NAME                  RDB$RELATION_NAME               RDB$INDEX_ID RDB$UNIQUE_FLAG   RDB$DESCRIPTION RDB$SEGMENT_COUNT RDB$INDEX_INACTIVE RDB$INDEX_TYPE RDB$FOREIGN_KEY                 RDB$SYSTEM_FLAG RDB$EXPRESSION_BLR RDB$EXPRESSION_SOURCE          RDB$STATISTICS
-=============================== =============================== ============ =============== ================= ================= ================== ============== =============================== =============== ================== ===================== =======================
-RDB$INDEX_20                    RDB$COLLATIONS                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_21                    RDB$PROCEDURES                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_22                    RDB$PROCEDURES                             2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_23                    RDB$EXCEPTIONS                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_24                    RDB$EXCEPTIONS                             2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_25                    RDB$CHARACTER_SETS                         2               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_26                    RDB$COLLATIONS                             2               1            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_27                    RDB$DEPENDENCIES                           1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_28                    RDB$DEPENDENCIES                           2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_29                    RDB$USER_PRIVILEGES                        1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_30                    RDB$USER_PRIVILEGES                        2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_31                    RDB$INDICES                                2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_32                    RDB$TRANSACTIONS                           1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_33                    RDB$VIEW_RELATIONS                         1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_34                    RDB$VIEW_RELATIONS                         2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_35                    RDB$TRIGGER_MESSAGES                       1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_36                    RDB$FIELD_DIMENSIONS                       1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_37                    RDB$TYPES                                  1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_38                    RDB$TRIGGERS                               2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_39                    RDB$ROLES                                  1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-
-RDB$INDEX_NAME                  RDB$RELATION_NAME               RDB$INDEX_ID RDB$UNIQUE_FLAG   RDB$DESCRIPTION RDB$SEGMENT_COUNT RDB$INDEX_INACTIVE RDB$INDEX_TYPE RDB$FOREIGN_KEY                 RDB$SYSTEM_FLAG RDB$EXPRESSION_BLR RDB$EXPRESSION_SOURCE          RDB$STATISTICS
-=============================== =============================== ============ =============== ================= ================= ================== ============== =============================== =============== ================== ===================== =======================
-RDB$INDEX_40                    RDB$CHECK_CONSTRAINTS                      2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-
-"""
-},
-{
- 'firebird_version': '1.5',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 'select * from RDB$INDICES;',
- 'expected_stdout': """RDB$INDEX_NAME                  RDB$RELATION_NAME               RDB$INDEX_ID RDB$UNIQUE_FLAG   RDB$DESCRIPTION RDB$SEGMENT_COUNT RDB$INDEX_INACTIVE RDB$INDEX_TYPE RDB$FOREIGN_KEY                 RDB$SYSTEM_FLAG RDB$EXPRESSION_BLR RDB$EXPRESSION_SOURCE          RDB$STATISTICS
-=============================== =============================== ============ =============== ================= ================= ================== ============== =============================== =============== ================== ===================== =======================
-
-RDB$INDEX_0                     RDB$RELATIONS                              1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_1                     RDB$RELATIONS                              2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_2                     RDB$FIELDS                                 1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_3                     RDB$RELATION_FIELDS                        1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_4                     RDB$RELATION_FIELDS                        2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_5                     RDB$INDICES                                1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_6                     RDB$INDEX_SEGMENTS                         1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_7                     RDB$SECURITY_CLASSES                       1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_8                     RDB$TRIGGERS                               1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_9                     RDB$FUNCTIONS                              1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_10                    RDB$FUNCTION_ARGUMENTS                     1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_11                    RDB$GENERATORS                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_12                    RDB$RELATION_CONSTRAINTS                   1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_13                    RDB$REF_CONSTRAINTS                        1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_14                    RDB$CHECK_CONSTRAINTS                      1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_15                    RDB$RELATION_FIELDS                        3               1            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_16                    RDB$FORMATS                                1               0            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_17                    RDB$FILTERS                                1               0            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_18                    RDB$PROCEDURE_PARAMETERS                   1               1            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_19                    RDB$CHARACTER_SETS                         1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-
-RDB$INDEX_NAME                  RDB$RELATION_NAME               RDB$INDEX_ID RDB$UNIQUE_FLAG   RDB$DESCRIPTION RDB$SEGMENT_COUNT RDB$INDEX_INACTIVE RDB$INDEX_TYPE RDB$FOREIGN_KEY                 RDB$SYSTEM_FLAG RDB$EXPRESSION_BLR RDB$EXPRESSION_SOURCE          RDB$STATISTICS
-=============================== =============================== ============ =============== ================= ================= ================== ============== =============================== =============== ================== ===================== =======================
-RDB$INDEX_20                    RDB$COLLATIONS                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_21                    RDB$PROCEDURES                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_22                    RDB$PROCEDURES                             2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_23                    RDB$EXCEPTIONS                             1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_24                    RDB$EXCEPTIONS                             2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_25                    RDB$CHARACTER_SETS                         2               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_26                    RDB$COLLATIONS                             2               1            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_27                    RDB$DEPENDENCIES                           1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_28                    RDB$DEPENDENCIES                           2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_29                    RDB$USER_PRIVILEGES                        1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_30                    RDB$USER_PRIVILEGES                        2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_31                    RDB$INDICES                                2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_32                    RDB$TRANSACTIONS                           1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_33                    RDB$VIEW_RELATIONS                         1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_34                    RDB$VIEW_RELATIONS                         2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_35                    RDB$TRIGGER_MESSAGES                       1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_36                    RDB$FIELD_DIMENSIONS                       1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_37                    RDB$TYPES                                  1               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_38                    RDB$TRIGGERS                               2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_39                    RDB$ROLES                                  1               1            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-
-RDB$INDEX_NAME                  RDB$RELATION_NAME               RDB$INDEX_ID RDB$UNIQUE_FLAG   RDB$DESCRIPTION RDB$SEGMENT_COUNT RDB$INDEX_INACTIVE RDB$INDEX_TYPE RDB$FOREIGN_KEY                 RDB$SYSTEM_FLAG RDB$EXPRESSION_BLR RDB$EXPRESSION_SOURCE          RDB$STATISTICS
-=============================== =============================== ============ =============== ================= ================= ================== ============== =============================== =============== ================== ===================== =======================
-RDB$INDEX_40                    RDB$CHECK_CONSTRAINTS                      2               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_41                    RDB$INDICES                                3               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_42                    RDB$RELATION_CONSTRAINTS                   2               0            <null>                 2                  0         <null> <null>                                        1             <null>                <null>                  <null>
-RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3               0            <null>                 1                  0         <null> <null>                                        1             <null>                <null>                  <null>
-
-"""
-},
-{
- 'firebird_version': '2.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script':
-  """
-    set list on;
-    set blob all;
-    select *
-    from rdb$indices;
-  """,
- 'expected_stdout': 
-  """
-    RDB$INDEX_NAME                  RDB$INDEX_0
-    RDB$RELATION_NAME               RDB$RELATIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_1
-    RDB$RELATION_NAME               RDB$RELATIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_2
-    RDB$RELATION_NAME               RDB$FIELDS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_3
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_4
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_5
-    RDB$RELATION_NAME               RDB$INDICES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_6
-    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_7
-    RDB$RELATION_NAME               RDB$SECURITY_CLASSES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_8
-    RDB$RELATION_NAME               RDB$TRIGGERS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_9
-    RDB$RELATION_NAME               RDB$FUNCTIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_10
-    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_11
-    RDB$RELATION_NAME               RDB$GENERATORS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_12
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_13
-    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_14
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_15
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS
-    RDB$INDEX_ID                    3
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_16
-    RDB$RELATION_NAME               RDB$FORMATS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_17
-    RDB$RELATION_NAME               RDB$FILTERS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_18
-    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_19
-    RDB$RELATION_NAME               RDB$CHARACTER_SETS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_20
-    RDB$RELATION_NAME               RDB$COLLATIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_21
-    RDB$RELATION_NAME               RDB$PROCEDURES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_22
-    RDB$RELATION_NAME               RDB$PROCEDURES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_23
-    RDB$RELATION_NAME               RDB$EXCEPTIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_24
-    RDB$RELATION_NAME               RDB$EXCEPTIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_25
-    RDB$RELATION_NAME               RDB$CHARACTER_SETS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_26
-    RDB$RELATION_NAME               RDB$COLLATIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_27
-    RDB$RELATION_NAME               RDB$DEPENDENCIES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_28
-    RDB$RELATION_NAME               RDB$DEPENDENCIES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_29
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_30
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_31
-    RDB$RELATION_NAME               RDB$INDICES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_32
-    RDB$RELATION_NAME               RDB$TRANSACTIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_33
-    RDB$RELATION_NAME               RDB$VIEW_RELATIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_34
-    RDB$RELATION_NAME               RDB$VIEW_RELATIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_35
-    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_36
-    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_37
-    RDB$RELATION_NAME               RDB$TYPES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_38
-    RDB$RELATION_NAME               RDB$TRIGGERS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_39
-    RDB$RELATION_NAME               RDB$ROLES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_40
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_41
-    RDB$RELATION_NAME               RDB$INDICES
-    RDB$INDEX_ID                    3
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_42
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_43
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
-    RDB$INDEX_ID                    3
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_44
-    RDB$RELATION_NAME               RDB$BACKUP_HISTORY
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  1
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_45
-    RDB$RELATION_NAME               RDB$FILTERS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-  """
-},
-{
- 'firebird_version': '2.5.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script':
-  """
-    set list on;
-    set blob all;
-    select *
-    from rdb$indices;
-  """,
- 'expected_stdout': 
-  """
-    RDB$INDEX_NAME                  RDB$INDEX_0
-    RDB$RELATION_NAME               RDB$RELATIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_1
-    RDB$RELATION_NAME               RDB$RELATIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_2
-    RDB$RELATION_NAME               RDB$FIELDS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_3
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_4
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_5
-    RDB$RELATION_NAME               RDB$INDICES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_6
-    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_7
-    RDB$RELATION_NAME               RDB$SECURITY_CLASSES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_8
-    RDB$RELATION_NAME               RDB$TRIGGERS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_9
-    RDB$RELATION_NAME               RDB$FUNCTIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_10
-    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_11
-    RDB$RELATION_NAME               RDB$GENERATORS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_12
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_13
-    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_14
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_15
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS
-    RDB$INDEX_ID                    3
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_16
-    RDB$RELATION_NAME               RDB$FORMATS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_17
-    RDB$RELATION_NAME               RDB$FILTERS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_18
-    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_19
-    RDB$RELATION_NAME               RDB$CHARACTER_SETS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_20
-    RDB$RELATION_NAME               RDB$COLLATIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_21
-    RDB$RELATION_NAME               RDB$PROCEDURES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_22
-    RDB$RELATION_NAME               RDB$PROCEDURES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_23
-    RDB$RELATION_NAME               RDB$EXCEPTIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_24
-    RDB$RELATION_NAME               RDB$EXCEPTIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_25
-    RDB$RELATION_NAME               RDB$CHARACTER_SETS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_26
-    RDB$RELATION_NAME               RDB$COLLATIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_27
-    RDB$RELATION_NAME               RDB$DEPENDENCIES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_28
-    RDB$RELATION_NAME               RDB$DEPENDENCIES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_29
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_30
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_31
-    RDB$RELATION_NAME               RDB$INDICES
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_32
-    RDB$RELATION_NAME               RDB$TRANSACTIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_33
-    RDB$RELATION_NAME               RDB$VIEW_RELATIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_34
-    RDB$RELATION_NAME               RDB$VIEW_RELATIONS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_35
-    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_36
-    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_37
-    RDB$RELATION_NAME               RDB$TYPES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_38
-    RDB$RELATION_NAME               RDB$TRIGGERS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_39
-    RDB$RELATION_NAME               RDB$ROLES
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_40
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_41
-    RDB$RELATION_NAME               RDB$INDICES
-    RDB$INDEX_ID                    3
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_42
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_43
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS
-    RDB$INDEX_ID                    3
-    RDB$UNIQUE_FLAG                 0
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_44
-    RDB$RELATION_NAME               RDB$BACKUP_HISTORY
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  1
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_45
-    RDB$RELATION_NAME               RDB$FILTERS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-    
-    RDB$INDEX_NAME                  RDB$INDEX_46
-    RDB$RELATION_NAME               RDB$GENERATORS
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$DESCRIPTION                 <null>
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$EXPRESSION_BLR              <null>
-    RDB$EXPRESSION_SOURCE           <null>
-    RDB$STATISTICS                  <null>
-  """
-},
 {
  'firebird_version': '2.5.2',
  'platform': 'All',
@@ -3019,23 +1577,37 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
   """,
  'expected_stdout': 
   """
-    RDB$FIELD_NAME                  RDB$DESCRIPTION                                                                              
-    RDB$FIELD_NAME                  RDB$EXPRESSION_BLR                                                                           
-    RDB$FIELD_NAME                  RDB$EXPRESSION_SOURCE                                                                        
-    RDB$FIELD_NAME                  RDB$FOREIGN_KEY                                                                              
-    RDB$FIELD_NAME                  RDB$INDEX_ID                                                                                 
-    RDB$FIELD_NAME                  RDB$INDEX_INACTIVE                                                                           
-    RDB$FIELD_NAME                  RDB$INDEX_NAME                                                                               
-    RDB$FIELD_NAME                  RDB$INDEX_TYPE                                                                               
-    RDB$FIELD_NAME                  RDB$RELATION_NAME                                                                            
-    RDB$FIELD_NAME                  RDB$SEGMENT_COUNT                                                                            
-    RDB$FIELD_NAME                  RDB$STATISTICS                                                                               
-    RDB$FIELD_NAME                  RDB$SYSTEM_FLAG                                                                              
-    RDB$FIELD_NAME                  RDB$UNIQUE_FLAG                                                                              
+    RDB$FIELD_NAME                  RDB$DESCRIPTION                                                                                                                                                                                                                                             
+
+    RDB$FIELD_NAME                  RDB$EXPRESSION_BLR                                                                                                                                                                                                                                          
+
+    RDB$FIELD_NAME                  RDB$EXPRESSION_SOURCE                                                                                                                                                                                                                                       
+
+    RDB$FIELD_NAME                  RDB$FOREIGN_KEY                                                                                                                                                                                                                                             
+
+    RDB$FIELD_NAME                  RDB$INDEX_ID                                                                                                                                                                                                                                                
+
+    RDB$FIELD_NAME                  RDB$INDEX_INACTIVE                                                                                                                                                                                                                                          
+
+    RDB$FIELD_NAME                  RDB$INDEX_NAME                                                                                                                                                                                                                                              
+
+    RDB$FIELD_NAME                  RDB$INDEX_TYPE                                                                                                                                                                                                                                              
+
+    RDB$FIELD_NAME                  RDB$RELATION_NAME                                                                                                                                                                                                                                           
+
+    RDB$FIELD_NAME                  RDB$SEGMENT_COUNT                                                                                                                                                                                                                                           
+
+    RDB$FIELD_NAME                  RDB$STATISTICS                                                                                                                                                                                                                                              
+
+    RDB$FIELD_NAME                  RDB$SYSTEM_FLAG                                                                                                                                                                                                                                             
+
+    RDB$FIELD_NAME                  RDB$UNIQUE_FLAG                                                                                                                                                                                                                                             
+
+
     Records affected: 13
 
-    RDB$INDEX_NAME                  RDB$INDEX_0                                                                                  
-    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$INDEX_NAME                  RDB$INDEX_0                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                                                                                                                                                                               
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3048,8 +1620,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_1                                                                                  
-    RDB$RELATION_NAME               RDB$RELATIONS                                                                                
+    RDB$INDEX_NAME                  RDB$INDEX_1                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$RELATIONS                                                                                                                                                                                                                                               
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3062,8 +1634,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_10                                                                                 
-    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$INDEX_NAME                  RDB$INDEX_10                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                                                                                                                                                                                      
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               2
@@ -3076,8 +1648,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_11                                                                                 
-    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$INDEX_NAME                  RDB$INDEX_11                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                                                                                                                                                                                              
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3090,8 +1662,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_12                                                                                 
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$INDEX_NAME                  RDB$INDEX_12                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                                                                                                                                                                                    
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3104,8 +1676,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_13                                                                                 
-    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                          
+    RDB$INDEX_NAME                  RDB$INDEX_13                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$REF_CONSTRAINTS                                                                                                                                                                                                                                         
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3118,8 +1690,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_14                                                                                 
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$INDEX_NAME                  RDB$INDEX_14                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                                                                                                                                                                                       
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3132,8 +1704,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_15                                                                                 
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$INDEX_NAME                  RDB$INDEX_15                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                                                                                                                                                                                         
     RDB$INDEX_ID                    3
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               2
@@ -3146,8 +1718,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_16                                                                                 
-    RDB$RELATION_NAME               RDB$FORMATS                                                                                  
+    RDB$INDEX_NAME                  RDB$INDEX_16                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FORMATS                                                                                                                                                                                                                                                 
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               2
@@ -3160,8 +1732,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_17                                                                                 
-    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$INDEX_NAME                  RDB$INDEX_17                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                                                                                                                                                                                 
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               2
@@ -3174,8 +1746,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_18                                                                                 
-    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$INDEX_NAME                  RDB$INDEX_18                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                                                                                                                                                                                    
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               3
@@ -3188,8 +1760,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_19                                                                                 
-    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
+    RDB$INDEX_NAME                  RDB$INDEX_19                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                                                                                                                                                                                          
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3202,8 +1774,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_2                                                                                  
-    RDB$RELATION_NAME               RDB$FIELDS                                                                                   
+    RDB$INDEX_NAME                  RDB$INDEX_2                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$FIELDS                                                                                                                                                                                                                                                  
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3216,8 +1788,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_20                                                                                 
-    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
+    RDB$INDEX_NAME                  RDB$INDEX_20                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                                                                                                                                                                                              
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3230,79 +1802,9 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_21                                                                                 
-    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
+    RDB$INDEX_NAME                  RDB$INDEX_21                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                                                                                                                                                                                              
     RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$SEGMENT_COUNT               2
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_22                                                                                 
-    RDB$RELATION_NAME               RDB$PROCEDURES                                                                               
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_23                                                                                 
-    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 1
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_24                                                                                 
-    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                               
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_25                                                                                 
-    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                           
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 1
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_26                                                                                 
-    RDB$RELATION_NAME               RDB$COLLATIONS                                                                               
-    RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               2
     RDB$INDEX_INACTIVE              0
@@ -3314,24 +1816,10 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_27                                                                                 
-    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_28                                                                                 
-    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                             
+    RDB$INDEX_NAME                  RDB$INDEX_22                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PROCEDURES                                                                                                                                                                                                                                              
     RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
+    RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
     RDB$INDEX_INACTIVE              0
     RDB$INDEX_TYPE                  <null>
@@ -3342,64 +1830,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_29                                                                                 
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_3                                                                                  
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_30                                                                                 
-    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                          
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_31                                                                                 
-    RDB$RELATION_NAME               RDB$INDICES                                                                                  
-    RDB$INDEX_ID                    2
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_32                                                                                 
-    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                             
+    RDB$INDEX_NAME                  RDB$INDEX_23                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                                                                                                                                                                                              
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3412,8 +1844,78 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_33                                                                                 
-    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$INDEX_NAME                  RDB$INDEX_24                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$EXCEPTIONS                                                                                                                                                                                                                                              
+    RDB$INDEX_ID                    2
+    RDB$UNIQUE_FLAG                 1
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_25                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$CHARACTER_SETS                                                                                                                                                                                                                                          
+    RDB$INDEX_ID                    2
+    RDB$UNIQUE_FLAG                 1
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_26                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$COLLATIONS                                                                                                                                                                                                                                              
+    RDB$INDEX_ID                    2
+    RDB$UNIQUE_FLAG                 1
+    RDB$SEGMENT_COUNT               2
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_27                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                                                                                                                                                                                            
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               2
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_28                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$DEPENDENCIES                                                                                                                                                                                                                                            
+    RDB$INDEX_ID                    2
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               3
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_29                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                                                                                                                                                                                         
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3426,8 +1928,22 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_34                                                                                 
-    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                           
+    RDB$INDEX_NAME                  RDB$INDEX_3                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                                                                                                                                                                                         
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_30                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$USER_PRIVILEGES                                                                                                                                                                                                                                         
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3440,50 +1956,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_35                                                                                 
-    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                         
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_36                                                                                 
-    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                         
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_37                                                                                 
-    RDB$RELATION_NAME               RDB$TYPES                                                                                    
-    RDB$INDEX_ID                    1
-    RDB$UNIQUE_FLAG                 0
-    RDB$SEGMENT_COUNT               1
-    RDB$INDEX_INACTIVE              0
-    RDB$INDEX_TYPE                  <null>
-    RDB$SYSTEM_FLAG                 1
-    RDB$STATISTICS                  <null>
-    RDB$FOREIGN_KEY                 <null>
-    DECRIPTN_BLOB_ID                <null>
-    EXPR_BLR_BLOB_ID                <null>
-    EXPR_SRC_BLOB_ID                <null>
-
-    RDB$INDEX_NAME                  RDB$INDEX_38                                                                                 
-    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$INDEX_NAME                  RDB$INDEX_31                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$INDICES                                                                                                                                                                                                                                                 
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3496,8 +1970,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_39                                                                                 
-    RDB$RELATION_NAME               RDB$ROLES                                                                                    
+    RDB$INDEX_NAME                  RDB$INDEX_32                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                                                                                                                                                                                            
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3510,8 +1984,22 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_4                                                                                  
-    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                          
+    RDB$INDEX_NAME                  RDB$INDEX_33                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                                                                                                                                                                                          
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_34                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$VIEW_RELATIONS                                                                                                                                                                                                                                          
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3524,8 +2012,50 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_40                                                                                 
-    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                        
+    RDB$INDEX_NAME                  RDB$INDEX_35                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$TRIGGER_MESSAGES                                                                                                                                                                                                                                        
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_36                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FIELD_DIMENSIONS                                                                                                                                                                                                                                        
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_37                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$TYPES                                                                                                                                                                                                                                                   
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_38                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                                                                                                                                                                                
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3538,8 +2068,50 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_41                                                                                 
-    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$INDEX_NAME                  RDB$INDEX_39                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$ROLES                                                                                                                                                                                                                                                   
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 1
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_4                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$RELATION_FIELDS                                                                                                                                                                                                                                         
+    RDB$INDEX_ID                    2
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_40                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$CHECK_CONSTRAINTS                                                                                                                                                                                                                                       
+    RDB$INDEX_ID                    2
+    RDB$UNIQUE_FLAG                 0
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_41                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$INDICES                                                                                                                                                                                                                                                 
     RDB$INDEX_ID                    3
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3552,8 +2124,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_42                                                                                 
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$INDEX_NAME                  RDB$INDEX_42                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                                                                                                                                                                                    
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               2
@@ -3566,8 +2138,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_43                                                                                 
-    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                     
+    RDB$INDEX_NAME                  RDB$INDEX_43                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$RELATION_CONSTRAINTS                                                                                                                                                                                                                                    
     RDB$INDEX_ID                    3
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3580,8 +2152,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_44                                                                                 
-    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$INDEX_NAME                  RDB$INDEX_44                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                                                                                                                                                                                          
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               2
@@ -3594,8 +2166,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_45                                                                                 
-    RDB$RELATION_NAME               RDB$FILTERS                                                                                  
+    RDB$INDEX_NAME                  RDB$INDEX_45                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FILTERS                                                                                                                                                                                                                                                 
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3608,8 +2180,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_46                                                                                 
-    RDB$RELATION_NAME               RDB$GENERATORS                                                                               
+    RDB$INDEX_NAME                  RDB$INDEX_46                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$GENERATORS                                                                                                                                                                                                                                              
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3622,8 +2194,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_47                                                                                 
-    RDB$RELATION_NAME               RDB$PACKAGES                                                                                 
+    RDB$INDEX_NAME                  RDB$INDEX_47                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PACKAGES                                                                                                                                                                                                                                                
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3636,8 +2208,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_48                                                                                 
-    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$INDEX_NAME                  RDB$INDEX_48                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                                                                                                                                                                                    
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3650,8 +2222,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_49                                                                                 
-    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$INDEX_NAME                  RDB$INDEX_49                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                                                                                                                                                                                      
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3664,8 +2236,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_5                                                                                  
-    RDB$RELATION_NAME               RDB$INDICES                                                                                  
+    RDB$INDEX_NAME                  RDB$INDEX_5                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$INDICES                                                                                                                                                                                                                                                 
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3678,8 +2250,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_50                                                                                 
-    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                     
+    RDB$INDEX_NAME                  RDB$INDEX_50                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PROCEDURE_PARAMETERS                                                                                                                                                                                                                                    
     RDB$INDEX_ID                    3
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               2
@@ -3692,8 +2264,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_51                                                                                 
-    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                       
+    RDB$INDEX_NAME                  RDB$INDEX_51                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FUNCTION_ARGUMENTS                                                                                                                                                                                                                                      
     RDB$INDEX_ID                    3
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               2
@@ -3706,8 +2278,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_52                                                                                 
-    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                             
+    RDB$INDEX_NAME                  RDB$INDEX_52                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$AUTH_MAPPING                                                                                                                                                                                                                                            
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3720,8 +2292,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_53                                                                                 
-    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$INDEX_NAME                  RDB$INDEX_53                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                                                                                                                                                                               
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3734,8 +2306,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_54                                                                                 
-    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                           
+    RDB$INDEX_NAME                  RDB$INDEX_54                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$BACKUP_HISTORY                                                                                                                                                                                                                                          
     RDB$INDEX_ID                    2
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3748,8 +2320,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_6                                                                                  
-    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                           
+    RDB$INDEX_NAME                  RDB$INDEX_6                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                                                                                                                                                                                          
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 0
     RDB$SEGMENT_COUNT               1
@@ -3762,8 +2334,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_7                                                                                  
-    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                         
+    RDB$INDEX_NAME                  RDB$INDEX_7                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                                                                                                                                                                                        
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3776,8 +2348,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_8                                                                                  
-    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                 
+    RDB$INDEX_NAME                  RDB$INDEX_8                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$TRIGGERS                                                                                                                                                                                                                                                
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               1
@@ -3790,8 +2362,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
-    RDB$INDEX_NAME                  RDB$INDEX_9                                                                                  
-    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                
+    RDB$INDEX_NAME                  RDB$INDEX_9                                                                                                                                                                                                                                                 
+    RDB$RELATION_NAME               RDB$FUNCTIONS                                                                                                                                                                                                                                               
     RDB$INDEX_ID                    1
     RDB$UNIQUE_FLAG                 1
     RDB$SEGMENT_COUNT               2
@@ -3803,6 +2375,8 @@ RDB$INDEX_43                    RDB$RELATION_CONSTRAINTS                   3    
     DECRIPTN_BLOB_ID                <null>
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
+
+
     Records affected: 55
   """,
   'substitutions': [
