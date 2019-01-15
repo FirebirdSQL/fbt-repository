@@ -3,7 +3,14 @@
 'qmid': 'functional.basic.db.db_31',
 'tracker_id': '',
 'title': 'Empty DB - RDB$USER_PRIVILEGES',
-'description': 'Check for correct content of RDB$USER_PRIVILEGES in empty database.',
+'description': 
+ """
+    Check for correct content of RDB$USER_PRIVILEGES in empty database.',
+    Checked on:
+        2.5.9.27126: OK, 0.437s.
+        3.0.5.33086: OK, 1.422s.
+        4.0.0.1378: OK, 5.781s.
+ """
 'min_versions': '2.5.7',
 'versions': [
 {
@@ -6179,7 +6186,6 @@
   """,
  'expected_stdout': 
   """
-
     RDB$USER                        22                                                                                                                                                                                                                                                          
     RDB$GRANTOR                     <null>
     RDB$PRIVILEGE                   D     
@@ -6671,6 +6677,15 @@
     RDB$PRIVILEGE                   S     
     RDB$GRANT_OPTION                0
     RDB$RELATION_NAME               RDB$SECURITY_CLASSES                                                                                                                                                                                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        PUBLIC                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                0
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 0
@@ -9233,6 +9248,15 @@
 
     RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
     RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$DBTZ_VERSION                                                                                                                                                                                                                                            
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
     RDB$PRIVILEGE                   D     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$DB_CREATORS                                                                                                                                                                                                                                             
@@ -11375,6 +11399,96 @@
 
     RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
     RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   D     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   I     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   R     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   S     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   U     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONES                                                                                                                                                                                                                                              
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 0
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONE_ID                                                                                                                                                                                                                                            
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONE_NAME                                                                                                                                                                                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONE_OFFSET                                                                                                                                                                                                                                        
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 18
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
     RDB$PRIVILEGE                   D     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$TRANSACTIONS                                                                                                                                                                                                                                            
@@ -12346,7 +12460,7 @@
     RDB$OBJECT_TYPE                 17
 
 
-    Records affected: 685
+    Records affected: 697
   """
 }
 ]
