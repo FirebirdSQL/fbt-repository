@@ -2,14 +2,196 @@
 'id': 'functional.basic.db.19',
 'qmid': 'functional.basic.db.db_19',
 'tracker_id': '',
-'title': 'Empty DB - RDB$PROCEDURE_PARAMETERS',
-'description': 'Check for correct content of RDB$PROCEDURE_PARAMETERS in empty database.',
+'title': 'New DB - RDB$PROCEDURE_PARAMETERS',
+'description': 
+  """
+    Check for correct content of RDB$PROCEDURE_PARAMETERS in a new database.
+    Checked on:
+        2.5.9.27126: OK, 0.485s.
+        3.0.5.33086: OK, 1.000s.
+        4.0.0.1378: OK, 5.078s.
+  """,
 'versions': [
 {
- 'firebird_version': '1.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$PROCEDURE_PARAMETERS;'
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+    select *
+    from rdb$procedure_parameters
+    order by rdb$procedure_name,rdb$parameter_name,rdb$parameter_number;
+  """,
+ 'expected_stdout': 
+  """
+    Records affected: 0
+  """
+},
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+    select *
+    from rdb$procedure_parameters
+    order by rdb$procedure_name,rdb$parameter_name,rdb$parameter_number;
+  """,
+ 'expected_stdout': 
+  """
+    Records affected: 0
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+    select *
+    from rdb$procedure_parameters
+    order by rdb$procedure_name,rdb$parameter_name,rdb$parameter_number;
+  """,
+ 'expected_stdout': 
+  """
+    RDB$PARAMETER_NAME              DST_OFFSET                                                                                                                                                                                                                                                  
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            3
+    RDB$PARAMETER_TYPE              1
+    RDB$FIELD_SOURCE                RDB$TIME_ZONE_OFFSET                                                                                                                                                                                                                                        
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              EFFECTIVE_OFFSET                                                                                                                                                                                                                                            
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            4
+    RDB$PARAMETER_TYPE              1
+    RDB$FIELD_SOURCE                RDB$TIME_ZONE_OFFSET                                                                                                                                                                                                                                        
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              END_TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            1
+    RDB$PARAMETER_TYPE              1
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              FROM_TIMESTAMP                                                                                                                                                                                                                                              
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            1
+    RDB$PARAMETER_TYPE              0
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              START_TIMESTAMP                                                                                                                                                                                                                                             
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            0
+    RDB$PARAMETER_TYPE              1
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              TIME_ZONE_NAME                                                                                                                                                                                                                                              
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            0
+    RDB$PARAMETER_TYPE              0
+    RDB$FIELD_SOURCE                RDB$TIME_ZONE_NAME                                                                                                                                                                                                                                          
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              TO_TIMESTAMP                                                                                                                                                                                                                                                
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            2
+    RDB$PARAMETER_TYPE              0
+    RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+    RDB$PARAMETER_NAME              ZONE_OFFSET                                                                                                                                                                                                                                                 
+    RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NUMBER            2
+    RDB$PARAMETER_TYPE              1
+    RDB$FIELD_SOURCE                RDB$TIME_ZONE_OFFSET                                                                                                                                                                                                                                        
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$NULL_FLAG                   1
+    RDB$PARAMETER_MECHANISM         0
+    RDB$FIELD_NAME                  <null>
+    RDB$RELATION_NAME               <null>
+    RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
+
+
+    Records affected: 8
+
+  """
 }
 ]
 }
