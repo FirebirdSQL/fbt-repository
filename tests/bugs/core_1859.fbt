@@ -2,102 +2,55 @@
 'id': 'bugs.core_1859',
 'qmid': None,
 'tracker_id': 'CORE-1859',
-'title': 'Arithmetic overflow or division by zero has occurred. in MAX function',
+'title': "Arithmetic overflow or division by zero has occurred. in MAX function",
 'description':
-  """
-    Confirmed bug on 2.1.0.17798 - got:
-    ===
-        Statement failed, SQLCODE = -802
-        arithmetic exception, numeric overflow, or string truncation
-    ===
-    Checked on: 2.1.1.17910 -- no error, and also:
-        2.5.9.27107: OK, 9.562s.
-        3.0.4.32924: OK, 17.468s.
-        4.0.0.916: OK, 20.219s.
-
-    Note. Warnings are issued during restore process:
-        gbak: WARNING:function DATETOSTR is not defined
-        gbak: WARNING:    module name or entrypoint could not be found
-    - we have to ignore these messages from analysis.
-    Restore on 2.1.x lasts about 12-13 seconds.
-  """,
-'min_versions': '2.5.0',
+ """
+     It was found that error raises in 2.1.0.17798 when we create table with two fields
+     of UNICODE_FSS type and add there six rows. Content of fields were taken from table
+     rdb$procedure_parameters of empty database.
+     Data that are inserted have been found after several simplifications of source DB.
+     Exception that raised:
+     ===
+         Statement failed, SQLCODE = -802
+         arithmetic exception, numeric overflow, or string truncation
+     ===
+     Checked on: 
+        2.1.1.17910 -- no error.
+        2.5.9.27126: OK, 0.672s.
+        3.0.5.33086: OK, 1.343s.
+        4.0.0.1378: OK, 5.797s.
+ """,
+'min_versions': '2.1.7',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '2.1',
  'platform': 'All',
- 'init_script':
+ 'init_script': 
   """
   """,
- 'test_type': 'Python',
+ 'test_type': 'ISQL',
  'test_script': 
   """
-import os
-import time
-import zipfile
-import subprocess
+    recreate table test( param_name rdb$parameter_name, proc_name rdb$procedure_name );
+    commit;
+    insert into test values('A1',  'ABCDEFGHIJK');
+    insert into test values('A',   'ASDFGHJKL');
+    commit;
 
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-
-db_conn.close()
-
-zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_1859.zip') )
-tmpfbk = 'core_1859.fbk'
-zf.extract( tmpfbk, '$(DATABASE_LOCATION)')
-zf.close()
-
-tmpfbk='$(DATABASE_LOCATION)'+tmpfbk
-tmpfdb='$(DATABASE_LOCATION)'+'tmp_arith_error_1859.fdb'
-
-f_restore_log=open( os.path.join(context['temp_directory'],'tmp_arith_error_1859.log'), 'w')
-subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
-                       "action_restore",
-                       "bkp_file", tmpfbk,
-                       "dbname", tmpfdb,
-                       "res_replace"
-                      ],
-                      stdout=f_restore_log, 
-                      stderr=subprocess.STDOUT)
-f_restore_log.close()
-
-# should be empty:
-##################
-with open( f_restore_log.name,'r') as f:
-  for line in f:
-      if 'gbak: ERROR:' in line:
-        print('UNEXPECTED STDERR in '+f_restore_log.name+': '+line)
-
-#UNEXPECTED STDERR in C:\MIX\firebird\QA\fbt-repo\tmp\tmp_arith_error_1859.log: gbak: WARNING:function DATETOSTR is not defined
-#UNEXPECTED STDERR in C:\MIX\firebird\QA\fbt-repo\tmp\tmp_arith_error_1859.log: gbak: WARNING:    module name or entrypoint could not be found
-
-sqltxt='''
     set list on;
-    select count(*) 
+    set count on;
+    select sign(count(*))
     from ( 
-        select p.rdb$parameter_name pname, max(p.rdb$procedure_name) pnmax 
-        from rdb$procedure_parameters p 
+        select t.param_name, max( t.proc_name ) pnmax 
+        from 
+        ( select t.param_name, t.proc_name from test t rows 6 ) t
         group by 1
     );
-'''
-
-runProgram('isql', [ 'localhost:'+tmpfdb,'-q' ], sqltxt)
-
-#####################################################################
-# Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
-time.sleep(1)
-
-os.remove(f_restore_log.name)
-os.remove(tmpfdb)
-os.remove(tmpfbk)
-
   """,
  'expected_stdout': 
   """
-    COUNT                           786
+    SIGN                            1
+    Records affected: 1
   """,
  'expected_stderr': 
   """
