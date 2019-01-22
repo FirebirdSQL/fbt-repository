@@ -3,7 +3,13 @@
 'qmid': '',
 'tracker_id': 'CORE-3003',
 'title': "Procedure suspend check may cause restore to fail",
-'description': '',
+'description':
+ """
+    Checked on:
+        2.5.9.27126: OK, 0.859s.
+        3.0.5.33086: OK, 1.937s.
+        4.0.0.1378: OK, 7.516s.
+ """,
 'min_versions': '2.1',
 'versions': [
 {
@@ -15,8 +21,16 @@
  'test_script':
   """
     set list on;
-    select rdb$procedure_name, rdb$procedure_source from rdb$procedures order by rdb$procedure_name;
-    select RDB$PROCEDURE_NAME, RDB$PARAMETER_NAME, RDB$PARAMETER_TYPE,RDB$PARAMETER_MECHANISM from rdb$procedure_parameters;
+    select rdb$procedure_name, rdb$procedure_source 
+    from rdb$procedures 
+    where upper( rdb$procedure_name ) in ( upper('sp_01'), upper('sp_02') )
+    order by rdb$procedure_name
+    ;
+
+    select RDB$PROCEDURE_NAME, RDB$PARAMETER_NAME, RDB$PARAMETER_TYPE,RDB$PARAMETER_MECHANISM 
+    from rdb$procedure_parameters
+    where upper( rdb$procedure_name ) in ( upper('sp_01'), upper('sp_02') )
+    ;
   """,
  'expected_stdout': 
   """
