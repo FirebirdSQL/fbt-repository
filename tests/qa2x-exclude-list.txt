@@ -1,0 +1,4 @@
+bugs.core_1544
+bugs.core_2668
+bugs.core_2966
+bugs.core_3058
