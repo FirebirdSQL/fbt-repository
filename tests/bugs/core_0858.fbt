@@ -103,6 +103,29 @@ PDOKUMENTID
  'expected_stderr': 
   """
   """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+     -- This section was intentionally left empty.
+     -- No message should be in expected_* sections.
+     -- It is STRONGLY RECOMMENDED to add this ticket
+     -- in the 'excluded-list file:
+     -- %FBT_REPO%\tests\qa4x-exclude-list.txt
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
 }
+
 ]
 }
