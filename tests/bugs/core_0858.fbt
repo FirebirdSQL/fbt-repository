@@ -9,6 +9,15 @@
         2.5.9.27126: OK, 0.594s.
         3.0.5.33086: OK, 1.343s.
         4.0.0.1378: OK, 6.969s.
+
+    24.01.2019. 
+    Disabled this test to be run on FB 4.0: added record to '%FBT_REPO%\tests\qa4x-exclude-list.txt'.
+
+    UDF usage is deprecated in FB 4+, see: ".../doc/README.incompatibilities.3to4.txt".
+    Functions div, frac, dow, sdow, getExactTimestampUTC and isLeapYear got safe replacement 
+    in UDR library "udf_compat", see it in folder: ../plugins/udr/
+
+    UDF function 'sright' has direct built-in analog 'right', there is no UDR function for it.
  """,
 'versions': [
 {
