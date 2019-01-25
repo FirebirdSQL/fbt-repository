@@ -5,8 +5,20 @@
 'title': 'LEFT JOIN incorrectly pushes UDF into the inner stream causing wrong results',
 'description':
  """
-   Confirmed  on 3.0.1.32597, 4.0.0.371 (wrong result).
-   Works fine on 3.0.1.32598, 4.0.0.372,
+    25.01.2019: totally changed: use ticket author's sample + dimitr's suggestion 
+    to operate with usual PSQL fcuntion (rather than UDF). 
+    Thus test nothing has to do with UDF or UDR.
+    Checked on:
+        3.0.5.33086: OK, 1.891s.
+        4.0.0.1172: OK, 6.703s.
+        4.0.0.1340: OK, 2.953s.
+        4.0.0.1378: OK, 3.312s.
+   Confirmed wrong result on 
+       WI-V3.0.0.32136 (Release Candidate 1; 06.11.2015) and 4.0.0.98 (30.03.2016)
+
+   Old comment:
+       Confirmed  on 3.0.1.32597, 4.0.0.371 (wrong result).
+       Works fine on 3.0.1.32598, 4.0.0.372,
  """,
 'min_versions': '3.0.1',
 'versions': [
@@ -19,101 +31,47 @@
  'test_type': 'ISQL',
  'test_script': 
   """
+    set bail on;
     set term ^;
-    execute block as
-    begin
-      execute statement 'drop function udf_strlen';
-      when any do begin end
-    end^
+    create or alter function psql_strlen (val varchar(10)) returns int as 
+    begin 
+      return char_length(coalesce(val, '')); 
+    end
+    ^
     set term ;^
     commit;
 
-    declare external function udf_strlen cstring(32765) returns integer by value entry_point 'IB_UDF_strlen' module_name 'ib_udf';
-    
-    set term ^;
-    create or alter function psql_strlen (val varchar(32765))
-      returns int
-    as
-    begin
-      return nullif(char_length(coalesce(val, '')), 32765);
-    end 
-    ^
+    recreate table test_table1 ( 
+        id integer not null, 
+        testtable2_id integer 
+    ); 
 
-    recreate package pkg_test as
-    begin
-        function pkg_strlen(val varchar(32765)) returns bigint;
-    end
-    ^
-    create package body pkg_test as
-    begin
-        function pkg_strlen(val varchar(32765)) returns bigint as
-        begin
-            return nullif(char_length(coalesce(val, '')), 32765);
-        end
-    end
-    ^
+    alter table test_table1 add primary key (id); 
+    commit; 
 
-    set term ;^
-    commit;
+    recreate table test_table2 ( 
+        id integer not null, 
+        groupcode varchar(10) 
+    ); 
+    alter table test_table2 add primary key (id); 
+    commit; 
 
-   
-    recreate table test_table1 (
-        id int primary key ,
-        testtable2_id int
-    );
-
-    recreate table test_table2 (
-        id int primary key,
-        groupcode varchar(32765)
-    );
-    commit;
-
-
-    insert into test_table1 (id,testtable2_id) values (1,101);
-    insert into test_table1 (id,testtable2_id) values (2,102);
-    insert into test_table1 (id,testtable2_id) values (3,103);
-    insert into test_table2 (id,groupcode) values (101,'a');
-    insert into test_table2 (id,groupcode) values (102, rpad('',32765, uuid_to_char(gen_uuid())) );
-    insert into test_table2 (id,groupcode) values (103, null);
-    commit;
+    insert into test_table1 (id,testtable2_id) values (1,100); 
+    insert into test_table2 (id,groupcode) values (100,'a'); 
+    commit; 
 
     set count on;
     set list on;
 
-    select t1.*, psql_strlen(t2.groupcode)
-    from test_table1 t1
-    left join test_table2 t2 on  t2.id = t1.testtable2_id 
-    where psql_strlen(t2.groupcode) in(0, null, 32765)
-    ;
+    select t1.id 
+    from test_table1 t1 
+    left join test_table2 t2 on t2.id=t1.testtable2_id
+    where psql_strlen(t2.groupcode) = 0 ;
 
-    select t1.*, pkg_test.pkg_strlen(t2.groupcode)
-    from test_table1 t1
-    left join test_table2 t2 on  t2.id = t1.testtable2_id 
-    where pkg_test.pkg_strlen(t2.groupcode)  in(0, null, 32765)
-    ;
-
-    select t1.*, udf_strlen(t2.groupcode)
-    from test_table1 t1
-    left join test_table2 t2 on t2.id = t1.testtable2_id
-    where nullif(udf_strlen(t2.groupcode),32765) in(0, null, 32765)
-    ;
   """,
   'expected_stdout':
   """
-    ID                              3
-    TESTTABLE2_ID                   103
-    PSQL_STRLEN                     0
-    Records affected: 1
-
-    ID                              3
-    TESTTABLE2_ID                   103
-    PKG_STRLEN                      0
-    Records affected: 1
-
-    ID                              3
-    TESTTABLE2_ID                   103
-    UDF_STRLEN                      0
-    Records affected: 1
+    Records affected: 0
   """,
   'expected_stderr':
   """
