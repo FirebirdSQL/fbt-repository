@@ -3,7 +3,16 @@
 'qmid': None,
 'tracker_id': 'CORE-2350',
 'title': 'Too long column name for select alias should be rejected',
-'description': '',
+'description':
+  """
+      26.01.2019, code for FB 4.0: added filtering 'where rdb$system_flag is distinct from 1' for query to rdb$procedures.
+      Currently there is one system-defined package (RDB$TIME_ZONE_UTIL) and one stand-alone procedure (RDB$TRANSITIONS)
+      Checked on:
+        3.0.4.33034: OK, 2.906s.
+        3.0.5.33097: OK, 1.453s.
+        4.0.0.1340: OK, 2.328s.
+        4.0.0.1410: OK, 2.453s.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -217,7 +226,7 @@
     commit;
     set list on;
     set count on;
-    select rdb$procedure_name from rdb$procedures;
+    select rdb$procedure_name from rdb$procedures where rdb$system_flag is distinct from 1;
   
   """,
  'expected_stdout': 
