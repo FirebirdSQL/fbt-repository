@@ -5,6 +5,21 @@
 'title': 'Creating external function (udf) to not existing dll - and then procedure with it - crash server',
 'description':
  """
+
+    *** FOR FB 4.X AND ABOVE  ***
+        Added separate code for running on FB 4.0.x: we use create UDR function statement and specify
+        non-existent library 'unknown_udf!UC_div'. The statement per se will pass and rdb$functions
+        *will* contain record for just created function. But following COMMT will raise exception:
+            Statement failed, SQLSTATE = HY000
+            UDR module not loaded
+            <localized message here>
+        Then we rollback and query rdb$functions again. No record about this function must be there.
+
+        STDERR is ignored in this test because of localized message about missed library.
+        Checked on:
+            4.0.0.1172: OK, 7.344s.
+            4.0.0.1340: OK, 2.797s.
+            4.0.0.1378: OK, 3.062s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -90,6 +105,118 @@ for i in range(len(f_list)):
     -module name or entrypoint could not be found
   """,
   'substitutions':[('.* at offset.*', '.* at offset')]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+#import re
+import subprocess
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+# STDERR: Statement failed, SQLSTATE = HY000
+# STDERR: UDR module not loaded
+#allowed_patterns = ( re.compile( '\.*SQLSTATE\s*=\s*HY000', re.IGNORECASE),
+#                     re.compile( '\.*UDR\s+module\s+not\s+(found|loaded)\.*', re.IGNORECASE),
+#                   )
+
+sql_text=\
+'''
+    recreate view v_check as
+    select rdb$function_name, rdb$entrypoint, rdb$engine_name, rdb$legacy_flag 
+    from rdb$functions 
+    where rdb$system_flag is distinct from 1 and rdb$function_name starting with upper( 'the_' )
+    ;
+    commit;
+
+    set list on;
+    set term ^;
+    execute block returns( o_gdscode int ) as
+    begin
+        begin
+            execute statement 
+              q'{
+                    create function the_div (
+                        n1 integer,
+                        n2 integer
+                    ) returns double precision
+                        external name 'unknown_udf!UC_div'
+                        engine udr
+                }';
+                -- was: external name 'udf_compat!UC_div'
+
+        when any do
+            begin
+                o_gdscode = gdscode;
+            end
+        end
+        suspend;
+    end
+    ^
+    set term ;^
+
+    commit;
+
+    set blob all;
+    set count on;
+
+    select * from v_check;
+    rollback;
+
+    select * from v_check;
+    rollback;
+'''
+
+f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_4172.sql') , 'w')
+f_sql_chk.write(sql_text)
+f_sql_chk.close()
+
+f_sql_log=open( os.path.join(context['temp_directory'],'tmp_4172.log'), 'w')
+fn_nul = open(os.devnull, 'w')
+subprocess.call( [ fb_home+'isql', dsn, '-i', f_sql_chk.name], stdout = f_sql_log, stderr = fn_nul)
+
+f_sql_log.close()
+fn_nul.close()
+
+with open( f_sql_log.name,'r') as f:
+    for line in f:
+        if line.split():
+            print( ' '.join( line.split() ) )
+f.close()
+
+# CLEANUP
+#########
+f_list=(f_sql_chk, f_sql_log)
+
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout': 
+  """
+    O_GDSCODE <null>
+    RDB$FUNCTION_NAME THE_DIV
+    RDB$ENTRYPOINT unknown_udf!UC_div
+    RDB$ENGINE_NAME UDR
+    RDB$LEGACY_FLAG 0
+    Records affected: 1
+    Records affected: 0
+  """,
+ 'expected_stderr': 
+  """
+  """
 }
 ]
 }
