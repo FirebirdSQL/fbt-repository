@@ -3,35 +3,45 @@
 'qmid': None,
 'tracker_id': 'CORE-4735',
 'title': "Expression 'where bool_field IS true | false' should also use index as 'where bool_field = true | false' (if such index exists)",
-'description': '',
+'description':
+ """
+    Changed expected PLAN of execution after dimitr's letter 28.01.2019 17:28: 
+    'is NOT <bool>' and 'is distinct from <bool>' should use  PLAN NATURAL.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script': 
   """
   """,
  'test_script': 
   """
-    recreate table test(bar boolean primary key using index test_pk, foo boolean, "Foo" boolean, "Bar" boolean);
-    commit;
-    create index test_compound1 on test(foo, bar);
-    create index test_compound2 on test("Foo", "Bar", foo, bar);
+    recreate table test(x boolean, unique(x) using index test_x);
     commit;
 
     set plan on;
-    select * from test where bar IS true; -- PK
-    select * from test where foo IS NOT true and bar IS distinct from foo; -- compound1
-    select * from test where "Foo" IS NOT false and "Bar" IS true and foo is not distinct from bar; -- compound2
+    select 1 from test where x = true ;
+    select 1 from test where x is true ;
+    select 0 from test where x = false ;
+    select 0 from test where x is false ;
+    select 1 from test where x is not true ; -- this must have plan NATURAL, 26.01.2019
+    select 1 from test where x is distinct from true ; -- this must have plan NATURAL, 26.01.2019
+    select 1 from test where x is not false ; -- this must have plan NATURAL, 26.01.2019
+    select 1 from test where x is distinct from false ; -- this must have plan NATURAL, 26.01.2019
   """,
  'expected_stdout':
   """
-    PLAN (TEST INDEX (TEST_PK))
-    PLAN (TEST INDEX (TEST_COMPOUND1))
-    PLAN (TEST INDEX (TEST_COMPOUND2))
+    PLAN (TEST INDEX (TEST_X))
+    PLAN (TEST INDEX (TEST_X))
+    PLAN (TEST INDEX (TEST_X))
+    PLAN (TEST INDEX (TEST_X))
+    PLAN (TEST NATURAL)
+    PLAN (TEST NATURAL)
+    PLAN (TEST NATURAL)
+    PLAN (TEST NATURAL)
   """
 }
 ]
