@@ -5,6 +5,11 @@
 'title': 'Connecting to service with invalid servicename yields incorrect error message',
 'description': 
   """
+    28.01.2019. 
+    Name of service manager is ignored in FB 4.0, see http://tracker.firebirdsql.org/browse/CORE-5883
+    ("service_mgr" to be cleaned out from connection string completely...")
+    Disabled this test to be run on FB 4.0: added record to '%FBT_REPO%\tests\qa4x-exclude-list.txt'.
+    Added EMPTY section for FB version 4.0 in this .fbt as one more way to protect from running.
   """,
 'min_versions': '3.0',
 'versions': [
@@ -27,6 +32,28 @@ runProgram('fbsvcmgr',['localhost:qwe_mnb_zxc_9','user','SYSDBA','password','mas
   """
     Cannot attach to services manager
     -service qwe_mnb_zxc_9 is not defined
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+     -- This section was intentionally left empty.
+     -- No message should be in expected_* sections.
+     -- It is STRONGLY RECOMMENDED to add this ticket
+     -- in the 'excluded-list file:
+     -- %FBT_REPO%\tests\qa4x-exclude-list.txt
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
   """
 }
 ]
