@@ -2968,10 +2968,12 @@
 
     select '' as "Data:" from rdb$database;
     set count on;
+    set blob all;
     select * from rdb$types order by rdb$field_name, rdb$type_name;
   """,
  'expected_stdout': 
   """
+
     DDL of table rdb$types:         
 
 
@@ -4534,6 +4536,12 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
+    RDB$TYPE                        26
+    RDB$TYPE_NAME                   REPLICATE_INTO_DATABASE                                                                                                                                                                                                                                     
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
     RDB$TYPE                        16
     RDB$TYPE_NAME                   SELECT_ANY_OBJECT_IN_DATABASE                                                                                                                                                                                                                               
     RDB$DESCRIPTION                 <null>
@@ -4689,9 +4697,7 @@
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
-
-    Records affected: 284
-
+    Records affected: 285
   """
 }
 ]
