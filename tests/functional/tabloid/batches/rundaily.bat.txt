@@ -155,14 +155,14 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
 
     for %%f in (!FB_SNAPSHOTS_FOLDER!\Firebird-%%s.?.*-0_x64.7z) do (
         set build_7z=%%f
-        for /f %%a in ("!build_7z!") do (
-            @rem c:\some\path\to\Firebird-4.0.0.1367-0_x64 ==> Firebird-4.0.0.1367-0_x64
-            set build_no=%%~na
+        
+        @rem Get build number and major version of FB:
+        @rem INPUT: c:\some\path\to\Firebird-4.0.0.1367-0_x64
+        @rem Result: 
+        @rem    build_no = 4.0.0.1367
+        @rem    major_v  = 4.0
+        call :extract_build_info !build_7z! build_no major_v
 
-            @rem Firebird-4.0.0.1367-0_x64 ==> 4.0.0.1367
-            set build_no=!build_no:~9,-6!
-
-        )
         call :sho "Check whether '!repo_path!\archive\!build_no!' not yet exists" !QA_MAIN_LOG!
         if not exist !repo_path!\archive\!build_no! (
             
@@ -193,8 +193,20 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
             call :sho "Build: !build_no!. Completed checks of all interested server modes." !QA_MAIN_LOG!
 
             if exist !repo_path!\archive\!build_no! (
-                  call :sho "Starting UPLOAD process for build_no=!build_no!." !QA_MAIN_LOG!
+                  
+                  set qa_upload_log=!QA_LOG_FOLDER!\%~n0.upload.log
+                  del !qa_upload_log! 2>nul
+
+                  call :sho "Starting UPLOAD process for build_no=!build_no!." !qa_upload_log!
                   if .1.==.1. (
+
+
+                      @rem Old batch:
+                      @rem =============
+                      @rem set PACKAGE=%1                                     c:\path\to\Firebird-4.0.0.1367-0_x64.7z
+                      @rem set VERSION=%PACKAGE:~22,-9%    -->    !build_no!  4.0.0.1367 etc
+                      @rem set VER=%VERSION:~0,3%          -->    !major_v!   4.0
+
                       
                       @rem See in config for this batch:
                       @rem SSH_PRIVATE_KEY_FILE=!FB_SNAPSHOTS_FOLDER!\bin\upload.key
@@ -203,40 +215,157 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
 
                       set skip_msg=NOTE: IMITATED EXECUTION. Real action is SKIPPED because config parameter SSH_IMITATE_UPLOAD not equal to 0.
 
+
+                      @rem -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                      @rem old batch: mv /home/fbadmin/prerelease/results/%VER%.* /home/fbadmin/prerelease/results/archive/
+                      @rem new code:  mv /home/fbadmin/prerelease/results/4.0.*   /home/fbadmin/prerelease/results/archive/
+
                       set run_cmd=plink -i !SSH_PRIVATE_KEY_FILE! !SSH_UPLOAD_HOST_DATA! mv !SSH_RESULTS_HOME_DIR!/!major_v!.* !SSH_RESULTS_HOME_DIR!/archive/
-                      call :sho "Command: !run_cmd!" !QA_MAIN_LOG!
+                      call :sho "Command: !run_cmd!" !qa_upload_log!
                       if .!SSH_IMITATE_UPLOAD!.==.0. (
-                          cmd /c !run_cmd! 1>>!QA_MAIN_LOG! 2>&1
+                          cmd /c !run_cmd! 1>>!qa_upload_log! 2>&1
                       ) else (
-                          call :sho "!skip_msg!" !QA_MAIN_LOG!
+                          call :sho "!skip_msg!" !qa_upload_log!
                       )
+
+
+                      @rem -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                      @rem old batch: plink -i <upload-key-file> fbadmin@<ip> rm -r /home/fbadmin/prerelease/results/%VER%.*
+                      @rem new code:  plink -i <upload-key-file> fbadmin@<ip> rm -r /home/fbadmin/prerelease/results/4.0.*
 
                       set run_cmd=plink -i !SSH_PRIVATE_KEY_FILE! !SSH_UPLOAD_HOST_DATA! rm -r !SSH_RESULTS_HOME_DIR!/!major_v!.*
-                      call :sho "Command: !run_cmd!" !QA_MAIN_LOG!
+                      call :sho "Command: !run_cmd!" !qa_upload_log!
                       if .!SSH_IMITATE_UPLOAD!.==.0. (
-                          cmd /c !run_cmd! 1>>!QA_MAIN_LOG! 2>&1
+                          cmd /c !run_cmd! 1>>!qa_upload_log! 2>&1
                       ) else (
-                          call :sho "!skip_msg!" !QA_MAIN_LOG!
+                          call :sho "!skip_msg!" !qa_upload_log!
                       )
+
+                      @rem -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                      @rem old batch: mkdir /home/fbadmin/prerelease/results/%VERSION%
+                      @rem new code:  mkdir /home/fbadmin/prerelease/results/4.0.0.1411
 
                       set run_cmd=plink -i !SSH_PRIVATE_KEY_FILE! !SSH_UPLOAD_HOST_DATA! mkdir !SSH_RESULTS_HOME_DIR!/!build_no!
-                      call :sho "Command: !run_cmd!" !QA_MAIN_LOG!
+                      call :sho "Command: !run_cmd!" !qa_upload_log!
                       if .!SSH_IMITATE_UPLOAD!.==.0. (
-                          cmd /c !run_cmd! 1>>!QA_MAIN_LOG! 2>&1
+                          cmd /c !run_cmd! 1>>!qa_upload_log! 2>&1
                       ) else (
-                          call :sho "!skip_msg!" !QA_MAIN_LOG!
+                          call :sho "!skip_msg!" !qa_upload_log!
                       )
 
+
+                      @rem -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+                      @rem old batch: pscp -i <upload-key-file> -r %REPO_PATH%\archive\%VERSION%\*.html fbadmin@<ip>:/home/fbadmin/prerelease/results/%VERSION%/
+                      @rem new code:  pscp -i <upload-key-file> -r C:\FirebirdQA\fbt-repository\archive\4.0.0.1411\*.html fbadmin@<ip>:/home/fbadmin/prerelease/results/4.0.0.1411/
+
                       set run_cmd=pscp -i !SSH_PRIVATE_KEY_FILE! -r !repo_path!\archive\!build_no!\*.html !SSH_UPLOAD_HOST_DATA!:!SSH_RESULTS_HOME_DIR!/!build_no!/
-                      call :sho "Command: !run_cmd!" !QA_MAIN_LOG!
+                      call :sho "Command: !run_cmd!" !qa_upload_log!
                       if .!SSH_IMITATE_UPLOAD!.==.0. (
-                          cmd /c !run_cmd! 1>>!QA_MAIN_LOG! 2>&1
+                          cmd /c !run_cmd! 1>>!qa_upload_log! 2>&1
                       ) else (
-                          call :sho "!skip_msg!" !QA_MAIN_LOG!
+                          call :sho "!skip_msg!" !qa_upload_log!
                       )
 
                   )
-                  call :sho "Completed upload process for build_no=!build_no!." !QA_MAIN_LOG!
+                  call :sho "Completed upload process for build_no=!build_no!." !qa_upload_log!
+                  type !qa_upload_log! >>!QA_MAIN_LOG!
+
+                  @rem Now we have to send as separate message to e-mail content of !qa_upload_log! -- result of uploadings:
+
+                  @rem |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+                  if NOT .!curl_bin!.==.. (
+
+                      @rem https://curl.haxx.se/mail/lib-2012-01/0121.html
+
+                      for /f %%a in ("!QA_MAIN_LOG!") do (
+                          set tmp_log=%%~dpna.tmp
+                          set tm2=%%~dpna.tm2
+                      )
+                      
+                      set dump_eml=%QA_LOG_FOLDER%\%~n0.email.log
+                      set curl_cmd=!curl_bin! !curl_opt! --upload-file "!dump_eml!"
+
+                      @rem 25.06.2018:
+                      @rem We have to remove parenthesis from name of file that will be specified in cUrl "--upload-file" command swicth,
+                      @rem otherwise cUrl raises excetption like "curl: (56) Send failure: Connection was aborted" and does NOT send file!
+                      set dump_eml=!dump_eml:(=_!
+                      set dump_eml=!dump_eml:^)=_!
+
+                      call :sho "Start sending e-mail with UPLOAD results. File with message body: !dump_eml!" !QA_MAIN_LOG!
+
+                      set mail_subj=!mail_hdr_subj! !build_no! !FB_CHECKED_MODES! !ymd!_!hms!: upload results.
+
+                      (
+                          echo From: ^<!mail_hdr_from!^>
+                          echo To: ^<!mail_hdr_to!^>
+                          echo Subject: !mail_subj!
+                          echo MIME-Version: 1.0
+                          @rem ### BODY of message ###
+                          echo Content-Type: text/plain
+                          echo.
+                      ) >!dump_eml!
+
+                      @rem Add log of UPLOADING commands to message BODY:
+                      type !qa_upload_log! >>!dump_eml!
+                      del !qa_upload_log!
+                      call :sho "File !dump_eml! has been created." !QA_MAIN_LOG!
+
+                      set /a eml_result=1
+                      
+                      (
+                          echo mail_subj=!mail_subj!
+                          echo Check cURL command:
+                          echo !curl_cmd!
+                      ) > !tmp_log!
+                      call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+                      @rem ####################################################################
+                      @rem ::: NB ::: cURL sends its output to STDERR rather than in STDOUT :::
+                      @rem ####################################################################
+
+                      cmd /c !curl_cmd! 1>!tmp_log! 2>&1
+
+                      if NOT errorlevel 1 (
+                          findstr /m /i /r /c:"250 .* ok" !tmp_log! >nul
+                          if NOT errorlevel 1 (
+                              findstr /m /i /c:"SPAM" /c:"BLOCKED" !tmp! >nul
+                              if NOT errorlevel 1 (
+                                  (
+                                      echo XXXXXXXXXXXXXXXXX
+                                      echo XXX ATTENTION XXX UPLOAD log sending could be FAILED: found phrase about spam/blocked in its log.
+                                      echo XXXXXXXXXXXXXXXXX
+                                  )>!tm2!
+                              ) else (
+                                  set /a eml_result=0
+                                  (
+                                      echo +++++++++++++++
+                                      echo +++ SUCCESS +++ UPLOAD log has been sent OK: found record with retcode = 250 OK.
+                                      echo +++++++++++++++
+                                  )>!tm2!
+                              )
+                              call :bulksho !tm2! !QA_MAIN_LOG!
+                          )
+                      ) else (
+                          call :sho "### SENDING ERROR ### Check log." !QA_MAIN_LOG!
+                      )
+
+                      if !eml_result! NEQ 0 (
+                          call :sho "Check cURL output:" !QA_MAIN_LOG!
+                          for /f "tokens=*" %%a in (!tmp_log!) do (
+                              echo !time:~0,8! %%a
+                              echo !time:~0,8! %%a >>!QA_MAIN_LOG!
+                          )
+                          call :sho "ERROR occured while sending UPLOAD log using cUrl. Check log !dump_eml! and config settings." !QA_MAIN_LOG!
+                      ) else (
+                          del !dump_eml!
+                      )
+                      del !tmp_log!
+
+                  )
+                  @rem if defined curl_bin
+
+                  @rem |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
             )
             @rem upload results
 
@@ -344,17 +473,14 @@ goto :eof
         set tm2=%%~dpna.tm2
     )
     
-    @rem set VERSION=%build_7z:~22,-9%
-    for /f %%a in ("!build_7z!") do (
-        @rem c:\some\path\to\Firebird-4.0.0.1367-0_x64 ==> Firebird-4.0.0.1367-0_x64
-        set build_no=%%~na
+    @rem Old batch: set VERSION=%build_7z:~22,-9% -- does not work when FB snapshot relates to Win32: file name has another length.
 
-        @rem Firebird-4.0.0.1367-0_x64 ==> 4.0.0.1367
-        set build_no=!build_no:~9,-6!
-
-        @rem 4.0.0.1367 --> 4.0
-        set major_v=!build_no:~0,3!
-    )
+    @rem Get build number and major version of FB:
+    @rem INPUT: c:\some\path\to\Firebird-4.0.0.1367-0_x64
+    @rem Result: 
+    @rem    build_no = 4.0.0.1367
+    @rem    major_v  = 4.0
+    call :extract_build_info !build_7z! build_no major_v
 
     set security_suffix=!major_v:~0,1!
     call :sho "Result of parsing build_7z: build_no=!build_no! ; major_v=!major_v! ; security_suffix=!security_suffix!" !QA_MAIN_LOG!
@@ -592,11 +718,11 @@ goto :eof
         )
         call :sho "Completed fbt_archive save. Size of !REPO_PATH!\archive\!build_no!\!arch_saved_name!: !arch_saved_size!" !QA_MAIN_LOG!
 
-        call :sho "Starting remove files older than !MAX_AGE_FOR_LOGS! days in !repo_path!\archive\ folder" !QA_MAIN_LOG!
+        call :sho "Starting remove files older than !MAX_AGE_FOR_LOGS! days in '!repo_path!\archive\' folder" !QA_MAIN_LOG!
 
         forfiles /p "!repo_path!\archive" /c "cmd /c if @isdir==TRUE RMDIR /S /Q @PATH" /d -!MAX_AGE_FOR_LOGS!
 
-        call :sho "Completed remove files older than !MAX_AGE_FOR_LOGS! days in !repo_path!\archive\ folder" !QA_MAIN_LOG!
+        call :sho "Completed remove files older than !MAX_AGE_FOR_LOGS! days in '!repo_path!\archive\' folder" !QA_MAIN_LOG!
 
 
         cd !repo_path!\archive\!build_no!
@@ -1060,6 +1186,35 @@ endlocal & goto:eof
     call :sho "Leaving routine fb3_init_and_prep_conf" !QA_MAIN_LOG!
 
 endlocal & goto:eof
+
+:extract_build_info
+    setlocal
+
+    @rem INPUT: C:\Snapshots\Firebird-4.0.0.1411-0_Win32.7z
+    @rem OUTPUT:
+    @rem     build_no = 4.0.0.1411
+    @rem     major_v  = 4.0
+
+    set build_7z=%1
+    call :sho "Intro routine extract_build_info. build_7z=!build_7z!" !QA_MAIN_LOG!
+
+    for /f %%b in ("!build_7z!") do (
+        set bfile=%%~nb
+        @rem Sample: bfile=Firebird-4.0.0.1411-0_x64
+        @rem echo bfile=  ^|!bfile!^|
+        for /f "tokens=2 delims=-_" %%f in ("!bfile!") do (
+            set build_no=%%f
+            for /f "tokens=1-2 delims=." %%g in ("!build_no!") do (
+                @rem Old code: set major_v=!build_no:~0,3!
+                set major_v=%%g.%%h
+            )
+        )
+    )
+    call :sho "Leaving routine extract_build_info. Output result: build_no=!build_no!,  major_v=!major_v!" !QA_MAIN_LOG!
+
+endlocal & set "%~2=%build_no%" & set "%~3=%major_v%"
+
+goto:eof
 
 @rem ------------------------------------------------- auxiliary subroutines below ---------------------------------
 :sho
