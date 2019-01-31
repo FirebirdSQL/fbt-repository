@@ -33,6 +33,60 @@ unsuccessful metadata update
     -CREATE COLLATION UNICODE_ENUS_CI failed
     -Invalid collation attributes
   """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'Windows',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    -- ::: NB ::: 31.01.2019
+    -- Since builds 4.0.0.1410, 26.01.2019, FULL ICU library icudt63l.dat is included in snapshot, 
+    -- so this collation *CAN AND MUST* be created w/o errors.
+
+    set list on;
+    create collation unicode_enus_ci for utf8 from unicode case insensitive 'LOCALE=en_US';
+    commit;
+
+    select
+        rc.rdb$collation_name
+        ,rc.rdb$collation_attributes
+        ,rc.rdb$base_collation_name
+        ,rc.rdb$specific_attributes as specific_attr_blob_id
+        ,rs.rdb$character_set_name
+        --,rs.rdb$number_of_characters
+        ,rs.rdb$bytes_per_character
+    from rdb$collations rc
+    join rdb$character_sets rs
+    on rc.rdb$character_set_id = rs.rdb$character_set_id
+    where
+        rc.rdb$system_flag is distinct from 1
+        and rc.rdb$collation_name = upper('unicode_enus_ci');
+  """,
+ 'expected_stdout':
+  """
+    RDB$COLLATION_NAME              UNICODE_ENUS_CI
+
+    RDB$COLLATION_ATTRIBUTES        3
+    RDB$BASE_COLLATION_NAME         UNICODE
+
+    SPECIFIC_ATTR_BLOB_ID           1d:1e7
+    COLL-VERSION=xx;LOCALE=en_US
+    RDB$CHARACTER_SET_NAME          UTF8
+
+    RDB$BYTES_PER_CHARACTER         4
+
+    Records affected: 1
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions': [
+    ('SPECIFIC_ATTR_BLOB_ID.*', ''),
+    ('COLL-VERSION=\d+\.\d+\.\d+\.\d+','COLL-VERSION=xx'),
+    ('COLL-VERSION=\d+\.\d+','COLL-VERSION=xx')
+  ]
+
 }
 ]
 }
