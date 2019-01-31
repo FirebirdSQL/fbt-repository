@@ -45,6 +45,7 @@ unsuccessful metadata update
     -- so this collation *CAN AND MUST* be created w/o errors.
 
     set list on;
+    set count on;
     create collation unicode_enus_ci for utf8 from unicode case insensitive 'LOCALE=en_US';
     commit;
 
