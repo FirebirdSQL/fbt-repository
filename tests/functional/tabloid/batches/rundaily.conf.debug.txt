@@ -2,10 +2,10 @@
 FB_SNAPSHOTS_FOLDER=C:\Users\Zotov\snapshots
 
 #FB_CHECKED_MAJOR=4.0
-#FB_CHECKED_MODES=CS
+#FB_CHECKED_MODES=SS
 
-FB_CHECKED_MAJOR=2.5
-FB_CHECKED_MODES=SS
+FB_CHECKED_MAJOR=3.0
+FB_CHECKED_MODES=SS,CS
 
 # DEBUG ONLY: single test for quick check.
 # Make this parameter commented when debug is completed.
@@ -13,6 +13,8 @@ FB_CHECKED_MODES=SS
 #SINGLE_TEST_FOR_DEBUG_ONLY=bugs.core_0070
 #SINGLE_TEST_FOR_DEBUG_ONLY=bugs.core_4748
 #SINGLE_TEST_FOR_DEBUG_ONLY=bugs.core_0932
+
+SINGLE_TEST_FOR_DEBUG_ONLY=bugs.core_1885
 
 QA_PATH=C:\FirebirdQA
 
@@ -53,20 +55,27 @@ GITCMD=C:\Snapshots\bin\git\cmd\git.exe
 # 1 - imitate (for debug only or when host-receiver has a problem)
 SSH_IMITATE_UPLOAD=1
 
-
-
 #curl_bin=C:\Users\Zotov\util\cUrl759\AMD64\CURL.EXE
 
 # NB: curl 7.59 has bug: it does not allow too upload text with size greater than 16383 bytes
 curl_bin=C:\Users\Zotov\util\cUrl763\bin\curl.exe
 
 mail_hdr_subj=::: QA fbtest :::
-mail_hdr_from=firebirdtest.win@gmail.com
 
-# NOTE: this is not real password.
-# Actual data must be stored only in host where job is running.
+
+# !!! gmail does not allow to sent .7z !!!
+#mail_hdr_from=firebirdtest.win@gmail.com
+#mail_smtp_url=smtps://smtp.gmail.com:465
+
+mail_smtp_url=smtps://smtp.yandex.ru:465
+mail_hdr_from=firebirdtest.win@yandex.ru
 mail_pwd_from=t0t@1ly_wr0ng
 
-mail_hdr_to=p519446@yandex.ru
+mail_hdr_to=firebirdtest.win@yandex.ru
 
-curl_opt=--verbose --url "smtps://smtp.gmail.com:465" --ssl-reqd --mail-from "!mail_hdr_from!" --mail-rcpt "!mail_hdr_to!" --user "!mail_hdr_from!:!mail_pwd_from!" --insecure
+curl_opt=--verbose --url "!mail_smtp_url!" --ssl-reqd --mail-from "!mail_hdr_from!" --mail-rcpt "!mail_hdr_to!" --user "!mail_hdr_from!:!mail_pwd_from!" --insecure
+
+# max size of attachment that can be sent without splitting it
+# (depends on mail receiver settings):
+max_size_without_split=10000000
+

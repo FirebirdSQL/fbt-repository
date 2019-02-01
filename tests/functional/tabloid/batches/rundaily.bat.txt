@@ -58,6 +58,7 @@ for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-
   set dts=%%a
   set ymd=!dts:~2,6!
   set hms=!dts:~8,6!
+
   @rem set GLOBAL_TIMESTAMP=!ymd!_!hms!
   set QA_MAIN_LOG=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.log
   set tmp_log=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.tmp
@@ -98,7 +99,7 @@ if NOT .!unknown_var!.==.. (
 @rem 'certutil.exe' if avaliable (must be so since Windows 7).
 @rem #########################################################
 set /a base64_avail=0
-certutil -? | findstr /i /c:"base64" 1>!tmp! 2>&1
+certutil -? | findstr /i /c:"base64" 1>!tmp_log! 2>&1
 if NOT errorlevel 1 (
     call :sho "Found utility 'certutil.exe' - will be used to encode e-mail attachments to base64 format." !QA_MAIN_LOG!
     set /a base64_avail=1
@@ -155,6 +156,8 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
 
     for %%f in (!FB_SNAPSHOTS_FOLDER!\Firebird-%%s.?.*-0_x64.7z) do (
         set build_7z=%%f
+        set bld_size=%%~zf
+        @rem set /a bld_size=!bld_size!/1024/1024
         
         @rem Get build number and major version of FB:
         @rem INPUT: c:\some\path\to\Firebird-4.0.0.1367-0_x64
@@ -168,7 +171,20 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
             
             @rem FB_CHECKED_MODES -- see in .conf: list of server modes that we want to verify: "SS,CS" or similar
 
+            @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+            @rem ::: s e n d     s n a p s h o t     b e f o r e    r u n     t e s t s    :::
+            @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+            call :mailsender !QA_MAIN_LOG! "!mail_hdr_subj! snapshot !build_no!, total size !bld_size!" "n/a" !build_7z!
+
             call :sho "Build: !build_no!. Starting checks of all interested server modes: !FB_CHECKED_MODES!" !QA_MAIN_LOG!
+
+            for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-9]"') do (
+                set dts=%%a
+                @rem for displaying in e-mail subj: DD.MM hh:mi when this subroutine finished
+                set mmdd_beg_all_modes_chk=!dts:~6,2!.!dts:~4,2!
+                set hhmi_beg_all_modes_chk=!dts:~8,2!:!dts:~10,2!
+            )
             for /d %%m in (!FB_CHECKED_MODES!) do (
                 call :kill_fb_processes !QA_MAIN_LOG!
                 echo.>>!QA_MAIN_LOG!
@@ -190,7 +206,14 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
             )
             @rem for /d %%m in (!FB_CHECKED_MODES!) -- process for every of interested server modes
             
+            for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-9]"') do (
+                set dts=%%a
+                @rem for displaying in e-mail subj: DD.MM hh:mi when this subroutine finished
+                set mmdd_end_all_modes_chk=!dts:~6,2!.!dts:~4,2!
+                set hhmi_end_all_modes_chk=!dts:~8,2!:!dts:~10,2!
+            )
             call :sho "Build: !build_no!. Completed checks of all interested server modes." !QA_MAIN_LOG!
+
 
             if exist !repo_path!\archive\!build_no! (
                   
@@ -272,99 +295,28 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
 
                   @rem Now we have to send as separate message to e-mail content of !qa_upload_log! -- result of uploadings:
 
-                  @rem |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-                  if NOT .!curl_bin!.==.. (
+                  @rem ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+                  @rem ::: s e n d     r e s u l t s     o f     u p l o a d i n g    o p s.  :::
+                  @rem ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-                      @rem https://curl.haxx.se/mail/lib-2012-01/0121.html
+                  set mail_subj=!mail_hdr_subj! !build_no! !FB_CHECKED_MODES! !mmdd_beg_all_modes_chk! !hhmi_beg_all_modes_chk! ... !mmdd_end_all_modes_chk! !hhmi_end_all_modes_chk!, upload result:
+                  @rem !ymd!_!hms!
 
-                      for /f %%a in ("!QA_MAIN_LOG!") do (
-                          set tmp_log=%%~dpna.tmp
-                          set tm2=%%~dpna.tm2
-                      )
-                      
-                      set dump_eml=%QA_LOG_FOLDER%\%~n0.email.log
-                      set curl_cmd=!curl_bin! !curl_opt! --upload-file "!dump_eml!"
-
-                      @rem 25.06.2018:
-                      @rem We have to remove parenthesis from name of file that will be specified in cUrl "--upload-file" command swicth,
-                      @rem otherwise cUrl raises excetption like "curl: (56) Send failure: Connection was aborted" and does NOT send file!
-                      set dump_eml=!dump_eml:(=_!
-                      set dump_eml=!dump_eml:^)=_!
-
-                      call :sho "Start sending e-mail with UPLOAD results. File with message body: !dump_eml!" !QA_MAIN_LOG!
-
-                      set mail_subj=!mail_hdr_subj! !build_no! !FB_CHECKED_MODES! !ymd!_!hms!: upload results.
-
-                      (
-                          echo From: ^<!mail_hdr_from!^>
-                          echo To: ^<!mail_hdr_to!^>
-                          echo Subject: !mail_subj!
-                          echo MIME-Version: 1.0
-                          @rem ### BODY of message ###
-                          echo Content-Type: text/plain
-                          echo.
-                      ) >!dump_eml!
-
-                      @rem Add log of UPLOADING commands to message BODY:
-                      type !qa_upload_log! >>!dump_eml!
-                      del !qa_upload_log!
-                      call :sho "File !dump_eml! has been created." !QA_MAIN_LOG!
-
-                      set /a eml_result=1
-                      
-                      (
-                          echo mail_subj=!mail_subj!
-                          echo Check cURL command:
-                          echo !curl_cmd!
-                      ) > !tmp_log!
-                      call :bulksho !tmp_log! !QA_MAIN_LOG!
-
-                      @rem ####################################################################
-                      @rem ::: NB ::: cURL sends its output to STDERR rather than in STDOUT :::
-                      @rem ####################################################################
-
-                      cmd /c !curl_cmd! 1>!tmp_log! 2>&1
-
+                  findstr /m /i /r /c:"Read.*only[ ]*file[ ]" !qa_upload_log! > nul
+                  if NOT errorlevel 1 (
+                      set mail_subj=!mail_subj! FAILED.
+                  ) else (
+                      findstr /m /i /r /c:"index.html.*100%%" !qa_upload_log! > nul
                       if NOT errorlevel 1 (
-                          findstr /m /i /r /c:"250 .* ok" !tmp_log! >nul
-                          if NOT errorlevel 1 (
-                              findstr /m /i /c:"SPAM" /c:"BLOCKED" !tmp! >nul
-                              if NOT errorlevel 1 (
-                                  (
-                                      echo XXXXXXXXXXXXXXXXX
-                                      echo XXX ATTENTION XXX UPLOAD log sending could be FAILED: found phrase about spam/blocked in its log.
-                                      echo XXXXXXXXXXXXXXXXX
-                                  )>!tm2!
-                              ) else (
-                                  set /a eml_result=0
-                                  (
-                                      echo +++++++++++++++
-                                      echo +++ SUCCESS +++ UPLOAD log has been sent OK: found record with retcode = 250 OK.
-                                      echo +++++++++++++++
-                                  )>!tm2!
-                              )
-                              call :bulksho !tm2! !QA_MAIN_LOG!
-                          )
+                          set mail_subj=!mail_subj! SUCCESS.
                       ) else (
-                          call :sho "### SENDING ERROR ### Check log." !QA_MAIN_LOG!
+                          set mail_subj=!mail_subj! UNKNOWN.
                       )
-
-                      if !eml_result! NEQ 0 (
-                          call :sho "Check cURL output:" !QA_MAIN_LOG!
-                          for /f "tokens=*" %%a in (!tmp_log!) do (
-                              echo !time:~0,8! %%a
-                              echo !time:~0,8! %%a >>!QA_MAIN_LOG!
-                          )
-                          call :sho "ERROR occured while sending UPLOAD log using cUrl. Check log !dump_eml! and config settings." !QA_MAIN_LOG!
-                      ) else (
-                          del !dump_eml!
-                      )
-                      del !tmp_log!
-
                   )
-                  @rem if defined curl_bin
 
-                  @rem |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+                  call :mailsender !QA_MAIN_LOG! "!mail_subj!" "!qa_upload_log!"
+                  @rem                   1             2              3
+                  del !qa_upload_log!
 
             )
             @rem upload results
@@ -385,6 +337,9 @@ call :sho "All done. Batch %~dpnx0 is finished." !QA_MAIN_LOG!
 
 goto :final
 
+@rem #+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#
+@rem #+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#
+@rem #+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#
 
 :kill_fb_processes
     setlocal
@@ -467,6 +422,15 @@ goto :eof
     set zip_extraction_success=1
 
     call :sho "Intro routine run_single_fbt_pass: build_7z=!build_7z!, repo_path=!repo_path!, server_mode=!server_mode!" !QA_MAIN_LOG!
+
+    for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-9]"') do (
+        set dts=%%a
+        set ymd=!dts:~2,6!
+        set hms=!dts:~8,6!
+        @rem for displaying in e-mail subj: DD.MM hh:mi when this subroutine started
+        set mmdd_beg_single_chk=!dts:~6,2!.!dts:~4,2!
+        set hhmi_beg_single_chk=!dts:~8,2!:!dts:~10,2!
+    )
 
     for /f %%a in ("!QA_MAIN_LOG!") do (
         set tmp_log=%%~dpna.tmp
@@ -562,9 +526,9 @@ goto :eof
             
             set fbc=!build_path!\bin
             if !server_mode!==SS (
-                set FB_EXE=fbserver.exe 
+                set FB_EXE=fbserver.exe
             ) else (
-                set FB_EXE=fb_inet_server.exe 
+                set FB_EXE=fb_inet_server.exe
             )
             (
                 echo # Added by %~dpnx0 !date! !time!
@@ -614,22 +578,28 @@ goto :eof
 
         call :sho "Binary to be launched: !fbc!\!fb_exe!" !QA_MAIN_LOG!
 
-        @echo on
-        start !fbc!\!fb_exe! -a
-        start !fbc!\fbguard.exe -a
-        @echo off
-
         del !tmp_log! 2>nul
-        wmic process where "name='!fb_exe!'" get ProcessID, ExecutablePath /FORMAT:LIST | findstr /c:"=" | more 1>>!tmp_log! 2>&1
-        wmic process where "name='fbguard.exe'" get ProcessID, ExecutablePath /FORMAT:LIST | findstr /c:"=" | more 1>>!tmp_log! 2>&1
+        call :sho "Launching: start !fbc!\!fb_exe! -a" !QA_MAIN_LOG!
+        start !fbc!\!fb_exe! -a
+
+        call :sho "Launching: start !fbc!\fbguard.exe -a" !QA_MAIN_LOG!
+        start !fbc!\fbguard.exe -a
+
+        call :sho "Determine PID of '!fb_exe!'" !QA_MAIN_LOG!
+        wmic process where "name='!fb_exe!'" get ProcessID, ExecutablePath /FORMAT:LIST | findstr /c:"=" | more 1>!tmp_log! 2>&1
+        call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+        call :sho "Determine PID of 'fbguard.exe'" !QA_MAIN_LOG!
+        wmic process where "name='fbguard.exe'" get ProcessID, ExecutablePath /FORMAT:LIST | findstr /c:"=" | more 1>!tmp_log! 2>&1
         call :bulksho !tmp_log! !QA_MAIN_LOG!
 
         cd !repo_path!
+
+        call :sho "Current dir: %cd%" !QA_MAIN_LOG!
+
         @rem cur dir is: C:\FirebirdQA\fbt-repository
 
-        @rem del !tmp_log! 2>nul
-        @rem tasklist /fi "imagename eq !fb_exe!" 1>>!tmp_log! 2>&1
-        @rem tasklist /fi "imagename eq fbguard.exe" 1>>!tmp_log! 2>&1
+        call :sho "Determine Firebird version" !QA_MAIN_LOG!
         !fbc!\fbsvcmgr localhost:service_mgr user sysdba password masterkey info_server_version 1>>!tmp_log!
 
         call :sho "Check FB version and currently running processes:" !QA_MAIN_LOG!
@@ -745,102 +715,59 @@ goto :eof
         )
         call :sho "Completed fbt_analyze. Size of !REPO_PATH!\archive\!build_no!\index.html: !analyze_html_size!" !QA_MAIN_LOG!
 
+        for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-9]"') do (
+            set dts=%%a
+            @rem for displaying in e-mail subj: DD.MM hh:mi when this subroutine finished
+            set mmdd_end_single_chk=!dts:~6,2!.!dts:~4,2!
+            set hhmi_end_single_chk=!dts:~8,2!:!dts:~10,2!
+        )
+
         cd %QA_PATH%
         set PATH=!ORIGIN_PATH!
 
         call :sho "Return value of PATH to: !path!" !QA_MAIN_LOG!
 
-        if NOT .!curl_bin!.==.. (
 
-            @rem https://curl.haxx.se/mail/lib-2012-01/0121.html
+        @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        @rem ::: s e n d     r e s u l t s     o f     j u s t    c o m p l e t e d     s n a p s h o t  +  s e r v e r m o d e  :::
+        @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-            set dump_eml=%QA_LOG_FOLDER%\%~n0.email.log
-            set curl_cmd=!curl_bin! !curl_opt! --upload-file "!dump_eml!"
-
-            @rem 25.06.2018:
-            @rem We have to remove parenthesis from name of file that will be specified in cUrl "--upload-file" command swicth,
-            @rem otherwise cUrl raises excetption like "curl: (56) Send failure: Connection was aborted" and does NOT send file!
-            set dump_eml=!dump_eml:(=_!
-            set dump_eml=!dump_eml:^)=_!
-
-            call :sho "Start sending e-mail with logged actions. File with message body: !dump_eml!" !QA_MAIN_LOG!
-
-            @rem Sample of fbt_view output (was saved in !fbtv_results!):
-            @rem -------------------------
-            @rem File:     C:\FirebirdQA\fbt-repository\archive\4.0.0.1370\0001-Windows64-SS-XX1.trf
-            @rem Desc:     Windows64 SS
-            @rem Version:  4.0.0.1370
-            @rem Arch:     SS
-            @rem Platform: Windows
-            @rem CPU:      64
-            @rem Sequence: 1
-            @rem Person:   Unknown (XX)
-            @rem Passes:   1
-            @rem Fails:    0
-            @rem Errors:   0
-            @rem Untested: 0
-            @rem Skipped:  0
-            @rem -------------------------
-            
-            set passes_cnt=?
-            set fails_cnt=?
-            set errors_cnt=?
-            set untested_cnt=?
-            set skipped_cnt=?
-            for /f "tokens=1-2" %%a in ('findstr /i /r /c:"Passes[:]*[ ]*[0-9]" /c:"Fails[:]*[ ]*[0-9]" /c:"Errors[:]*[ ]*[0-9]" /c:"Untested[:]*[ ]*[0-9]" /c:"Skipped[:]*[ ]*[0-9]" !fbtv_results!') do (
-                set line=%%a
-                set lin2=!line:Passes=!
-                if NOT .!lin2!.==.!line!. (
-                    set passes_cnt=%%b
-                )
-                set lin2=!line:Fails=!
-                if NOT .!lin2!.==.!line!. (
-                    set fails_cnt=%%b
-                )
-                set lin2=!line:Errors=!
-                if NOT .!lin2!.==.!line!. (
-                    set errors_cnt=%%b
-                )
-                set lin2=!line:Untested=!
-                if NOT .!lin2!.==.!line!. (
-                    set untested_cnt=%%b
-                )
-                set lin2=!line:Skipped=!
-                if NOT .!lin2!.==.!line!. (
-                    set skipped_cnt=%%b
-                )
+        set passes_cnt=?
+        set fails_cnt=?
+        set errors_cnt=?
+        set untested_cnt=?
+        set skipped_cnt=?
+        for /f "tokens=1-2" %%a in ('findstr /i /r /c:"Passes[:]*[ ]*[0-9]" /c:"Fails[:]*[ ]*[0-9]" /c:"Errors[:]*[ ]*[0-9]" /c:"Untested[:]*[ ]*[0-9]" /c:"Skipped[:]*[ ]*[0-9]" !fbtv_results!') do (
+            set line=%%a
+            set lin2=!line:Passes=!
+            if NOT .!lin2!.==.!line!. (
+                set passes_cnt=%%b
             )
+            set lin2=!line:Fails=!
+            if NOT .!lin2!.==.!line!. (
+                set fails_cnt=%%b
+            )
+            set lin2=!line:Errors=!
+            if NOT .!lin2!.==.!line!. (
+                set errors_cnt=%%b
+            )
+            set lin2=!line:Untested=!
+            if NOT .!lin2!.==.!line!. (
+                set untested_cnt=%%b
+            )
+            set lin2=!line:Skipped=!
+            if NOT .!lin2!.==.!line!. (
+                set skipped_cnt=%%b
+            )
+        )
 
-            set mail_subj=!mail_hdr_subj! !build_no! !server_mode! !ymd!_!hms!: p=!passes_cnt! f=!fails_cnt! e=!errors_cnt! u=!untested_cnt! s=!skipped_cnt!
-            @rem echo mail_subj=!mail_subj!
+        @rem ::: QA fbtest ::: 4.0.0.1421 SS, 22.02 03:49 ... 22.02 05:51, fbt_run results: p=NNN f=NNN e=NNN u=NNN s=NNN
+        set mail_subj=!mail_hdr_subj! !build_no! !server_mode!, !mmdd_beg_single_chk! !hhmi_beg_single_chk! ... !mmdd_end_single_chk! !hhmi_end_single_chk!
+        set mail_subj=!mail_subj!, fbt_run results: p=!passes_cnt! f=!fails_cnt! e=!errors_cnt! u=!untested_cnt! s=!skipped_cnt!
 
-            set bnd_label=----==--bound.label.!dts!
-
+        del !tmp_log! 2>nul
+        if exist "!build_path!\firebird.conf" (
             (
-                echo From: ^<!mail_hdr_from!^>
-                echo To: ^<!mail_hdr_to!^>
-                echo Subject: !mail_subj!
-                echo MIME-Version: 1.0
-                if !base64_avail! EQU 1 (
-                    echo Content-Type: multipart/mixed;
-                    echo     boundary="!bnd_label!"
-                    echo.
-                    echo.
-                    echo --!bnd_label!
-
-                    @rem ### BODY of message ###
-                    @rem echo Content-Transfer-Encoding: 7bit
-                    echo Content-Type: text/plain
-
-                ) else (
-
-                    echo Content-Transfer-Encoding: 8bit
-                    echo Content-Type: text/html; charset=utf-8
-                )
-                echo.
-            ) >!dump_eml!
-
-            if exist "!build_path!\firebird.conf" (
                 @rem Add changed params from firebird.conf to message BODY:
                 echo.
                 echo Changed parameters in "!build_path!\firebird.conf":
@@ -848,141 +775,48 @@ goto :eof
                 findstr /r /c:"^^[^^#;]" "!build_path!\firebird.conf"
                 echo --------------------------------------------------
                 echo.
-            ) >>!dump_eml!
-
-            @rem Add *overall* results of test run to message BODY:
-            (
-                echo.
-                echo Environment variables related to temp files:
-                echo.    TEMP=%TEMP%
-                echo.    FIREBIRD_TMP=%FIREBIRD_TMP%
-                echo.
-                echo Overall results of last test run:
-                echo ---------------------------------
-                type !fbtv_results! 
-                echo ---------------------------------
-                echo.
-                echo Tests that were SKIPPED (file '!qa_excluded_tests!'^):
-                echo -----------------------
-                type !qa_excluded_tests!
-                echo -----------------------
-            ) >>!dump_eml!
-            del !fbtv_results!
-            if !base64_avail! EQU 1 (
-                @rem Create ATTACHMENT that will be sent // rundaily.190123_030002.3_0_5_33095-SS.log.zip
-                
-                set qa_fbt_result_zip=!QA_LOG_FOLDER!\!build_no:.=_!-!server_mode!.!dts!.zip
-
-                set run_cmd=!P7ZCMD! u -mx=9 -tzip !qa_fbt_result_zip! !qa_fbt_result_log! 1^>!tmp! 2^>^&1
-
-                call :sho "Preparing .ZIP with results log for being attached to e-mail message." !QA_MAIN_LOG!
-                call :sho "Command !run_cmd!" !QA_MAIN_LOG!
-
-                cmd /c "!run_cmd!"
-                type !tmp! >> !QA_MAIN_LOG!
-
-                for /f %%a in ("!qa_fbt_result_zip!") do (
-                    set zipname=%%~nxa
-                    set zipb64=!QA_LOG_FOLDER!\%%~na.b64
-                    set run_cmd=certutil -encode %%a !zipb64! 1^>!tmp! 2^>^&1
-
-                    (
-                        echo Encode ZIP archieve with last results to base64 for attaching it content to message.
-                        echo Processing file: !zipname!
-                        echo Command: !run_cmd!
-                    ) > !tmp!
-                    call :bulksho !tmp! !QA_MAIN_LOG!
-
-                    cmd /c "!run_cmd!"
-                    call :bulksho !tmp! !QA_MAIN_LOG!
-
-                    copy !zipb64! !tmp!
-                    
-                    findstr /i /v /r /c:"begin[ ]*cert" /c:"end[ ]*cert" !tmp! > !zipb64!
-                    del !tmp!
-                    call :sho "File !qa_fbt_result_zip! has been encoded to base64." !QA_MAIN_LOG!
-
-                    (
-                        echo --!bnd_label!
-                        echo Content-Disposition: attachment;
-                        @rem -- seems that does not help here -- echo 	filename="!zip4trc!.gmail"
-                        echo 	filename="!zipname!"
-                        echo Content-Transfer-Encoding: base64
-                        echo Content-Type: application/zip;
-                        echo 	name="!zipname!"
-                        echo.
-                    ) >>!dump_eml!
-
-                    @rem :::::::::::::::::::::::::::::::::::::::::::::::
-                    @rem ::: Add stack trace as attachment to e-mail :::
-                    @rem :::::::::::::::::::::::::::::::::::::::::::::::
-                    type !zipb64!>>!dump_eml!
-
-                    del !zipb64!
-                )
-                del !qa_fbt_result_zip!
-
-                @rem Put final lable at the end of message body: add two dashes before and after label.
-                echo --!bnd_label!-->>!dump_eml!
-
-
-            )
-
-            call :sho "File !dump_eml! has been created." !QA_MAIN_LOG!
-
-
-            set /a eml_result=1
-            
-            (
-                echo mail_subj=!mail_subj!
-                echo Check cURL command:
-                echo !curl_cmd!
-            ) > !tmp_log!
-            call :bulksho !tmp_log! !QA_MAIN_LOG!
-
-            @rem ####################################################################
-            @rem ::: NB ::: cURL sends its output to STDERR rather than in STDOUT :::
-            @rem ####################################################################
-
-            cmd /c !curl_cmd! 1>!tmp_log! 2>&1
-
-            if NOT errorlevel 1 (
-                findstr /m /i /r /c:"250 .* ok" !tmp_log! >nul
-                if NOT errorlevel 1 (
-                    findstr /m /i /c:"SPAM" /c:"BLOCKED" !tmp! >nul
-                    if NOT errorlevel 1 (
-                        (
-                            echo XXXXXXXXXXXXXXXXX
-                            echo XXX ATTENTION XXX Sending could be FAILED: found phrase about spam/blocked in its log.
-                            echo XXXXXXXXXXXXXXXXX
-                        )>!tm2!
-                    ) else (
-                        set /a eml_result=0
-                        (
-                            echo +++++++++++++++
-                            echo +++ SUCCESS +++ Message with has been sent OK: found record with retcode = 250 OK.
-                            echo +++++++++++++++
-                        )>!tm2!
-                    )
-                    call :bulksho !tm2! !QA_MAIN_LOG!
-                )
-            ) else (
-                call :sho "### SENDING ERROR ### Check log." !QA_MAIN_LOG!
-            )
-
-            if !eml_result! NEQ 0 (
-                call :sho "Check cURL output:" !QA_MAIN_LOG!
-                for /f "tokens=*" %%a in (!tmp_log!) do (
-                    echo !time:~0,8! %%a
-                    echo !time:~0,8! %%a >>!QA_MAIN_LOG!
-                )
-                call :sho "ERROR occured while sending alert using cUrl. Check log !dump_eml! and config settings." !QA_MAIN_LOG!
-            ) else (
-                del !dump_eml!
-            )
-            del !tmp_log!
+            ) >> !tmp_log!
         )
-        @rem if defined curl_bin
+
+        @rem Add *overall* results of test run to message BODY:
+        (
+            echo.
+            echo Environment variables related to temp files:
+            echo.    TEMP=%TEMP%
+            echo.    FIREBIRD_TMP=%FIREBIRD_TMP%
+            echo.
+            echo Overall results of last test run:
+            echo ---------------------------------
+            type !fbtv_results! 
+            echo ---------------------------------
+            echo.
+            echo Tests that were SKIPPED (file '!qa_excluded_tests!'^):
+            echo -----------------------
+            type !qa_excluded_tests!
+            echo -----------------------
+        ) >>!tmp_log!
+        type !tmp_log! > !fbtv_results!
+
+        set qa_fbt_result_zip=!QA_LOG_FOLDER!\!build_no:.=_!-!server_mode!.results.!ymd!_!hms!.zip
+        set run_cmd=!P7ZCMD! u -mx=9 -tzip !qa_fbt_result_zip! !qa_fbt_result_log! 1^>!tmp_log! 2^>^&1
+
+        call :sho "Preparing .ZIP with results log for being attached to e-mail message." !QA_MAIN_LOG!
+        call :sho "Command !run_cmd!" !QA_MAIN_LOG!
+
+        cmd /c "!run_cmd!"
+        type !tmp_log! >> !QA_MAIN_LOG!
+        del !qa_fbt_result_log!
+
+
+        @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        @rem ::: s e n d     r e s u l t s     o f     j u s t    c o m p l e t e d     s n a p s h o t  +  s e r v e r m o d e  :::
+        @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        call :mailsender !QA_MAIN_LOG! "!mail_subj!" "!fbtv_results!" "!qa_fbt_result_zip!"
+        @rem                   1             2              3                   4
+
+        del !qa_fbt_result_zip!
+        del !fbtv_results!
 
     )
     @rem zip_extraction_success! EQU 1
@@ -1213,6 +1047,318 @@ endlocal & goto:eof
     call :sho "Leaving routine extract_build_info. Output result: build_no=!build_no!,  major_v=!major_v!" !QA_MAIN_LOG!
 
 endlocal & set "%~2=%build_no%" & set "%~3=%major_v%"
+
+goto:eof
+
+:mailsender
+    setlocal
+    set QA_MAIN_LOG=%1
+    set mail_subj=%2
+    set mail_body_text_file=%3
+    set mail_attachment_file=%4
+
+    @rem max_size_without_split -- take from .conf
+
+    call :sho "Intro routine mailsender" !QA_MAIN_LOG!
+
+
+    for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-9]"') do (
+        set dts=%%a
+        set ymd=!dts:~2,6!
+        set hms=!dts:~8,6!
+    )
+    set tmp_log=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.0.tmp
+    set tmp=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.1.tmp
+    set tm2=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.2.tmp
+
+    set left_char=!mail_subj:~0,1!
+    set righ_char=!mail_subj:~-1!
+
+    @rem REMOVE LEADING AND TRAILING DOUBLE QUOTES:
+    @rem ##########################################
+    set result=!left_char:"=!
+    if .!result!.==.. (
+       set result=!righ_char:"=!
+       if .!result!.==.. (
+          set mail_subj=!mail_subj:~1,-1!
+       )
+    )
+
+    if NOT .!curl_bin!.==.. (
+
+        @rem https://curl.haxx.se/mail/lib-2012-01/0121.html
+
+        set dump_eml=%QA_LOG_FOLDER%\%~n0.email.log
+        set curl_cmd=!curl_bin! !curl_opt! --upload-file "!dump_eml!"
+
+        @rem 25.06.2018:
+        @rem We have to remove parenthesis from name of file that will be specified in cUrl "--upload-file" command swicth,
+        @rem otherwise cUrl raises excetption like "curl: (56) Send failure: Connection was aborted" and does NOT send file!
+        set dump_eml=!dump_eml:(=_!
+        set dump_eml=!dump_eml:^)=_!
+
+        call :sho "Start sending e-mail. File with message body: !dump_eml!" !QA_MAIN_LOG!
+
+        set bnd_label=----==--bound.label.!dts!
+
+        @rem set /a analyze_html_size=0
+        @rem for /f %%a in ("!REPO_PATH!\archive\!build_no!\index.html") do (
+        @rem     if %%~za GTR 0 (
+        @rem         set /a analyze_html_size=%%~za
+        @rem     )
+        @rem )
+
+        if exist !mail_attachment_file! (
+            if !base64_avail! EQU 1 (
+                set /a mail_attachment_size=0
+                for /f %%a in ("!mail_attachment_file!") do (
+                    set attach_filepath=%%~dpa
+                    set attach_filepath=!attach_filepath:~0,-1!
+                    set attach_filename=%%~na
+                    set attach_file_ext=%%~xa
+                    set zipname=%%~na.!ymd!
+                    set zipname=!zipname:.=_!
+                    if %%~za GTR 0 (
+                        set /a mail_attachment_size=%%~za
+                    )
+                )
+
+                if !mail_attachment_size! GTR !max_size_without_split! (
+                    set run_cmd=!P7ZCMD! u -mx=0
+                    if !mail_attachment_size! GTR !max_size_without_split! (
+                        set run_cmd=!run_cmd! -v!max_size_without_split!
+                    ) 
+                    set run_cmd=!run_cmd! !QA_LOG_FOLDER!\!zipname! !mail_attachment_file!
+
+                    call :sho "Create compressed file to be sent as attachment:" !QA_MAIN_LOG!
+                    call :sho "Command: !run_cmd!" !QA_MAIN_LOG!
+                    cmd /c !run_cmd!
+
+                    for /f %%x in ('dir /b !QA_LOG_FOLDER!\!zipname!.* ^| findstr !zipname! ^| find /v /c ""') do (
+                       set /a num_of_zip_parts=%%x
+                    )
+                    set attach_filepath=!QA_LOG_FOLDER!
+                    set attach_pattern=!QA_LOG_FOLDER!\!zipname!.*
+                    set attach_mime_type=application/x-7z-compressed
+                ) else (
+                    set /a num_of_zip_parts=1
+                    set attach_pattern=!mail_attachment_file!
+
+                    @rem attach_filepath, attach_filename, attach_file_ext -- already known, see above.
+
+                    set attach_mime_type=text/plain
+                    if /i "!attach_file_ext!"==".zip" (
+                        set attach_mime_type=application/zip
+                    )
+                    if /i "!attach_file_ext!"==".7z" (
+                        set attach_mime_type=application/x-7z-compressed
+                    )
+                )
+                set /a zip_part_no=0
+                
+                echo attach_pattern=!attach_pattern! ; attach_filename=!attach_filename! ; attach_file_ext=!attach_file_ext! >>!QA_MAIN_LOG!
+                echo Check result of "dir /b !attach_pattern! ^| findstr !attach_filename!" >>!QA_MAIN_LOG!
+                dir /b !attach_pattern! | findstr !attach_filename! >> !QA_MAIN_LOG!
+
+                for /f %%a in ('dir /b !attach_pattern! ^| findstr !attach_filename!') do (
+
+                    set /a zip_part_no=!zip_part_no!+1
+                    
+                    call :sho "Sending file %%a, part !zip_part_no! of !num_of_zip_parts!" !QA_MAIN_LOG!
+
+                    if exist !dump_eml! del !dump_eml!
+
+                    (
+                        echo From: ^<!mail_hdr_from!^>
+                        echo To: ^<!mail_hdr_to!^>
+                        if !num_of_zip_parts! GTR 1 (
+                            echo Subject: !mail_subj! // !zip_part_no!/!num_of_zip_parts!
+                        ) else (
+                            echo Subject: !mail_subj!
+                        )
+                        echo MIME-Version: 1.0
+                        echo Content-Type: multipart/mixed;
+                        echo     boundary="!bnd_label!"
+                        echo.
+                        echo.
+                        echo --!bnd_label!
+                        @rem ### BODY of message ###
+                        echo Content-Type: text/plain
+                        echo.
+                    ) > !dump_eml!
+
+                    if exist !mail_body_text_file! (
+                        type !mail_body_text_file! >> !dump_eml!
+                    )
+                    set sending_file=%%~nxa
+                    set zipb64=!QA_LOG_FOLDER!\%%~na.!dts!.b64
+                    set run_cmd=certutil -encode !attach_filepath!\%%a !zipb64! 1^>!tmp! 2^>^&1
+
+                    (
+                        echo Encoding to base64: !sending_file!
+                        echo Command: !run_cmd!
+                    ) > !tmp!
+                    call :bulksho !tmp! !QA_MAIN_LOG!
+
+                    cmd /c "!run_cmd!"
+                    call :bulksho !tmp! !QA_MAIN_LOG!
+
+                    copy !zipb64! !tmp!
+                    
+                    findstr /i /v /r /c:"begin[ ]*cert" /c:"end[ ]*cert" !tmp! > !zipb64!
+                    del !tmp!
+
+                    @rem We have to remove file that was compressed for sending and encoded to base64 just now
+
+                    if NOT .!attach_pattern!.==.!mail_attachment_file!. (
+                        @rem this is PART of compressed .7z file -- we can and have to drop it.
+                        del !QA_LOG_FOLDER!\%%a
+                    )
+
+                    call :sho "File !sending_file! has been encoded to base64." !QA_MAIN_LOG!
+
+                    (
+                        echo --!bnd_label!
+                        echo Content-Disposition: attachment;
+                        echo 	filename="!sending_file!"
+                        echo Content-Transfer-Encoding: base64
+                        echo Content-Type: !attach_mime_type!;
+                        echo 	name="!sending_file!"
+                        echo.
+                    ) >>!dump_eml!
+
+                    @rem :::::::::::::::::::::::::::::::::::::::::::::::
+                    @rem ::: Add stack trace as attachment to e-mail :::
+                    @rem :::::::::::::::::::::::::::::::::::::::::::::::
+                    type !zipb64!>>!dump_eml!
+
+                    del !zipb64!
+
+                    @rem Put final lable at the end of message body: add two dashes before and after label.
+                    echo --!bnd_label!-->>!dump_eml!
+
+                    call :sho "Completed preparing file !dump_eml! for sending." !QA_MAIN_LOG!
+
+                    set /a eml_result=1
+                    
+                    (
+                        echo mail_subj=!mail_subj!
+                        echo Check cURL command:
+                        echo !curl_cmd!
+                    ) > !tmp_log!
+                    call :bulksho !tmp_log! !QA_MAIN_LOG!
+                    call :mail_prepared_eml !QA_MAIN_LOG! "!curl_cmd!"
+                    del !dump_eml!
+
+                )
+                @rem processing .7z files: for /f %%a in ('dir /b !QA_LOG_FOLDER!\!zipname!.* ^| findstr !zipname!')
+
+            )
+            @rem if !base64_avail! EQU 1
+ 
+        ) else (
+
+            (
+                echo From: ^<!mail_hdr_from!^>
+                echo To: ^<!mail_hdr_to!^>
+                echo Subject: !mail_subj!
+                echo MIME-Version: 1.0
+                @rem ### BODY of message ###
+                echo Content-Type: text/plain
+                echo.
+            ) >!dump_eml!
+            if exist !mail_body_text_file! (
+                type !mail_body_text_file! >> !dump_eml!
+            )
+
+            call :mail_prepared_eml !QA_MAIN_LOG! "!curl_cmd!"
+            del !dump_eml!
+
+        )
+        @rem if exist !mail_attachment_file! --> TRUE / FALSE
+
+    )
+    @rem if defined curl_bin
+
+    call :sho "Leaving routine mailsender" !QA_MAIN_LOG!
+
+goto:eof
+
+:mail_prepared_eml
+    setlocal
+    set QA_MAIN_LOG=%1
+    set curl_cmd=%2
+
+    call :sho "Intro routine mail_prepared_eml" !QA_MAIN_LOG!
+
+    for /f "delims=." %%a in ('wmic os get localdatetime ^| findstr /i /r /b /c:"[0-9]"') do (
+        set dts=%%a
+        set ymd=!dts:~2,6!
+        set hms=!dts:~8,6!
+    )
+    set tmp_log=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.0.tmp
+    set tmp=%QA_LOG_FOLDER%\%~n0.!ymd!_!hms!.1.tmp
+
+    set left_char=!curl_cmd:~0,1!
+    set righ_char=!curl_cmd:~-1!
+
+    @rem REMOVE LEADING AND TRAILING DOUBLE QUOTES:
+    @rem ##########################################
+    set result=!left_char:"=!
+    if .!result!.==.. (
+       set result=!righ_char:"=!
+       if .!result!.==.. (
+          set curl_cmd=!curl_cmd:~1,-1!
+       )
+    )
+
+    @rem ####################################################################
+    @rem ::: NB ::: cURL sends its output to STDERR rather than in STDOUT :::
+    @rem ####################################################################
+    set /a eml_result=1
+
+    call :sho "Now sending e-mail using command:" !QA_MAIN_LOG!
+    call :sho "---------------------------------" !QA_MAIN_LOG!
+    call :sho "!curl_cmd!" !QA_MAIN_LOG!
+    call :sho "---------------------------------" !QA_MAIN_LOG!
+
+    cmd /c !curl_cmd! 1>!tmp_log! 2>&1
+
+    if NOT errorlevel 1 (
+        findstr /m /i /r /c:"250 .* ok" !tmp_log! >nul
+        if NOT errorlevel 1 (
+            findstr /m /i /c:"SPAM" /c:"BLOCKED" !tmp_log! >nul
+            if NOT errorlevel 1 (
+                (
+                    echo XXXXXXXXXXXXXXXXX
+                    echo XXX ATTENTION XXX Sending could be FAILED: found phrase about spam/blocked in its log.
+                    echo XXXXXXXXXXXXXXXXX
+                )>!tmp!
+            ) else (
+                set /a eml_result=0
+                (
+                    echo +++++++++++++++
+                    echo +++ SUCCESS +++ Message with has been sent OK: found record with retcode = 250 OK.
+                    echo +++++++++++++++
+                )>!tmp!
+            )
+            call :bulksho !tmp! !QA_MAIN_LOG!
+        )
+    ) else (
+        call :sho "### SENDING ERROR ### Check log." !QA_MAIN_LOG!
+    )
+
+    if !eml_result! NEQ 0 (
+        call :sho "Check cURL output:" !QA_MAIN_LOG!
+        for /f "tokens=*" %%a in (!tmp_log!) do (
+            echo !time:~0,8! %%a
+            echo !time:~0,8! %%a >>!QA_MAIN_LOG!
+        )
+        call :sho "ERROR occured while sending alert using cUrl. Check log !tmp_log! and config settings." !QA_MAIN_LOG!
+    )
+    del !tmp_log!
+
+    call :sho "Leaving routine mail_prepared_eml" !QA_MAIN_LOG!
 
 goto:eof
 
