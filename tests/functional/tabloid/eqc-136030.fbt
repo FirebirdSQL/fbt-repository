@@ -3,7 +3,14 @@
 'qmid': '',
 'tracker_id': '',
 'title': 'Check ability for preparing and then run query with parameters. Query should use ORDER-BY clause.',
-'description': '',
+'description':
+ """
+    02.02.2019: removed from DB metadata calls to UDFs - they are not used in this test but can not be used in FB 4.0 by default.
+    Removed triggers because they have no deal here.
+    Checked on:
+        3.0.5.33097: OK, 2.782s.
+        4.0.0.1421: OK, 3.642s.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -79,9 +86,9 @@ os.remove(fbk)
     02: sqltype: 448 VARYING scale: 0 subtype: 0 len: 2 charset: 0 NONE
       :  name:   alias: 
       : table:   owner: 
-    
+
     PLAN JOIN (JOIN (A ORDER DOCGIO_PK, B NATURAL), C NATURAL)
-    
+
     OUTPUT message field count: 15
     01: sqltype: 448 VARYING scale: 0 subtype: 0 len: 4 charset: 0 NONE
       :  name: CSOC  alias: CSOC
@@ -128,7 +135,8 @@ os.remove(fbk)
     15: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 1 charset: 0 NONE
       :  name: FBLC  alias: FBLC
       : table: GIOTIP  owner: SYSDBA
-    
+
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          AUT
@@ -138,13 +146,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          CGA
-    DESDOC                          Registrazioni  Automatiche Contabilit Generale
-    FBLC                            0
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          CGE
@@ -154,13 +162,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          CGE
-    DESDOC                          Registrazione Contabilit Generale
-    FBLC                            0
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          CTI
@@ -173,10 +181,10 @@ os.remove(fbk)
     TIPDOC                          <null>
     DESDOC                          <null>
     FBLC                            <null>
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FAA
@@ -186,13 +194,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTA
-    DESDOC                          Autofatture di Acquisto 
-    FBLC                            0
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FAV
@@ -202,13 +210,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTV
-    DESDOC                          Autofatture di Vendita
-    FBLC                            0
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FTA
@@ -218,13 +226,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTA
-    DESDOC                          Fattura Acquisti
-    FBLC                            0
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FTV
@@ -234,13 +242,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTV
-    DESDOC                          Fattura di Vendita
-    FBLC                            0
-    TIPGIO                          CGB
-    DESGIO                          Giornale Bollato
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FAA
@@ -250,13 +258,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTA
-    DESDOC                          Autofatture di Acquisto 
-    FBLC                            0
-    TIPGIO                          RA1
-    DESGIO                          Registro Fatture Acquisti
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FTA
@@ -266,13 +274,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTA
-    DESDOC                          Fattura Acquisti
-    FBLC                            0
-    TIPGIO                          RA1
-    DESGIO                          Registro Fatture Acquisti
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          NCA
@@ -282,13 +290,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          NCA
-    DESDOC                          Nota Credito Acquisti Ricevuta
-    FBLC                            0
-    TIPGIO                          RA1
-    DESGIO                          Registro Fatture Acquisti
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          NDA
@@ -298,13 +306,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          NDA
-    DESDOC                          Nota Debito Acquisti Ricevuta
-    FBLC                            0
-    TIPGIO                          RA1
-    DESGIO                          Registro Fatture Acquisti
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FAV
@@ -314,13 +322,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTV
-    DESDOC                          Autofatture di Vendita
-    FBLC                            0
-    TIPGIO                          RV1
-    DESGIO                          Registro Fatture Vendita
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          FTV
@@ -330,13 +338,13 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          FTV
-    DESDOC                          Fattura di Vendita
-    FBLC                            0
-    TIPGIO                          RV1
-    DESGIO                          Registro Fatture Vendita
-    FBLC                            0
-    
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
+
     CSOC                            DEM1
     NRESERC                         
     CODDOC                          NCV
@@ -346,12 +354,12 @@ os.remove(fbk)
     UTENTE_UPD                      1
     FBLC                            0
     FDEL                            0
-    TIPDOC                          NCV
-    DESDOC                          Nota Credito Vendite Emessa
-    FBLC                            0
-    TIPGIO                          RV1
-    DESGIO                          Registro Fatture Vendita
-    FBLC                            0
+    TIPDOC                          <null>
+    DESDOC                          <null>
+    FBLC                            <null>
+    TIPGIO                          <null>
+    DESGIO                          <null>
+    FBLC                            <null>
   """,
  'expected_stderr': 
   """
