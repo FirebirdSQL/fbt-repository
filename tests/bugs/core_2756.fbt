@@ -10,6 +10,14 @@
     Checed on:
         4.0.0.1340: OK, 2.313s.
         4.0.0.1410: OK, 2.360s.
+
+    02.02.2019. Note for 4.0.
+    One need to EXPLICITLY add statement SET TIME ZONE <+HH:MM> at the beginning of test, otherwise
+    we will get eception because current_timestamp string will have length more than expected.
+    This is because DEFAULT time zone in FB 4.0 includes REGION NAME ('Moscow/Europe") instead of HH:MM shift.
+    Checked on:
+        4.0.0.1421: OK, 1.493s.
+
  """,
 'min_versions': '2.5.1',
 'versions': [
@@ -46,6 +54,8 @@
  'test_script':
   """
     set list on;
+    set time zone '+00:00';
+
     select
          -- dts,
          iif( left(dts,4) = extract(year from current_timestamp), 'Looks as expected', 'Unexpected for dts = ' || dts ) as year_as_numeric
