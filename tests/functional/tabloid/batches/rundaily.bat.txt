@@ -174,8 +174,11 @@ for /d %%s in (!FB_CHECKED_MAJOR!) do (
             @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
             @rem ::: s e n d     s n a p s h o t     b e f o r e    r u n     t e s t s    :::
             @rem :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-            call :mailsender !QA_MAIN_LOG! "!mail_hdr_subj! snapshot !build_no!, total size !bld_size!" "n/a" !build_7z!
+            if !PACK_AND_SEND_SNAPSHOT! EQU 1 (
+                call :mailsender !QA_MAIN_LOG! "!mail_hdr_subj! snapshot !build_no!, total size !bld_size!" "n/a" !build_7z!
+            ) else (
+                call :sho "SKIP compressing and sending snapshot !build_no!, check config parameter 'PACK_AND_SEND_SNAPSHOT'" !QA_MAIN_LOG!
+            )
 
             call :sho "Build: !build_no!. Starting checks of all interested server modes: !FB_CHECKED_MODES!" !QA_MAIN_LOG!
 
@@ -348,7 +351,7 @@ goto :final
       set tmp_log=%%~dpna.tmp
     )
 
-    for /d %%p in (fbguard,firebird,fb_inet_server,fbserver,isql,gbak,gstat,fbsvcmgr) do (
+    for /d %%p in (fbguard,firebird,fb_inet_server,fbserver,isql,gbak,gstat,fbsvcmgr,fbtracemgr) do (
         echo.
         call :sho "Start of loop on processes name list. Searching for instances of: '%%p.exe'" !QA_MAIN_LOG!
         call :sho "Command: tasklist /fi 'imagename eq %%p.exe'" !QA_MAIN_LOG!
@@ -372,7 +375,7 @@ goto :final
 
             findstr /i /v /c:"SUCCESS:" !tmp_log!
             if NOT errorlevel 1 (
-                call :sho "### FAILED TO KILL ### At least one row in log does NOT contain phrase 'SUCCESS'." !QA_MAIN_LOG!
+                call :sho "### TASKKILL FAILED ### At least one row in log does NOT contain phrase 'SUCCESS'." !QA_MAIN_LOG!
 
                 @rem https://stackoverflow.com/questions/12528963/taskkill-f-doesnt-kill-a-process
                 call :sho "Perform 2nd attampt: use wmic process ... delete" !QA_MAIN_LOG!
@@ -384,7 +387,10 @@ goto :final
                 @rem Instance deletion successful.
                 @rem Deleting instance \\FBCOMPILEWIN\ROOT\CIMV2:Win32_Process.Handle="6892"
                 @rem Instance deletion successful.
-                @rem . . .
+                @rem ...
+                for /f "tokens=*" %%w in ('tasklist /fi "imagename eq %%p.exe"') do (
+                    call :sho "### WMIC PROCESS DELETE FAILED ### Found as still alive: %%w" !QA_MAIN_LOG!
+                )
             ) else (
                 call :sho "Seems to be completed successfully: all rows in log contain phrase 'SUCCESS'." !QA_MAIN_LOG!
             )
@@ -398,7 +404,7 @@ goto :final
             call :bulksho !tmp_log! !QA_MAIN_LOG!
             call :sho "------------------------------------" !QA_MAIN_LOG!
         ) else (
-            call :sho "Process with name '%%p.exe' NOT found in the output of TASKLIST /FI." !QA_MAIN_LOG!
+            call :sho "Nothing to kill. Process with name '%%p.exe' not found." !QA_MAIN_LOG!
         )
         del !tmp_log! 2>nul
     )
@@ -604,14 +610,24 @@ goto :eof
 
         call :sho "Check FB version and currently running processes:" !QA_MAIN_LOG!
         call :bulksho !tmp_log! !QA_MAIN_LOG!
-        
-        call :sho "Starting !GITCMD! reset --hard  and  !GITCMD! pull, current folder: %cd%:" !QA_MAIN_LOG!
 
-        !GITCMD! reset --hard 1>!tmp_log! 2>&1
-        !GITCMD! pull 1>>!tmp_log! 2>&1
+        if !PERFORM_GIT_PULL! EQU 1 (
+            call :sho "Starting !GITCMD! reset --hard  and  !GITCMD! pull, current folder: %cd%:" !QA_MAIN_LOG!
 
-        call :sho "Completed. Check result:" !QA_MAIN_LOG!
-        call :bulksho !tmp_log! !QA_MAIN_LOG!
+            !GITCMD! reset --hard 1>!tmp_log! 2>&1
+            !GITCMD! pull 1>>!tmp_log! 2>&1
+
+            call :sho "Completed. Check result:" !QA_MAIN_LOG!
+            call :bulksho !tmp_log! !QA_MAIN_LOG!
+        ) else (
+            (
+                echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                echo xxx ::: NOTE :::  SKIP git reset and git pull xxx
+                echo xxx Parameter 'PERFORM_GIT_PULL' = 0          xxx
+                echo xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+            ) > !tmp_log!
+            call :bulksho !tmp_log! !QA_MAIN_LOG!
+        )
 
         @echo on
         if exist !repo_path!\tmp ( 
@@ -630,10 +646,14 @@ goto :eof
         @rem set SINGLE_TEST_FOR_DEBUG_ONLY=bugs.core_0070
 
         set fbt_command=%PYTHON_HOME%\Scripts\fbt_run -b !fbc! -c !fbc!\fbclient.dll -v --skip !qa_excluded_tests! -a !server_mode! !SINGLE_TEST_FOR_DEBUG_ONLY!
-        call :sho "Starting fbt_run for !build_no!-!server_mode!" !QA_MAIN_LOG!
-        call :sho "Current dir: !CD!" !QA_MAIN_LOG!
-        call :sho "Command: !fbt_command!" !QA_MAIN_LOG!
-        call :sho "Log will be written to: !qa_fbt_result_log!" !QA_MAIN_LOG!
+
+        (
+            echo Starting fbt_run for !build_no!-!server_mode!
+            echo Current dir: !CD!
+            echo Command: !fbt_command!
+            echo Log will be written to: !qa_fbt_result_log!
+        ) > !tmp_log!
+        call :bulksho !tmp_log! !QA_MAIN_LOG!
 
         @rem call %PYTHON_HOME%\Scripts\fbt_run -b !fbc! -v --skip !qa_excluded_tests! -a !server_mode! 1>!qa_fbt_result_log! 2>&1
 
@@ -654,6 +674,20 @@ goto :eof
         )
 
         call :sho "Completed fbt_run for !build_no!-!server_mode!" !QA_MAIN_LOG!
+
+       if NOT .!SINGLE_TEST_FOR_DEBUG_ONLY!.==.. (
+           set run_cmd=!PYTHON_HOME!\Scripts\fbt_view.exe -d !REPO_PATH!\results.trf
+           call :sho "Check result, command: !run_cmd!" !QA_MAIN_LOG!
+           cmd /c !run_cmd! > !tmp_log!
+           for /f "tokens=*" %%c in (!tmp_log!) do (
+               @rem do NOT use here: call :sho "..." - troubles with GTR/LSS and output redirection.
+               echo.    %%c
+               echo.    %%c >>!QA_MAIN_LOG!
+           )
+           del !tmp_log!
+       )
+@rem echo 2222222222222
+@rem pause
 
         call :kill_fb_processes !QA_MAIN_LOG!
 
@@ -1470,10 +1504,30 @@ exit /b
 
 :final
     echo.
-    call :haltHelper 2> nul
     if defined QA_MAIN_LOG (
         call :sho "Bye-bye from %~dpnx0" !QA_MAIN_LOG!
+        if defined QA_LOG_FOLDER (
+            set tmp=!QA_LOG_FOLDER!\%~n0.tmp
+        ) else (
+            set tmp=%~dpn0.tmp
+        )
+
+        (
+            echo.
+            echo Check config for %~f0:
+            echo ############
+            for /f "tokens=*" %%c in (!cfg!) do (
+                echo.    %%c
+            )
+            echo ############
+        ) >>!QA_MAIN_LOG!
+
+        call :mailsender !tmp! "!mail_hdr_subj! overall job log" "!QA_MAIN_LOG!"
+        del !tmp! 2>nul
+
     ) else (
         echo Bye-bye from %~dpnx0.
     )
+
+    call :haltHelper 2> nul
     @echo.

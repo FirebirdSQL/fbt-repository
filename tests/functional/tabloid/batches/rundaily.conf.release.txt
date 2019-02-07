@@ -1,3 +1,6 @@
+PACK_AND_SEND_SNAPSHOT=1
+PERFORM_GIT_PULL=1
+
 FB_SNAPSHOTS_FOLDER=C:\Snapshots
 
 FB_CHECKED_MAJOR=2.5,3.0,4.0
@@ -62,7 +65,7 @@ mail_hdr_subj=::: QA fbtest :::
 
 mail_smtp_url=smtps://smtp.yandex.ru:465
 mail_hdr_from=firebirdtest.win@yandex.ru
-mail_pwd_from=t0t@1ly_wr0ng
+mail_pwd_from=FBtestb0x
 
 #mail_hdr_to=p519446@yandex.ru
 mail_hdr_to=firebirdtest.win@yandex.ru
@@ -71,4 +74,4 @@ curl_opt=--verbose --url "!mail_smtp_url!" --ssl-reqd --mail-from "!mail_hdr_fro
 
 # max size of attachment that can be sent without splitting it
 # (depends on mail receiver settings):
-max_size_without_split=10000000
+max_size_without_split=12000000
