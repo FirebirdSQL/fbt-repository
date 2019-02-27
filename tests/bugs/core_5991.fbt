@@ -1,0 +1,256 @@
+{
+'id': 'bugs.core_5991',
+'qmid': None,
+'tracker_id': 'CORE-5991',
+'title': 'Trace could not work correctly with quoted file names in trace configurations',
+'description': 
+ """
+    Thank Vlad for suggestions.
+
+    NOTE-1. Bug will NOT appear if PATTERN is used in database-section!
+    In order to reproduce bug one need to create config file for trace with following 
+    _SINGLE_ file name in databases-section:
+    =====
+        database = 'C:\FBTESTING\qa\fbt-repo\tmp\tmp_5991.o'clock.fdb'
+        {
+            enabled = true
+            time_threshold = 0 
+            log_initfini = false
+            log_connections = true
+            log_transactions = true
+            log_statement_finish = true
+        }
+    =====
+    (path 'C:\FBTESTING\qa\fbt-repo\tmp\' will be replaced with actual test DB location)
+
+    Then we start trace session.
+
+    NOTE-2: if this trace session will be forced to wait about 10 seconds, then error message will appear
+    with text "error while parsing trace configuration" but DB name will be securityN.fdb. 
+    Moreover, an operation with any DB which has name different than specified in database-section will
+    raise this error, and its text can be misleading that trace did not started at all or was terminated.
+    This is because another bug (not yet fixed) which Vlad mentioned privately in letter 26.02.19 23:37.
+    
+    :::: NB :::::
+    We can IGNORE this error message despite it contains phrase "Error creating trace session" and go on.
+    Trace session actually *WILL* be created and we have to check this here by further actions with DB.
+    :::::::::::::
+    
+    After this, we create database with the same name by calling fdb.create_database().
+    NOTE-3: we have to enclose DB file in double quotes and - moreover - duplicate single apostoph,
+    otherwise fdb driver will create DB without it, i.e.: "tmp_5991.oclock.fdb".
+
+    At the second step we do trivial statement and drop this database (tmp_5991.o'clock.fdb).
+    Finally, we wait at least two seconds because trace buffer must be flushed to disk, stop trace session
+    and then - open trace log for parsing it.
+    Trace log MUST contain all of following phrases (each of them must occur in log at least one time):
+        1. Trace session ID <N> started
+        2. CREATE_DATABASE
+        3. START_TRANSACTION
+        4. EXECUTE_STATEMENT_FINISH
+        5. ROLLBACK_TRANSACTION
+        6. DROP_DATABASE
+    We check each line of trace for matching to patterns (based on these phrases) and put result into Python dict.
+    Resulting dict must contain 'FOUND' and value for every of its keys (patterns).
+
+    Confirmed bug on 3.0.4.33054.
+    Checked on:
+        4.0.0.1421: OK, 5.536s.
+        3.0.5.33106: OK, 4.184s.
+
+ """,
+'min_versions': '3.0.5',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import re
+import time
+import subprocess
+from subprocess import Popen
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+
+fdb_file="$(DATABASE_LOCATION)tmp_5991.o'clock.fdb"
+if os.path.isfile(fdb_file):
+    os.remove(fdb_file)
+
+db_conn.close()
+
+fdb_trace=fdb_file.replace('/','\\\\')
+
+
+#####################################################################
+# Prepare config for trace session that will be launched by call of FBSVCMGR:
+
+txt = '''\
+    database = '%(fdb_trace)s'
+    {
+        enabled = true
+        time_threshold = 0 
+        log_initfini = false
+        log_connections = true
+        log_transactions = true
+        log_statement_finish = true
+    }
+''' % locals()
+
+trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_5991.cfg'), 'w')
+trc_cfg.write(txt)
+trc_cfg.close()
+trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_5991.log'), 'w')
+trc_log.close()
+trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_5991.lst'), 'w')
+trc_lst.close()
+
+#####################################################################
+# Async. launch of trace session using FBSVCMGR action_trace_start:
+
+trc_log=open(trc_log.name, "w")
+# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
+                    "action_trace_start",
+                    "trc_cfg", trc_cfg.name
+                  ],
+                  stdout=trc_log, 
+                  stderr=subprocess.STDOUT
+                )
+
+# Wait! Trace session is initialized not instantly!
+#time.sleep(2)
+
+
+#####################################################################
+# database = 'C:\FBTESTING\qa\fbt-repo\tmp\tmp_5991.o'clock.fdb'
+# con=fdb.create_database( dsn = "localhost:C:/FBTESTING/qa/fbt-repo/tmp/tmp_5991.o''clock.fdb", user='SYSDBA', password='masterkey')
+
+print( 'Trying to create: "localhost:%s"' % fdb_file.replace("'","''") )
+con = fdb.create_database( dsn = "localhost:%s" % fdb_file.replace("'","''") )
+print( 'Database created OK.' )
+cur = con.cursor()
+cur.execute( "select 'Database name contains single quote.' as result from mon$database where lower(mon$database_name) similar to '%[\\/](tmp_5991.o''clock).fdb'")
+for r in cur:
+    print(r[0])
+#print( 'Database: ',con.database_name,' - created OK, attachment: ', con.attachment_id )
+con.drop_database()
+print( 'Database dropped OK.')
+#####################################################################
+
+# ::: NB ::: Here we have to be idle at least two seconds otherwise trace log will not be filled 
+# with messages about create DB, start Tx, execute statement, rollback Tx and drop DB.
+time.sleep(2)
+
+# Determine active trace session ID (for further stop):
+########################
+
+trc_lst=open(trc_lst.name, "w")
+subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+                 "action_trace_list"],
+                 stdout=trc_lst, stderr=subprocess.STDOUT
+               )
+trc_lst.close()
+
+# Session ID: 5 
+#   user:   
+#   date:  2015-08-27 15:24:14 
+#   flags: active, trace 
+
+sid_pattern = re.compile('Session\s+ID[:]{0,1}\s+\d+', re.IGNORECASE)
+
+trc_ssn=0
+with open( trc_lst.name,'r') as f:
+    for line in f:
+        if sid_pattern.search( line ) and len( line.split() ) == 3:
+            trc_ssn = line.split()[2]
+            break
+
+# Result: `trc_ssn` is ID of active trace session. 
+# We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
+if trc_ssn==0:
+    print("Error parsing trace session ID.")
+    os.exit(0)
+
+
+# Stop trace session:
+#####################
+
+trc_lst=open(trc_lst.name, "a")
+trc_lst.seek(0,2)
+
+subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+                   "action_trace_stop",
+                   "trc_id",trc_ssn
+                 ],
+                 stdout=trc_lst, 
+                 stderr=subprocess.STDOUT
+               )
+trc_lst.close()
+
+p_svcmgr.terminate()
+trc_log.close()
+
+# do NOT remove this delay:
+time.sleep(1)
+
+allowed_patterns = {
+     '1. TRACE_START'    : re.compile('Trace\s+session\s+ID\s+\d+\s+started\.*', re.IGNORECASE)
+    ,'2. DB_CREATION'    : re.compile('[.*]*CREATE_DATABASE\.*', re.IGNORECASE)
+    ,'3. TX_START'       : re.compile('[.*]*START_TRANSACTION\.*', re.IGNORECASE)
+    ,'4. STATEMENT_DONE' : re.compile('[.*]*EXECUTE_STATEMENT_FINISH\.*', re.IGNORECASE)
+    ,'5. TX_FINISH'      : re.compile('[.*]*ROLLBACK_TRANSACTION\.*', re.IGNORECASE)
+    ,'6. DB_REMOVAL'     : re.compile('[.*]*DROP_DATABASE\.*', re.IGNORECASE)
+}
+
+found_patterns={}
+
+with open( trc_log.name,'r') as f:
+    for line in f:
+        if line.rstrip().split():
+            for k,v in allowed_patterns.items():
+                if v.search(line):
+                    found_patterns[k] = 'FOUND'
+
+            #for i,p in enumerate( allowed_patterns ):
+            #    if p.search(line):
+            #        found_patterns[i] = 'FOUND'
+
+for k,v in sorted( found_patterns.items() ):
+    print( 'Pattern', k, ':', v)
+
+# cleanup:
+##########
+f_list = () # (trc_lst, trc_cfg, trc_log)
+
+for f in f_list:
+     os.remove(f.name)
+
+  """,
+ 'expected_stdout':
+  """
+    Trying to create: "localhost:C:/FBTESTING/qa/fbt-repo/tmp/tmp_5991.o''clock.fdb"
+    Database created OK.
+    Database name contains single quote.
+    Database dropped OK.
+    Pattern 1. TRACE_START : FOUND
+    Pattern 2. DB_CREATION : FOUND
+    Pattern 3. TX_START : FOUND
+    Pattern 4. STATEMENT_DONE : FOUND
+    Pattern 5. TX_FINISH : FOUND
+    Pattern 6. DB_REMOVAL : FOUND
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
