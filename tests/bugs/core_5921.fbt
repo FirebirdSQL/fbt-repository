@@ -19,6 +19,8 @@
     ::: NB :::
     This ISQL-based test does NOT verify cases when tx is dead or in limbo.
     Perhaps, Python-based implementation is required and will be created later.
+
+    05.03.2019: renamed RDB$GET_CONTEXT('SYSTEM', 'SNAPSHOT_CN') to RDB$GET_CONTEXT('SYSTEM', 'SNAPSHOT_NUMBER') -- see CORE-6016. Checked on 4.0.0.1455
  """,
 'min_versions': '4.0',
 'versions': [
@@ -82,25 +84,17 @@
         ,rdb$get_transaction_cn( 9223372036854775807 ) as get_tx_002_cn
         ,rdb$get_transaction_cn(-9223372036854775808) as get_tx_003_cn
     from mon$database d;
-
-    /*
-    set sqlda_display on;
-    set planonly;
-    select
-        rdb$get_context('SYSTEM', 'GLOBAL_CN') as global_cn
-       ,rdb$get_context('SYSTEM', 'SNAPSHOT_CN') as snapshot_cn
-    from rdb$database;
-    */
-
+    
     set term ^;
     execute block returns( global_cn_sign smallint, snapshot_cn smallint ) as
     begin
        global_cn_sign = sign( rdb$get_context('SYSTEM', 'GLOBAL_CN') );
-       snapshot_cn = sign( rdb$get_context('SYSTEM', 'SNAPSHOT_CN') );
+       snapshot_cn = sign( rdb$get_context('SYSTEM', 'SNAPSHOT_NUMBER') );
        suspend;
     end
     ^
-
+    set term ;^
+    commit;
   """,
  'expected_stdout': 
   """
