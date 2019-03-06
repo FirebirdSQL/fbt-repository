@@ -229,7 +229,7 @@ for k,v in sorted( found_patterns.items() ):
 
 # cleanup:
 ##########
-f_list = () # (trc_lst, trc_cfg, trc_log)
+f_list = (trc_lst, trc_cfg, trc_log)
 
 for f in f_list:
      os.remove(f.name)
