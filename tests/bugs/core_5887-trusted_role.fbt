@@ -1,0 +1,148 @@
+{
+'id': 'bugs.core_5887-trusted_role',
+'qmid': None,
+'tracker_id': 'CORE-5887',
+'title': "Allow the use of management statements in PSQL blocks: check only TRUSTED ROLE",
+'description':
+ """
+    Role can be set as TRUSTED when following conditions are true:
+    * BOTH AuthServer and AuthClient parameters from firebird.conf contain 'Win_Sspi' as plugin, in any place;
+    * current OS user has admin rights;
+    * OS environment has *no* variables ISC_USER and ISC_PASSWORD (i.e. they must be UNSET);
+    * Two mappings are created (both uses plugin win_sspi):
+    ** from any user to user;
+    ** from predefined_group domain_any_rid_admins to role <role_to_be_trusted>
+
+    Connect to database should be done in form: CONNECT '<computername>:<our_database>' role <role_to_be_trusted>',
+    and after this we can user 'SET TRUSTED ROLE' statement.
+
+    This test checks that statement 'SET TRUSTED ROLE' can be used within PSQL block rather than as DSQL.
+
+    Checked on: 4.0.0.1457: OK, 2.602s.
+
+    Thanks to Alex for suggestions.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'Windows',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """\
+import os
+import re
+import time
+import subprocess
+from subprocess import Popen
+from fdb import services
+import socket
+import getpass
+
+#os.environ["ISC_USER"] = user_name
+#os.environ["ISC_PASSWORD"] = user_password
+
+THIS_DBA_USER=user_name
+THIS_DBA_PSWD=user_password
+
+THIS_COMPUTER_NAME = socket.gethostname()
+CURRENT_WIN_ADMIN = getpass.getuser()
+
+#THIS_FDB=os.path.join(context['temp_directory'],'bugs.core_5229.fdb')
+THIS_FDB = db_conn.database_name
+
+db_conn.close()
+
+f_sql_cmd = open( os.path.join(context['temp_directory'],'tmp_check_5887.sql'), 'w')
+
+f_sql_txt='''
+    set bail on;
+    --set echo on;
+    connect 'localhost:%(THIS_FDB)s' user %(THIS_DBA_USER)s password '%(THIS_DBA_PSWD)s';
+    create role tmp$role_5887;
+    commit;
+    grant tmp$role_5887 to "%(THIS_COMPUTER_NAME)s\%(CURRENT_WIN_ADMIN)s";
+    commit;
+
+    -- We have to use here "create mapping trusted_auth ... from any user to user" otherwise get
+    -- Statement failed, SQLSTATE = 28000 /Missing security context for C:\FBTESTING\QA\MISC\C5887.FDB
+    -- on connect statement which specifies COMPUTERNAME:USERNAME instead path to DB:
+    create or alter mapping trusted_auth using plugin win_sspi from any user to user;
+
+    -- We have to use here "create mapping win_admins ... DOMAIN_ANY_RID_ADMINS" otherwise get
+    -- Statement failed, SQLSTATE = 0P000 / Your attachment has no trusted role
+
+    create or alter mapping win_admins using plugin win_sspi from predefined_group domain_any_rid_admins to role tmp$role_5887;
+    commit;
+
+    connect '%(THIS_COMPUTER_NAME)s:%(THIS_FDB)s' role tmp$role_5887;
+
+    --show mapping;
+
+    set list on;
+    select 'point-1' as msg, a.mon$role,a.mon$auth_method from mon$attachments a where mon$attachment_id = current_connection;
+
+    set term ^;
+    execute block as
+    begin
+        set trusted role;
+    end
+    ^
+    set term ;^
+    commit;
+
+    connect '%(THIS_COMPUTER_NAME)s:%(THIS_FDB)s';
+    
+    select 'point-2' as msg, a.mon$role, a.mon$auth_method from mon$attachments a where mon$attachment_id = current_connection;
+    commit;
+
+    connect 'localhost:%(THIS_FDB)s' user %(THIS_DBA_USER)s password '%(THIS_DBA_PSWD)s';
+    drop mapping trusted_auth;
+    drop mapping WIN_ADMINS;
+    commit;
+    --set bail off;
+    --show mapping;
+''' % locals()
+
+f_sql_cmd.write(f_sql_txt)
+f_sql_cmd.close()
+
+#time.sleep(10)
+#runProgram( 'isql', [ '-q', '-i', f_sql_cmd.name] )
+
+f_sql_log=open( os.path.join(context['temp_directory'],'tmp_check_5887.log'), 'w')
+subprocess.call( [ "isql", "-q", "-i", f_sql_cmd.name ],
+                          stdout=f_sql_log, stderr=subprocess.STDOUT
+                      )
+f_sql_log.close()
+
+with open( f_sql_log.name,'r') as f:
+    for line in f:
+        print(line)
+
+f_list = (f_sql_cmd, f_sql_log)
+for f in f_list:
+     os.remove(f.name)
+
+
+  """,
+ 'expected_stdout': 
+  """
+    MSG                             point-1
+    MON$ROLE                        TMP$ROLE_5887                                                                                                                                                                                                                                               
+    MON$AUTH_METHOD                 Mapped from Win_Sspi
+
+    MSG                             point-2
+    MON$ROLE                        TMP$ROLE_5887                                                                                                                                                                                                                                               
+    MON$AUTH_METHOD                 Mapped from Win_Sspi
+
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
