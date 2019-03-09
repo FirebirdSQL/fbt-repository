@@ -47,19 +47,19 @@
     --  This must issue Infinity instead of 0.000...:
     select cast( 9.999999999999999999999999999999999E6144 as decfloat(34)) as greatest_df34_for_pos_scope from rdb$database;
 
-    --  This must issue -Iinfinity instead of 0.000...:
+    --  This must issue -Infinity instead of 0.000...:
     select cast(-9.999999999999999999999999999999999E6144 as decfloat(34)) as greatest_df34_for_neg_scope from rdb$database;
 
     select cast(1.0E-6143 as decfloat(34)) as approx_zero_df34_for_pos_scope from rdb$database;
     
-    select cast(-1.0E-6143 as decfloat(34)) as approx_zero__df34_for_neg_scope from rdb$database;
+    select cast(-1.0E-6143 as decfloat(34)) as approx_zero_df34_for_neg_scope from rdb$database;
   """,
  'expected_stdout': 
   """
     GREATEST_DF34_FOR_POS_SCOPE     Infinity
     GREATEST_DF34_FOR_NEG_SCOPE     -Infinity
     APPROX_ZERO_DF34_FOR_POS_SCOPE  0.0000000000000000
-    APPROX_ZERO__DF34_FOR_NEG_SCOPE 0.0000000000000000
+    APPROX_ZERO_DF34_FOR_NEG_SCOPE  0.0000000000000000
   """,
  'expected_stderr': 
   """
