@@ -1,0 +1,109 @@
+{
+'id': 'bugs.core_5887',
+'qmid': None,
+'tracker_id': 'CORE-5887',
+'title': "Allow the use of management statements in PSQL blocks",
+'description':
+ """
+    ::: NB :::
+    1. Currently test checks only ability to use SYNTAX for usage statements within PSQL blocks
+       as it is described in '...\doc\sql.extensions\README.management_statements_psql.md'.
+       Actual affects on further work are not verified.
+    2. Deferred check of 'alter session reset': got SQLSTATE = 25000/no transaction for request.
+       Sent letter to dimitr et al, 09-mar-2019 13:43.
+    3. Deferred check of 'SET TRUSTED ROLE': it is unclear for me how to implement this. 
+       Sent Q to Alex (same letter).
+
+    All other cases are checkedc on 4.0.0.1421 and 4.0.0.1457: OK.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set bail on;
+
+    set term ^;
+    execute block as
+    begin
+        begin
+            execute statement 'drop role acnt';
+        when any do begin end
+        end
+    end
+    ^
+    set term ;^
+    commit;
+
+    create role acnt;
+    commit;
+
+    grant acnt to sysdba;
+    commit;
+
+    ----------------------------------------------
+
+    -- NO output should be produced by further PSQL blocks:
+
+    set term ^;
+    execute block as
+    begin
+        set decfloat round ceiling;
+    end^
+
+    execute block as
+    begin
+        set decfloat traps to Division_by_zero, Invalid_operation, Overflow;
+    end^
+
+    execute block as
+    begin
+        set decfloat bind native;
+    end^
+
+    execute block as
+    begin
+        set role acnt;
+    end^
+
+    execute block as
+    begin
+        set session idle timeout 5 minute;
+    end^
+
+    execute block as
+    begin
+        set statement timeout 1 minute;
+    end^
+
+    execute block as
+    begin
+        set time zone local;
+    end^
+
+    execute block as
+    begin
+        set time zone bind native;
+    end^
+    ^
+    set term ;^
+    commit;
+
+    drop role acnt;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
