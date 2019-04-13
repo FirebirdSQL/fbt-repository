@@ -26,18 +26,18 @@
  'test_type': 'Python',
  'test_script': 
   """
+import os
 import fdb
-from fdb import services
 
-svc = services.connect( host='localhost', user = 'SYSDBA', password = 'masterkey' )
-usr1 = services.User('TMP$C5892')
-usr1.password = '123'
-svc.add_user(usr1)
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
 
-con1=fdb.connect( dsn = 'localhost:e40', user = 'SYSDBA', password = 'masterkey' )
+con1=fdb.connect( dsn = dsn ) #, user = 'SYSDBA', password = 'masterkey' )
+con1.execute_immediate("create or alter user TMP$C5892 password '123' using plugin Srp")
 
-con2=fdb.connect( dsn = 'localhost:e40', user = 'TMP$C5892', password = '123' )
-con3=fdb.connect( dsn = 'localhost:e40', user = 'TMP$C5892', password = '123' )
+con2=fdb.connect( dsn = dsn, user = 'TMP$C5892', password = '123' )
+con3=fdb.connect( dsn = dsn, user = 'TMP$C5892', password = '123' )
 
 sp_definer_ddl = '''
     create or alter procedure sp_test_definer returns( another_name varchar(31), another_conn_id int, execution_context varchar(31) ) SQL SECURITY DEFINER
@@ -111,11 +111,11 @@ cur2b.close()
 #---------------------------------
 
 con2.close()
-
-svc.remove_user(usr1)
-svc.close()
-con1.close()
 con3.close()
+
+con1.execute_immediate('drop user TMP$C5892 using plugin Srp')
+con1.close()
+
   """,
  'expected_stdout':
   """
