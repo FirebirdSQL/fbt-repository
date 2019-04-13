@@ -145,6 +145,12 @@ if NOT errorlevel 1 (
 
 call :sho "Point before main loop on checked major versions = !FB_CHECKED_MAJOR!" !QA_MAIN_LOG!
 
+@rem #+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#
+@rem #+#=#+#                                   #+#+#+#+#
+@rem #+#=#+#       m a i n       l o o p       #+#+#+#+#
+@rem #+#=#+#                                   #+#+#+#+#
+@rem #+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#+#
+
 for /d %%s in (!FB_CHECKED_MAJOR!) do (
     set fb_mask=
     echo.>>!QA_MAIN_LOG!
@@ -486,6 +492,7 @@ goto :eof
     )
 
     call :sho "Compressed file extraction..." !QA_MAIN_LOG!
+    call :sho "Current folder: !cd!, command: !P7ZCMD! x -y !build_7z!"  !QA_MAIN_LOG!
 
     @rem cur dir: C:\FirebirdQA\builds
     !P7ZCMD! x -y !build_7z! 1>!tmp_log! 2>&1
@@ -498,7 +505,9 @@ goto :eof
     findstr /i /r /c:"ERROR:" /c:"access.*denied" !tmp_log! 1>nul 2>&1
     if NOT errorlevel 1 (
         set zip_extraction_success=0
-        call :sho "Detected text related to extraction error." !QA_MAIN_LOG!
+        call :sho "##########################################" !QA_MAIN_LOG!
+        call :sho "Detected text related to extraction errors" !QA_MAIN_LOG!
+        call :sho "##########################################" !QA_MAIN_LOG!
     ) else (
         findstr /i /m /r /c:"Everything.*Ok" !tmp_log! 1>nul 2>&1
         if NOT errorlevel 1 (
@@ -585,10 +594,10 @@ goto :eof
         call :sho "Binary to be launched: !fbc!\!fb_exe!" !QA_MAIN_LOG!
 
         del !tmp_log! 2>nul
-        call :sho "Launching: start !fbc!\!fb_exe! -a" !QA_MAIN_LOG!
+        call :sho "Launching FB server as application: start !fbc!\!fb_exe! -a" !QA_MAIN_LOG!
         start !fbc!\!fb_exe! -a
 
-        call :sho "Launching: start !fbc!\fbguard.exe -a" !QA_MAIN_LOG!
+        call :sho "Launching FB guardian as application: start !fbc!\fbguard.exe -a" !QA_MAIN_LOG!
         start !fbc!\fbguard.exe -a
 
         call :sho "Determine PID of '!fb_exe!'" !QA_MAIN_LOG!
@@ -610,6 +619,93 @@ goto :eof
 
         call :sho "Check FB version and currently running processes:" !QA_MAIN_LOG!
         call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+        if "!major_v!"=="2.5" (
+            call :sho "SKIP basic encryption test for this FB version." !QA_MAIN_LOG!
+        ) else (
+            call :sho "Start basic encryption test for this FB version." !QA_MAIN_LOG!
+            del !tmp_log! 2>nul
+            
+            @rem NOTE: we have to stay in pause while KEEP CONNECTION order encryption/decryption process can finish its work.
+            @rem Here we define duration of this pause, in seconds, by using config parameter ENCRYPTION_DELAY_FOR_NORMAL_FINISH
+            @rem as argument in 'set transaction lock timeout' statement:
+
+            (
+                echo set echo on;
+                echo set bail on;
+                echo set term ^^;
+                echo create or alter procedure tmp_sp_pause as
+                echo begin
+                echo     update employee set emp_no=emp_no order by emp_no rows 1;
+                echo     -- this lead to pause equal to lock_timeout in declared 'outer' transaction:
+                echo     execute statement 'update employee set emp_no=emp_no order by emp_no rows 1' 
+                echo             on external 'localhost:' ^|^| rdb$get_context('SYSTEM', 'DB_NAME'^)
+                echo             as user 'SYSDBA' password 'masterkey' role left(replace( uuid_to_char(gen_uuid(^)^), '-', ''^), 31^)
+                echo     ;
+                echo when any do
+                echo     begin
+                echo     end
+                echo end
+                echo ^^
+                echo set term ;^^
+                echo commit;
+                echo --------------------------------------------
+                echo alter database encrypt with dbcrypt key red;
+                echo --------------------------------------------
+                echo commit;
+                echo set list on;
+                echo.
+                echo -- Check parameter 'ENCRYPTION_DELAY_FOR_NORMAL_FINISH' in %~n0.conf if following
+                echo -- lock_timeout will not be enough for successful completition of enryption process:
+                echo set transaction lock timeout !ENCRYPTION_DELAY_FOR_NORMAL_FINISH!;
+                echo.
+                echo select current_timestamp as pause_started_at from rdb$database;
+                echo execute procedure tmp_sp_pause;
+                echo select current_timestamp as pause_finished_at from rdb$database;
+                echo rollback;
+                echo -- This should issue: "Database encrypted" - without any other text about progress of encryption.
+                echo -- Increase value of config parameter 'ENCRYPTION_DELAY_FOR_NORMAL_FINISH' if it is not so:
+                echo show database;
+            ) > !tm2!
+            !build_path!\isql.exe localhost:encryption_test -user sysdba -pas masterkey -i !tm2! 1>>!tmp_log! 2>&1
+            !build_path!\gstat.exe -h encryption_test | findstr /i /c:"attributes" /c:"crypt" /c:"key hash" /c:"key name" 1>>!tmp_log! 2>&1
+
+            call :sho "Check result of test encryption:" !QA_MAIN_LOG!
+            call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+            del !tmp_log! 2>nul
+            (
+                echo set echo on;
+                echo set bail on;
+                echo alter database decrypt;
+                echo commit;
+                echo set list on;
+                echo.
+                echo -- Check parameter 'ENCRYPTION_DELAY_FOR_NORMAL_FINISH' in %~n0.conf if following
+                echo -- lock_timeout will not be enough for successful completition of deryption process:
+                echo set transaction lock timeout !ENCRYPTION_DELAY_FOR_NORMAL_FINISH!;
+                echo.
+                echo select current_timestamp as pause_started_at from rdb$database;
+                echo execute procedure tmp_sp_pause;
+                echo select current_timestamp as pause_finished_at from rdb$database;
+                echo rollback;
+                echo drop procedure tmp_sp_pause;
+                echo commit;
+                echo -- This should issue: "Database not encrypted" - without any other text about progress of decryption.
+                echo -- Increase value of config parameter 'ENCRYPTION_DELAY_FOR_NORMAL_FINISH' if it is not so:
+                echo show database;
+            ) > !tm2!
+            !build_path!\isql.exe localhost:encryption_test -user sysdba -pas masterkey -i !tm2! 1>>!tmp_log! 2>&1
+            !build_path!\gstat.exe -h encryption_test | findstr /i /c:"attributes" /c:"crypt" /c:"key hash" /c:"key name" 1>>!tmp_log! 2>&1
+        
+            call :sho "Check result of test decryption:" !QA_MAIN_LOG!
+            call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+            del !tmp_log! 2>nul
+            del !tm2! 2>nul
+            call :sho "Finished basic encryption test for this FB version." !QA_MAIN_LOG!
+
+        )
 
         if !PERFORM_GIT_PULL! EQU 1 (
             call :sho "Starting !GITCMD! reset --hard  and  !GITCMD! pull, current folder: %cd%:" !QA_MAIN_LOG!
@@ -961,7 +1057,14 @@ endlocal & goto:eof
         @rem 26-sep-2018, Zotov: addded 'Srp256' and 'Win_Sspi' to the list of AuthClient:
         echo AuthClient = Legacy_Auth, Srp, Srp256, Win_Sspi
 
-        echo WireCrypt = Disabled
+        @rem --- disabled 13.04.2019 -- echo WireCrypt = Disabled
+
+        echo ###########################
+        echo # Added 13.04.2019: started implementing tests for verifying DB encryption tasks
+        echo # Encryption demo plugin was supplied by IBSurgeon, see %ENCRYPTION_PLUGIN_FOLDER%
+        echo WireCrypt = Enabled
+        echo KeyHolderPlugin = KeyHolder
+        echo ###########################
 
         echo TempCacheLimit = 256M
         echo MaxUnflushedWrites = -1
@@ -972,6 +1075,7 @@ endlocal & goto:eof
         @rem Added 17-06-2018, Zotov:
         echo # 'UdfAccess' - changed because default value in FB 4.x is *NONE*. Some tests need to create/use/drop UDFs from fbudf.dll
         echo UdfAccess = Restrict UDF
+
         echo # 'BugCheckAbort' - changed in order Windows Error Reporting could create post-morten memory dumps if FB crashes
         echo BugCheckAbort = 1
 
@@ -979,6 +1083,17 @@ endlocal & goto:eof
         echo TempDirectories=!TEMP_DIR!
 
     ) >> !BUILD_PATH!\firebird.conf
+
+    call :sho "Copying encryption plugin files from !ENCRYPTION_PLUGIN_FOLDER! to !BUILD_PATH!" !QA_MAIN_LOG!
+    xcopy /y /f /s !ENCRYPTION_PLUGIN_FOLDER! !BUILD_PATH! 1>!tmp_log! 2>&1
+    call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+    call :sho "Copying license file from separate folder to !BUILD_PATH!\plugins" !QA_MAIN_LOG!
+    xcopy /y /f /v !ENCRYPTION_LICENSE_FILE! !BUILD_PATH!\plugins\*.* 1>!tmp_log! 2>&1
+    call :bulksho !tmp_log! !QA_MAIN_LOG!
+
+    call :sho "Copying standard employee.fdb to new .fdb for usage in encryption tests, file: %ENCRYPTION_SAMPLE_FDB%" !QA_MAIN_LOG!
+    echo F | xcopy /y /f /v !BUILD_PATH!\examples\empbuild\EMPLOYEE.FDB !BUILD_PATH!\examples\empbuild\%ENCRYPTION_SAMPLE_FDB%
 
     call :sho "Changed parameters in !build_path!\firebird.conf:" !QA_MAIN_LOG!
     findstr /m /r /c:"^[^#;]" !build_path!\firebird.conf >nul
@@ -992,7 +1107,6 @@ endlocal & goto:eof
     ) else (
         call :sho "There are NO uncommented parameters, all of them have DEFAULT values." !QA_MAIN_LOG!
     )
-
 
     if NOT .!FIREBIRD_TMP!.==.. (
         call :sho "Value of 'FIREBIRD_TMP': !FIREBIRD_TMP!, GTT data will be stored in this folder." !QA_MAIN_LOG!
@@ -1030,9 +1144,21 @@ endlocal & goto:eof
               )
           ) >> !dbconf_tmp!
         )
+
+        (
+            echo # !BUILD_PATH!\examples\empbuild\%ENCRYPTION_SAMPLE_FDB% - added by %~f0
+            echo encryption_test = $(dir_sampleDb^)/%ENCRYPTION_SAMPLE_FDB%
+            echo {
+            echo    KeyHolderPlugin = KeyHolder
+            echo }
+        ) >> !dbconf_tmp!
+
+
+        @rem =====================================================
+        @rem O V E R W R I T I N G     D A T A B A S E S . C O N F 
+        @rem =====================================================
         type !dbconf_tmp! > !dbconf_for_tests_run!
         del !dbconf_tmp!
-
 
         call :sho "Changed parameters in !dbconf_for_tests_run!:" !QA_MAIN_LOG!
         findstr /m /r /c:"^[^#;]" !dbconf_for_tests_run! >nul
