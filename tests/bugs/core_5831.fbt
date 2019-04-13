@@ -64,7 +64,7 @@
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'init_script':
   """
   """,
