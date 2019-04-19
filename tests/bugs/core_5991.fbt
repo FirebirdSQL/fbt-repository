@@ -250,7 +250,8 @@ for f in f_list:
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[('Trying to create.*', '')]
 }
 ]
 }
