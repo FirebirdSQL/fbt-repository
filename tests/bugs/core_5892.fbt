@@ -2,7 +2,7 @@
 'id': 'bugs.core_5892',
 'qmid': None,
 'tracker_id': 'CORE-5892',
-'title': "Trigger on system table restored in FB3 database and can't be deleted",
+'title': "SQL SECURITY DEFINER context is not properly evaluated for monitoring tables",
 'description':
  """
     Test is based on ticket sample: we create non-privileged user and allow him to call TWO procedures.
