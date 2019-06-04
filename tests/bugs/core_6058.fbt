@@ -1,0 +1,62 @@
+{
+'id': 'bugs.core_6058',
+'qmid': None,
+'tracker_id': 'CORE-6058',
+'title': "Change behavior of skipped and repeated wall times within time zones",
+'description':
+ """
+    Confirmed wrong output on 4.0.0.1421.
+    Works OK on 4.0.0.1524
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- Change behavior of skipped and repeated wall times within time zones
+    -- Within time zones, some wall times does not exist (DST starting) or repeats twice (DST ending).
+
+    set heading off;
+
+    -- is repeated twice (fall backward), but it must be interpreted as 1:30 AM UTC-04 instead of 1:30 AM UTC-05" 
+    select timestamp '2017-11-05 01:30 America/New_York' from rdb$database;
+    select timestamp '2017-11-05 01:30 -04' from rdb$database;
+    select datediff(
+        second from 
+        timestamp '2017-11-05 01:30 America/New_York'
+        to 
+        timestamp '2017-11-05 01:30 -04'
+    ) from rdb$database;
+
+
+    -- does not exist, but it must be interpreted as 2:30 AM UTC-05 (equivalent to 3:30 AM UTC-04)"
+    select timestamp '2017-03-12 02:30 America/New_York' from rdb$database;
+    select timestamp '2017-03-12 02:30 -05' from rdb$database;
+    select datediff(
+        second from 
+        timestamp '2017-03-12 02:30 America/New_York'
+        to 
+        timestamp '2017-03-12 02:30 -05'
+    ) from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    2017-11-05 01:30:00.0000 America/New_York
+    2017-11-05 01:30:00.0000 -04:00
+    0
+    2017-03-12 03:30:00.0000 America/New_York
+    2017-03-12 02:30:00.0000 -05:00
+    0
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
