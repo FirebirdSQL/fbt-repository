@@ -2,7 +2,7 @@
 'id': 'bugs.core_5796',
 'qmid': None,
 'tracker_id': 'CORE-5796',
-'title': "Not user friendly output of gstat at encrypted database",
+'title': "gstat may produce faulty report about presence of some none-encrypted pages in database",
 'description':
  """
     We create new database ('tmp_core_5796.fdb') and try to encrypt it usng IBSurgeon Demo Encryption package
