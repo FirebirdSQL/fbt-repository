@@ -45,19 +45,19 @@
     In case of "Crypt plugin DBCRYPT failed to load/607/335544351" check that all 
     needed files from IBSurgeon Demo Encryption package exist in %FB_HOME% and %FB_HOME%\plugins
     %FB_HOME%:
-        282112 fbcrypt.dll
+        283136 fbcrypt.dll
        2905600 libcrypto-1_1-x64.dll
         481792 libssl-1_1-x64.dll
-         33554 firebird.conf
+
     %FB_HOME%\plugins:
-        288768 dbcrypt.dll
-        301568 keyholder.dll
+        297984 dbcrypt.dll
+        306176 keyholder.dll
            108 DbCrypt.conf
            856 keyholder.conf
     
     === NOTE-2 ===
-    firebird.conf must contain following line:
-        KeyHolderPlugin = KeyHolder
+    Version of DbCrypt.dll of october-2018 must be replaced because it has hard-coded 
+    date of expiration rather than reading it from DbCrypt.conf !!
 
  """,
 'min_versions': '3.0.4',
