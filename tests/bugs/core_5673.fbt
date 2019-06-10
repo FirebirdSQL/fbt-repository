@@ -109,7 +109,6 @@ try:
     cur.execute( 'insert into test(x) values(1)' )
 except Exception as e:
     for x in e.args:
-        #print( x.replace(chr(92),"/") if type(x)=='str' else x  )
         print( x  )
 
 try:
