@@ -1,0 +1,332 @@
+{
+'id': 'bugs.core_6078',
+'qmid': None,
+'tracker_id': 'CORE-6078',
+'title': "Permissions for create or alter statements are not checked",
+'description':
+ """
+    The problem occured for all kind of DB objects which allow 'create OR ALTER' statement to be applied against themselves.
+    Test creates non-privileged user and checks for all such objects that this user can NOT create any object because missing
+    privilege to do this.
+    Confirmed bug on 3.0.5.33140 and 4.0.0.1532.
+    Checked on:
+        4.0.0.1533: OK, 2.354s.
+        3.0.5.33141: OK, 1.101s.
+ """,
+'min_versions': '3.0.5',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    set count on;
+
+
+    recreate table test( uid char(16) character set octets, x int, y int);
+    commit;
+    set term ^;
+    create or alter trigger test_bi for test active before insert position 0 as
+    begin
+       new.uid = gen_uuid();
+    end
+    ^
+    set term ;^
+    commit;
+
+    create or alter user tmp$c6078 password '123'; -- Unprivileged user
+    commit;
+
+    connect '$(DSN)' user tmp$c6078 password '123';
+    commit;
+
+
+    ---------------------------------------------------------------
+    -- trigger on existing table (CREATED BY SYSDBA)
+
+    -- Statement failed, SQLSTATE = 28000
+    -- unsuccessful metadata update
+    -- -CREATE OR ALTER TRIGGER TEST_BI failed
+    -- -no permission for ALTER access to TABLE TEST
+    set term ^;
+    create or alter trigger test_bi for test active before insert position 0 as
+    begin
+       new.uid = 'QWE';
+    end
+    ^
+    set term ;^
+    commit;
+
+    ----------------------------------------------------------------
+    -- new trigger, on DB-level event:
+
+    -- Statement failed, SQLSTATE = 28000
+    -- unsuccessful metadata update
+    -- -CREATE OR ALTER TRIGGER TRG$START failed
+    -- -no permission for ALTER access to DATABASE
+    set term ^;
+    create or alter trigger trg$start
+        inactive on transaction start position 0
+    as
+    begin
+        rdb$set_context('USER_SESSION', 'TRANS_ID', current_transaction);
+    end
+    ^
+    set term ;^
+
+    ----------------------------------------------------------------
+
+    -- Statement failed, SQLSTATE = 28000
+    -- unsuccessful metadata update
+    -- -CREATE OR ALTER TRIGGER TRIG_DDL_SP failed
+    -- -no permission for ALTER access to DATABASE
+
+    set term ^;
+    create or alter trigger trig_ddl_sp before create procedure as
+    begin
+    end
+    ^
+    set term ;^
+
+    -- Expected:
+    -- RDB$TRIGGER_NAME                TEST_BI
+    -- RDB$TRIGGER_SOURCE              c:3cc
+    -- as
+    -- begin
+    --    new.uid = gen_uuid();
+    -- end
+    -- Records affected: 1
+
+    select t.rdb$trigger_name altered_trigger_name, t.rdb$trigger_source altered_trigger_source from rdb$database r left join rdb$triggers t on t.rdb$system_flag is distinct from 1;
+
+    ---------------------------------------------------------------
+
+    -- package
+    -- Statement failed, SQLSTATE = 42000
+    -- unsuccessful metadata update
+    -- -RECREATE PACKAGE BODY PKG_TEST failed
+    -- -There is no privilege for this operation
+    set term ^ ;
+    create or alter package pkg_test -- error did raise, but packages still WAS created.
+    as
+    begin
+      function f_test_inside_pkg
+      returns smallint;
+    end
+    ^
+    set term ;^
+
+    set term ^;
+    recreate package body PKG_TEST
+    as
+    begin
+      function f_test_inside_pkg
+      returns smallint
+      as
+      begin
+        return 1;
+      end
+    end
+    ^
+    set term ;^
+
+    commit;
+
+    -- Expected:
+    -- RDB$PACKAGE_NAME                <null>
+    -- Records affected: 1
+    select p.rdb$package_name as altered_pkg_name from rdb$database r left join rdb$packages p on p.rdb$system_flag is distinct from 1;
+    commit;
+
+
+    ---------------------------------------------------------------
+    -- standalone function
+    set term ^;
+    create or alter function fn_c6078 returns int as  -- error did raise, but function still WAS created.
+    begin
+      return 123987;
+    end
+    ^
+    set term ^;
+    commit;
+
+    -- Expected:
+    -- RDB$FUNCTION_NAME               <null>
+    -- Records affected: 1
+    select f.rdb$function_name as altered_standalone_func from rdb$database r left join rdb$functions f on f.rdb$system_flag is distinct from 1 and f.RDB$PACKAGE_NAME is null;
+    commit;
+
+    ---------------------------------------------------------------
+    -- standalone procedure
+
+    set term ^;
+    create or alter procedure sp_c6078 returns(whoami varchar(32)) as
+    begin
+        whoami = current_user;
+        suspend;
+    end
+    ^
+    set term ;^ 
+    commit;
+
+    -- Expected:
+    -- RDB$PROCEDURE_NAME              <null>
+    -- Records affected: 1
+    select p.rdb$procedure_name as altered_standalone_proc from rdb$database r left join rdb$procedures p on p.rdb$system_flag is distinct from 1;
+
+
+    ---------------------------------------------------------------
+    -- view
+    --create or alter view v_c6078 as select * from rdb$database; -- here no error, even for 1st run of this statement!
+    create or alter view v_c6078 as select * from rdb$database; -- NO error at all, view WAS created.
+    commit;
+
+    -- Expected
+    -- RDB$RELATION_NAME               <null>
+    -- Records affected: 1
+    select v.rdb$relation_name as altered_view_name from rdb$database r left join rdb$relations v on v.rdb$system_flag is distinct from 1 and v.rdb$relation_name = upper('v_c6078');
+    commit;
+
+    ---------------------------------------------------------------
+    -- sequence
+    -- create or alter sequence sq_c6078 start with 192837465; -- here no error, even for 1st run of this statement!
+    create or alter sequence sq_c6078 start with 192837465;
+    commit;
+
+    -- Expected:
+    -- RDB$GENERATOR_NAME              <null>
+    -- Records affected: 1
+    select g.rdb$generator_name as altered_sequence_name from rdb$database r left join rdb$generators g on g.rdb$system_flag is distinct from 1;
+    commit;
+
+    ---------------------------------------------------------------
+    -- exception
+    --create or alter exception ex_c6078 'Something wrong.'; -- here no error, even for 1st run of this statement!
+    create or alter exception ex_c6078 'Something wrong.';
+    commit;
+
+    -- Expected
+    -- RDB$EXCEPTION_NAME              <null>
+    -- Records affected: 1
+    select x.rdb$exception_name as altered_exception_name from rdb$database r left join rdb$exceptions x on x.rdb$system_flag is distinct from 1;
+    commit;
+
+    --########################################################################
+
+    create or alter function wait_event ( -- NO error at all, UDR-based funtion WAS created.
+        event_name varchar(31) character set utf8 not null
+    ) returns integer not null
+        external name 'udrcpp_example!wait_event'
+        engine udr;
+
+    commit;
+
+    -- Expected:
+    -- RDB$FUNCTION_NAME               <null>
+    -- Records affected: 1
+    select f.rdb$function_name as altered_UDR_based_func from rdb$database r left join rdb$functions f on f.rdb$system_flag is distinct from 1 and f.rdb$engine_name = upper('udr');
+    commit;
+
+    -- cleanup
+    connect '$(DSN)' user sysdba password 'masterkey';
+
+    drop user tmp$c6078;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    ALTERED_TRIGGER_NAME            TEST_BI                                                                                                                                                                                                                                                     
+    ALTERED_TRIGGER_SOURCE
+    as
+    begin
+       new.uid = gen_uuid();
+    end
+    Records affected: 1
+
+    ALTERED_PKG_NAME                <null>
+    Records affected: 1
+
+    ALTERED_STANDALONE_FUNC         <null>
+    Records affected: 1
+
+    ALTERED_STANDALONE_PROC         <null>
+    Records affected: 1
+
+    ALTERED_VIEW_NAME               <null>
+    Records affected: 1
+
+    ALTERED_SEQUENCE_NAME           <null>
+    Records affected: 1
+
+    ALTERED_EXCEPTION_NAME          <null>
+    Records affected: 1
+
+    ALTERED_UDR_BASED_FUNC          <null>
+    Records affected: 1
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 28000
+    unsuccessful metadata update
+    -CREATE OR ALTER TRIGGER TEST_BI failed
+    -no permission for ALTER access to TABLE TEST
+
+    Statement failed, SQLSTATE = 28000
+    unsuccessful metadata update
+    -CREATE OR ALTER TRIGGER TRG$START failed
+    -no permission for ALTER access to DATABASE 
+
+    Statement failed, SQLSTATE = 28000
+    unsuccessful metadata update
+    -CREATE OR ALTER TRIGGER TRIG_DDL_SP failed
+    -no permission for ALTER access to DATABASE 
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE OR ALTER PACKAGE PKG_TEST failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -RECREATE PACKAGE BODY PKG_TEST failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE OR ALTER FUNCTION FN_C6078 failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE OR ALTER PROCEDURE SP_C6078 failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE OR ALTER VIEW V_C6078 failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -ALTER SEQUENCE SQ_C6078 failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE OR ALTER EXCEPTION EX_C6078 failed
+    -There is no privilege for this operation
+
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE OR ALTER FUNCTION WAIT_EVENT failed
+    -There is no privilege for this operation
+  """,
+  'substitutions': [('ALTERED_TRIGGER_SOURCE.*', 'ALTERED_TRIGGER_SOURCE')]
+}
+]
+}
