@@ -1,0 +1,107 @@
+{
+'id': 'bugs.core_6089',
+'qmid': None,
+'tracker_id': 'CORE-6089',
+'title': 'BLOBs are unnecessarily copied during UPDATE after a table format change',
+'description': 
+ """
+    It's not easy to obtain BLOB_ID using only fdb. Rather in ISQL blob_id will be shown always (even if we do not want this :)).
+    This test runs ISQL with commands that were provided in the ticket and parses its result by extracting only column BLOB_ID.
+    Each BLOB_ID is added to set(), so eventually we can get total number of UNIQUE blob IDs that were generated during test.
+    This number must be equal to number of records in the table (three in this test).
+
+    Confirmed bug on: 4.0.0.1535; 3.0.5.33142.
+    Works fine on:
+       4.0.0.1556: OK, 3.384s.
+       3.0.5.33152: OK, 2.617s.
+
+ """,
+'min_versions': '3.0.5',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import re
+import subprocess
+import time
+import fdb
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+allowed_patterns = ( re.compile('COL2_BLOB_ID\s+\S+', re.IGNORECASE), )
+
+sql_txt='''
+    set bail on;
+    set list on;
+    set blob off;
+    recreate table t (col1 int, col2 blob);
+    recreate view v as select col2 as col2_blob_id from t; -- NB: alias for column have to be matched to re.compile() argument
+    commit;
+
+    insert into t values (1, '1');
+    insert into t values (2, '2');
+    insert into t values (3, '3');
+    commit;
+
+    select v.* from v;
+    update t set col1 = -col1;
+    select v.* from v;
+
+
+    rollback;
+    alter table t add col3 date;
+    select v.* from v;
+    update t set col1 = -col1;
+    select v.* from v; -- bug was here
+    quit;
+'''
+
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_6089.sql'), 'w')
+f_isql_cmd.write( sql_txt )
+f_isql_cmd.close()
+
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_6089.log'), 'w')
+
+subprocess.call(["isql", dsn, "-q", "-i", f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
+f_isql_log.close()
+
+# Let redirected output of isql be flushed on disk:
+time.sleep(1)
+
+blob_id_set=set()
+with open( f_isql_log.name,'r') as f:
+    for line in f:
+        match2some = filter( None, [ p.search(line) for p in allowed_patterns ] )
+        if match2some:
+            blob_id_set.add( line.split()[1] )
+
+print( 'Number of unique blob IDs: ' + str(len(blob_id_set)) )
+
+# Cleanup.
+##########
+f_list = (f_isql_cmd, f_isql_log)
+for i in range(len(f_list)):
+   if os.path.isfile(f_list[i].name):
+       os.remove(f_list[i].name)
+
+  """,
+ 'expected_stdout': 
+  """
+    Number of unique blob IDs: 3
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
