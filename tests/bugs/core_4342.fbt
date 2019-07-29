@@ -119,6 +119,20 @@
   """,
  'expected_stderr': 
   """
+    Statement failed, SQLSTATE = HY000
+    Cannot select system table RDB$SECURITY_CLASSES for update WITH LOCK
+    Statement failed, SQLSTATE = 42000
+    UPDATE operation is not allowed for system table RDB$SECURITY_CLASSES
+    Statement failed, SQLSTATE = 42000
+    DELETE operation is not allowed for system table RDB$SECURITY_CLASSES
+    Statement failed, SQLSTATE = HY000
+    Cannot select system table RDB$SECURITY_CLASSES for update WITH LOCK
+    Statement failed, SQLSTATE = 28000
+    no permission for UPDATE access to TABLE RDB$SECURITY_CLASSES
+    -Effective user is MNGR
+    Statement failed, SQLSTATE = 28000
+    no permission for DELETE access to TABLE RDB$SECURITY_CLASSES
+    -Effective user is MNGR
   """
 }
 ]
