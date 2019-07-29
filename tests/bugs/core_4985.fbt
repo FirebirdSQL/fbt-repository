@@ -47,8 +47,11 @@
   """
     Statement failed, SQLSTATE = 28000
     no permission for SELECT access to TABLE TEST
+    -Effective user is TMP$C4985
+
     Statement failed, SQLSTATE = 28000
     no permission for SELECT access to TABLE TEST
+    -Effective user is TMP$C4985
   """
 }
 ]
