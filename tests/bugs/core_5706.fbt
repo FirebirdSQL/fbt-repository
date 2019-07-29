@@ -28,6 +28,14 @@
   Checked on:
      3.0.3.32876 (SS, CS)
      4.0.0.852  (SS, CS)
+  Checked again 29.07.2019 on:
+     4.0.0.1567: OK, 7.203s.
+     4.0.0.1535: OK, 11.601s.
+     4.0.0.1535: OK, 7.483s.
+     3.0.5.33160: OK, 6.882s.
+     3.0.5.33152: OK, 7.767s.
+     3.0.4.33054: OK, 8.622s.
+
  """,
 'min_versions': '3.0.3',
 'versions': [
@@ -226,6 +234,7 @@ f_list=(
     ,f_fblog_after
     ,f_diff_txt
 )
+
 for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
