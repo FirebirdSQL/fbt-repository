@@ -61,7 +61,10 @@
     Statement failed, SQLSTATE = 28000
     no permission for EXECUTE access to PROCEDURE PeRm
   """,
-  'substitutions':[('execute', 'EXECUTE')]
+  'substitutions':[
+      ('execute', 'EXECUTE'),
+      ('-Effective user is.*', '')
+   ]
 }
 ]
 }
