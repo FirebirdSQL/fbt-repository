@@ -139,7 +139,10 @@
     Statement failed, SQLSTATE = 28000
     no permission for UPDATE access to COLUMN TEST.FLD_FOR_SENIORS
   """,
-  'substitutions':[('GRANT.*TMP.*','')]
+  'substitutions':[
+     ('GRANT.*TMP.*',''),
+     ('-Effective user is.*', '')
+   ]
 }
 ]
 }
