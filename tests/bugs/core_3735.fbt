@@ -173,7 +173,10 @@
     no permission for DELETE access to TABLE RDB$CHARACTER_SETS
     Statement failed, SQLSTATE = 28000
     no permission for DELETE access to TABLE RDB$DATABASE
-  """
+  """,
+  'substitutions':[
+      ('-Effective user is.*', '')
+   ]
 }
 ]
 }
