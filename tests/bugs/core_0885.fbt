@@ -160,7 +160,11 @@
   """
     Statement failed, SQLSTATE = 28000
     no permission for UPDATE access to TABLE TEST
-  """
+  """,
+  'substitutions':[
+      ('-Effective user is.*', '')
+   ]
+
 }
 ]
 }
