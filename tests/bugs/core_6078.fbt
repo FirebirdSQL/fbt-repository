@@ -326,7 +326,10 @@
     -CREATE OR ALTER FUNCTION WAIT_EVENT failed
     -There is no privilege for this operation
   """,
-  'substitutions': [('ALTERED_TRIGGER_SOURCE.*', 'ALTERED_TRIGGER_SOURCE')]
+  'substitutions': [
+      ('ALTERED_TRIGGER_SOURCE.*', 'ALTERED_TRIGGER_SOURCE')
+     ,('-Effective user is.*', '')
+   ]
 }
 ]
 }
