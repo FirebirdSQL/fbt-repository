@@ -107,7 +107,8 @@
     ('record not found for user:.*', ''),
     ('read/select','SELECT'),
     ('Data source : Firebird::.*','Data source : Firebird::'),
-    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+    ('-At block line: [\d]+, col: [\d]+', '-At block line'),
+    ('335545254 : Effective user is.*', '')
   ]
 }
 ]
