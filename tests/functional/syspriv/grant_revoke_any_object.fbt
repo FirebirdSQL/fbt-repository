@@ -116,6 +116,7 @@
   """
     Statement failed, SQLSTATE = 28000
     no permission for SELECT access to TABLE TEST_U01
+    -Effective user is U02
   """
 }
 ]
