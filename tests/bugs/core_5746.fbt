@@ -101,7 +101,9 @@
     unsuccessful metadata update
     -CREATE INDEX SYSTABLE_COMM_IDX failed
     -no permission for ALTER access to TABLE RDB$RELATIONS
-  """
+  """,
+  'substitutions': [ ('-Effective user is.*', '') ]
+
 }
 ]
 }
