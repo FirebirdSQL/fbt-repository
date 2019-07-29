@@ -14,7 +14,6 @@
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'test_script': 
   """
@@ -57,6 +56,52 @@
   """
     Statement failed, SQLSTATE = 28000
     no permission for SELECT access to TABLE TEST
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set wng off;
+    create or alter user tmp_c4980 password '123';
+    commit;
+
+    recreate table test(id int);
+    commit;
+    insert into test values(1);
+    commit;
+
+    revoke all on all from tmp_c4980;
+    revoke all on all from public;
+    commit;
+
+    connect '$(DSN)' user tmp_c4980 password '123';
+
+    set list on;
+    select current_user as who_am_i from rdb$database;
+    select current_user as who_am_i, r.rdb$character_set_name from rdb$database r;
+    select current_user as who_am_i, r.rdb$relation_name from rdb$relations r order by rdb$relation_id rows 1;
+    select current_user as who_am_i, t.id from test t; -- this should ALWAYS fail because this is non-system table.
+    commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+    drop user tmp_c4980;
+  """,
+ 'expected_stdout': 
+  """
+    WHO_AM_I                        TMP_C4980
+    WHO_AM_I                        TMP_C4980
+    RDB$CHARACTER_SET_NAME          NONE
+    WHO_AM_I                        TMP_C4980
+    RDB$RELATION_NAME               RDB$PAGES
+  """,
+ 'expected_stderr': 
+  """
+    Statement failed, SQLSTATE = 28000
+    no permission for SELECT access to TABLE TEST
+    -Effective user is TMP_C4980
   """
 }
 ]
