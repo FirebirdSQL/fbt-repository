@@ -34,7 +34,7 @@
         'BEFORE CHECKS:' as msg, 
         mon$user as who_am_i, 
         mon$role as whats_my_role,
-        mon$remote_protocol what_protocol_im_using
+        left(mon$remote_protocol,3) what_protocol_im_using
     from mon$attachments a 
     where mon$attachment_id=current_connection;
 
@@ -47,7 +47,7 @@
       declare v_sttm varchar(255);
     begin
       v_dbnm = rdb$get_context('SYSTEM', 'DB_NAME');
-      v_sttm = 'select mon$user,mon$role,mon$remote_protocol from mon$attachments a where mon$attachment_id=current_connection';
+      v_sttm = 'select mon$user,mon$role, left(mon$remote_protocol,3) from mon$attachments a where mon$attachment_id=current_connection';
 
       check_no=1;
       execute statement v_sttm
@@ -79,12 +79,12 @@
     MSG                             BEFORE CHECKS:
     WHO_AM_I                        TMP$C5898
     WHATS_MY_ROLE                   BOSS
-    WHAT_PROTOCOL_IM_USING          TCPv4
+    WHAT_PROTOCOL_IM_USING          TCP
 
     CHECK_NO                        1
     WHO_AM_I                        TMP$C5898
     WHATS_MY_ROLE                   BOSS
-    WHAT_PROTOCOL_IM_USING          TCPv4
+    WHAT_PROTOCOL_IM_USING          TCP
 
     CHECK_NO                        2
     WHO_AM_I                        TMP$C5898
