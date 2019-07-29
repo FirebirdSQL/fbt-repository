@@ -413,8 +413,11 @@
   """
     Statement failed, SQLSTATE = 28000
     no permission for SELECT access to TABLE TPDSK
+    -Effective user is TMP$C1815_BOSS
+
     Statement failed, SQLSTATE = 28000
     no permission for SELECT access to TABLE TACNT
+    -Effective user is TMP$C1815_BOSS
   """
 }
 ]
