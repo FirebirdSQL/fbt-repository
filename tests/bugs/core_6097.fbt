@@ -55,7 +55,7 @@ sql_txt='''
     create or alter user "Ковалевский_Олег" password '123' using plugin Srp;
     commit;
     set list on;
-    select sec$user_name, octet_length(trim(sec$user_name)) as octets_in_name from sec$users where sec$user_name != 'SYSDBA';
+    select sec$user_name, octet_length(trim(sec$user_name)) as octets_in_name from sec$users where sec$user_name = 'Ковалевский_Олег';
     commit;
 ''' % (fb_home,)
 
