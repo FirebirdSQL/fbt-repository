@@ -72,13 +72,16 @@ f_init_log.close()
 #runProgram( fb_home+'isql', [dsn, "-q", "-user", "Ковалевский_Олег", "-pas", "123" ], 'set list on; set count on; select * from mon$attachments where mon$attachment_id = current_connection;')
 
 f_check_sql=open( os.path.join(context['temp_directory'],'tmp_6097_check.sql'), 'w')
-f_check_sql.write( 'set list on; select count(*) as "Can_i_see_myself ?" from mon$attachments where mon$attachment_id = current_connection;' )
+#f_check_sql.write( 'set list on; select count(*) as "Can_i_see_myself ?" from mon$attachments where mon$attachment_id = current_connection;' )
+f_check_sql.write( 'set count on; set list on; select mon$user as who_am_i, left(mon$remote_protocol,3) as mon_protocol, mon$auth_method as mon_auth_method from mon$attachments where mon$attachment_id = current_connection;' )
 f_check_sql.close()
 
 f_bat_text='''
 @echo off
+chcp 65001 1>nul
 %s %s -user "Ковалевский_Олег" -pas 123 -ch utf8 -q -i %s
 ''' % ( fb_home+'isql.exe', dsn, f_check_sql.name )
+#''' % ( fb_home+'isql.exe', 'localhost:employee', f_check_sql.name )
 
 f_check_bat=open( os.path.join(context['temp_directory'],'tmp_6097_check.bat'), 'w')
 f_check_bat.write( f_bat_text )
@@ -114,7 +117,11 @@ for i in range(len(f_list)):
 	SEC$USER_NAME                   Ковалевский_Олег
 	OCTETS_IN_NAME                  31
 	Records affected: 1
-	Can_i_see_myself ?              1
+	
+	WHO_AM_I                        Ковалевский_Олег
+	MON_PROTOCOL                    TCP
+	MON_AUTH_METHOD                 Srp
+	Records affected: 1
   """,
  'expected_stderr': 
   """
