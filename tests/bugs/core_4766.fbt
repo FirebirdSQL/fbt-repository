@@ -78,7 +78,9 @@
   """,
   'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'),
                    ('TABLE PLG\$SRP_VIEW', 'TABLE PLG'),
-                   ('find/delete', 'delete') ]
+                   ('find/delete', 'delete'),
+                   ('-Effective user is.*', '')
+   ]
 }
 ]
 }
