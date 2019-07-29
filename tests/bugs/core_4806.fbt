@@ -141,7 +141,10 @@
 
     Statement failed, SQLSTATE = 28000
     no permission for USAGE access to GENERATOR G
-  """
+  """,
+  'substitutions':[
+     ('-Effective user is.*', '')
+   ]
 }
 ]
 }
