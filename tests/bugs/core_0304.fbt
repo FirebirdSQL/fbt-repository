@@ -294,94 +294,110 @@
   """,
   'expected_stderr':
   """
-    Statement failed, SQLSTATE = 28000
-    no permission for EXECUTE access to PROCEDURE SP_TEST
+Statement failed, SQLSTATE = 28000
+no permission for EXECUTE access to PROCEDURE SP_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    no permission for USAGE access to GENERATOR G_TEST
-    There is no generator G_TEST in this database
+Statement failed, SQLSTATE = 28000
+no permission for USAGE access to GENERATOR G_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -ALTER DOMAIN DM_TEST failed
-    -no permission for ALTER access to DOMAIN DM_TEST
+There is no generator G_TEST in this database
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-ALTER DOMAIN DM_TEST failed
+-no permission for ALTER access to DOMAIN DM_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -ALTER DOMAIN DM_TEST failed
-    -no permission for ALTER access to DOMAIN DM_TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-ALTER DOMAIN DM_TEST failed
+-no permission for ALTER access to DOMAIN DM_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -ALTER DOMAIN DM_TEST failed
-    -no permission for ALTER access to DOMAIN DM_TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-ALTER DOMAIN DM_TEST failed
+-no permission for ALTER access to DOMAIN DM_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -ALTER TRIGGER TEST_BI failed
-    -no permission for ALTER access to TABLE TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-ALTER TRIGGER TEST_BI failed
+-no permission for ALTER access to TABLE TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -ALTER TABLE TEST failed
-    -no permission for ALTER access to TABLE TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-ALTER TABLE TEST failed
+-no permission for ALTER access to TABLE TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -ALTER TABLE TEST failed
-    -no permission for ALTER access to TABLE TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-ALTER TABLE TEST failed
+-no permission for ALTER access to TABLE TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP INDEX TEST_X failed
-    -no permission for ALTER access to TABLE TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP INDEX TEST_X failed
+-no permission for ALTER access to TABLE TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP TABLE V_TEST failed
-    -no permission for DROP access to VIEW V_TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP TABLE V_TEST failed
+-no permission for DROP access to VIEW V_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP TRIGGER TEST_BI failed
-    -no permission for ALTER access to TABLE TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP TRIGGER TEST_BI failed
+-no permission for ALTER access to TABLE TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP TABLE TEST failed
-    -no permission for DROP access to TABLE TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP TABLE TEST failed
+-no permission for DROP access to TABLE TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP ROLE MANAGER failed
-    -no permission for DROP access to ROLE MANAGER
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP ROLE MANAGER failed
+-no permission for DROP access to ROLE MANAGER
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP PROCEDURE SP_TEST failed
-    -no permission for DROP access to PROCEDURE SP_TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP PROCEDURE SP_TEST failed
+-no permission for DROP access to PROCEDURE SP_TEST
+-Effective user is TMP$C0304
 
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP SEQUENCE G_TEST failed
+-no permission for DROP access to GENERATOR G_TEST
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP SEQUENCE G_TEST failed
-    -no permission for DROP access to GENERATOR G_TEST
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP EXCEPTION E_TEST failed
+-no permission for DROP access to EXCEPTION E_TEST
+-Effective user is TMP$C0304
 
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP FUNCTION UDR40_FRAC failed
+-no permission for DROP access to FUNCTION UDR40_FRAC
+-Effective user is TMP$C0304
 
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP EXCEPTION E_TEST failed
-    -no permission for DROP access to EXCEPTION E_TEST
-
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP FUNCTION UDR40_FRAC failed
-    -no permission for DROP access to FUNCTION UDR40_FRAC
-
-    Statement failed, SQLSTATE = 28000
-    unsuccessful metadata update
-    -DROP COLLATION NAME_COLL failed
-    -no permission for DROP access to COLLATION NAME_COLL
+Statement failed, SQLSTATE = 28000
+unsuccessful metadata update
+-DROP COLLATION NAME_COLL failed
+-no permission for DROP access to COLLATION NAME_COLL
+-Effective user is TMP$C0304
 
   """
 }
