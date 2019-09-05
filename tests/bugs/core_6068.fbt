@@ -6,12 +6,16 @@
 'description':
  """
 	Confirmed bug on 4.0.0.1485 - FB hangs.
-	Works fine on 4.0.0.1524 - compiler error is issued; 4.501 s
+	Works fine on 4.0.0.1524 - compiler error is issued; 4.501s.
+	
+	05-sep-2019: reduced minimal version to 3.0.5 because of commit
+	https://github.com/FirebirdSQL/firebird/commit/04deca31dd5fa9b4aae3670d22fb7d97c4e5097d
+	(checked on  WI-V3.0.5.33166 )
  """,
-'min_versions': '4.0',
+'min_versions': '3.0.5',
 'versions': [
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'database_character_set': 'UTF8',
  'connection_character_set': 'UTF8',
