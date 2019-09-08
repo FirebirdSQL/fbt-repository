@@ -7,6 +7,10 @@
  """
      Confirmed normal work (evaluation for less than 10 ms) on WI-T4.0.0.1598.
      Quantifier value was increased to 1000, string 'abcd.abc' is used for pattern search.
+
+     ::: NOTE :::
+     doc\sql.extensions\README.similar_to.txt:
+     Since FB 4 the repeat factor low/high values could not be greater than 1000.
  """,
 'min_versions': '4.0',
 'versions': [
