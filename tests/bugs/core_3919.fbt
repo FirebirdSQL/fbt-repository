@@ -91,7 +91,7 @@
 
         ratio_of_time = iif( ratio_similar_vs_like < MAX_RATIO
                         ,'acceptable'
-                        ,'TOO LOG: '|| ratio_similar_vs_like ||' times. This is more than max threshold = ' || MAX_RATIO || ' times'
+                        ,'TOO LONG: '|| ratio_similar_vs_like ||' times. This is more than max threshold = ' || MAX_RATIO || ' times'
                       )
         ;
         suspend; 
