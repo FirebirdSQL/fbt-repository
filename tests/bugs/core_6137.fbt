@@ -9,11 +9,12 @@
     (got in firebird.log: "internal Firebird consistency check (invalid SEND request (167), file: JrdStatement.cpp line: 327)")
 
     Checked on: 4.0.0.1575: OK, 1.834s; 3.0.5.33168: OK, 0.916s.
+    Checked on: 2.5.9.27142 (10.09.2019), but previous snapshot 2.5.9.27139 (03.06.2019) also worked fine - without bugcheck.
  """,
-'min_versions': '3.0.5',
+'min_versions': '2.5.9',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'init_script': 
   """
