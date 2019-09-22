@@ -1,0 +1,58 @@
+{
+'id': 'bugs.core_6145',
+'qmid': None,
+'tracker_id': 'CORE-6145',
+'title': 'Wrong result in "similar to" with non latin characters',
+'description':
+ """
+	Confirmed bug on 4.0.0.1607
+	Checked on:
+		4.0.0.1614: OK, 1.509s.
+		3.0.5.33171: OK, 0.682s.
+		2.5.9.27142: OK, 0.629s.	
+ """,
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'Windows',
+ 'test_type': 'ISQL',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'WIN1251',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+    set count on;
+	set heading off;
+	select 1 from rdb$database where 'я' similar to '%Я%'; 
+	select 2 from rdb$database where 'Я' similar to '%я%'; 
+	select 3 from rdb$database where 'я' similar to '[Яя]'; 
+    select 4 from rdb$database where 'Я' similar to 'я';
+    select 5 from rdb$database where 'Я' similar to 'Я';
+    select 6 from rdb$database where 'Я' similar to '[яЯ]';
+  """,
+ 'expected_stdout': 
+  """
+	Records affected: 0
+	
+	Records affected: 0
+	
+	3
+	Records affected: 1
+	
+	Records affected: 0
+	
+	5
+	Records affected: 1
+	
+	6
+	Records affected: 1  
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
