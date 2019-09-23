@@ -15,7 +15,7 @@
 'versions': [
 {
  'firebird_version': '2.5',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'ISQL',
  'init_script':
   """
