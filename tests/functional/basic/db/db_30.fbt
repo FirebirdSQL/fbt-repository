@@ -2973,7 +2973,6 @@
   """,
  'expected_stdout': 
   """
-
     DDL of table rdb$types:         
 
 
@@ -3002,6 +3001,30 @@
     RDB$FIELD_NAME                  MON$BACKUP_STATE                                                                                                                                                                                                                                            
     RDB$TYPE                        1
     RDB$TYPE_NAME                   STALLED                                                                                                                                                                                                                                                     
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  MON$CRYPT_STATE                                                                                                                                                                                                                                             
+    RDB$TYPE                        2
+    RDB$TYPE_NAME                   DECRYPT IN PROGRESS                                                                                                                                                                                                                                         
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  MON$CRYPT_STATE                                                                                                                                                                                                                                             
+    RDB$TYPE                        3
+    RDB$TYPE_NAME                   ENCRYPT IN PROGRESS                                                                                                                                                                                                                                         
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  MON$CRYPT_STATE                                                                                                                                                                                                                                             
+    RDB$TYPE                        1
+    RDB$TYPE_NAME                   ENCRYPTED                                                                                                                                                                                                                                                   
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  MON$CRYPT_STATE                                                                                                                                                                                                                                             
+    RDB$TYPE                        0
+    RDB$TYPE_NAME                   NOT ENCRYPTED                                                                                                                                                                                                                                               
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
@@ -3948,6 +3971,12 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
+    RDB$TYPE                        26
+    RDB$TYPE_NAME                   INT128                                                                                                                                                                                                                                                      
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$FIELD_TYPE                                                                                                                                                                                                                                              
     RDB$TYPE                        16
     RDB$TYPE_NAME                   INT64                                                                                                                                                                                                                                                       
     RDB$DESCRIPTION                 <null>
@@ -4697,7 +4726,9 @@
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
 
-    Records affected: 285
+
+    Records affected: 290
+
   """
 }
 ]
