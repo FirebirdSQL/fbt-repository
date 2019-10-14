@@ -9194,6 +9194,15 @@
 
     RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
     RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$CRYPT_STATE                                                                                                                                                                                                                                             
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+    RDB$GRANTOR                     <null>
     RDB$PRIVILEGE                   D     
     RDB$GRANT_OPTION                1
     RDB$RELATION_NAME               RDB$DATABASE                                                                                                                                                                                                                                                
@@ -12459,8 +12468,7 @@
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 17
 
-
-    Records affected: 697
+    Records affected: 698
   """
 }
 ]
