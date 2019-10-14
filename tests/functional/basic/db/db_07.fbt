@@ -9052,6 +9052,37 @@ Records affected: 150
     RDB$SECURITY_CLASS              SQL$111                                                                                                                                                                                                                                                     
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
+    RDB$FIELD_NAME                  RDB$CRYPT_STATE                                                                                                                                                                                                                                             
+    RDB$QUERY_NAME                  <null>
+    RDB$VALIDATION_BLR              <null>
+    RDB$VALIDATION_SOURCE           <null>
+    RDB$COMPUTED_BLR                <null>
+    RDB$COMPUTED_SOURCE             <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$FIELD_LENGTH                2
+    RDB$FIELD_SCALE                 0
+    RDB$FIELD_TYPE                  7
+    RDB$FIELD_SUB_TYPE              <null>
+    RDB$MISSING_VALUE               <null>
+    RDB$MISSING_SOURCE              <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$QUERY_HEADER                <null>
+    RDB$SEGMENT_LENGTH              <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$EXTERNAL_LENGTH             <null>
+    RDB$EXTERNAL_SCALE              <null>
+    RDB$EXTERNAL_TYPE               <null>
+    RDB$DIMENSIONS                  <null>
+    RDB$NULL_FLAG                   0
+    RDB$CHARACTER_LENGTH            <null>
+    RDB$COLLATION_ID                <null>
+    RDB$CHARACTER_SET_ID            <null>
+    RDB$FIELD_PRECISION             <null>
+    RDB$SECURITY_CLASS              SQL$162                                                                                                                                                                                                                                                     
+    RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+
     RDB$FIELD_NAME                  RDB$DBKEY_LENGTH                                                                                                                                                                                                                                            
     RDB$QUERY_NAME                  <null>
     RDB$VALIDATION_BLR              <null>
@@ -13223,7 +13254,8 @@ Records affected: 150
     RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
 
-    Records affected: 161
+    Records affected: 162
+
   """,
   'substitutions': [
     ('RDB\$DEFAULT_VALUE.*',''),
