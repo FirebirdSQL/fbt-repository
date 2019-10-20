@@ -1,0 +1,65 @@
+{
+'id': 'bugs.core_6158',
+'qmid': None,
+'tracker_id': 'CORE-6158',
+'title': 'substring similar - extra characters in the result for non latin characters',
+'description':
+ """
+    Confirmed regression on build 4.0.0.1629, 4.0.0.1631 
+	Worked as expected on 4.0.0.1535 (build 24.06.2019, before replacement old regexp library with 're2')
+    Works fine on: 4.0.0.1632 (build 19.10.2019)
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'init_script': 
+  """
+    -- This is needed to get "cannot transliterate character between character sets"
+	--	on build 4.0.0.1631, see comment in the tracker 18/Oct/19 02:57 PM:
+	create domain T_A64 as varchar (64) character set WIN1251 collate WIN1251;
+	create table VALUT_LIST (NAME T_A64 not null);
+	commit;
+	insert into VALUT_LIST (NAME) values ('Российский рубль');
+	insert into VALUT_LIST (NAME) values ('Турецкая лира');
+	insert into VALUT_LIST (NAME) values ('Доллар США');
+	commit;
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+	set list on;
+	set blob all;
+
+	select substring('
+	aaa
+	/*==== Комментарий между символами "равно" ====*/
+	bbb
+	ccc
+	ddd
+	eee
+	fff
+	jjj
+	' similar '%/#*(=){3,}#"%#"(=){3,}#*/%' escape '#') as result1
+	from rdb$database;
+
+	-- additional check for special character '-' as delimiter:
+	select substring('здесь написан /*---- Комментарий между символами "дефис" ----*/ - и больше ничего!' similar '%/#*(#-){3,}#"%#"(#-){3,}#*/%' escape '#') as result2
+	from rdb$database;
+
+	-- Confirmed fail on 4.0.0.1631 with "cannot transliterate character between character sets":
+	select substring(list(T.NAME, '; ') from 1 for 250) as result_3_blob_id from VALUT_LIST T;
+  """,
+ 'expected_stdout': 
+  """
+	RESULT1                         = Комментарий между символами "равно" =
+	RESULT2                         - Комментарий между символами "дефис" -
+	Российский рубль; Турецкая лира; Доллар США
+  """,
+  'substitutions': [('RESULT_3_BLOB_ID.*','')]
+}
+]
+}
