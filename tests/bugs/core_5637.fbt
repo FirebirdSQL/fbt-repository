@@ -13,6 +13,10 @@
         ...
     Checked on:
         4.0.0.918: OK, 6.516s.
+    
+    Refactored 25.10.2019: restored DB state must be changed to full shutdown in order to make sure tha all attachments are gone.
+    Otherwise got on CS: "WindowsError: 32 The process cannot access the file because it is being used by another process".
+    Checked on 4.0.0.1633 SS, CS.
   """,
 'min_versions': '4.0',
 'versions': [
@@ -30,6 +34,14 @@ import time
 import zipfile
 import difflib
 import subprocess
+
+#--------------------------------------------
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i] ):
+            os.remove( f_names_list[i] )
+#--------------------------------------------
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -90,6 +102,21 @@ subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
                       stderr=subprocess.STDOUT)
 f_validation_log.close()
 
+#time.sleep(1)
+
+# 25.20.2019: add full shutdown to forcedly drop all attachments
+f_shutdown_log=open( os.path.join(context['temp_directory'],'tmp_5637_shutdown.log'), 'w')
+
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+                  "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0", "dbname", tmpfdb,
+                 ],
+                 stdout = f_shutdown_log,
+                 stderr = subprocess.STDOUT
+               )
+
+f_shutdown_log.close()
+
+
 # Compare firebird.log versions BEFORE and AFTER this test:
 ######################
 
@@ -119,6 +146,10 @@ with open( f_validation_log.name,'r') as f:
         if 'Error'.upper() in line.upper():
             print( 'UNEXPECTED ERROR IN VALIDATION LOG: ' + (' '.join(line.split()).upper()) )
 
+with open( f_shutdown_log.name,'r') as f:
+    for line in f:
+        if line.split():
+            print( 'UNEXPECTED OUTPUT IN DB SHUTDOWN LOG: ' + (' '.join(line.split()).upper()) )
 
 with open( f_diff_txt.name,'r') as f:
     for line in f:
@@ -133,20 +164,11 @@ with open( f_diff_txt.name,'r') as f:
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
 
-os.remove( tmpfbk )
-os.remove( tmpfdb )
 
-f_list=( 
-     f_restore_log
-    ,f_validation_log
-    ,f_fblog_before
-    ,f_fblog_after
-    ,f_diff_txt
-)
+f_list = [ i.name for i in ( f_restore_log,f_validation_log,f_shutdown_log,f_fblog_before,f_fblog_after,f_diff_txt ) ]
+f_list += [ tmpfbk,tmpfdb ]
 
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+cleanup( f_list )
 
 
   """,
