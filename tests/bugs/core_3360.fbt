@@ -15,53 +15,52 @@
   """,
  'test_script':
   """
-    drop user tmp$c3360;
+    set list on;
+    set wng off;
+
+    -- Drop old account with name = 'tmp$c3360' if it remains from prevoius run:
+    set term ^;
+    execute block as
+    begin
+        begin
+        execute statement 'drop user tmp$c3360' with autonomous transaction;
+            when any do begin end
+        end
+    end^
+    set term ;^
     commit;
+
     create user tmp$c3360 password '123';
-    commit;
-    recreate table t(id int, x int, y int, z int); 
-    commit;
-    insert into t(id, x, y, z) values(1, 100, 200, 300); 
     commit;
     revoke all on all from tmp$c3360;
     commit;
-    grant select on t to tmp$c3360;
-    grant update (z) on t to tmp$c3360;
-    commit;  
-    set list on;
-    -- Emulate connect of unprivileged person using ES/EDS and trying to get value of field 'z'
-    -- for which this user has privilege to update:
-    set term ^;
-    execute block returns(new_z int) as
-        declare v_dbname type of column mon$database.mon$database_name;
-    begin
-        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
-        execute statement 'update t set z = x-y where id=1 returning z'
-        on external v_dbname
-        as user 'tmp$c3360' password '123'
-        into new_z;
-        suspend;
-    end
-    ^
-    set term ;^
+    
+    recreate table test(id int, readonly_x int, readonly_y int, writeable_column int); 
     commit;
+
+    insert into test(id, readonly_x, readonly_y, writeable_column) values(1, 100, 200, 300); 
+    commit;
+
+    grant select on test to tmp$c3360;
+    grant update (writeable_column) on test to tmp$c3360;
+    commit;  
+
+    connect '$(DSN)' user 'TMP$C3360' password '123';
+
+    update test set writeable_column = readonly_x - readonly_y where id = 1 returning writeable_column;
+    commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
     drop user tmp$c3360;
     commit;
   """,
  'expected_stdout': 
   """
-    NEW_Z                           -100
+    WRITEABLE_COLUMN                -100
   """,
  'expected_stderr': 
   """
-    Warning: ALL on ALL is not granted to TMP$C3360.
-  """,
-  'substitutions': [
-    ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*',''),
-    ('Warning: ALL on ALL is not granted to.*', '')
-  ]
-
+  """
 }
 ]
 }
