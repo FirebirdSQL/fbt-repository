@@ -35,6 +35,7 @@ db_conn.close()
 
 con1=fdb.connect( dsn = dsn ) #, user = 'SYSDBA', password = 'masterkey' )
 con1.execute_immediate("create or alter user TMP$C5892 password '123' using plugin Srp")
+con1.commit()
 
 con2=fdb.connect( dsn = dsn, user = 'TMP$C5892', password = '123' )
 con3=fdb.connect( dsn = dsn, user = 'TMP$C5892', password = '123' )
