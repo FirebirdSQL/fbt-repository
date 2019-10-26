@@ -1,13 +1,19 @@
 @echo off
 setlocal enabledelayedexpansion enableextensions
 
+@rem ::: NOTE ::: 
+@rem Following must be done in order to prevent from pop-up window asking either to close or to debug:
+@rem 1. Open HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting
+@rem 2. Ad there: DontShowUI, type: DWORD, value: 1
+@rem See also: https://www.raymond.cc/blog/disable-program-has-stopped-working-error-dialog-in-windows-server-2008/
+@rem --------------------------------------------------------------------------------------------------------------
 @rem change to folder %fbt_root%\fbt-repo\tests\bugs:
 @rem ..\..\fbt-run2.bat core_**** fb40ss & C:\Python27\Scripts\fbt_view -d ..\..\results.trf
 @rem OR
 @rem ..\..\fbt-run2.bat fb30ss **** & C:\Python27\Scripts\fbt_view -d ..\..\results.trf
 @rem ..\..\fbt-run2.bat **** fb40ss & C:\Python27\Scripts\fbt_view -d ..\..\results.trf
 @rem ..\..\fbt-run2.bat core_****.fbt fb40ss & C:\Python27\Scripts\fbt_view -d ..\..\results.trf
-@rem -------------------------------------------------
+@rem --------------------------------------------------------------------------------------------------------------
 
 set py_home=C:\Python27
 set usr=SYSDBA
@@ -62,39 +68,55 @@ if !all_digits! EQU 1 (
     set svc_to_check=core_!svc_to_check!
 )
 
+set check_for_core_number=1
 if not "%2" == "" (
 
-    echo 1: svc_to_check=!svc_to_check! ;  fbt_to_check=!fbt_to_check!
-    set chkfbttext=!fbt_to_check!
-    set chkfbtrepl=!chkfbttext:core=!
-    set chksvctext=!svc_to_check!
-    set chksvcrepl=!chksvctext:core=!
+    echo svc_to_check=!svc_to_check! ;  fbt_to_check=!fbt_to_check!
 
-    if not .!chkfbtrepl!.==.!chkfbttext!. (
-        if .!chksvcrepl!.==.!chksvctext!. (
-            echo case-1: CORE file to be tested: !fbt_to_check!
-        ) else (
-            echo INVALID values of arg #1 and #2. Result of parsing:
-            echo.    svc_to_check=!svc_to_check!
-            echo.    fbt_to_check=!fbt_to_check!
-            goto final
-        )
-    ) 
-    if .!chkfbtrepl!.==.!chkfbttext!. (
-        if not .!chksvcrepl!.==.!chksvctext!. (
-            set chktext=!fbt_to_check!
-            set fbt_to_check=!svc_to_check!
-            set svc_to_check=!chktext!
-            echo case-2: CORE file to be tested: !fbt_to_check!
-        ) else (
-            echo INVALID values of arg #1 and #2. Result of parsing:
-            echo.    svc_to_check=!svc_to_check!
-            echo.    fbt_to_check=!fbt_to_check!
-            goto final
+    set cur_dir=!cd!
+    set chk_txt=!cur_dir:\tests\bugs=#!
+    if .!cur_dir!.==.!chk_txt!. (
+        echo.
+        echo Current .fbt is not related to CORE tests. We have to use its name 'as is', without parsing for possible CORE number.
+        set check_for_core_number=0
+        echo.
+    ) else (
+        echo.
+        echo Current .fbt belongs to CORE tests. We have to extract CORE number from it for possible check of its position.
+        echo.
+
+        set chkfbttext=!fbt_to_check!
+        set chkfbtrepl=!chkfbttext:core=!
+        set chksvctext=!svc_to_check!
+        set chksvcrepl=!chksvctext:core=!
+
+        if not .!chkfbtrepl!.==.!chkfbttext!. (
+            if .!chksvcrepl!.==.!chksvctext!. (
+                echo case-1: CORE file to be tested: !fbt_to_check!
+            ) else (
+                echo case-2: INVALID values of arg #1 and #2. Result of parsing:
+                echo.    svc_to_check=!svc_to_check!
+                echo.    fbt_to_check=!fbt_to_check!
+                goto final
+            )
+        ) 
+        if .!chkfbtrepl!.==.!chkfbttext!. (
+            if not .!chksvcrepl!.==.!chksvctext!. (
+                set chktext=!fbt_to_check!
+                set fbt_to_check=!svc_to_check!
+                set svc_to_check=!chktext!
+                echo case-3: CORE file to be tested: !fbt_to_check!
+            ) else (
+                echo case-4: INVALID values of arg #1 and #2. Result of parsing:
+                echo.    svc_to_check=!svc_to_check!
+                echo.    fbt_to_check=!fbt_to_check!
+                goto final
+            )
         )
     )
 
 )
+
 
 for /d %%a in (!log!,!tmp1!,!tmp2!,!res_ok!,!res_warn!,!res_fail!,!res_skip!) do (
   del %%a 2>nul
@@ -130,35 +152,42 @@ if .!svc_to_check!.==.. (
 )
 
 
-@rem ##################################################################################
-@rem We have to check whether core_NNNN is valid: it should not contain asterisk or so.
-@rem Command "for /f %%f in ('echo !fbt_to_check!') do ..." works NOT properly if  string
-@rem !fbt_to_check! is checked for presense of '*': it assigns name of first existent file 
-@rem (i.e. 'core_0001') fo %%f argument.
-@rem Command 'set fbt_name=!fbt_full:*=#!' also does not work: result always is empty string.
-@rem For these reasons we have TRY to convert strng to number using "set /a" and check its errorlevel.
-@rem See also: https://stackoverflow.com/questions/11685375/i-need-to-match-or-replace-an-asterisk-in-a-batch-environmental-variable-using
-@rem ##################################################################################
+if !check_for_core_number! EQU 1 (
+    @rem ##################################################################################
+    @rem We have to check whether core_NNNN is valid: it should not contain asterisk or so.
+    @rem Command "for /f %%f in ('echo !fbt_to_check!') do ..." does NOT work properly if  string
+    @rem !fbt_to_check! is checked for presense of '*': it assigns name of first existent file 
+    @rem (i.e. 'core_0001') fo %%f argument.
+    @rem Command 'set fbt_name=!fbt_full:*=#!' also does not work: result always is empty string.
+    @rem For these reasons we have TRY to convert strng to number using "set /a" and check its errorlevel.
+    @rem See also: https://stackoverflow.com/questions/11685375/i-need-to-match-or-replace-an-asterisk-in-a-batch-environmental-variable-using
+    @rem ##################################################################################
 
-set cnum=!fbt_to_check:core=!
-set cnum=!cnum:_=!
-set cnum=!cnum:.fbt=!
-set /a cnum=!cnum! 2>nul
-set elevel=!errorlevel!
-@rem result: elevel will be 1073750989 if !cnum! is invalid number, otherwise 0.
-if !elevel! EQU 0 (
-    call :sho "File name !fbt_to_check! looks VALID." !log!
-) else (
-    (
-        echo #####################################################
-        echo INVALID NAME OF .FBT FILE TO BE CHECKED: !fbt_to_check!
-        echo YOU HAVE TO SPECIFY IT LIKE THIS: [core_]NNNN"
-        echo #####################################################
-    ) > !res_fail!
-    call :bulksho !res_fail! !log!
-    goto final
+    set cnum=!fbt_to_check:core=!
+    set cnum=!cnum:_=!
+    set cnum=!cnum:.fbt=!
+
+    @rem core_0927 --> 0927 --> Invalid number.  Numeric constants are either decimal (17), hexadecimal (0x11), or octal (021).
+
+    @rem Here we add '1' to prevent from interpreting cnum as octal:
+    set ctmp=1!cnum!
+    set /a cval=!ctmp! 
+    set elevel=!errorlevel!
+    @rem result: elevel will be 1073750989 if !cnum! is invalid number, 1073750991 if cnum starts with '0', otherwise 0.
+    if !elevel! EQU 0 (
+        call :sho "File name !fbt_to_check! looks VALID." !log!
+    ) else (
+        (
+            echo #####################################################
+            echo INVALID NAME OF .FBT FILE TO BE CHECKED: !fbt_to_check!
+            echo YOU HAVE TO SPECIFY IT LIKE THIS: [core_]NNNN"
+            echo #####################################################
+            echo FAILED attempt: set /a cval=!ctmp!, errorlevel=!elevel!
+        ) > !res_fail!
+        call :bulksho !res_fail! !log!
+        goto final
+    )
 )
-
 for /f %%f in ('echo !fbt_to_check!') do (
     set fbt_full=%%~dpnf
     if not exist !fbt_full! (
@@ -177,6 +206,7 @@ for /f %%f in ('echo !fbt_full!') do (
 @rem fbt_name=core_1234
 
 call :sho "File with test to be checked: !fbt_full!" !log!
+
 
 set find_what=%~dp0
 
@@ -200,14 +230,14 @@ if exist %~dp0results.trf (
 
 findstr /i /b /c:"'min_versions':" !fbt_full! | findstr /e /c:"," > !tmp1!
 for /f "tokens=2 delims=:, " %%a in (!tmp1!) do (
-  set min_vers=%%a
-  set min_vers=!min_vers:'=!
-  if .!min_vers!.==.None. (
-      set min_vers=1.5.6.0000
-  )
-  if .!min_vers!.==.. (
-      set min_vers=1.5.6.0000
-  )
+    set min_vers=%%a
+    set min_vers=!min_vers:'=!
+    if .!min_vers!.==.None. (
+        set min_vers=1.5.6.0000
+    )
+    if .!min_vers!.==.. (
+        set min_vers=1.5.6.0000
+    )
 )
 
 
@@ -634,7 +664,7 @@ call :sho "Check results:" !log!
 call :sho "##############" !log!
 
 if !svcfound! EQU 0 (
-    call :sho "^>^>^>^>^>^>^>^> ERROR. NOTHING WAS DONE: NO SERVICE FOUND ^<^<^<^<^<^<^<^<" !log!
+    call :sho "^>^>^>^>^>^>^>^> ERROR. NOTHING WAS DONE: SERVICE NOT FOUND OR NOT RUNNING ^<^<^<^<^<^<^<^<" !log!
     call :sho "Check 2nd input argument: ^|%2^|" !log!
 ) else (
     if exist !res_ok! (
