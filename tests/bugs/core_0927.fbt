@@ -3,7 +3,10 @@
 'qmid': '',
 'tracker_id': 'CORE-927',
 'title': "Grants don't work for procedures used inside views",
-'description': '',
+'description':
+ """
+    Checked on: 4.0.0.1635: OK, 2.209s; 3.0.5.33180: OK, 1.838s; 2.5.9.27119: OK, 0.292s.
+ """,
 'min_versions': '2.5.2',
 'versions': [
 {
@@ -12,11 +15,24 @@
  'test_type': 'ISQL',
  'test_script':
   """
-    drop user usr$c0927;
+    set wng off;
+    set list on;
+
+    -- Drop old account if it remains from prevoius run:
+    set term ^;
+    execute block as
+    begin
+        begin
+        execute statement 'drop user tmp$c0927' with autonomous transaction;
+            when any do begin end
+        end
+    end^
+    set term ;^
     commit;
-    create user usr$c0927 password '123';
+
+    create user tmp$c0927 password '123';
     commit;
-    revoke all on all from usr$c0927;
+    revoke all on all from tmp$c0927;
     commit;
     
     create or alter view v_test as select 1 id from rdb$database;
@@ -33,42 +49,31 @@
     commit;
     
     create or alter view v_test as
-    select (select result from sp_test) r from rdb$database;
+    select (select result from sp_test) as result from rdb$database;
     
     grant execute on procedure sp_test to view v_test;
-    grant select on v_test to usr$c0927;
+    grant select on v_test to tmp$c0927;
+    commit;
 
     -------------------------------------------------
-    set list on;
-    set term ^;
-    execute block returns(who_am_i varchar(31), result int) as
-        declare v_dbname varchar(255);
-    begin
-        v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
-        execute statement 'select current_user, r from v_test'
-        on external v_dbname
-        as user 'usr$c0927' password '123'
-        into who_am_i, result;
-        suspend;
-    end
-    ^
-    set term ;^
-    drop user usr$c0927;
+    connect '$(DSN)' user 'tmp$c0927' password '123';
+    -------------------------------------------------
+    select current_user as who_am_i, v.* from v_test v;
+    commit;
+
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+
+    drop user tmp$c0927;
     commit;
   """,
  'expected_stdout': 
   """
-    WHO_AM_I                        USR$C0927
+    WHO_AM_I                        TMP$C0927
     RESULT                          1
   """,
  'expected_stderr': 
   """
-    Warning: ALL on ALL is not granted to USR$C0927.
-  """,
-  'substitutions': [
-    ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*','')
-  ]
+  """
 }
 ]
 }
