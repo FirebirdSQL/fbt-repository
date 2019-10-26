@@ -3,54 +3,58 @@
 'qmid': 'bugs.core_1292',
 'tracker_id': 'CORE-1292',
 'title': "Can't create table using long username and UTF8 as attachment charset",
-'description': '',
+'description':
+ """
+    Checked on: 4.0.0.1635 SS/CS; 3.0.5.33180 SS/CS; 2.5.9.27119 SC/SS
+ """,
 'versions': [
 {
- 'firebird_version': '2.0.2',
+ 'firebird_version': '2.5',
  'platform': 'All',
- 'user_name': 'testtesttest',
- 'user_password': 'firebirdqa',
  'database_character_set': 'UTF8',
  'connection_character_set': 'UTF8',
  'test_type': 'ISQL',
- 'test_script': """create table t (n integer);
+ 'test_script': 
+  """
+    set wng off;
 
-show table t;
-""",
- 'expected_stdout': """N                               INTEGER Nullable
-""",
- 'resources': ['longname']
-},
-{
- 'firebird_version': '2.5.0',
- 'platform': 'All',
- 'database_character_set': 'UTF8',
- 'connection_character_set': 'UTF8',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    drop user Nebuchadnezzar2_King_of_Babylon;
+    -- Drop old account if it remains from prevoius run:
+    set term ^;
+    execute block as
+    begin
+        begin
+        execute statement 'drop user Nebuchadnezzar2_King_of_Babylon' with autonomous transaction;
+            when any do begin end
+        end
+    end^
+    set term ;^
     commit;
-    create user Nebuchadnezzar2_King_of_Babylon password 'guinness';
+
+
+    create user Nebuchadnezzar2_King_of_Babylon password 'guinness'; -- revoke admin role;
     --          1234567890123456789012345678901
-    --          1         2         3
+    --                   1         2         3
     commit;
-    
-    
+    revoke all on all from Nebuchadnezzar2_King_of_Babylon;
     set term ^;
     execute block as
-      declare v_dbname type of column mon$database.mon$database_name;
     begin
-      v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
-      execute statement 'create table ttt(nnn int)'
-      on external v_dbname
-      as user 'Nebuchadnezzar2_King_of_Babylon' password 'guinness';
+        if ( rdb$get_context('SYSTEM', 'ENGINE_VERSION') not starting with '2.5' ) then
+        begin
+            execute statement 'grant create table to Nebuchadnezzar2_King_of_Babylon';
+        end
     end
     ^
     set term ;^
     commit;
+
+    connect '$(DSN)' user 'Nebuchadnezzar2_King_of_Babylon' password 'guinness';
+
+    create table test(n int);
+    commit;
     
-    show table ttt;
+    connect '$(DSN)' user 'SYSDBA' password 'masterkey';
+
     set list on;
     select usr_name, grantor, can_grant, tab_name,usr_type,obj_type, list(priv) priv_list
     from (
@@ -63,98 +67,26 @@ show table t;
             ,p.rdb$object_type obj_type
             ,trim(p.rdb$privilege) priv
         from rdb$user_privileges p
-        where upper(trim(p.rdb$relation_name)) = upper('ttt')
-        order by priv
-    )
-    group by usr_name, grantor, can_grant, tab_name,usr_type,obj_type;  
-  """,
- 'expected_stdout': 
-  """
-    NNN                             INTEGER Nullable
-    
-    USR_NAME                        NEBUCHADNEZZAR2_KING_OF_BABYLON
-    GRANTOR                         NEBUCHADNEZZAR2_KING_OF_BABYLON
-    CAN_GRANT                       1
-    TAB_NAME                        TTT
-    USR_TYPE                        8
-    OBJ_TYPE                        0
-    D,I,R,S,U
-  """,
-  'substitutions': [
-    ('PRIV_LIST.*',''), 
-    ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*','')
-  ]
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'database_character_set': 'UTF8',
- 'connection_character_set': 'UTF8',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    drop user Nebuchadnezzar2_King_of_Babylon;
-    commit;
-    create user Nebuchadnezzar2_King_of_Babylon password 'guinness';
-    commit;
-    grant create table to Nebuchadnezzar2_King_of_Babylon;
-    --                    1234567890123456789012345678901
-    --                             1         2         3
-    commit;
-    
-    
-    set term ^;
-    execute block as
-      declare v_dbname type of column mon$database.mon$database_name;
-    begin
-      v_dbname = 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME');
-      execute statement 'create table ttt(nnn int)'
-      on external v_dbname
-      as user 'Nebuchadnezzar2_King_of_Babylon' password 'guinness';
-    end
-    ^
-    set term ;^
-    commit;
-    
-    show table ttt;
-    set list on;
-    select usr_name, grantor, can_grant, tab_name,usr_type,obj_type, list(priv) priv_list
-    from (
-        select
-            p.rdb$user usr_name
-            ,p.rdb$grantor grantor
-            ,p.rdb$grant_option can_grant
-            ,p.rdb$relation_name tab_name
-            ,p.rdb$user_type usr_type
-            ,p.rdb$object_type obj_type
-            ,trim(p.rdb$privilege) priv
-        from rdb$user_privileges p
-        where upper(trim(p.rdb$relation_name)) = upper('ttt')
+        where upper(trim(p.rdb$relation_name)) = upper('test')
         order by priv
     )
     group by usr_name, grantor, can_grant, tab_name,usr_type,obj_type;  
     commit;
+
     drop user Nebuchadnezzar2_King_of_Babylon;
     commit;
   """,
  'expected_stdout': 
   """
-    NNN                             INTEGER Nullable
-    
     USR_NAME                        NEBUCHADNEZZAR2_KING_OF_BABYLON
     GRANTOR                         NEBUCHADNEZZAR2_KING_OF_BABYLON
     CAN_GRANT                       1
-    TAB_NAME                        TTT
+    TAB_NAME                        TEST
     USR_TYPE                        8
     OBJ_TYPE                        0
     D,I,R,S,U
   """,
-  'substitutions': [
-    ('PRIV_LIST.*',''), 
-    ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*','')
-  ]
+  'substitutions': [ ('PRIV_LIST.*','')  ]
 }
 ]
 }
