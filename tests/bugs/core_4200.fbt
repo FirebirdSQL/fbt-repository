@@ -3,72 +3,99 @@
 'qmid': None,
 'tracker_id': 'CORE-4200',
 'title': 'An uncommitted select of the pseudo table sec$users blocks new database connections',
-'description': '',
+'description':
+ """
+    Checked on: 4.0.0.1635: OK, 1.866s; 3.0.5.33180: OK, 1.869s.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'init_script': 
   """
-  """,
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    drop user tmp$c4200;
-    commit;
-    create user tmp$c4200 password '123';
-    commit;
-    
-    set list on;
-    set transaction no wait;
-    select sec$user_name 
-    from sec$users where sec$user_name = 'SYSDBA' 
-    -- NB: TWO rows can be returned if security_db was initialized with SYSDBA login using plugin Srp 
-    -- (beside already existing SYSDBA account that was created using Legacy_UserManager)
-    -- We have to limit output by any of these rows:
-    rows 1 
-    ;
-    
+    -- Drop old account if it remains from prevoius run:
     set term ^;
-    execute block returns(connect_from rdb$user, connect_diff smallint) as
-        declare v_dbname type of column mon$database.mon$database_name;
-        declare v_stt varchar(1024);
-        declare v_usr rdb$user = 'tmp$c4200';
-        declare v_pwd varchar(20) = '123';
-        declare v_sysdba_attach int;
+    execute block as
     begin
-        select 'localhost:' || d.mon$database_name, current_connection
-        from mon$database d
-        into v_dbname, v_sysdba_attach;
-    
-        v_stt = 'select mon$user, sign( current_connection - :y ) from mon$attachments where upper(trim(mon$user)) = upper(:x) rows 1';
-    
-        execute statement (v_stt)  ( x := v_usr, y := v_sysdba_attach )
-        on external (v_dbname) 
-        as user :v_usr password :v_pwd
-        into connect_from, connect_diff;
-    
-        suspend;
-    
+        begin
+            execute statement 'drop user tmp$c4200_leg using plugin Legacy_UserManager' with autonomous transaction;
+            when any do begin end
+        end
+        begin
+            execute statement 'drop user tmp$c4200_srp using plugin Srp' with autonomous transaction;
+            when any do begin end
+        end
     end
     ^
     set term ;^
-    rollback;
-    drop user tmp$c4200;
     commit;
+
+    create user tmp$c4200_leg password '123' using plugin Legacy_UserManager;
+    create user tmp$c4200_srp password '123' using plugin Srp;
+    commit;
+
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+db_conn.close()
+
+custom_tpb = fdb.TPB()
+custom_tpb.access_mode = fdb.isc_tpb_read
+custom_tpb.isolation_level = (fdb.isc_tpb_read_committed, fdb.isc_tpb_rec_version)
+custom_tpb.lock_resolution = fdb.isc_tpb_nowait
+
+con1=fdb.connect(dsn = dsn, user = 'SYSDBA', password = 'masterkey')
+trn1=con1.trans( default_tpb = custom_tpb )
+cur1=trn1.cursor()
+cur1.execute('select sec$user_name from sec$users')
+for r in cur1:
+    pass
+
+#custom_con = fdb.Connection()
+#custom_con._default_tpb = custom_tpb
+
+con2=fdb.connect( dsn = dsn, user = 'tmp$c4200_leg', password = '123') #, connection_class = custom_con)
+con3=fdb.connect( dsn = dsn, user = 'tmp$c4200_srp', password = '123') #, connection_class = custom_con)
+
+check_sql='select mon$user as who_am_i, mon$auth_method as auth_method from mon$attachments'
+
+trn2=con2.trans( default_tpb = custom_tpb )
+cur2=trn2.cursor()
+cur2.execute(check_sql)
+
+trn3=con3.trans( default_tpb = custom_tpb )
+cur3=trn3.cursor()
+cur3.execute(check_sql)
+
+for c in (cur2, cur3):
+    cur_cols=c.description
+    for r in c:
+        for i in range(0,len(cur_cols)):
+            print( cur_cols[i][0],':', r[i] )
+    c.close()
+
+trn2.rollback()
+trn3.rollback()
+
+con2.close()
+con3.close()
+
+cur1.close()
+con1.execute_immediate('drop user tmp$c4200_leg using plugin Legacy_UserManager')
+con1.execute_immediate('drop user tmp$c4200_srp using plugin Srp')
+con1.commit()
+
   """,
  'expected_stdout': 
   """
-    SEC$USER_NAME                   SYSDBA
-    CONNECT_FROM                    TMP$C4200
-    CONNECT_DIFF                    1
+    WHO_AM_I 	: TMP$C4200_LEG
+    AUTH_METHOD : Legacy_Auth
+    WHO_AM_I 	: TMP$C4200_SRP
+    AUTH_METHOD : Srp
   """,
-  'substitutions': [
-    ('Statement failed, SQLSTATE.*',''),
-    ('record not found for user:.*','')
-  ]
+  'substitutions': [ ('[ \t]+', ' '), ('=', '')  ]
 }
 ]
 }
