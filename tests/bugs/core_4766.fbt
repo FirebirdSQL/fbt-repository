@@ -3,7 +3,11 @@
 'qmid': None,
 'tracker_id': 'CORE-4766',
 'title': 'AV when trying to manage users list using EXECUTE STATEMENT on behalf of non-sysdba user which has RDB$ADMIN role',
-'description': '',
+'description':
+ """
+    Checked on: 4.0.0.1635 SS/CS: OK, 1.567s; 3.0.5.33180 SS/CS: OK, 0.969s.
+    FB 4.0: phrase "-Effective user is TMP$C4766_BOSS" in STDERR is ignored here, see 'substitutions'.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -21,21 +25,21 @@
     -- Because of this, section 'substitution' has been added in order to ignore rest part of line
     -- after words 'TABLE PLG'.
 
-    -- Note-2. User 'boss' is NOT granted with 'RDB$ADMIN' role, only clause "grant admin" present for him
+    -- Note-2. User 'tmp$c4766_boss' is NOT granted with 'RDB$ADMIN' role, only clause "grant admin" present for him
     -- in the creating statement, so all his attempts to create/drop another user will be FAILED.
     -- Before snapshot 31807 3rd such fail lead FB to crash (AV).
 
-    -- Note-3. Since 3.0.0.32294 (was built 26-jan-2016) text of error message was chenged
+    -- Note-3. Since 3.0.0.32294 (was built 26-jan-2016) text of error message was changed
     -- See also: http://sourceforge.net/p/firebird/code/62852 (24-jan-2016)
 
-    create or alter user boss password '123' grant admin role;
+    create or alter user tmp$c4766_boss password '123' grant admin role;
     commit;
 
     set term ^;
     execute block as
     begin
-        execute statement 'create or alter user mgr1 password ''456'''
-        as user 'BOSS' password '123' role 'RDB$ADMIN';
+        execute statement 'create or alter user tmp$c4766_mgr1 password ''456'''
+        as user 'tmp$c4766_boss' password '123' role 'RDB$ADMIN';
     end
     ^
     set term ;^
@@ -46,8 +50,8 @@
     set term ^;
     execute block as
     begin
-        execute statement 'drop user mgr1'
-        as user 'BOSS' password '123' role 'RDB$ADMIN';
+        execute statement 'drop user tmp$c4766_mgr1'
+        as user 'tmp$c4766_boss' password '123' role 'RDB$ADMIN';
     end
     -- This lead to 2nd "SQLSTATE = 28000" with text:
     -- before build 32136: "add record error / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
@@ -55,8 +59,8 @@
     ^
     set term ;^
 
-    -- Attention: see above ROLLBACK labaled as [###NB###]: without that rollback following
-    -- COMMIT will again try to ADD user boss/123 and only after it - drop user statement,
+    -- Attention: see above ROLLBACK labeled as [###NB###]: without that rollback following
+    -- COMMIT will again try to ADD user tmp$c4766_boss/123 and only after it - drop user statement,
     -- and this will lead to fail again with error about adding (not deleting) user.
     -- Explanation see in letter by dimitr, 31-mar-2016 17:23
 
@@ -64,8 +68,28 @@
 
     rollback;
 
-    drop user boss;
+    -- cleanup:
+    -- ########
+    connect '$(DSN)' user 'sysdba' password 'masterkey';
+
+    --                                    ||||||||||||||||||||||||||||
+    -- ###################################|||  FB 4.0+, SS and SC  |||##############################
+    --                                    ||||||||||||||||||||||||||||
+    -- If we check SS or SC and ExtConnPoolLifeTime > 0 (config parameter FB 4.0+) then current
+    -- DB (bugs.core_NNNN.fdb) will be 'captured' by firebird.exe process and fbt_run utility
+    -- will not able to drop this database at the final point of test.
+    -- Moreover, DB file will be hold until all activity in firebird.exe completed and AFTER this
+    -- we have to wait for <ExtConnPoolLifeTime> seconds after it (discussion and small test see
+    -- in the letter to hvlad and dimitr 13.10.2019 11:10).
+    -- This means that one need to kill all connections to prevent from exception on cleanup phase:
+    -- SQLCODE: -901 / lock time-out on wait transaction / object <this_test_DB> is in use
+    -- #############################################################################################
+    delete from mon$attachments where mon$attachment_id != current_connection;
     commit;
+
+    drop user tmp$c4766_boss;
+    commit;
+
   """,
   'expected_stderr':
   """
