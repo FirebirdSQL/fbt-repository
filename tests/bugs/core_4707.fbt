@@ -3,7 +3,10 @@
 'qmid': None,
 'tracker_id': 'CORE-4707',
 'title': 'Implement ability to validate tables and indices online (without exclusive access to database)',
-'description': '',
+'description':
+ """
+    Checked on: 4.0.0.1635 SS: 7.072s; 4.0.0.1633 CS: 7.923s; 3.0.5.33180 SS: 6.599s; 3.0.5.33178 CS: 7.189s. 2.5.9.27119 SS: 5.951s; 2.5.9.27146 SC: 5.748s.
+ """,
 'min_versions': '2.5.5',
 'versions': [
 {
@@ -150,6 +153,22 @@ for i in range(len(f_list)):
     if os.path.isfile(f_list[i].name):
         os.remove(f_list[i].name)
 
+##                                    ||||||||||||||||||||||||||||
+## ###################################|||  FB 4.0+, SS and SC  |||##############################
+##                                    ||||||||||||||||||||||||||||
+## If we check SS or SC and ExtConnPoolLifeTime > 0 (config parameter FB 4.0+) then current
+## DB (bugs.core_NNNN.fdb) will be 'captured' by firebird.exe process and fbt_run utility
+## will not able to drop this database at the final point of test.
+## Moreover, DB file will be hold until all activity in firebird.exe completed and AFTER this
+## we have to wait for <ExtConnPoolLifeTime> seconds after it (discussion and small test see
+## in the letter to hvlad and dimitr 13.10.2019 11:10).
+## This means that one need to kill all connections to prevent from exception on cleanup phase:
+## SQLCODE: -901 / lock time-out on wait transaction / object <this_test_DB> is in use
+## #############################################################################################
+con4cleanup=fdb.connect( dsn = dsn, user = user_name, password = user_password )
+con4cleanup.execute_immediate('delete from mon$attachments where mon$attachment_id != current_connection')
+con4cleanup.commit()
+
   """,
  'expected_stdout':
   """
@@ -171,8 +190,8 @@ for i in range(len(f_list)):
     08:37:03.17 Validation finished
   """,
   'substitutions':[
-    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
-    ('Relation [0-9]{3,4}','Relation')
+    ('[\d]{2}:[\d]{2}:[\d]{2}.[\d]{2}',''),
+    ('Relation [\d]{3,4}','Relation')
   ]
 }
 ]
