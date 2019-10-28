@@ -12,23 +12,26 @@
         CSPROG        Sun Aug 21 09:49:12 2016
                 *** DUMP ***
 
-
         CSPROG        Sun Aug 21 09:49:12 2016
                 Tag=-1 Offset=18 Length=34 Eof=0
-
-
 
         CSPROG        Sun Aug 21 09:49:12 2016
                 Clump 5 at offset 0: AAAABBBBCCCCDDDD
 
-
         CSPROG        Sun Aug 21 09:49:12 2016
                 Fatal exception during clumplet dump: Invalid clumplet buffer structure: buffer end before end of clumplet - clumplet too long
-
 
         CSPROG        Sun Aug 21 09:49:12 2016
                 Plain dump starting with offset 18: <05><15>localhost.loca
    ===
+    Checked on:
+        4.0.0.1635 SS: 4.251s.
+        4.0.0.1633 CS: 4.948s.
+        3.0.5.33180 SS: 3.868s.
+        3.0.5.33178 CS: 4.312s.
+        2.5.9.27119 SS: 3.269s.
+        2.5.9.27146 SC: 3.280s.
+
  """,
 'min_versions': '2.5.5',
 'versions': [
@@ -49,10 +52,13 @@ import subprocess
 from fdb import services
 
 fb_host = '127.0.0.1'
+fb_port=3050
 
 os.environ["ISC_USER"] = 'none'
 os.environ["ISC_PASSWORD"] = 'QwaSeDTy'
 db_file="$(DATABASE_LOCATION)bugs.core_4058.fdb"
+
+#--------------------------------------------------------------------------------
 
 def svc_get_fb_log( engine, fb_home, fb_port, f_fb_log ):
 
@@ -75,6 +81,8 @@ def svc_get_fb_log( engine, fb_home, fb_port, f_fb_log ):
                    )
 
     return
+
+#--------------------------------------------------------------------------------
 
 # Obtain engine version:
 engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
@@ -104,8 +112,6 @@ with open( fb_conf,'r') as f:
         if 'remoteserviceport' in line.lower():
             fb_port = line.split('=')[1].strip()
             
-f.close()
-
 if engine.startswith('2.5'):
   fb_home = fb_home + 'bin'+os.sep
 
