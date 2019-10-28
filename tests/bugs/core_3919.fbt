@@ -8,10 +8,10 @@
      Confirmed normal work on WI-T4.0.0.1598. 
      Moreover, SIMILAR TO is about 5x faster than LIKE comparison in this test.
  """,
-'min_versions': '3.0',
+'min_versions': '4.0',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'database': 'Restore',
  'backup_file': 'core3919.fbk',
