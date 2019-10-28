@@ -69,6 +69,12 @@ if !all_digits! EQU 1 (
 )
 
 set check_for_core_number=1
+if exist !fbt_to_check! (
+    set check_for_core_number=0
+) else if exist !fbt_to_check!.fbt (
+    set check_for_core_number=0
+)
+
 if not "%2" == "" (
 
     echo svc_to_check=!svc_to_check! ;  fbt_to_check=!fbt_to_check!
@@ -292,11 +298,15 @@ for /f "tokens=2" %%a in (!tmp1!) do (
 
   del .\tmp\!cdprefix!.!fbt_name!.fdb 2>nul
   if exist .\tmp\!cdprefix!.!fbt_name!.fdb (
-      set msg=FATAL ERROR: CAN NOT REMOVE FILE .\tmp\!cdprefix!.!fbt_name!.fdb 
-      call :sho "!msg!" !log!
-
-      set msg="This file is still opened from previous test run."
-      call :sho "!msg!" !log!
+      (
+          echo FATAL ERROR: CAN NOT REMOVE FILE .\tmp\!cdprefix!.!fbt_name!.fdb 
+          echo This file is still opened from previous test run.
+          echo Perhaps this is because of parameters ExtConnPool* in firebird.conf
+          echo ###################################################################
+          echo ENSURE THAT TEST HAS 'DELETE FROM MON$ATTACHMENTS' IN ITS CLEANUP.
+          echo ###################################################################
+      ) >!tmp1!
+      call :bulksho !tmp1! !log!
       goto final
 
   )
@@ -512,9 +522,14 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                 )
                
                 if !pre_checks_done! EQU 1 (
-                    @rem -------------------------
-                    @rem Now we can launch fbt_run
-                    @rem -------------------------
+
+                    call :sho "Get actual FB architecture..." !log!
+                    set fb_arch=UNKNOWN
+                    @rem #####################################################
+                    @rem ###   g e t     a c t u a l     F B    a r c h.   ###
+                    @rem #####################################################
+                    call :get_fb_arch !bindir! !tmp1! !tmp2! fb_arch
+                    call :sho "Result: FB is working in !fb_arch! mode." !log!
 
                     set "path=!bindir!;!py_home!\Scripts\;!py_home!;%pbk%"
 
@@ -533,9 +548,15 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                         echo.    ISC_PASSWORD=!ISC_PASSWORD!
                         echo quit; | !bindir!\isql -q -z
                         echo.
+                        echo.    Actual server mode: !fb_arch!
+                        echo.
                     )>>!log!
 
                     
+                    @rem -------------------------
+                    @rem Now we can launch fbt_run
+                    @rem -------------------------
+
                     call :sho "Obtaining version info for Python, fbtest and fdb packages..." !log!
 
                     !py_home!\python.exe -V 2>!tmp1! 1>&2
@@ -570,17 +591,17 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                               set elapsed_sec=%%u
                             )
 
-                            call :sho "++++++++++++++++++++++++" !log!
-                            call :sho "fbt_res: +++ SUCCESS +++, done for !elapsed_sec!." !log!
-                            call :sho "++++++++++++++++++++++++" !log!
-
                             for /f "tokens=*" %%u in ('fbt_view -d results.trf') do (
                               @rem --- do NOT use here -- call :sho "%%u" !log!
                               echo.    %%u
                               echo.    %%u >> !log!
                             )
 
-                            call :sho "!svcname!, build !fb_vers!: OK, !elapsed_sec!." !res_ok!
+                            call :sho "++++++++++++++++++++++++" !log!
+                            call :sho "fbt_res: +++ SUCCESS +++, done for !elapsed_sec!." !log!
+                            call :sho "++++++++++++++++++++++++" !log!
+
+                            call :sho "!svcname!, build !fb_vers! !fb_arch!: !elapsed_sec!." !res_ok!
 
                         ) else (
 
@@ -598,7 +619,7 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                                 findstr /i /c:"'firebird_version':" !fbt_full!
                                 echo ###############################
                                 echo.
-                                echo !svcname!, build !fb_vers!: WARNING, could not found 'Passes: 1' in the log.
+                                echo !svcname!, build !fb_vers! !fb_arch!: WARNING, could not found 'Passes: 1' in the log.
                             ) > !res_warn!
                             call :bulksho !res_warn! !log!
 
@@ -637,7 +658,7 @@ for /f "tokens=2" %%a in (!tmp1!) do (
                         )
                         call :sho ---------------------------------------------------- !log!
 
-                        call :sho "!svcname!, build !fb_vers!: FAILED." !res_fail!
+                        call :sho "!svcname!, build !fb_vers! !fb_arch!: FAILED." !res_fail!
 
                     )
                     set "path=!pbk!"
@@ -777,6 +798,112 @@ endlocal & goto:eof
     )
     del !tmp!
 endlocal & goto:eof
+
+@rem ----------------------- end  of routine bulksho ------------------------------
+
+:get_fb_arch
+
+    set fbc=%1
+    set tmpsql=%2
+    set tmplog=%3
+    
+    @rem NOTE: arg %4 is OUTPUT, will be assigned here as result.
+
+    set tmpfdb=c:\temp\get_fb_arch.tmp.fdb
+    (
+        echo     set bail on;
+        echo     shell del !tmpfdb! 2^>nul;
+        echo     create database 'localhost:!tmpfdb!' user 'SYSDBA' password 'masterkey';
+        echo     set term ^^;
+        echo     create or alter procedure sys_get_fb_arch (
+        echo          a_connect_with_usr varchar(31^) default 'SYSDBA'
+        echo         ,a_connect_with_pwd varchar(31^) default 'masterkey'
+        echo     ^) returns(
+        echo         fb_arch varchar(50^)
+        echo     ^) as
+        echo         declare cur_server_pid int;
+        echo         declare ext_server_pid int;
+        echo         declare att_protocol varchar(255^);
+        echo         declare v_test_sttm varchar(255^);
+        echo         declare v_fetches_beg bigint;
+        echo         declare v_fetches_end bigint;
+        echo     begin
+        echo         fb_arch = rdb$get_context('USER_SESSION', 'SERVER_MODE'^);
+        echo         if ( fb_arch is null ^) then
+        echo         begin
+        echo             select a.mon$server_pid, a.mon$remote_protocol
+        echo             from mon$attachments a
+        echo             where a.mon$attachment_id = current_connection
+        echo             into cur_server_pid, att_protocol;
+        echo             if ( att_protocol is null ^) then
+        echo                 fb_arch = 'Embedded';
+        echo             else if ( upper(current_user^) = upper('SYSDBA'^)
+        echo                       and rdb$get_context('SYSTEM','ENGINE_VERSION'^) NOT starting with '2.5' 
+        echo                       and exists(select * from mon$attachments a 
+        echo                                  where a.mon$remote_protocol is null
+        echo                                        and upper(a.mon$user^) in ( upper('Cache Writer'^), upper('Garbage Collector'^)^)
+        echo                                 ^) 
+        echo                     ^) then
+        echo                 fb_arch = 'SS';
+        echo             else
+        echo                 begin
+        echo                     v_test_sttm =
+        echo                         'select a.mon$server_pid + 0*(select 1 from rdb$database^)'
+        echo                         ^|^|' from mon$attachments a '
+        echo                         ^|^|' where a.mon$attachment_id = current_connection';
+        echo                     select i.mon$page_fetches
+        echo                     from mon$io_stats i
+        echo                     where i.mon$stat_group = 0  -- db_level
+        echo                     into v_fetches_beg;
+        echo                     execute statement v_test_sttm
+        echo                     on external
+        echo                          'localhost:' ^|^| rdb$get_context('SYSTEM', 'DB_NAME'^)
+        echo                     as
+        echo                          user a_connect_with_usr
+        echo                          password a_connect_with_pwd
+        echo                          role left('R' ^|^| replace(uuid_to_char(gen_uuid(^)^),'-',''^),31^)
+        echo                     into ext_server_pid;
+        echo                     in autonomous transaction do
+        echo                     select i.mon$page_fetches
+        echo                     from mon$io_stats i
+        echo                     where i.mon$stat_group = 0  -- db_level
+        echo                     into v_fetches_end;
+        echo                     fb_arch = iif( cur_server_pid is distinct from ext_server_pid, 
+        echo                                    'CS', 
+        echo                                    iif( v_fetches_beg is not distinct from v_fetches_end, 
+        echo                                         'SC', 
+        echo                                         'SS'
+        echo                                       ^) 
+        echo                                  ^);
+        echo                 end
+        echo             fb_arch = trim(fb_arch^) ^|^| ' ' ^|^| rdb$get_context('SYSTEM','ENGINE_VERSION'^);
+        echo             rdb$set_context('USER_SESSION', 'SERVER_MODE', fb_arch^);
+        echo         end
+        echo         suspend;
+        echo     end 
+        echo     ^^ -- sys_get_fb_arch
+        echo     set term ;^^
+        echo     commit;
+        echo     set heading off;
+        echo     select * from sys_get_fb_arch('SYSDBA', 'masterkey'^);
+        echo     commit;
+        echo     delete from mon$attachments where mon$attachment_id ^<^> current_connection ;
+        echo     commit;
+        echo     drop database;
+    ) >!tmpsql!
+
+    !fbc!\isql.exe -q -i !tmpsql! 1>!tmplog! 2>&1
+
+    set actual_fb_arch=UNKNOWN
+    for /f "tokens=1" %%a in ('type !tmplog!') do (
+        set actual_fb_arch=%%a
+    )
+    del !tmpsql!
+    del !tmplog!
+
+endlocal & set "%~4=%actual_fb_arch%"  & goto:eof
+
+@rem ----------------------- end of routine get_fb_arch ---------------------------
 
 :final
     cd /d %curdir%
