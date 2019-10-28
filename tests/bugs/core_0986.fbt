@@ -24,7 +24,6 @@
     1) was encoded in NON unicode character set (e.g. win1251 - as is used in this test) and 
     2) did create DB objects with non-ascii names.
 
-    Checked on: 4.0.0.153, WI-V3.0.0.32499
     
     NOTE-1: 'min_version' here was set to 3.0 rather than 2.5.x intentionally: one may NOT to use 
     sequence with non-ascii name in TRIGGER as arg. of gen_id() - see code below:
@@ -35,6 +34,14 @@
     
     NOTE-2: test was implemented to run only on Windows platform. 
     I could not find how save script in cyrillic codepage there: it become unreadable (OS locale is UTF8).
+
+    Checked on:
+        4.0.0.1635 SS: 3.217s.
+        4.0.0.1633 CS: 3.619s.
+        3.0.5.33180 SS: 2.548s.
+        3.0.5.33178 CS: 3.153s.
+
+    NB: old checked on: 4.0.0.153, WI-V3.0.0.32499 - did pass without using codecs! Strange!..
         
  """,
 'min_versions': '3.0',
@@ -52,6 +59,21 @@ import os
 import time
 import subprocess
 
+# 28.10.2019. This is needed in Python 2.7 for converting string in UTF8 to cp1251
+import codecs
+
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
+
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
@@ -63,7 +85,7 @@ for row in cur1:
 
 db_conn.close()
 
-non_ascii_ddl=u'''\
+non_ascii_ddl='''
     set bail on;
     set echo on;
 
@@ -89,9 +111,9 @@ non_ascii_ddl=u'''\
 
     -- TEMPLY COMMENTED UNTIL CORE-5209 IS OPEN:
     -- ISQL -X ignores connection charset for text of EXCEPTION message (restoring it in initial charset when exception was created)
-    -- recreate exception "Невзлет" 'Запись обломалась, ваши не пляшут. Но не стесняйтесь и обязательно заходите еще, мы всегда рады видеть вас. До скорой встречи, товарищ!';
+    recreate exception "Невзлет" 'Запись обломалась, ваши не пляшут. Но не стесняйтесь и обязательно заходите еще, мы всегда рады видеть вас. До скорой встречи, товарищ!';
     commit;
-
+	
     -------------------------------------------------
     recreate table "склад" (
          "ИД'шник" "ИД'шники"
@@ -196,8 +218,8 @@ non_ascii_ddl=u'''\
     ';
     --------------------------------------------------
     commit;
-    /*
-    TEMPLY COMMENTED UNTIL CORE-5221 IS OPEN:
+    --/*
+    --TEMPLY COMMENTED UNTIL CORE-5221 IS OPEN:
     set echo on;
     show collation;
     show domain;
@@ -208,15 +230,26 @@ non_ascii_ddl=u'''\
     show view;
     show procedure;
     show role;
-    */
+    --*/
     set list on;
     set echo off;
     select 'Metadata created OK.' as msg from rdb$database;
+	
 '''
 
-f_checksql=open( os.path.join(context['temp_directory'],'tmp_non_ascii_ddl_0986.sql'), 'w')
-f_checksql.write( non_ascii_ddl.encode('windows-1251') )
-f_checksql.close()
+# NB, 28.10.2019: this *did* work correctly before!
+# It is very strange that now we have to use codecs for this test!
+# ------------------
+#f_checksql=open( os.path.join(context['temp_directory'],'tmp_non_ascii_ddl_0986.sql'), 'w')
+#f_checksql.write( non_ascii_ddl.encode('windows-1251') )
+#f_checksql.close()
+# ------------------
+
+f_checksql=os.path.join(context['temp_directory'],'tmp_non_ascii_ddl_0986.sql')
+with codecs.open( f_checksql, 'w', encoding='cp1251') as f:
+    f.write( non_ascii_ddl.decode('utf-8') )
+
+# Result: file 'tmp_non_ascii_ddl_0986' is encoded in cp1251 and contains SQL statements to be executed.
 
 ###########################################################################################################
 ###  check-1:  attempt to apply DDL with non-ascii characters __WITHOUT__ charset specifying (for ISQL) ###
@@ -225,7 +258,7 @@ f_checksql.close()
 f_apply_cset_none_log = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_none.log'), 'w')
 f_apply_cset_none_err = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_none.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_checksql.name ],
+subprocess.call( ["isql", dsn, "-i", f_checksql ],
                  stdout = f_apply_cset_none_log,
                  stderr = f_apply_cset_none_err
                )
@@ -250,7 +283,7 @@ f_apply_cset_none_err.close()
 f_apply_cset_1251_log = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_1251.log'), 'w')
 f_apply_cset_1251_err = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_1251.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_checksql.name, "-ch", "win1251" ],
+subprocess.call( ["isql", dsn, "-i", f_checksql, "-ch", "win1251" ],
                  stdout = f_apply_cset_1251_log,
                  stderr = f_apply_cset_1251_err
                )
@@ -265,7 +298,6 @@ f_apply_cset_1251_err.close()
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
-
 
 # CHECK RESULTS:
 ################
@@ -308,7 +340,6 @@ f.close()
 
 if 'Metadata created OK.' in open(f_apply_cset_1251_log.name).read():
     print('STDLOG WHEN CSET=1251: ALL FINISHED OK.')
-
     
 # This log should be EMPTY: when we used '-ch win1251' metadata creation 
 # with non-ascii names in DB objects should be finished successfully!
@@ -327,16 +358,12 @@ f.close()
 #####################################################################
 # Cleanup:
 
-f_list=[]
-f_list.append(f_apply_cset_none_log)
-f_list.append(f_apply_cset_none_err)
-f_list.append(f_apply_cset_1251_log)
-f_list.append(f_apply_cset_1251_err)
-f_list.append(f_checksql)
+# CLEANUP
+#########
 
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+f_list = [ i.name for i in ( f_apply_cset_none_log, f_apply_cset_none_err, f_apply_cset_1251_log, f_apply_cset_1251_err ) ]
+f_list += [ f_checksql, ]
+cleanup( f_list )
 
   """,
  'expected_stdout': 
