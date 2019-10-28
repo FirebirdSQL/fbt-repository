@@ -52,7 +52,7 @@ import subprocess
 from fdb import services
 
 fb_host = '127.0.0.1'
-fb_port=3050
+fb_port='3050'
 
 os.environ["ISC_USER"] = 'none'
 os.environ["ISC_PASSWORD"] = 'QwaSeDTy'
