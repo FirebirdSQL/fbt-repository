@@ -3,7 +3,16 @@
 'qmid': None,
 'tracker_id': '',
 'title': '',
-'description': '',
+'description':
+ """
+    NB: new datatype in FB 4.0 was introduces: numeric(38,0).
+    It leads to additional ident of values when we show them in form "SET LIST ON",
+    so we have to ignore all internal spaces - see added 'substitution' section below.
+
+    Checked on:
+        4.0.0.1635 SS: 1.824s.
+        3.0.5.33182 SS: 1.387s.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -246,7 +255,8 @@
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
