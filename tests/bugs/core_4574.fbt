@@ -3,7 +3,16 @@
 'qmid': None,
 'tracker_id': 'CORE-4574',
 'title': 'Regression: Incorrect result in subquery with aggregate',
-'description': '',
+'description':
+ """
+    30.10.2019. NB: new datatype in FB 4.0 was introduces: numeric(38,0).
+    It can lead to additional ident of values when we show them in form "SET LIST ON",
+    so we have to ignore all internal spaces - see added 'substitution' section below.
+    Checked on:
+        4.0.0.1635 SS: 1.197s.
+        3.0.5.33182 SS: 0.848s.
+        2.5.9.27146 SC: 0.188s.
+ """,
 'min_versions': '2.1.7',
 'versions': [
 {
@@ -41,7 +50,8 @@
   """
     S1                              3
     S2                              0
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
