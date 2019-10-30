@@ -2,12 +2,16 @@
 'id': 'bugs.core_5389',
 'qmid': None,
 'tracker_id': 'CORE-5389',
-'title': "Querry cannot be executed if win1251 characters used in field aliases",
+'title': "Query cannot be executed if win1251 characters used in field aliases",
 'description':
  """
     Test prepares file that will serve as input SQL script and will have CYRYLLIC names for field aliases.
     File has name = 'tmp_non_ascii_chk_5389.sql' and is encoded to windows-1251 codepage.
     Checked on 4.0.0.639.
+	30.10.2019 checked on:
+		4.0.0.1635 SS: 2.782s.
+		4.0.0.1633 CS: 3.515s.	
+	NB: old checked on: 4.0.0.639 - did pass without using codecs! Strange!
  """,
 'min_versions': '4.0',
 'versions': [
@@ -25,24 +29,40 @@ import os
 import time
 import subprocess
 
+# 30.10.2019. This is needed in Python 2.7 for converting string in UTF8 to cp1251
+import codecs
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
+
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
-non_ascii_ddl=u'''\
+non_ascii_ddl='''
     set list on;
-    select 
-       '' as "ФИО"
-      ,'' as "Д.рождения"
-      ,'' as "Город"
-      ,'' as "Расшифровка выступлений"
-    from rdb$database;
+	select
+	   '' as "ФИО"
+	  ,'' as "Д.рождения"
+	  ,'' as "Город"
+	  ,'' as "Расшифровка выступлений"
+	from rdb$database;	
 '''
 
-f_checksql=open( os.path.join(context['temp_directory'],'tmp_non_ascii_chk_5389.sql'), 'w')
-f_checksql.write( non_ascii_ddl.encode('windows-1251') )
-f_checksql.close()
+f_checksql=os.path.join(context['temp_directory'],'tmp_non_ascii_ddl_5389.sql')
+with codecs.open( f_checksql, 'w', encoding='cp1251') as f:
+    f.write( non_ascii_ddl.decode('utf-8') )
+
+# Result: file 'tmp_non_ascii_chk_5389.sql' is encoded in cp1251 and contains SQL statements to be executed.
 
 ###########################################################################################################
 ###  check-1:  attempt to apply DDL with non-ascii characters __WITHOUT__ charset specifying (for ISQL) ###
@@ -51,7 +71,7 @@ f_checksql.close()
 f_apply_cset_none_log = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_none.log'), 'w')
 f_apply_cset_none_err = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_none.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_checksql.name ],
+subprocess.call( ["isql", dsn, "-i", f_checksql ],
                  stdout = f_apply_cset_none_log,
                  stderr = f_apply_cset_none_err
                )
@@ -66,7 +86,7 @@ f_apply_cset_none_err.close()
 f_apply_cset_1251_log = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_1251.log'), 'w')
 f_apply_cset_1251_err = open( os.path.join(context['temp_directory'],'tmp_5389_apply_cset_1251.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_checksql.name, "-ch", "win1251" ],
+subprocess.call( ["isql", dsn, "-i", f_checksql, "-ch", "win1251" ],
                  stdout = f_apply_cset_1251_log,
                  stderr = f_apply_cset_1251_err
                )
@@ -121,12 +141,10 @@ f.close()
 #####################################################################
 # Cleanup:
 
-f_list=(f_apply_cset_none_log, f_apply_cset_none_err, f_apply_cset_1251_log, f_apply_cset_1251_err)
-'''
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-'''
+f_list = [ i.name for i in ( f_apply_cset_none_log, f_apply_cset_none_err, f_apply_cset_1251_log, f_apply_cset_1251_err ) ]
+f_list += [ f_checksql, ]
+cleanup( f_list )
+
   """,
  'expected_stdout': 
   """
