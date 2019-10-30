@@ -5,8 +5,12 @@
 'title': "Provide ability to return all columns using RETURNING (eg RETURNING *)",
 'description':
  """
-   Ability to use 'returning *' is verified both in DSL and PSQL.
-   Checked on: 4.0.0.1455: OK, 1.337s.
+    Ability to use 'returning *' is verified both in DSL and PSQL.
+    Checked on: 4.0.0.1455: OK, 1.337s.
+
+    30.10.2019. NB: new datatype in FB 4.0 was introduces: numeric(38,0).
+    It can lead to additional ident of values when we show them in form "SET LIST ON",
+    so we have to ignore all internal spaces - see added 'substitution' section below.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -55,7 +59,8 @@
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
