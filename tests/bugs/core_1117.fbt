@@ -3,7 +3,15 @@
 'qmid': 'bugs.core_1117',
 'tracker_id': '',
 'title': 'Remove or extend limit of command text length (64K)',
-'description': '',
+'description':
+ """
+    30.10.2019. NB: new datatype in FB 4.0 was introduces: numeric(38,0).
+    It can lead to additional ident of values when we show them in form "SET LIST ON",
+    so we have to ignore all internal spaces - see added 'substitution' section below.
+    Checked on:
+        4.0.0.1635 SS: 0.917s.
+        3.0.5.33182 SS: 0.765s.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -2066,7 +2074,8 @@
  'expected_stdout':
   """
     SUM_ALL                         500500
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
