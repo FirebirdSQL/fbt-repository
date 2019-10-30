@@ -3,7 +3,18 @@
 'qmid': None,
 'tracker_id': 'CORE-3829',
 'title': "Bad alias table choice joining CTE",
-'description': 'Confirmed wrong result on 2.5.1; no problem on 2.5.7 and above',
+'description':
+ """
+    Confirmed wrong result on 2.5.1; no problem on 2.5.7 and above
+
+    30.10.2019. NB: new datatype in FB 4.0 was introduces: numeric(38,0).
+    It can lead to additional ident of values when we show them in form "SET LIST ON",
+    so we have to ignore all internal spaces - see added 'substitution' section below.
+    Checked on:
+        4.0.0.1635 SS: 1.848s.
+        3.0.5.33182 SS: 1.531s.
+        2.5.9.27146 SC: 0.572s.
+ """,
 'min_versions': '2.5.7',
 'versions': [
 {
@@ -447,7 +458,8 @@
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
