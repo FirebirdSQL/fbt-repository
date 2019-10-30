@@ -5,7 +5,14 @@
 'title': "The last column in a view is returning as a null value even when it's not",
 'description':
  """
-   Confirmed wrong resultset on 2.5.0.26074.
+    Confirmed wrong resultset on 2.5.0.26074.
+    Checked on:
+        4.0.0.1635 SS: 1.701s.
+        3.0.5.33182 SS: 1.394s.
+        2.5.9.27146 SC: 0.524s.
+    NB: new datatype in FB 4.0 was introduces: numeric(38,0).
+    It leads to additional ident of values when we show them in form "SET LIST ON",
+    so we have to ignore all internal spaces - see added 'substitution' section below.
  """,
 'min_versions': '2.5.1',
 'versions': [
@@ -132,7 +139,8 @@
     DATABASENAME                    12
     TESTVALUE                       250.00
     PLACER                          10
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
