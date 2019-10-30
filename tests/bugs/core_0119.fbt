@@ -27,7 +27,8 @@
     Statement failed, SQLSTATE = 22003
     arithmetic exception, numeric overflow, or string truncation
     -numeric value is out of range
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
