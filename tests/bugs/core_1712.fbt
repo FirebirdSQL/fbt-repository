@@ -3,7 +3,11 @@
 'qmid': None,
 'tracker_id': 'CORE-1712',
 'title': 'Buffer overflow in conversion',
-'description': '',
+'description':
+ """
+   One 'zero' character disappeared in 4.0 output.
+   It was confirmed by Alex that this is expected, letter 31.10.2019 09:08.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -37,6 +41,31 @@
  'platform': 'Linux:Solaris:FreeBSD:HP-UX',
  'sql_dialect': 1,
  'page_size': '4096',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table testtable(f1 numeric(15, 2));
+    commit;
+    
+    insert into testtable(f1) values(1e19);
+    commit;
+    
+    set list on;
+    select cast(f1 as varchar(30)) f1_as_varchar30 from testtable;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+    F1_AS_VARCHAR30                 1.000000000000000e+19
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'Windows',
+ 'sql_dialect': 1,
  'init_script': 
   """
   """,
