@@ -3,7 +3,13 @@
 'qmid': None,
 'tracker_id': 'CORE-3503',
 'title': 'ALTER VIEW crashes the server if the new version has an artificial (aggregate or union) stream at the position of a regular context in the older version',
-'description': '',
+'description':
+ """
+    Checked on:
+        4.0.0.1635 SS: 1.890s.
+        3.0.5.33182 SS: 1.207s.
+        2.5.9.27146 SC: 0.360s.
+ """,
 'min_versions': '2.5.1',
 'versions': [
 {
@@ -35,7 +41,8 @@
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
