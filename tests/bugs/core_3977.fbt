@@ -5,8 +5,23 @@
 'title': 'DELETE FROM MON$STATEMENTS does not interrupt a longish fetch',
 'description':
  """
-   Refactored 08-may-2017.
-   Checked on 2.5.8.27061,  3.0.2.32708 and 4.0.0.633 (Classic & Super).
+    Refactored 08-may-2017.
+    Checked on 2.5.8.27061,  3.0.2.32708 and 4.0.0.633 (Classic & Super).
+
+    Refactored 02.11.2019: restored DB state must be changed to full shutdown in order to make sure tha all attachments are gone.
+    Otherwise one may get:
+        Error while dropping database
+        - SQLCODE: -901
+        - lock time-out on wait transaction
+        - object E:\QA\FBT-REPO\TMP\BUGS.CORE_3977.FDB is in use
+    This is actual for 4.0+ SS/SC when ExtConnPoolLifeTime > 0.
+    Checked on:
+        4.0.0.1639 SS: 5.299s.
+        4.0.0.1633 CS: 6.037s.
+        3.0.5.33183 SS: 4.795s.
+        3.0.5.33178 CS: 5.192s.
+        2.5.9.27119 SS: 3.491s.
+        2.5.9.27146 SC: 3.617s.
  """,
 'min_versions': '2.5.3',
 'versions': [
@@ -30,6 +45,11 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+# dsn                     localhost/3400:C:\FBTESTING\qa\fbt-repo\tmp\bugs.core_NNNN.fdb
+# db_conn.database_name   C:\FBTESTING\QA\FBT-REPO\TMP\BUGS.CORE_NNNN.FDB
+# $(DATABASE_LOCATION)... C:/FBTESTING/qa/fbt-repo/tmp/bugs.core_NNN.fdb
+
+this_fdb=db_conn.database_name
 db_conn.close()
 
 ##############################################
@@ -49,7 +69,7 @@ sql_cmd='''
         for 
             execute statement ('select gen_id(g,1) from rdb$types,rdb$types,rdb$types')
             on external 
-                rdb$get_context('SYSTEM','DB_NAME')
+                'localhost:' || rdb$get_context('SYSTEM','DB_NAME')
                 as user '%(usr)s' password '%(pwd)s'
             into x
         do begin
@@ -172,25 +192,45 @@ time.sleep(1)
 ########################
 # Cleanup
 
-'''
-if os.path.isfile(f_query_to_be_killedcmd.name):
-    os.remove(f_query_to_be_killedcmd.name)
-if os.path.isfile(f_query_to_be_killedlog.name):
-    os.remove(f_query_to_be_killedlog.name)
+# 02.11.2019: add full shutdown to forcedly drop all attachments.
+##                                    ||||||||||||||||||||||||||||
+## ###################################|||  FB 4.0+, SS and SC  |||##############################
+##                                    ||||||||||||||||||||||||||||
+## If we check SS or SC and ExtConnPoolLifeTime > 0 (config parameter FB 4.0+) then current
+## DB (bugs.core_NNNN.fdb) will be 'captured' by firebird.exe process and fbt_run utility
+## will not able to drop this database at the final point of test.
+## Moreover, DB file will be hold until all activity in firebird.exe completed and AFTER this
+## we have to wait for <ExtConnPoolLifeTime> seconds after it (discussion and small test see
+## in the letter to hvlad and dimitr 13.10.2019 11:10).
+## This means that one need to kill all connections to prevent from exception on cleanup phase:
+## SQLCODE: -901 / lock time-out on wait transaction / object <this_test_DB> is in use
+## #############################################################################################
 
-if os.path.isfile(f_delete_from_mon_sttm_sql.name):
-    os.remove(f_delete_from_mon_sttm_sql.name)
-if os.path.isfile(f_delete_from_mon_sttm_log.name):
-    os.remove(f_delete_from_mon_sttm_log.name)
+f_shutdown_log=open( os.path.join(context['temp_directory'],'tmp_3977_shutdown.log'), 'w')
 
-if os.path.isfile(f_check_result_cmd.name):
-    os.remove(f_check_result_cmd.name)
-if os.path.isfile(f_check_result_log.name):
-    os.remove(f_check_result_log.name)
-'''
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+                  "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0", "dbname", this_fdb,
+                 ],
+                 stdout = f_shutdown_log,
+                 stderr = subprocess.STDOUT
+               )
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+                  "action_properties", "prp_db_online", "dbname", this_fdb,
+                 ],
+                 stdout = f_shutdown_log,
+                 stderr = subprocess.STDOUT
+               )
+
+f_shutdown_log.close()
+
+with open( f_shutdown_log.name,'r') as f:
+    for line in f:
+        if line.split():
+            print( 'UNEXPECTED OUTPUT IN DB SHUTDOWN LOG: ' + (' '.join(line.split()).upper()) )
 
 
-f_list=(f_query_to_be_killedcmd, f_query_to_be_killedlog, f_delete_from_mon_sttm_sql, f_delete_from_mon_sttm_log, f_check_result_cmd, f_check_result_log )
+
+f_list=(f_query_to_be_killedcmd, f_query_to_be_killedlog, f_delete_from_mon_sttm_sql, f_delete_from_mon_sttm_log, f_check_result_cmd, f_check_result_log, f_shutdown_log )
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
