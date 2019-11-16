@@ -43,9 +43,7 @@ import subprocess
 import fdb
 from fdb import services
 
-#DB_PATH=r'C:\FBTESTING\qa\misc'
 DB_PATH = os.sep.join( db_conn.database_name.split(os.sep)[:-1] )
-#print(DB_PATH)
 
 DB_USER='SYSDBA'
 DB_PSWD='masterkey'
@@ -87,7 +85,7 @@ ddl_main=\
     commit;
 ''' % locals()
 
-f_isql1=open( r'C:\FBTESTING\qa\misc\c6182-ddl1.sql', 'w' )
+f_isql1=open( os.path.join(context['temp_directory'],'tmp-c6182-ddl1.sql'), 'w')
 f_isql1.write( ddl_main )
 f_isql1.close()
 
@@ -121,7 +119,7 @@ ddl_eds=\
 '''
 
 
-f_isql2=open( r'C:\FBTESTING\qa\misc\c6182-ddl2.sql', 'w' )
+f_isql2=open( os.path.join(context['temp_directory'],'tmp-c6182-ddl2.sql'), 'w')
 f_isql2.write( ddl_eds )
 f_isql2.close()
 
