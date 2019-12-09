@@ -5,8 +5,13 @@
 'title': 'FBSVCMGR with `action_trace_start` prevents in 3.0 SuperServer from connecting using local protocol',
 'description': 
  """
-   Confirmed failing to create embedded attach on build 31948.
-   Confirmed successful work on build 32268, architectures: SS, SC and CS.
+    Confirmed failing to create embedded attach on build 31948.
+    Confirmed successful work on build 32268, architectures: SS, SC and CS.
+    10.12.2019. Additional check:
+        4.0.0.1685 SS: 11.439s.
+        4.0.0.1685 CS: 12.078s.
+        3.0.5.33206 SS: 10.827s.
+        3.0.5.33206 CS: 11.793s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -48,8 +53,6 @@ trc_log.close()
 trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_4889.lst'), 'w')
 trc_lst.close()
 
-#sys.stdout.flush()
-#os._exit(0)
 
 #####################################################################
 # Async. launch of trace session using FBSVCMGR action_trace_start:
@@ -94,93 +97,94 @@ with open( trc_lst.name,'r') as f:
 # We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
 if trcssn==0:
     print("Error parsing trace session ID.")
-    os.remove(fdb_file)
-    os.exit(0)
+    trc_log.close()
 
-#####################################################################
-
-# Preparing script for ISQL:
-
-sql_cmd='''
-set list on; 
-set count on;
-select 
-    iif(a.mon$remote_protocol is null, 'internal', 'remote') as connection_protocol,
-    iif(a.mon$remote_process is null,  'internal', 'remote') as connection_process,
-    iif(a.mon$remote_pid     is null,  'internal', 'remote') as connection_remote_pid,
-    a.mon$auth_method as auth_method -- should be: 'User name in DPB'
-from rdb$database r
-left join mon$attachments a on a.mon$attachment_id = current_connection and a.mon$system_flag = 0;
-commit; 
-'''
-
-isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_4889.sql'), 'w')
-isql_cmd.write(sql_cmd)
-isql_cmd.close()
-
-#######################################################################
-
-# Async. launch ISQL process with EMBEDDED connect. 
-# ::::: NB :::::
-# Confirmed that this action:
-# works fine on WI-V3.0.0.31940, build 14-jul-2015
-# **HANGS**  on WI-V3.0.0.31948, build 16-jul-2015
-
-isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_4889.log'), 'w')
-p_isql = Popen( [ "isql" , fdb_file, \
-                  "-user", "tmp$no$such$user$4889", \
-                  "-n", "-i", isql_cmd.name ], \
-                stdout=isql_log, \
-                stderr=subprocess.STDOUT \
-              )
-
-# do NOT remove this delay:
-time.sleep(5)
-
-p_isql.terminate()
-isql_log.close()
-
-#####################################################################
-
-# Stop trace session:
-
-trc_lst=open(trc_lst.name, "a")
-trc_lst.seek(0,2)
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
-                  "action_trace_stop","trc_id",trcssn], \
-                  stdout=trc_lst, stderr=subprocess.STDOUT \
-               )
-trc_lst.close()
-
-p_svcmgr.terminate()
-trc_log.close()
-
-# do NOT remove this delay:
-time.sleep(2)
-
-#####################################################################
-
-# Output logs:
-
-i=0
-with open( trc_log.name,'r') as f:
-    for line in f:
-        if ') EXECUTE_STATEMENT_FINISH' in line:
-           i=1
-        if i==1 and '1 records fetched' in line:
-           i=2
-           print("OK: found text in trace related to EMBEDDED connect.")
-           break
-
-if not i==2:
-    print("FAILED to found text in trace related to EMBEDDED connect.")
-
-if os.path.getsize(isql_log.name) == 0:
-    print("FAILED to print log from EMBEDDED connect: log is EMPTY.")
 else:
-    with open( isql_log.name,'r') as f:
-        print(f.read())
-    f.close()
+    #####################################################################
+
+    # Preparing script for ISQL:
+
+    sql_cmd='''
+    set list on; 
+    set count on;
+    select 
+        iif(a.mon$remote_protocol is null, 'internal', 'remote') as connection_protocol,
+        iif(a.mon$remote_process is null,  'internal', 'remote') as connection_process,
+        iif(a.mon$remote_pid     is null,  'internal', 'remote') as connection_remote_pid,
+        a.mon$auth_method as auth_method -- should be: 'User name in DPB'
+    from rdb$database r
+    left join mon$attachments a on a.mon$attachment_id = current_connection and a.mon$system_flag = 0;
+    commit; 
+    '''
+
+    isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_4889.sql'), 'w')
+    isql_cmd.write(sql_cmd)
+    isql_cmd.close()
+
+    #######################################################################
+
+    # Async. launch ISQL process with EMBEDDED connect. 
+    # ::::: NB :::::
+    # Confirmed that this action:
+    # works fine on WI-V3.0.0.31940, build 14-jul-2015
+    # **HANGS**  on WI-V3.0.0.31948, build 16-jul-2015
+
+    isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_4889.log'), 'w')
+    p_isql = Popen( [ "isql" , fdb_file, \
+                      "-user", "tmp$no$such$user$4889", \
+                      "-n", "-i", isql_cmd.name ], \
+                    stdout=isql_log, \
+                    stderr=subprocess.STDOUT \
+                  )
+
+    # do NOT remove this delay:
+    time.sleep(5)
+
+    p_isql.terminate()
+    isql_log.close()
+
+    #####################################################################
+
+    # Stop trace session:
+
+    trc_lst=open(trc_lst.name, "a")
+    trc_lst.seek(0,2)
+    subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
+                      "action_trace_stop","trc_id",trcssn], \
+                      stdout=trc_lst, stderr=subprocess.STDOUT \
+                   )
+    trc_lst.close()
+
+    p_svcmgr.terminate()
+    trc_log.close()
+
+    # do NOT remove this delay:
+    time.sleep(2)
+
+    #####################################################################
+
+    # Output logs:
+
+    i=0
+    with open( trc_log.name,'r') as f:
+        for line in f:
+            if ') EXECUTE_STATEMENT_FINISH' in line:
+               i=1
+            if i==1 and '1 records fetched' in line:
+               i=2
+               print("OK: found text in trace related to EMBEDDED connect.")
+               break
+
+    if not i==2:
+        print("FAILED to found text in trace related to EMBEDDED connect.")
+
+    if os.path.getsize(isql_log.name) == 0:
+        print("FAILED to print log from EMBEDDED connect: log is EMPTY.")
+    else:
+        with open( isql_log.name,'r') as f:
+            print(f.read())
+        f.close()
+
 
 # do NOT remove this pause otherwise log of trace will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
@@ -195,20 +199,12 @@ time.sleep(1)
 
 # Cleanup:
 
-if os.path.isfile(isql_cmd.name):
-    os.remove(isql_cmd.name)
+f_list = [ trc_lst, trc_cfg, trc_log ]
+if trcssn > 0:
+    f_list += [isql_cmd, isql_log, ]
 
-if os.path.isfile(isql_log.name):
-    os.remove(isql_log.name)
-
-if os.path.isfile(trc_cfg.name):
-    os.remove(trc_cfg.name)
-
-if os.path.isfile(trc_lst.name):
-    os.remove(trc_lst.name)
-
-if os.path.isfile(trc_log.name):
-    os.remove(trc_log.name)
+for f in f_list:
+     os.remove(f.name)
 
   """,
  'expected_stdout':
