@@ -57,6 +57,13 @@
     Checked on:
         4.0.0.1421: OK, 5.536s.
         3.0.5.33106: OK, 4.184s.
+    Additional check 10.12.2019:
+        4.0.0.1685 SS: 5.016s.
+        4.0.0.1637 SC: 4.718s.
+        4.0.0.1685 CS: 5.907s.
+        3.0.5.33206 SS: 4.547s.
+        3.0.5.33152 SC: 5.320s.
+        3.0.5.33206 CS: 5.285s.
 
  """,
 'min_versions': '3.0.5',
@@ -176,56 +183,60 @@ with open( trc_lst.name,'r') as f:
 
 # Result: `trc_ssn` is ID of active trace session. 
 # We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
+
 if trc_ssn==0:
     print("Error parsing trace session ID.")
-    os.exit(0)
+    time.sleep(2)
 
+else:
 
-# Stop trace session:
-#####################
+    # Stop trace session:
+    #####################
 
-trc_lst=open(trc_lst.name, "a")
-trc_lst.seek(0,2)
+    trc_lst=open(trc_lst.name, "a")
+    trc_lst.seek(0,2)
 
-subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
-                   "action_trace_stop",
-                   "trc_id",trc_ssn
-                 ],
-                 stdout=trc_lst, 
-                 stderr=subprocess.STDOUT
-               )
-trc_lst.close()
+    subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+                       "action_trace_stop",
+                       "trc_id",trc_ssn
+                     ],
+                     stdout=trc_lst, 
+                     stderr=subprocess.STDOUT
+                   )
+    trc_lst.close()
 
-p_svcmgr.terminate()
-trc_log.close()
+    p_svcmgr.terminate()
+    trc_log.close()
 
-# do NOT remove this delay:
-time.sleep(1)
+    # do NOT remove this delay:
+    time.sleep(1)
 
-allowed_patterns = {
-     '1. TRACE_START'    : re.compile('Trace\s+session\s+ID\s+\d+\s+started\.*', re.IGNORECASE)
-    ,'2. DB_CREATION'    : re.compile('[.*]*CREATE_DATABASE\.*', re.IGNORECASE)
-    ,'3. TX_START'       : re.compile('[.*]*START_TRANSACTION\.*', re.IGNORECASE)
-    ,'4. STATEMENT_DONE' : re.compile('[.*]*EXECUTE_STATEMENT_FINISH\.*', re.IGNORECASE)
-    ,'5. TX_FINISH'      : re.compile('[.*]*ROLLBACK_TRANSACTION\.*', re.IGNORECASE)
-    ,'6. DB_REMOVAL'     : re.compile('[.*]*DROP_DATABASE\.*', re.IGNORECASE)
-}
+    allowed_patterns = {
+         '1. TRACE_START'    : re.compile('Trace\s+session\s+ID\s+\d+\s+started\.*', re.IGNORECASE)
+        ,'2. DB_CREATION'    : re.compile('[.*]*CREATE_DATABASE\.*', re.IGNORECASE)
+        ,'3. TX_START'       : re.compile('[.*]*START_TRANSACTION\.*', re.IGNORECASE)
+        ,'4. STATEMENT_DONE' : re.compile('[.*]*EXECUTE_STATEMENT_FINISH\.*', re.IGNORECASE)
+        ,'5. TX_FINISH'      : re.compile('[.*]*ROLLBACK_TRANSACTION\.*', re.IGNORECASE)
+        ,'6. DB_REMOVAL'     : re.compile('[.*]*DROP_DATABASE\.*', re.IGNORECASE)
+    }
 
-found_patterns={}
+    found_patterns={}
 
-with open( trc_log.name,'r') as f:
-    for line in f:
-        if line.rstrip().split():
-            for k,v in allowed_patterns.items():
-                if v.search(line):
-                    found_patterns[k] = 'FOUND'
+    with open( trc_log.name,'r') as f:
+        for line in f:
+            if line.rstrip().split():
+                for k,v in allowed_patterns.items():
+                    if v.search(line):
+                        found_patterns[k] = 'FOUND'
 
-            #for i,p in enumerate( allowed_patterns ):
-            #    if p.search(line):
-            #        found_patterns[i] = 'FOUND'
+                #for i,p in enumerate( allowed_patterns ):
+                #    if p.search(line):
+                #        found_patterns[i] = 'FOUND'
 
-for k,v in sorted( found_patterns.items() ):
-    print( 'Pattern', k, ':', v)
+    for k,v in sorted( found_patterns.items() ):
+        print( 'Pattern', k, ':', v)
+
+#< cond "if trc_ssn>0"
 
 # cleanup:
 ##########
