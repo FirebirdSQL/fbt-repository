@@ -77,8 +77,6 @@ sqltxt=open( os.path.join(context['temp_directory'],'tmp_dml_4236.sql'), 'w')
 sqltxt.write(dmltxt)
 sqltxt.close()
 
-#sys.exit(0)
-
 f_list = []
 p_list = []
 
