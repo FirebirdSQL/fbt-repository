@@ -49,9 +49,13 @@ echo !msg!>>!log!
 @rem ###    g i t    a d d    ###
 @rem ############################
 git add %1 1>>!log! 2>&1
-set elevel=!errorlevel!
+set /a elevel=!errorlevel!
 echo elevel=!elevel!
 echo elevel=!elevel!>>!log!
+if !elevel! GTR 0 (
+   echo ERROR OCCURED.
+   goto :final
+)
 
 git status %1 1>>!log! 2>&1
 
@@ -66,6 +70,10 @@ git commit -a -m "!git_text!" 1>>!log! 2>&1
 set elevel=!errorlevel!
 echo elevel=!elevel!
 echo elevel=!elevel!>>!log!
+if !elevel! GTR 0 (
+   echo ERROR OCCURED.
+   goto :final
+)
 
 
 set msg=Processing command: git push 
@@ -79,6 +87,10 @@ git push 1>>!log! 2>&1
 set elevel=!errorlevel!
 echo elevel=!elevel!
 echo elevel=!elevel!>>!log!
+if !elevel! GTR 0 (
+   echo ERROR OCCURED.
+   goto :final
+)
 
 echo -------------------------------
 type !log!
