@@ -5,6 +5,11 @@
 'title': 'Allow output to trace explain plan form.',
 'description': 
  """
+    Checked on
+        4.0.0.1685 SS: 7.985s.
+        4.0.0.1685 CS: 8.711s.
+        3.0.5.33206 SS: 7.281s.
+        3.0.5.33206 CS: 8.278s.
  """,
 'min_versions': '3.0.0',
 'versions': [
@@ -54,9 +59,6 @@ trc_log.close()
 trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_4451.lst'), 'w')
 trc_lst.close()
 
-#sys.stdout.flush()
-#os._exit(0)
-
 #####################################################################
 # Async. launch of trace session using FBSVCMGR action_trace_start:
 
@@ -104,56 +106,55 @@ with open( trc_lst.name,'r') as f:
 # We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
 if trcssn==0:
     print("Error parsing trace session ID.")
-    os.remove(fdb_file)
-    os.exit(0)
+    trc_log.close()
+else:
+    #####################################################################
 
-#####################################################################
+    # Preparing script for ISQL:
 
-# Preparing script for ISQL:
+    sql_cmd='''select count(*) from test;'''
 
-sql_cmd='''select count(*) from test;'''
+    so=sys.stdout
+    se=sys.stderr
 
-so=sys.stdout
-se=sys.stderr
+    sys.stdout = open(os.devnull, 'w')
+    sys.stderr = sys.stdout
 
-sys.stdout = open(os.devnull, 'w')
-sys.stderr = sys.stdout
+    runProgram('isql',[dsn],sql_cmd)
 
-runProgram('isql',[dsn],sql_cmd)
+    sys.stdout = so
+    sys.stderr = se
 
-sys.stdout = so
-sys.stderr = se
+    # do NOT reduce this delay!
+    time.sleep(2)
 
-# do NOT reduce this delay!
-time.sleep(2)
+    #####################################################################
 
-#####################################################################
+    # Stop trace session:
 
-# Stop trace session:
+    trc_lst=open(trc_lst.name, "a")
+    trc_lst.seek(0,2)
+    subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+                       "action_trace_stop",
+                       "trc_id",trcssn
+                     ],
+                     stdout=trc_lst, 
+                     stderr=subprocess.STDOUT
+                   )
+    trc_lst.close()
 
-trc_lst=open(trc_lst.name, "a")
-trc_lst.seek(0,2)
-subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
-                   "action_trace_stop",
-                   "trc_id",trcssn
-                 ],
-                 stdout=trc_lst, 
-                 stderr=subprocess.STDOUT
-               )
-trc_lst.close()
+    p_svcmgr.terminate()
+    trc_log.close()
 
-p_svcmgr.terminate()
-trc_log.close()
+    # do NOT remove this delay:
+    time.sleep(1)
 
-# do NOT remove this delay:
-time.sleep(1)
-
-show_line = 0
-with open(trc_log.name) as f:
-    for line in f:
-        show_line = ( show_line + 1 if ('^' * 79) in line or show_line>0 else show_line )
-        if show_line > 1:
-            print(line)
+    show_line = 0
+    with open(trc_log.name) as f:
+        for line in f:
+            show_line = ( show_line + 1 if ('^' * 79) in line or show_line>0 else show_line )
+            if show_line > 1:
+                print(line)
 
 # do NOT remove this delay:
 time.sleep(1)
