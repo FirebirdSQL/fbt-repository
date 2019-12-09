@@ -8,9 +8,13 @@
  """,
 'description': 
  """
-   Check commit: "Fixed parsing of scaled integers and MAX/MIN INT64", 2017-05-28
-   See: github.com/FirebirdSQL/firebird/commit/1278d0692b535f69c7f9e208aad9682980ed9c59
-   40SS, build 4.0.0.680: OK, 1.047s;  build 4.0.0.651: FAILED.
+    Check commit: "Fixed parsing of scaled integers and MAX/MIN INT64", 2017-05-28
+    See: github.com/FirebirdSQL/firebird/commit/1278d0692b535f69c7f9e208aad9682980ed9c59
+    40SS, build 4.0.0.680: OK, 1.047s;  build 4.0.0.651: FAILED.
+
+    10.12.2019. Updated syntax for SET BIND command because it was changed in 11-nov-2019. 
+    Checked on: WI-T4.0.0.1685.
+
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -33,7 +37,15 @@
     select * from  v_test;
 
     set sqlda_display off;
-    set decfloat bind bigint;
+
+    -- OLD SYNTAX: set decfloat bind bigint;
+    -- Syntax after 11-nov-2019:
+    -- https://github.com/FirebirdSQL/firebird/commit/a77295ba153e0c17061e2230d0ffdbaf08839114
+    -- See also: doc/sql.extensions/README.set_bind.md:
+    --     SET BIND OF type-from TO { type-to | LEGACY };
+    --     SET BIND OF type NATIVE;
+
+    set bind of decfloat to bigint;
 
     select * from  v_test;
   """,
@@ -42,24 +54,28 @@
     INPUT message field count: 0
 
     OUTPUT message field count: 3
-    01: sqltype: 32762 DECFLOAT(34) Nullable scale: 0 subtype: 0 len: 16
+    01: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 19 len: 16
       :  name: BEHIND_BIGINT_MAX  alias: BEHIND_BIGINT_MAX
       : table: V_TEST  owner: SYSDBA
-    02: sqltype: 32762 DECFLOAT(34) Nullable scale: 0 subtype: 0 len: 16
+    02: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 19 len: 16
       :  name: BEHIND_BIGINT_MIN  alias: BEHIND_BIGINT_MIN
       : table: V_TEST  owner: SYSDBA
-    03: sqltype: 32762 DECFLOAT(34) Nullable scale: 0 subtype: 0 len: 16
+    03: sqltype: 32752 NUMERIC(38) Nullable scale: -4 subtype: 35 len: 16
       :  name: BIG_E23  alias: BIG_E23
       : table: V_TEST  owner: SYSDBA
 
-    BEHIND_BIGINT_MAX                                     -9223372036854775809
-    BEHIND_BIGINT_MIN                                      9223372036854775808
-    BIG_E23                                123456789012345678901234567890.1234
+    BEHIND_BIGINT_MAX                                        -9223372036854775809
+    BEHIND_BIGINT_MIN                                         9223372036854775808
+    BIG_E23                                   123456789012345678901234567890.1234
+
+
+
+    BEHIND_BIGINT_MAX                                        -9223372036854775809
+    BEHIND_BIGINT_MIN                                         9223372036854775808
+    BIG_E23                                   123456789012345678901234567890.1234
   """,
   'expected_stderr':
   """
-    Statement failed, SQLSTATE = 22000
-    Decimal float invalid operation.  An indeterminant error occurred during an operation.
   """
 }
 ]
