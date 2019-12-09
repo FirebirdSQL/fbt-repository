@@ -70,7 +70,7 @@ init_ddl='''
 runProgram('isql', [dsn], init_ddl)
 
 #sys.stdout.flush()
-#os._exit(0)
+#sys.exit(0)
 
 lock_sql='''
     set list on;
