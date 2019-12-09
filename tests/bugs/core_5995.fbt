@@ -114,31 +114,30 @@ with open( trc_lst.name,'r') as f:
 # We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
 if trcssn==0:
     print("Error parsing trace session ID.")
-    os.remove(fdb_file)
-    os.exit(0)
 
-#####################################################################
+else:
 
-# Stop trace session:
+    #####################################################################
+    # Stop trace session:
+    #####################################################################
 
-trc_lst=open(trc_lst.name, "a")
-trc_lst.seek(0,2)
+    trc_lst=open(trc_lst.name, "a")
+    trc_lst.seek(0,2)
 
-print( 'Trace was started by: ' + trcusr )
-#print( 'Session to be stopped: ' + str(trcssn) )
+    print( 'Trace was started by: ' + trcusr )
 
-subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
-                   "action_trace_stop",
-                   "trc_id",trcssn
-                 ],
-                 stdout=trc_lst, 
-                 stderr=subprocess.STDOUT
-               )
-trc_lst.close()
+    subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+                       "action_trace_stop",
+                       "trc_id",trcssn
+                     ],
+                     stdout=trc_lst, 
+                     stderr=subprocess.STDOUT
+                   )
+    trc_lst.close()
+    p_svcmgr.terminate()
 
-p_svcmgr.terminate()
+
 trc_log.close()
-
 # do NOT remove this delay:
 time.sleep(1)
 
