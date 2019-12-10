@@ -134,7 +134,7 @@ p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
                 )
 
 # Wait! Trace session is initialized not instantly!
-#time.sleep(2)
+#time.sleep(1)
 
 
 #####################################################################
@@ -166,6 +166,8 @@ subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  stdout=trc_lst, stderr=subprocess.STDOUT
                )
 trc_lst.close()
+
+time.sleep(1)
 
 # Session ID: 5 
 #   user:   
