@@ -5,29 +5,40 @@
 'title': 'GTTs do not release used space',
 'description': 
  """
-   === For FB 3.x ===
-       Test obtains full path to $fb_home via FBSVCMGR info_get_env.
-       Then it makes copy of file 'databases.conf' that is in $fb_home directory because 
-       following lines will be added to that 'databases.conf':
-       ===
-       tmp_6043_keep = ...
-       {
-           ClearGTTAtRetaining = 0
-       }
-       After this, it does connect to this alias and run statements from ticket with commit/rollback retain.
-       We check that:
-         * COMMIT RETAIN preserves record that was inserted in the statement before this commit;
-         * ROLLBACK RETAIN does NOT delete record that was inserted before COMMIT RETAIN.
+    === For FB 3.x ===
+        Test obtains full path to $fb_home via FBSVCMGR info_get_env.
+        Then it makes copy of file 'databases.conf' that is in $fb_home directory because 
+        following lines will be added to that 'databases.conf':
+        ===
+        tmp_6043_keep = ...
+        {
+            ClearGTTAtRetaining = 0
+        }
+        After this, it does connect to this alias and run statements from ticket with commit/rollback retain.
+        We check that:
+          * COMMIT RETAIN preserves record that was inserted in the statement before this commit;
+          * ROLLBACK RETAIN does NOT delete record that was inserted before COMMIT RETAIN.
 
-       Then we check the same for ClearGTTAtRetaining = 1 (i.e. for default value) - just to ensure that it works.
-       Finally, previous databases.conf file is restored in initial state.
+        Then we check the same for ClearGTTAtRetaining = 1 (i.e. for default value) - just to ensure that it works.
+        Finally, previous databases.conf file is restored in initial state.
 
-   === For FB 4.x ===
-       It is enough just to run ISQL; databases.conf can be left unchanged.
+    === For FB 4.x ===
+        It is enough just to run ISQL; databases.conf can be left unchanged.
 
-   Checked on:
-      4.0.0.1501: OK, 1.827s.
-      3.0.5.33123: OK, 2.807s.
+    13.12.2019.
+    It seems that we have to DISABLE BUFFERING in any IO operation which relates to preparing scripts, configs or logs.
+    Otherwise sporadic runtime errors can occur: I/O error during "CreateFile (open)" operation for file "..."
+
+    Explanation:
+    https://docs.python.org/2/library/functions.html#open
+    https://stackoverflow.com/questions/18984092/python-2-7-write-to-file-instantly/41506739
+
+    Checked on:
+        4.0.0.1687 SS: 1.536s.
+        4.0.0.1685 CS: 2.026s.
+        3.0.5.33207 SS: 1.435s.
+        3.0.5.33152 SC: 1.243s.
+        3.0.5.33206 CS: 2.626s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -48,36 +59,30 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
 fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
 this_db = db_conn.database_name
 db_conn.close()
 
-# Resut: fb_home is full path to FB instance home (with trailing slash).
+tmp_fdb_keep=os.path.join(context['temp_directory'],'tmp_6043.keep_GTT_data.fdb')
+tmp_fdb_kill=os.path.join(context['temp_directory'],'tmp_6043.kill_GTT_data.fdb')
 
+shutil.copy2( this_db, tmp_fdb_keep )
+shutil.copy2( this_db, tmp_fdb_kill )
+
+# Resut: fb_home is full path to FB instance home (with trailing slash).
 shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
 
-f_dbconf=open(fb_home+'databases.conf','a')
-f_dbconf.seek(0, 2)
-
-alias_data=\
-'''
-# Created temply by fbtest, CORE-6043. Should be removed auto.
-tmp_6043_keep = %(this_db)s 
-{
-    # Value of 0 makes engine to not clear GTT data on COMMIT/ROLLBACK RETAINING and let application to see it.
-    # Default value is 1 (clear GTT data on commit/rollback retaining).
-    # Note: in Firebird 4 default value will be changed to 0 and this setting will
-    # be removed at Firebird 5.
-
-    ClearGTTAtRetaining = 0
-
-}
-''' % locals()
-
-f_dbconf.write(alias_data)
-f_dbconf.close()
-
-#shutil.copy2( fb_home+'databases.conf', fb_home+'databases.new' )
+# ----------------------------------------------------------------------
 
 isql_script='''
     set list on;
@@ -100,69 +105,95 @@ isql_script='''
     select * from gtt; -- point 2
 '''
 
-f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_6043.sql'), 'w')
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_6043.sql'), 'w', buffering = 0)
 f_isql_cmd.write( isql_script )
 f_isql_cmd.close()
 
-f_isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_6043.log'), 'w')
-subprocess.call(["isql", 'localhost:tmp_6043_keep',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
-f_isql_log.close()
+# --------------------------------------------------------------------
 
-with open( f_isql_log.name,'r') as f:
+f_dbconf=open(fb_home+'databases.conf','a', buffering = 0)
+f_dbconf.seek(0, 2)
+
+alias_data=\
+'''
+
+    # Created temply by fbtest, CORE-6043. Should be removed auto.
+    # WARNING! DO NOT ADD YET ANOTHER ALIAS FOR THE SAME DATABASE!
+    # Attempt to connect to any of these aliases will fail with message:
+    # =======
+    #   Statement failed, SQLSTATE = 08004
+    #   Server misconfigured - contact administrator please
+    # =======
+    # Server log will contain:
+    # File databases.conf contains bad data: Duplicated configuration for database <file>
+
+    tmp_6043_keep = %(tmp_fdb_keep)s
+    {
+        # Value of 0 makes engine to not clear GTT data on COMMIT/ROLLBACK RETAINING and let application to see it.
+        # Default value is 1 (clear GTT data on commit/rollback retaining).
+        # Note: in Firebird 4 default value will be changed to 0 and this setting will
+        # be removed at Firebird 5.
+        ClearGTTAtRetaining = 0
+    }
+
+    tmp_6043_kill = %(tmp_fdb_kill)s
+    {
+        # Check that 1 really works as default value, i.e. clears GTT data on commit/rollback retaining.
+        ClearGTTAtRetaining = 1
+    }
+
+
+''' % locals()
+
+f_dbconf.write(alias_data)
+f_dbconf.close()
+
+# 4debug: shutil.copy2( fb_home+'databases.conf', fb_home+'databases.conf.check_it' )
+
+# NB: buffering = 0 - we want this file be immediately on disk after closing in order to avoid excessive waiting for it
+###################
+f_isql_keep_log=open( os.path.join(context['temp_directory'],'tmp_6043.keep_GTT_data.log'), 'w', buffering = 0)
+subprocess.call(["isql", 'localhost:tmp_6043_keep',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_keep_log, stderr=subprocess.STDOUT)
+f_isql_keep_log.close()
+
+with open( f_isql_keep_log.name,'r') as f:
     for line in f:
         if line.split():
             print( 'When ClearGTTAtRetaining = 0: ' + line )
 
 ####################################################################
 
-shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
+# NB: buffering = 0 - we want this file be immediately on disk after closing in order to avoid excessive waiting for it
+f_isql_kill_log=open( os.path.join(context['temp_directory'],'tmp_6043.kill_GTT_data.log'), 'w', buffering = 0)
+subprocess.call(["isql", 'localhost:tmp_6043_kill',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_kill_log, stderr=subprocess.STDOUT)
+f_isql_kill_log.close()
 
-f_dbconf=open(fb_home+'databases.conf','a')
-f_dbconf.seek(0, 2)
-
-alias_data=\
-'''
-# Created temply by fbtest, CORE-6043. Should be removed auto.
-tmp_6043_kill = %(this_db)s 
-{
-    # Check that 1 really works as default value (i.e. clears GTT data on commit/rollback retaining).
-    ClearGTTAtRetaining = 1
-}
-''' %locals()
-f_dbconf.write(alias_data)
-f_dbconf.close()
-
-f_isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_6043.log'), 'w')
-subprocess.call(["isql", 'localhost:tmp_6043_kill',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
-f_isql_log.close()
-
-with open( f_isql_log.name,'r') as f:
+with open( f_isql_kill_log.name,'r') as f:
     for line in f:
         if line.split():
             print( 'When ClearGTTAtRetaining = 1: ' + line )
 
 ####################################################################
 
+# Restore previous content:
 shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
 os.remove( fb_home+'databases.bak' )
-
 
 #####################################################################
 # Cleanup:
 
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
-time.sleep(1)
+# >>>> 13.12.2019 we can remove this delay because use buffering=0 for open() calls: >>>> time.sleep(1)
 
-os.remove(f_isql_log.name)
-os.remove(f_isql_cmd.name)
+cleanup( [ i.name for i in ( f_isql_keep_log, f_isql_kill_log, f_isql_cmd ) ] + [ tmp_fdb_keep, tmp_fdb_kill ]   )
 
   """,
  'expected_stdout':
   """
-    When ClearGTTAtRetaining = 0: ID                              3
+    When ClearGTTAtRetaining = 0: ID 3
     When ClearGTTAtRetaining = 0: Records affected: 1
-    When ClearGTTAtRetaining = 0: ID                              3
+    When ClearGTTAtRetaining = 0: ID 3
     When ClearGTTAtRetaining = 0: Records affected: 1
 
     When ClearGTTAtRetaining = 1: Records affected: 0
@@ -170,7 +201,8 @@ os.remove(f_isql_cmd.name)
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 },
 {
  'firebird_version': '4.0',
@@ -202,15 +234,16 @@ os.remove(f_isql_cmd.name)
   """,
  'expected_stdout':
   """
-    ID                              4
+    ID 4
     Records affected: 1
 
-    ID                              4
+    ID 4
     Records affected: 1
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 
 ]
