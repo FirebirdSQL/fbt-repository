@@ -1,7 +1,7 @@
 {
 'id': 'functional.datatypes.decfloat-binding-to-other-types',
 'qmid': None,
-'tracker_id': 'CORE-5535',
+'tracker_id': '',
 'title': 
  """
    Test ability for DECFLOAT values to be represented as other data types (char, double, bigint).
