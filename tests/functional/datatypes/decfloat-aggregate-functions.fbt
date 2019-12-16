@@ -1,7 +1,7 @@
 {
 'id': 'functional.datatypes.decfloat-scalar-functions',
 'qmid': None,
-'tracker_id': 'CORE-5535',
+'tracker_id': '',
 'title': 
  """
    Test common math functions that should work with DECFLOAT datatype.
