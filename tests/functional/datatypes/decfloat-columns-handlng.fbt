@@ -1,7 +1,7 @@
 {
 'id': 'functional.datatypes.decfloat-columns-handlng',
 'qmid': None,
-'tracker_id': 'CORE-5535',
+'tracker_id': '',
 'title': 'Check ability of misc. actions against table column for DECFLOAT datatype.',
 'description': 
  """

@@ -1,7 +1,7 @@
 {
 'id': 'functional.datatypes.decfloat-literal-length',
 'qmid': None,
-'tracker_id': 'CORE-5535',
+'tracker_id': '',
 'title': 
  """
    Literal length currently is limited with 1024 characters (including decimal separator and minus sign if any)

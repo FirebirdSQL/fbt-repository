@@ -1,7 +1,7 @@
 {
 'id': 'functional.datatypes.decfloat-df16-alignment',
 'qmid': None,
-'tracker_id': 'CORE-5535',
+'tracker_id': '',
 'title': 'Check proper alignment of decfloat(16) value if it is shown in ISQL when SET LIST ON.',
 'description': 
  """
