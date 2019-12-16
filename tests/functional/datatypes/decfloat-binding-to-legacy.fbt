@@ -4,7 +4,20 @@
 'tracker_id': '',
 'title': 
  """
-   Test ability for DECFLOAT values to be represented as other data types using LEGACY keyword.
+    Test ability for DECFLOAT values to be represented as other data types using LEGACY keyword.
+    We check here that values from DECFLOAT will be actually converted to legacy datatypes 
+    according to following table from sql.extensions\README.set_bind.md:
+        ----------------------------------------------------------
+        | Native datatype          | Legacy datatype             |
+        |--------------------------|-----------------------------|
+        | BOOLEAN                  | CHAR(5)                     |
+        | DECFLOAT                 | DOUBLE PRECISION            |
+        | NUMERIC(38)              | NUMERIC(18)                 |
+        | TIME WITH TIME ZONE      | TIME WITHOUT TIME ZONE      |
+        | TIMESTAMP WITH TIME ZONE | TIMESTAMP WITHOUT TIME ZONE |
+        ----------------------------------------------------------
+     SQLDA must contain the same datatypes when we use either explicit rule or LEGACY keyword.
+     Checked on 4.0.0.1691 SS: 1.113s.
  """,
 'description': 
  """
@@ -24,48 +37,77 @@
 
     -- Legacy, explicit and implicit:
     set bind of boolean to char(5);
-    select not false and true as check_bind_bool_to_char from rdb$database;
+    select not false and true as "check_bind_bool_to_char" from rdb$database;
 
     set bind of boolean to legacy;
-    select not false and true as check_bind_bool_to_legacy from rdb$database;
+    select not false and true as "check_bind_bool_to_legacy" from rdb$database;
 
 
     set bind of decfloat to double precision;
-    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as check_bind_decfloat_to_double from rdb$database;
+    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as "check_bind_decfloat_to_double" from rdb$database;
 
     set bind of decfloat to legacy;
-    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as check_bind_decfloat_to_legacy from rdb$database;
+    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as "check_bind_decfloat_to_legacy" from rdb$database;
 
 
     set bind of numeric(38) to numeric(18);
-    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as check_bind_n38_to_n18 from rdb$database;
+    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as "check_bind_n38_to_n18" from rdb$database;
 
     set bind of numeric(38) to legacy;
-    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as check_bind_n38_to_legacy from rdb$database;
+    select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as "check_bind_n38_to_legacy" from rdb$database;
 
 
     set bind of time with time zone to time without time zone;
-    select time '10:00 America/Los_Angeles' as check_bind_time_with_zone_to_time from rdb$database;
+    select time '10:00 America/Los_Angeles' as "check_bind_time_with_zone_to_time" from rdb$database;
 
     set bind of time with time zone to legacy;
-    select time '10:00 America/Los_Angeles' as check_bind_time_with_zone_to_legacy from rdb$database;
+    select time '10:00 America/Los_Angeles' as "check_bind_time_with_zone_to_legacy" from rdb$database;
 
 
     set bind of timestamp with time zone to timestamp without time zone;
-    select timestamp '2018-01-01 12:00 GMT' as check_bind_timestamp_with_zone_to_timestamp from rdb$database;
+    select timestamp '2018-01-01 12:00 GMT' as "check_bind_timestamp_with_zone_to_timestamp" from rdb$database;
 
     set bind of timestamp with time zone to legacy;
-    select timestamp '2018-01-01 12:00 GMT' as check_bind_timestamp_with_zone_to_legacy from rdb$database;
+    select timestamp '2018-01-01 12:00 GMT' as "check_bind_timestamp_with_zone_to_legacy" from rdb$database;
 
 
   """,
   'expected_stdout':
   """
+    01: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 5
+    check_bind_bool_to_char TRUE
+
+    01: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 5
+    check_bind_bool_to_legacy TRUE
+
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+    check_bind_decfloat_to_double 3.141592653589793
+
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+    check_bind_decfloat_to_legacy 3.141592653589793
+
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+    check_bind_n38_to_n18 3.141592653589793
+
+    01: sqltype: 480 DOUBLE scale: 0 subtype: 0 len: 8
+    check_bind_n38_to_legacy 3.141592653589793
+
+    01: sqltype: 560 TIME scale: 0 subtype: 0 len: 4
+    check_bind_time_with_zone_to_time 21:00:00.0000
+
+    01: sqltype: 560 TIME scale: 0 subtype: 0 len: 4
+    check_bind_time_with_zone_to_legacy 21:00:00.0000
+
+    01: sqltype: 510 TIMESTAMP scale: 0 subtype: 0 len: 8
+    check_bind_timestamp_with_zone_to_timestamp 2018-01-01 15:00:00.0000
+
+    01: sqltype: 510 TIMESTAMP scale: 0 subtype: 0 len: 8
+    check_bind_timestamp_with_zone_to_legacy 2018-01-01 15:00:00.0000
   """,
   'expected_stderr':
   """
   """,
-  'substitutions':[ ('charset.*', ''), ('^((?!(sqltype|CHECK_BIND_)).)*$',''), ('[ \t]+',' ') ]
+  'substitutions':[ ('charset.*', ''), ('.*alias:.*', ''), ('^((?!(sqltype|check_bind_)).)*$',''), ('[ \t]+',' ') ]
 }
 ]
 }
