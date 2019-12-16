@@ -1,7 +1,7 @@
 {
 'id': 'functional.datatypes.decfloat-parsing-scaled-integers-and-bigint-max-min',
 'qmid': None,
-'tracker_id': 'CORE-5535',
+'tracker_id': '',
 'title': 
  """
    Test DECFLOAT values to be interpreted s bigint
