@@ -50,7 +50,7 @@
     select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as "check_bind_decfloat_to_legacy" from rdb$database;
 
 
-    set bind of numeric(38) to numeric(18);
+    set bind of numeric(38) to numeric(18); -- this is mentioned in http://tracker.firebirdsql.org/browse/CORE-6057
     select 3.141592653589793238462643383279502884197169399375105820974944592307816406286 as "check_bind_n38_to_n18" from rdb$database;
 
     set bind of numeric(38) to legacy;
