@@ -48,7 +48,7 @@
             v_encrypt_sttm = 'select encrypt( q''{' || c.source_text || '}'' using ' || c.crypto_alg || ' mode ofb key q''{' || c.crypto_key || '}'' iv q''{' || c.crypto_iv || '}'' ) from rdb$database';
             execute statement v_encrypt_sttm into v_encrypted;
         end
-        result_msg = 'octets in encrypted string: ' || coalesce( octet_length( v_encrypted ), 0);
+        result_msg = 'String has been encrypted.';
         suspend;
     end
     ^
@@ -60,7 +60,7 @@
   """,
  'expected_stdout': 
   """
-    RESULT_MSG                      octets in encrypted string: 65533
+    RESULT_MSG                      String has been encrypted.
     ENCRYPT_STR                     8E709DDA89912F172C
   """,
  'expected_stderr':
