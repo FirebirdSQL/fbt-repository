@@ -4,8 +4,10 @@
 'tracker_id': '',
 'title':
  """
-    Test block crypto algorithms that are implemented in ENCRYPT/DECRYPT built-in functions.
+    Verify block crypto algorithms that are implemented in ENCRYPT/DECRYPT built-in functions.
     See doc\sql.extensions\README.builtin_functions.txt for details.
+
+    Checked on 4.0.0.1691: OK, 1.561s.
  """,
 'description':
  """
