@@ -5,34 +5,31 @@
 'title': 'Compress Data over the Network',
 'description':
   """
-    We create selective procedure (name: "sp_uuid") that produces arbitrary number of rows and accepts as 1st argument parameter 
-    that defines "quality" of issued data for compression: either with excellent ratio of expected compression or with poor ability 
-    to do any compress because of random characters from wide scope.
-    Currently this SP is used only to produce 1st type of data (i.e. lines which can be compressed with MAXIMAL ratio).
-
-    Test opens firebird.conf and changes there value of WireCompression parameter to FALSE. Then we generate .sql file
-    which will obtain <N_ROWS> of lines from sp_uuid() and redirect output to temporary dump storage. We log timestamps
-    when this action starts and finishes in the table T_LOG for further analisys.
-
-    After this, test again opens firebird.conf and changes value WireCompression parameter to TCRUE, and all actions repeat
-    again for logging duration in T_LOG table.
-  
-    Finally, test does query to T_LOG table and checks that:
-    1) required value of WireCompression parameter (i.e. that is changed in firebird.conf) equals to 
-       value that can be obtained from RDB$GET_CONTEXT('SYSTEM', 'WIRE_COMPRESSED');
-    2) slowest duration for COMPRESSED traffic is LESS than fastest duration of UNCOMPRESSED one. 
-       Several measures showed that profit is about 14-16%.
+    CHANGED 22.12.2019: CODE REDUCTION: REMOVED MEASURES OT TIME.
+    Results are completely opposite to those which were obtained on snapshots when this test was implenmented (3.0.5.33084, 4.0.0.1347).
+    Requirement to compress data leads to DEGRADATION of performance when data are stored on local machine, and we have no ability
+    to change storage when fbt_run is in work (at least for nowadays).
+    After discuss with dimitr it was decided to remove any logging and its analysis.
+    We only verify matching of RDB$GET_CONTEXT('SYSTEM', 'WIRE_COMPRESSED') and value that was stored in the firebird.conf
+    for current check.
 
     ### NOTE ###
     Changed value of parameter WireCompression (in firebird.conf) will be seen by application if it reloads client library. 
     Reconnect is NOT enough for this. For this reason we use subprocess and call ISQL utility to do above mentioned actions
     in new execution context.
     
-    See also tests for CORE-5536, 5913.
+    See also tests for:
+        CORE-5536 - checks that field mon$wire_compressed actually exists in MON$ATTACHMENTS table;
+        CORE-5913 - checks that built-in rdb$get_context('SYSTEM','WIRE_ENCRYPTED') is avaliable;
 
     Checked on:
-    3.0.5.33084 SS: 6.82", SC: 6.05"
-    4.0.0.1347  SS: 8.88", SC: 10.00"
+        4.0.0.1693 SS: 3.031s.
+        4.0.0.1346 SC: 2.890s.
+        4.0.0.1691 CS: 3.678s.
+        3.0.5.33215 SS: 1.452s.
+        3.0.5.33084 SC: 1.344s.
+        3.0.5.33212 CS: 3.175s.
+
   """,
 'min_versions': '3.0.0',
 'versions': [
@@ -41,12 +38,12 @@
  'platform': 'All',
  'init_script':
   """
+    create domain dm_dump varchar(32700) character set none;
     recreate table t_log( required_value varchar(5), actual_value varchar(5), elap_ms int );
     commit;
     set term ^; 
     create or alter procedure sp_uuid(a_compressable boolean, n_limit int default 1) 
-    --returns (b blob character set octets) as
-    returns (b varchar(32700) character set none) as
+    returns (b dm_dump) as
         declare g char(16) character set octets;
     begin
         if ( a_compressable ) then
@@ -79,6 +76,7 @@ from time import time
 import re
 import shutil
 import subprocess
+import platform
 
 from fdb import services
 
@@ -90,7 +88,10 @@ DB_NAME = '$(DATABASE_LOCATION)' + 'bugs.core_0733.fdb'
 DB_PATH = '$(DATABASE_LOCATION)'
 U_NAME = user_name
 U_PSWD = user_password
-N_ROWS = 1000
+NUL_DEVICE = 'nul' if platform.system() == 'Windows' else '/dev/null'
+
+N_ROWS = 1
+
 F_SQL_NAME=os.path.join(context['temp_directory'],'tmp_core_0733.sql')
 
 fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
@@ -120,9 +121,11 @@ def prepare_fb_conf( fb_home, a_required_value ):
     f_fbconf.close()
 #------------------------------------------------------------------------------------
 
-#def prepare_sql_4run( sql_file_name, db_path, n_rows, required_compression ):
 def prepare_sql_4run( required_compression, db_path, n_rows, sql_file_name ):
     global os
+    global U_NAME
+    global U_PSWD
+    global NUL_DEVICE
 
     sql_dump='tmp_core_0733_compression_%(required_compression)s.dump' % ( locals() )
 
@@ -137,30 +140,45 @@ def prepare_sql_4run( required_compression, db_path, n_rows, sql_file_name ):
     sql_text='''
         set list on;
 
-        out %(db_path)s%(sql_dump)s;
         set term ^;
         execute block returns(dts timestamp) as
         begin
-           rdb$set_context('USER_SESSION','DTS_BEG',current_timestamp);
            dts = 'now';
+           rdb$set_context('USER_SESSION','DTS_BEG', dts);
            suspend;
         end
         ^
         set term ;^
 
-        select b from sp_uuid( true, %(n_rows)s );
+        --out %(db_path)s%(sql_dump)s;
+        out nul;
 
         set term ^;
-        execute block returns(dts timestamp) as
+        execute block returns(b dm_dump) as
         begin
-           rdb$set_context('USER_SESSION','DTS_END',current_timestamp);
-           dts = 'now';
-           suspend;
+            /***********
+            for
+                execute statement 'select b from sp_uuid( true, %(n_rows)s )'
+                on external 'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
+                as user '%(U_NAME)s' password '%(U_PSWD)s'
+                into b
+            do
+                suspend;
+            ***********/
         end
         ^
         set term ;^
-
         out;
+
+        set term ^;
+        execute block returns(dts timestamp) as
+        begin
+           dts = 'now';
+           rdb$set_context('USER_SESSION','DTS_END', dts);
+           suspend;
+        end
+        ^
+        set term ;^
 
         insert into t_log( required_value, actual_value, elap_ms)
         values(
@@ -170,15 +188,23 @@ def prepare_sql_4run( required_compression, db_path, n_rows, sql_file_name ):
                           from cast(rdb$get_context('USER_SESSION','DTS_BEG') as timestamp) 
                           to cast(rdb$get_context('USER_SESSION','DTS_END') as timestamp) 
                         )           
-              );
+              )
+        returning required_value, actual_value, elap_ms
+        ;
         commit;
-    ''' % ( locals() )
+    ''' % dict(globals(), **locals())
+     # ( locals() )
 
     f_sql=open( sql_file_name, 'w')
     f_sql.write( sql_text )
     f_sql.close()
 
 #-------------------------
+
+# Call for removing dump from disk:
+prepare_sql_4run( 'false', DB_PATH, None, None )
+prepare_sql_4run( 'true',  DB_PATH, None, None )
+
 
 REQUIRED_WIRE_COMPRESSION = 'false'
 # ------------------------------------------------------ ###########
@@ -196,18 +222,20 @@ prepare_fb_conf( fb_home, REQUIRED_WIRE_COMPRESSION)
 #  Launch ISQL in separate context of execution with job to obtain data and log duration
 # --------------------------------------------------------------------------------------
 
-fn_nul = open(os.devnull, 'w') # open( os.path.join(context['temp_directory'],'tmp_core_0733_obtain_data.log'), 'w')
-f_isql_obtain_data_err = open( os.path.join(context['temp_directory'],'tmp_core_0733_obtain_data.err'), 'w')
+fn_log = open(os.devnull, 'w')
+#fn_log = open( os.path.join(context['temp_directory'],'tmp_0733_with_compression.log'), 'w')
+f_isql_obtain_data_err = open( os.path.join(context['temp_directory'],'tmp_0733_obtain_data.err'), 'w')
 
 subprocess.call( ["isql", dsn, "-i", F_SQL_NAME ],
-                 stdout = fn_nul,
+                 stdout = fn_log,
                  stderr = f_isql_obtain_data_err
                )
-fn_nul.close()
+fn_log.close()
 f_isql_obtain_data_err.close()
 
 # Call for removing dump from disk:
-prepare_sql_4run( REQUIRED_WIRE_COMPRESSION, DB_PATH, None, None )
+#prepare_sql_4run( False, DB_PATH, None, None )
+#prepare_sql_4run( True, DB_PATH, None, None )
 
 
 # Update content of firebird.conf with WireCompression = true
@@ -224,24 +252,23 @@ prepare_sql_4run( REQUIRED_WIRE_COMPRESSION, DB_PATH, N_ROWS, F_SQL_NAME )
 # ------------------------------------------------------ ###########
 prepare_fb_conf( fb_home, REQUIRED_WIRE_COMPRESSION)
 
-fn_nul = open(os.devnull, 'w') # open( os.path.join(context['temp_directory'],'tmp_core_0733_obtain_data.log'), 'w')
-f_isql_obtain_data_err = open( os.path.join(context['temp_directory'],'tmp_core_0733_obtain_data.err'), 'a')
+fn_log = open(os.devnull, 'w') 
+#fn_log = open( os.path.join(context['temp_directory'],'tmp_0733_without_compress.log'), 'w')
+f_isql_obtain_data_err = open( os.path.join(context['temp_directory'],'tmp_0733_obtain_data.err'), 'a')
 
 subprocess.call( ["isql", dsn, "-i", F_SQL_NAME ],
-                 stdout = fn_nul,
+                 stdout = fn_log,
                  stderr = f_isql_obtain_data_err
                )
-fn_nul.close()
+fn_log.close()
 f_isql_obtain_data_err.close()
 
 # Call for removing dump from disk:
-prepare_sql_4run( REQUIRED_WIRE_COMPRESSION, DB_PATH, None, None )
+#prepare_sql_4run( REQUIRED_WIRE_COMPRESSION, DB_PATH, None, None )
 
 # RESTORE original config:
 ##########################
 shutil.copy2( fbconf_bak , fb_home+'firebird.conf')
-os.remove(fbconf_bak)
-os.remove(F_SQL_NAME)
 
 sql='''
     -- select * from t_log;
@@ -252,13 +279,15 @@ sql='''
     set list on;
     select
          result_of_req_compare_to_actual
-        ,iif( slowest_with_compression < fastest_without_compression, 'COOL: compression was FASTER.', 'POOR: Compression was SLOWER.') as result_of_compression_benchmark
-        -- ,100 - 100 * ( 1.00 * slowest_with_compression / fastest_without_compression) as diff_prc -- 16...18%
+        --,iif( slowest_with_compression < fastest_without_compression, 
+        --      'EXPECTED: compression was FASTER.', 
+        --      'POOR. slowest_with_compression=' || slowest_with_compression || ', fastest_without_compression=' || fastest_without_compression
+        --    ) as result_of_compression_benchmark
     from (
         select 
              min( iif( upper(required_value) is distinct from upper(actual_value)
                        ,coalesce(required_value,'<null>') || coalesce(actual_value,'<null>')
-                       ,'Cool: actual values were equal to required.' 
+                       ,'EXPECTED: actual values were equal to required.' 
                      )
                 ) as result_of_req_compare_to_actual
             ,min( iif( upper(required_value) = upper('false'), elap_ms, null ) ) fastest_without_compression
@@ -266,6 +295,8 @@ sql='''
         from t_log
     )
     ;
+    set list off;
+    --select * from t_log;
 
 '''
 runProgram('isql', [ dsn ], sql)
@@ -284,11 +315,13 @@ for i in range(len(f_list)):
        f.close()
 
 os.remove(f_isql_obtain_data_err.name)
+os.remove(fbconf_bak)
+os.remove(F_SQL_NAME)
+
   """,
  'expected_stdout':
   """
-    RESULT_OF_REQ_COMPARE_TO_ACTUAL Cool: actual values were equal to required.
-    RESULT_OF_COMPRESSION_BENCHMARK COOL: compression was FASTER.
+    RESULT_OF_REQ_COMPARE_TO_ACTUAL EXPECTED: actual values were equal to required.
   """,
  'expected_stderr':
   """
