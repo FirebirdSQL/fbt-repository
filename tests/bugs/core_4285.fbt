@@ -3,84 +3,350 @@
 'qmid': None,
 'tracker_id': 'CORE-4285',
 'title': 'Choose the best matching index for navigation',
-'description': '',
+'description':
+ """
+    When ORDER plan is in game, the optimizer chooses the first index candidate that matches the ORDER BY / GROUP BY clause.
+    This is not the best approach when multiple index choices are available
+
+    22.12.2019. Refactored: split code and expected_std* for each major FB version; add some data to the test table.
+    Checked on:
+        4.0.0.1693: 1.698s.
+        4.0.0.1637: 1.515s.
+        3.0.5.33215: 1.094s.
+        NB: 3.0.5.33212 - FAILED, another index(es) are chosen!
+ """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': """create table test (col1 int, col2 int, col3 int);
-create index itestcol1 on test (col1);
-create index itestcol12 on test (col1, col2);
-create index itestcol21 on test (col2, col1);
-create index itestcol123 on test (col1, col2, col3);
-create index itestcol132 on test (col1, col3, col2);
-commit;""",
+ 'init_script':
+  """
+    set bail on;
+    recreate table test (col1 int, col2 int, col3 int);
+    commit;
+    insert into test(col1, col2, col3)
+    with recursive
+    r as (
+        select 0 as i from rdb$database
+        union all
+        select r.i+1 from r
+        where r.i < 49
+    )
+    select mod(r1.i,1000), mod(r1.i,100), mod(r1.i,10)
+    from r as r1, r as r2
+    where 1=1
+    ;
+    commit;
+
+    create index test_col1 on test (col1);
+    create index test_col12 on test (col1, col2);
+    create index test_col21 on test (col2, col1);
+    create index test_col123 on test (col1, col2, col3);
+    create index test_col132 on test (col1, col3, col2);
+    commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """set planonly;
-select * from RDB$COLLATIONS where RDB$COLLATION_ID = 0 order by RDB$CHARACTER_SET_ID;
--- expected: PLAN (RDB$COLLATIONS ORDER RDB$INDEX_26)
+ 'test_script':
+  """
+    set explain on;
+    set planonly;
+    set echo on;
 
-select 1 from test order by col1;
--- expected: PLAN (TEST ORDER ITESTCOL1)
+    select 1 from test order by col1;
 
-select 1 from test where col1 = 0 order by col1;
--- expected: PLAN (TEST ORDER ITESTCOL1)
+    ------
+    select 1 from test where col1 = 0 order by col1;
 
-select 1 from test order by col1, col2;
--- expected: PLAN (TEST ORDER ITESTCOL12)
+    ------
+    select 1 from test order by col1, col2;
 
-select 1 from test where col1 = 0 order by col1, col2;
--- expected: PLAN (TEST ORDER ITESTCOL12)
+    ------
+    select 1 from test where col1 = 0 order by col1, col2;
 
-select 1 from test where col1 = 0 and col2 = 0 order by col1, col2;
--- expected: PLAN (TEST ORDER ITESTCOL12)
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2;
 
-select 1 from test order by col1, col2, col3;
--- expected: PLAN (TEST ORDER ITESTCOL123)
+    ------
+    select 1 from test order by col1, col2, col3;
 
-select 1 from test where col1 = 0 order by col1, col2, col3;
--- expected: PLAN (TEST ORDER ITESTCOL123)
+    ------
+    select 1 from test where col1 = 0 order by col1, col2, col3;
 
-select 1 from test where col1 = 0 and col2 = 0 order by col1, col2, col3;
--- expected: PLAN (TEST ORDER ITESTCOL123)
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2, col3;
 
-select 1 from test where col1 = 0 and col3 = 0 order by col1;
--- expected: PLAN (TEST ORDER ITESTCOL132)
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1;
 
-select 1 from test where col1 = 0 and col3 = 0 order by col1, col2, col3;
--- expected: PLAN (TEST ORDER ITESTCOL123)
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col2, col3;
 
-select 1 from test where col1 = 0 and col3 = 0 order by col1, col3;
--- expected: PLAN (TEST ORDER ITESTCOL132)
-""",
- 'expected_stdout': """Database:  localhost:C:\Users\win7\Firebird_tests\fbt-repository\tmp\bugs.core_4285.fdb, User: SYSDBA
-SQL> SQL> CON> CON> CON>
-PLAN (RDB$COLLATIONS ORDER RDB$INDEX_26)
-SQL>
-PLAN (TEST ORDER ITESTCOL1)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL1)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL12)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL12)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL12)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL123)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL123)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL123)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL132)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL123)
-SQL> SQL> SQL>
-PLAN (TEST ORDER ITESTCOL132)
-SQL> SQL>"""
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col3;
+
+  """,
+ 'expected_stdout':
+   """
+    select 1 from test order by col1;
+
+    Select Expression
+        -> Table "TEST" Access By ID
+            -> Index "TEST_COL1" Full Scan
+
+    ------
+    select 1 from test where col1 = 0 order by col1;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL1" Range Scan (full match)
+
+    ------
+    select 1 from test order by col1, col2;
+
+    Select Expression
+        -> Table "TEST" Access By ID
+            -> Index "TEST_COL12" Full Scan
+
+    ------
+    select 1 from test where col1 = 0 order by col1, col2;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL12" Range Scan (partial match: 1/2)
+
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL12" Range Scan (full match)
+
+    ------
+    select 1 from test order by col1, col2, col3;
+
+    Select Expression
+        -> Table "TEST" Access By ID
+            -> Index "TEST_COL123" Full Scan
+
+    ------
+    select 1 from test where col1 = 0 order by col1, col2, col3;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL123" Range Scan (partial match: 1/3)
+
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2, col3;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL123" Range Scan (partial match: 2/3)
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL132" Range Scan (partial match: 2/3)
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col2, col3;
+
+    Select Expression
+        -> Sort (record length: 44, key length: 24)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL132" Range Scan (partial match: 2/3)
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col3;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL132" Range Scan (partial match: 2/3)
+
+   """,
+ 'expected_stderr':
+   """
+   """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    set bail on;
+    recreate table test (col1 int, col2 int, col3 int);
+    commit;
+    insert into test(col1, col2, col3)
+    with recursive
+    r as (
+        select 0 as i from rdb$database
+        union all
+        select r.i+1 from r
+        where r.i < 49
+    )
+    select mod(r1.i,1000), mod(r1.i,100), mod(r1.i,10)
+    from r as r1, r as r2
+    where 1=1
+    ;
+    commit;
+
+    create index test_col1 on test (col1);
+    create index test_col12 on test (col1, col2);
+    create index test_col21 on test (col2, col1);
+    create index test_col123 on test (col1, col2, col3);
+    create index test_col132 on test (col1, col3, col2);
+    commit;
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    set explain on;
+    set planonly;
+    set echo on;
+
+    select 1 from test order by col1;
+
+    ------
+    select 1 from test where col1 = 0 order by col1;
+
+    ------
+    select 1 from test order by col1, col2;
+
+    ------
+    select 1 from test where col1 = 0 order by col1, col2;
+
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2;
+
+    ------
+    select 1 from test order by col1, col2, col3;
+
+    ------
+    select 1 from test where col1 = 0 order by col1, col2, col3;
+
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2, col3;
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1;
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col2, col3;
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col3;
+
+  """,
+ 'expected_stdout':
+   """
+    select 1 from test order by col1;
+
+    Select Expression
+        -> Table "TEST" Access By ID
+            -> Index "TEST_COL1" Full Scan
+
+    ------
+    select 1 from test where col1 = 0 order by col1;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL1" Range Scan (full match)
+
+    ------
+    select 1 from test order by col1, col2;
+
+    Select Expression
+        -> Table "TEST" Access By ID
+            -> Index "TEST_COL12" Full Scan
+
+    ------
+    select 1 from test where col1 = 0 order by col1, col2;
+
+    Select Expression
+        -> Sort (record length: 36, key length: 16)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL1" Range Scan (full match)
+
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2;
+
+    Select Expression
+        -> Sort (record length: 36, key length: 16)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL21" Range Scan (full match)
+
+    ------
+    select 1 from test order by col1, col2, col3;
+
+    Select Expression
+        -> Table "TEST" Access By ID
+            -> Index "TEST_COL123" Full Scan
+
+    ------
+    select 1 from test where col1 = 0 order by col1, col2, col3;
+
+    Select Expression
+        -> Sort (record length: 44, key length: 24)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL1" Range Scan (full match)
+
+    ------
+    select 1 from test where col1 = 0 and col2 = 0 order by col1, col2, col3;
+
+    Select Expression
+        -> Sort (record length: 44, key length: 24)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL21" Range Scan (full match)
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL132" Range Scan (partial match: 2/3)
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col2, col3;
+
+    Select Expression
+        -> Sort (record length: 44, key length: 24)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL132" Range Scan (partial match: 2/3)
+
+    ------
+    select 1 from test where col1 = 0 and col3 = 0 order by col1, col3;
+
+    Select Expression
+        -> Filter
+            -> Table "TEST" Access By ID
+                -> Index "TEST_COL132" Range Scan (partial match: 2/3)
+   """,
+ 'expected_stderr':
+   """
+   """
 }
 ]
 }
