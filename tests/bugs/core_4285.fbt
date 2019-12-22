@@ -10,7 +10,7 @@
 
     22.12.2019. Refactored: split code and expected_std* for each major FB version; add some data to the test table.
     Checked on:
-        4.0.0.1693: 1.698s.
+        4.0.0.1694: 1.598s // NB: output in 4.0 became match to 3.x since 4.0.0.1694
         4.0.0.1637: 1.515s.
         3.0.5.33215: 1.094s.
         NB: 3.0.5.33212 - FAILED, another index(es) are chosen!
@@ -260,9 +260,11 @@
     select 1 from test where col1 = 0 order by col1;
 
     Select Expression
-        -> Filter
-            -> Table "TEST" Access By ID
-                -> Index "TEST_COL1" Range Scan (full match)
+        -> Sort (record length: 28, key length: 8)
+            -> Filter
+                -> Table "TEST" Access By ID
+                    -> Bitmap
+                        -> Index "TEST_COL1" Range Scan (full match)
 
     ------
     select 1 from test order by col1, col2;
