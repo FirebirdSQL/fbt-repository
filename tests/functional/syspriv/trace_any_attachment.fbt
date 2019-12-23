@@ -36,31 +36,35 @@ import subprocess
 from subprocess import Popen
 import time
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_file=os.path.basename(db_conn.database_name)
 db_conn.close()
-db_file="$(DATABASE_LOCATION)functional.syspriv.trace_any_attachment.fdb"
 
 trace_options = '''# Trace config, format for 3.0 and above. Generated auto, do not edit!
-database=%[\\\\\\\\/]functional.syspriv.trace_any_attachment.fdb
+database=%%[\\\\\\\\/]%(db_file)s
 {
-  enabled = true
-  log_errors = true
-  time_threshold = 0
-  log_statement_start = true
-  log_statement_finish = true
-  print_perf = true
-  max_sql_length = 16384
-  max_log_size = 5000000
+    enabled = true
+    log_initfini = false
+    log_errors = true
+    time_threshold = 0
+    log_statement_start = true
+    log_statement_finish = true
+    print_perf = true
+    max_sql_length = 16384
 }
-'''
-f_trccfg=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.cfg'), 'w')
+''' % locals()
+
+f_trccfg=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.cfg'), 'w', buffering=0)
 f_trccfg.write(trace_options)
 f_trccfg.close()
 
 # Starting trace session in new child process (async.):
 #######################################################
 
-f_trclog=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.log'), 'w')
-f_trcerr=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.err'), 'w')
+f_trclog=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.log'), 'w', buffering=0)
+f_trcerr=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_attacmhent.err'), 'w', buffering=0)
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 p_trace=Popen(["fbsvcmgr", "localhost:service_mgr",
@@ -71,16 +75,18 @@ p_trace=Popen(["fbsvcmgr", "localhost:service_mgr",
                 stderr=f_trcerr
              )
 
-# Wait! Trace session is initialized not instantly!
-time.sleep(2)
 
-runProgram('isql',[dsn,'-nod','-user','SYSDBA', '-pas', 'masterkey'], 'insert into test_trace_any_attachment(id) values(123456789);')
+runProgram('isql',[dsn, '-q', '-n'], 'insert into test_trace_any_attachment(id) values(123456789);')
+
+# 23.12.2019: do NOT reduce value of this delay otherwise trace log can be left empty.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+time.sleep(2)
 
 #####################################################
 # Getting ID of launched trace session and STOP it:
 
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
-f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_5273.lst'), 'w')
+f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_5273.lst'), 'w', buffering=0)
 subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  "user", "U01", "password", "123",
                  "action_trace_list"],
@@ -102,7 +108,7 @@ with open( f_trclst.name,'r') as f:
 f.close()
 
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
-f_trclst=open(f_trclst.name,'a')
+f_trclst=open(f_trclst.name,'a', buffering=0)
 f_trclst.seek(0,2)
 subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  "user", "U01", "password", "123",
@@ -113,7 +119,7 @@ subprocess.call(["fbsvcmgr", "localhost:service_mgr",
 f_trclst.close()
 
 # do NOT remove this delay: trase session can not be stopped immediatelly:
-time.sleep(2)
+#time.sleep(2)
 
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
@@ -128,35 +134,34 @@ with open( f_trcerr.name,'r') as f:
 f.close()
 
 # Must contain info about SYSDBA activity (this was traced by non-sysdba user):
+
+found_sysdba_attachment, found_sysdba_statement = False, False
 with open( f_trclog.name,'r') as f:
     for line in f:
         if 'SYSDBA:NONE' in line:
-            print('FOUND SYSDBA RECORD.')
+            if not found_sysdba_attachment:
+                print('FOUND SYSDBA ATTACHMENT.')
+                found_sysdba_attachment = True
         if '123456789' in line:
-            print(line.upper())
+            if not found_sysdba_statement:
+                print('FOUND SYSDBA STATEMENT.')
+                found_sysdba_statement = True
 f.close()
 
-runProgram('isql',[dsn,'-nod','-user', user_name, '-pas', user_password], 'drop user u01;')
+runProgram('isql',[dsn], 'drop user u01;')
 
 # Cleanup:
 ##########
-
-f_list=[f_trclst,f_trcerr,f_trclog, f_trccfg]
-
+f_list = (f_trclst,f_trcerr,f_trclog, f_trccfg)
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
 
-
   """,
   'expected_stdout':
   """
-    FOUND SYSDBA RECORD.
-    FOUND SYSDBA RECORD.
-    FOUND SYSDBA RECORD.
-    INSERT INTO TEST_TRACE_ANY_ATTACHMENT(ID) VALUES(123456789)
-    FOUND SYSDBA RECORD.
-    INSERT INTO TEST_TRACE_ANY_ATTACHMENT(ID) VALUES(123456789)
+    FOUND SYSDBA ATTACHMENT.
+    FOUND SYSDBA STATEMENT.
   """,
   'expected_stderr':
   """
