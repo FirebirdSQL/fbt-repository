@@ -2,7 +2,7 @@
 'id': 'bugs.core_2238',
 'qmid': None,
 'tracker_id': 'CORE-2238',
-'title': 'Server does not validate correctness of user/password pair provided in EXECUTE STATEMENT operator',
+'title': 'UTF8 and large varchar fields, is disinct from > Implementation limit exceeded.',
 'description': 
   """
     Test operates with literals of utf8 charset with length = exactly 8191 symbols.
