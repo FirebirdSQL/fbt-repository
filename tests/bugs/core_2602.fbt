@@ -5,21 +5,28 @@
 'title': 'Attachments using NONE charset may cause reads from MON$ tables to fail',
 'description': 
  """
-   Fully refactored 05-feb-2018. Apply HASH() functions to unicode mon$sql_text in order to returnonly numeric value
-   rather than non-translatable unicode representation which can differ on machines with different codepage / OS.
-   For example, instead of (on Win XP with codepage 1251):
-       r2none (u'othr', u "select '123\ u0413\ u040e\ u0413\ xa9456' from mon$database", 4, u'UTF8')
-   - result was different on Win 2008 R2 with codepage 437
-       r2none (u'othr', u "select '123\ xc3\ xa1\ xc3\ xa9456' from mon$database", 4, u'UTF8')
-   ---------------------------------------------------------------------------------------
-   Confirmed bug on 2.1.3.18185, got exception:
-       fdb.fbcore.DatabaseError: ('Cursor.fetchone:\n- SQLCODE: -901\n- lock conflict on no wait transaction', -901, 335544345)
-   - just after issued 1st cursor result.
-   No error since 2.5.0.26074.
-   Last tested on:
-      2.5.8.27090: OK, 0.328s.
-      3.0.3.32901: OK, 1.078s.
-      4.0.0.875: OK, 1.047s.
+	Fully refactored 05-feb-2018. Apply HASH() functions to unicode mon$sql_text in order to returnonly numeric value
+	rather than non-translatable unicode representation which can differ on machines with different codepage / OS.
+	For example, instead of (on Win XP with codepage 1251):
+	   r2none (u'othr', u "select '123\ u0413\ u040e\ u0413\ xa9456' from mon$database", 4, u'UTF8')
+	- result was different on Win 2008 R2 with codepage 437
+	   r2none (u'othr', u "select '123\ xc3\ xa1\ xc3\ xa9456' from mon$database", 4, u'UTF8')
+	---------------------------------------------------------------------------------------
+	Confirmed bug on 2.1.3.18185, got exception:
+	   fdb.fbcore.DatabaseError: ('Cursor.fetchone:\n- SQLCODE: -901\n- lock conflict on no wait transaction', -901, 335544345)
+	- just after issued 1st cursor result.
+	No error since 2.5.0.26074.
+	
+	25.12.2019: added filtering expr to WHERE clause in order to prevent from passing through records related to RDB$AUTH table (4.x).
+	Last tested 25.12.2019 on:
+		4.0.0.1707 SS: 1.448s.
+		4.0.0.1346 SC: 1.295s.
+		4.0.0.1691 CS: 2.009s.
+		3.0.5.33218 SS: 0.733s.
+		3.0.5.33084 SC: 0.673s.
+		3.0.5.33212 CS: 1.755s.
+		2.5.9.27149 SC: 0.218s.
+		2.5.9.27119 SS: 2.411s.
  """,
 'min_versions': '2.5',
 'versions': [
@@ -66,9 +73,11 @@ sql='''
     from mon$statements s
     join mon$attachments a on s.mon$attachment_id = a.mon$attachment_id
     join rdb$character_sets c on a.mon$character_set_id = c.rdb$character_set_id
-    where 
+    where
         s.mon$attachment_id != current_connection 
-        and not s.mon$sql_text containing 'mon$statements'
+        and s.mon$sql_text NOT containing 'mon$statements'
+        and s.mon$sql_text NOT containing 'rdb$auth'
+        and a.mon$remote_protocol is not null
 '''
 
 r2none.execute(sql)
