@@ -27,6 +27,9 @@
     10.12.2019. Updated syntax for SET BIND command because it was changed in 11-nov-2019. 
     Replaced 'bigint,3' with numeric(18,3) - can not specify scale using comma delimiter, i.e. ",3"
     Checked on: WI-T4.0.0.1685.
+
+    27.12.2019. Updated expected_stdout after discuss with Alex: subtype now must be zero in all cases.
+    Checked on: WI-T4.0.0.1710.
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -80,42 +83,51 @@
   'expected_stdout':
   """
     INPUT message field count: 0
+
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 35 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
     CONSTANT                                  123456789012345678901234567890.1234
 
 
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 35 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
     CONSTANT                                  123456789012345678901234567890.1234
 
 
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 24 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
     CONSTANT                                             1234567890123456789.1234
 
 
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 24 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
     CONSTANT                                             1234567890123456789.1234
 
 
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: -3 subtype: 1 len: 8
       :  name: CAST  alias: CAST
@@ -124,13 +136,16 @@
     CAST                            1234.568
 
 
+
     INPUT message field count: 0
+
     OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: -8 subtype: 1 len: 8
       :  name: CAST  alias: CAST
       : table:   owner: 
 
     CAST                            1234.56780000
+
   """,
   'expected_stderr':
   """
