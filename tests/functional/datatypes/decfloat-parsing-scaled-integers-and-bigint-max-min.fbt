@@ -15,6 +15,8 @@
     10.12.2019. Updated syntax for SET BIND command because it was changed in 11-nov-2019. 
     Checked on: WI-T4.0.0.1685.
 
+    27.12.2019. Updated expected_stdout after discuss with Alex: subtype now must be zero in all cases.
+    Checked on: WI-T4.0.0.1710.
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -54,21 +56,19 @@
     INPUT message field count: 0
 
     OUTPUT message field count: 3
-    01: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 19 len: 16
+    01: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 0 len: 16
       :  name: BEHIND_BIGINT_MAX  alias: BEHIND_BIGINT_MAX
       : table: V_TEST  owner: SYSDBA
-    02: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 19 len: 16
+    02: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 0 len: 16
       :  name: BEHIND_BIGINT_MIN  alias: BEHIND_BIGINT_MIN
       : table: V_TEST  owner: SYSDBA
-    03: sqltype: 32752 NUMERIC(38) Nullable scale: -4 subtype: 35 len: 16
+    03: sqltype: 32752 NUMERIC(38) Nullable scale: -4 subtype: 0 len: 16
       :  name: BIG_E23  alias: BIG_E23
       : table: V_TEST  owner: SYSDBA
 
     BEHIND_BIGINT_MAX                                        -9223372036854775809
     BEHIND_BIGINT_MIN                                         9223372036854775808
     BIG_E23                                   123456789012345678901234567890.1234
-
-
 
     BEHIND_BIGINT_MAX                                        -9223372036854775809
     BEHIND_BIGINT_MIN                                         9223372036854775808
