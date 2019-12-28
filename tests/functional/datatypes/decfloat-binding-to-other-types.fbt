@@ -40,32 +40,30 @@
  'test_script': 
   """
     set list on;
-    --set bail on;
-    --set echo on;
     set sqlda_display on;
 
     -- set decfloat bind char;
     set bind of decfloat to char;
     select 
-        123456789012345678901234567890.1234 -- must be shown in SQLDA as: sqltype: 452 TEXT ... charset: 2 ASCII
+        123456789012345678901234567890.1234
     from rdb$database;
 
     -- set decfloat bind double precision;
     set bind of decfloat to double precision;
     select 
-        123456789012345678901234567890.1234 -- must be shown in SQLDA as: sqltype: 480 DOUBLE ... len: 8
+        123456789012345678901234567890.1234
     from rdb$database;
 
     -- set decfloat bind bigint;
     set bind of decfloat to bigint;
     select 
-        1234567890123456789.1234 -- must be shown in SQLDA as: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+        1234567890123456789.1234
     from rdb$database;
 
     -- set decfloat bind bigint, 0;
     set bind of decfloat to numeric(18,0);
     select 
-        1234567890123456789.1234 -- must be shown in SQLDA as: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+        1234567890123456789.1234
     from rdb$database;
 
 
@@ -85,7 +83,7 @@
     INPUT message field count: 0
 
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 2 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
@@ -96,7 +94,7 @@
     INPUT message field count: 0
 
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 2 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
@@ -107,7 +105,7 @@
     INPUT message field count: 0
 
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 2 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
@@ -118,7 +116,7 @@
     INPUT message field count: 0
 
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 0 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -4 subtype: 2 len: 16
       :  name: CONSTANT  alias: CONSTANT
       : table:   owner: 
 
@@ -145,7 +143,6 @@
       : table:   owner: 
 
     CAST                            1234.56780000
-
   """,
   'expected_stderr':
   """
