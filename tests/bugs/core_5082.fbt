@@ -14,6 +14,17 @@
     06.02.2019: added separate code for 4.0 because of new error message ("Missing security context for ...")
     Checked on: 4.0.0.1421 SS, CS.
 
+
+    30.12.2019: removed check for all detailed messages about error except SQLSTATE:
+    it is enough to check that server does not allow to perform such logins.
+    Checked on:
+        4.0.0.1712 SS: 1.134s.
+        4.0.0.1346 SC: 1.563s.
+        4.0.0.1691 CS: 1.878s.
+        3.0.5.33218 SS: 0.637s.
+        3.0.5.33084 SC: 1.058s.
+        3.0.5.33212 CS: 1.613s.
+
   """,
 'min_versions': '3.0',
 'versions': [
@@ -166,22 +177,19 @@
  'expected_stderr': 
   """
     Statement failed, SQLSTATE = 28000
-    Missing security context for C:\FBTESTING\qa\misc\e40.fdb
-    -At block line: 3, col: 9
 
     Statement failed, SQLSTATE = 28000
-    Missing security context for C:\FBTESTING\qa\misc\e40.fdb
-    -At block line: 3, col: 9
 
     Statement failed, SQLSTATE = 28000
-    Missing security context for C:\FBTESTING\qa\misc\e40.fdb
-    -At block line: 3, col: 9
 
     Statement failed, SQLSTATE = 28000
-    Missing security context for C:\FBTESTING\qa\misc\e40.fdb
-    -At block line: 3, col: 9
   """,
-  'substitutions': [ ('-At block line: [\d]+, col: [\d]+', '-At block line'), ('Missing security context for.*', 'Missing security context for') ]
+  'substitutions': [
+      ('-At block line: [\d]+, col: [\d]+', ''),
+      ('Missing security context.*', ''),
+      ('Your user name and password are not defined.*', '')
+
+   ]
 }
 ]
 }
