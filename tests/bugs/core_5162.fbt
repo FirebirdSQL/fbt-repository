@@ -62,7 +62,8 @@
         ,sa.sec$value as sa_val
         ,sa.sec$plugin as sa_plg
     from sec$user_attributes sa
-    where sa.sec$user_name ='TMP$C5162';
+    where sa.sec$user_name ='TMP$C5162'
+    order by usrname, sa_plg;
 
     select
          su.sec$user_name as usrname
@@ -72,7 +73,9 @@
         ,sa.sec$value as sa_val
         ,sa.sec$plugin as sa_plg
     from sec$users su left join sec$user_attributes sa using(sec$user_name, sec$plugin)
-    where su.sec$user_name ='TMP$C5162';
+    where su.sec$user_name ='TMP$C5162'
+    order by usrname, sa_plg;
+
     commit;
 
     -- cleanup:
@@ -89,7 +92,7 @@
 
 
     USRNAME    FIRSTNM    SU_PLG               SA_KEY SA_VAL SA_PLG
-    ========== ========== ==================== ====== ====== ====================
+    ========== ========== ==================== ====== ====== ========
     TMP$C5162  John       Legacy_UserManager   <null> <null> <null>
     TMP$C5162  Mary       Srp                  KEY1   val111 Srp
     TMP$C5162  Mary       Srp                  KEY2   val222 Srp
