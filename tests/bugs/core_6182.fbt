@@ -7,6 +7,7 @@
  """
     We create one main ('head') DB (only for make single attach to it) and four test databases for making EDS connections to each of them from main DB.
     Special user is created using LEGACY plugin because of comment in the ticket by hvlad 06/Nov/19 01:36 PM.
+                                  ~~~~~~
     Then we do subsequent connections to each of these databases using EDS mechanism, with delay betnwe them (and also with final delay).
     Total sum of seconds that execution was paused is 4 * TDELAY - must be GREATER than config parameter ExtConnPoolLifeTime.
     After last delay will elapsed, we again establish connections to each of these databases and try to execute DROP DATABASE statements.
@@ -195,8 +196,20 @@ for i in range(1, DB_CNT+1):
         svc.bring_online( database = dbx )
         os.remove(dbx)
 
-svc.remove_user( EDS_USER )
+# commented 05.01.2020:
+#######################
+# Unable to perform the requested Service API action:
+# - SQLCODE: -85
+# - The user name specified was not found in the security database
+# -85
+# 335544753
+# ---xxx --- svc.remove_user( EDS_USER )
+
 svc.close()
+
+# Use ISQL instead of FDB Services instance to drop user which was created with Legacy_UserManager plugin
+# and this plugin now is NOT in the head of UserManager config parameter:
+runProgram('isql',[ dsn, '-user', DB_USER, '-pas', DB_PSWD ], 'drop user %(EDS_USER)s using plugin Legacy_UserManager;' % locals() )
 
 os.remove(f_isql1.name)
 os.remove(f_isql2.name)
