@@ -30,23 +30,33 @@
   """
     set list on;
     set count on;
+    create view v_test as
+    select sec$user_name, sec$plugin
+    from sec$users 
+    where upper(sec$user_name) starting with upper('tmp$c4607')
+    order by 1,2
+    ;
+    commit;
     create or alter user tmp$c4607_leg password '123' using plugin Legacy_UserManager;
     create or alter user tmp$c4607_srp password '456' using plugin Srp;
     commit;
-    select sec$user_name, sec$plugin from sec$users where upper(sec$user_name) starting with upper('tmp$c4607');
+    select * from v_test;
     commit;
     drop user tmp$c4607_leg using plugin Legacy_UserManager;
     drop user tmp$c4607_srp using plugin Srp;
     commit;
-    select sec$user_name, sec$plugin from sec$users where upper(sec$user_name) starting with upper('tmp$c4607');
+    select * from v_test;
   """,
   'expected_stdout':
   """
     SEC$USER_NAME                   TMP$C4607_LEG
     SEC$PLUGIN                      Legacy_UserManager
+
     SEC$USER_NAME                   TMP$C4607_SRP
     SEC$PLUGIN                      Srp
+
     Records affected: 2
+
     Records affected: 0
   """,
   'expected_stderr':
