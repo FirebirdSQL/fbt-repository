@@ -3,108 +3,221 @@
 'qmid': None,
 'tracker_id': 'CORE-4766',
 'title': 'AV when trying to manage users list using EXECUTE STATEMENT on behalf of non-sysdba user which has RDB$ADMIN role',
-'description':
+'description': 
  """
-    Checked on: 4.0.0.1635 SS/CS: OK, 1.567s; 3.0.5.33180 SS/CS: OK, 0.969s.
-    FB 4.0: phrase "-Effective user is TMP$C4766_BOSS" in STDERR is ignored here, see 'substitutions'.
+    05.01.2020. Refactored in order to make its code more flexible because 3.0 and 4.0 have significant differences in stdout/stderr.
+    Common SQL code was stored in fbt-repo\files\core_4766.sql with embedding variable names there from here:
+        %(current_auth_plugin)s, %(dsn)s et al.
+
+    Content of this file is stored in variable 'sql_text' and this variable is changed using common Python rule for substitutions:
+        sql_text % dict(globals(), **locals()
+
+    Then we save this variable to temporarily .sql script and run it.
+    This action is done for two possible values of auth plugin (see var. current_auth_plugin): Srp and Legacy_UserManager.
+
+    As result, we have to compare only expected* data and SQL code is equal for diff. FB major versions (and is stored outside).
+
+    # ::: NB :::
+    # Only Legacy_UserManager is checked for FB 4.0. Srp has totally different behaviour, at  least for 4.0.0.1714.
+    # Sent letter to dimitr and alex, 05.01.2020 22:00.
+
+    Crash is reproduced on WI-T3.0.0.31374 Firebird 3.0 Beta 1 (build 24-nov-2014).
+
+    Checked on:
+        4.0.0.1714 SS: 1.985s.
+        4.0.0.1714 SC: 5.687s.
+        4.0.0.1714 CS: 9.688s.
+        3.0.5.33221 SS: 1.843s.
+        3.0.5.33221 SC: 5.110s.
+        3.0.5.33221 CS: 9.078s.
+    Parameters in firebird.conf:
+        AuthServer = Srp, Srp256, Legacy_Auth, Win_Sspi
+        UserManager = Srp, Legacy_UserManager
+        AuthClient =  Srp, Srp256, Win_Sspi, Legacy_Auth
  """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'sql_dialect': 1,
- 'test_type': 'ISQL',
- 'init_script':
-  """
-  """,
+ 'test_type': 'Python',
  'test_script':
   """
-    -- Note-1. Name of table in STDERR depends on value of UserManager = { Srp | Legacy_UserManager }.
-    -- For 'Srp' it will be 'PLG$SRP_VIEW', for Legacy_UserManager -- PLG$VIEW_USERS.
-    -- Because of this, section 'substitution' has been added in order to ignore rest part of line
-    -- after words 'TABLE PLG'.
+import os
+import sys
+import subprocess
+from fdb import services
 
-    -- Note-2. User 'tmp$c4766_boss' is NOT granted with 'RDB$ADMIN' role, only clause "grant admin" present for him
-    -- in the creating statement, so all his attempts to create/drop another user will be FAILED.
-    -- Before snapshot 31807 3rd such fail lead FB to crash (AV).
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
-    -- Note-3. Since 3.0.0.32294 (was built 26-jan-2016) text of error message was changed
-    -- See also: http://sourceforge.net/p/firebird/code/62852 (24-jan-2016)
+#--------------------------------------------
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+#--------------------------------------------
 
-    create or alter user tmp$c4766_boss password '123' grant admin role;
-    commit;
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+this_db = db_conn.database_name
+db_conn.close()
 
-    set term ^;
-    execute block as
-    begin
-        execute statement 'create or alter user tmp$c4766_mgr1 password ''456'''
-        as user 'tmp$c4766_boss' password '123' role 'RDB$ADMIN';
-    end
-    ^
-    set term ;^
-    commit; -- this lead to first "SQLSTATE = 28000 / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
+f_sql=open(os.path.join(context['files_location'],'core_4766.sql'),'r')
+sql_text = f_sql.read()
+f_sql.close()
 
-    ROLLBACK; -- [###NB###] Added 01-apr-2016; explanation see in letter by dimitr, 31-mar-2016 17:23
+for current_auth_plugin in ('Srp', 'Legacy_UserManager'):
+    f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_core_4766.' + current_auth_plugin[:3] + '.sql'), 'w', buffering = 0)
+    f_sql_chk.write( sql_text % dict(globals(), **locals()) )
+    f_sql_chk.close()
 
-    set term ^;
-    execute block as
-    begin
-        execute statement 'drop user tmp$c4766_mgr1'
-        as user 'tmp$c4766_boss' password '123' role 'RDB$ADMIN';
-    end
-    -- This lead to 2nd "SQLSTATE = 28000" with text:
-    -- before build 32136: "add record error / -no permission for INSERT access to TABLE PLG$VIEW_USERS"
-    -- since  that  build: "find/delete record error / -no permission for DELETE access to TABLE"
-    ^
-    set term ;^
+    f_sql_log = open( '.'.join( (os.path.splitext( f_sql_chk.name )[0], 'log') ), 'w', buffering = 0)
+    subprocess.call( [ fb_home + 'isql', '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
+    f_sql_log.close()
 
-    -- Attention: see above ROLLBACK labeled as [###NB###]: without that rollback following
-    -- COMMIT will again try to ADD user tmp$c4766_boss/123 and only after it - drop user statement,
-    -- and this will lead to fail again with error about adding (not deleting) user.
-    -- Explanation see in letter by dimitr, 31-mar-2016 17:23
+    with open( f_sql_log.name,'r') as f:
+        for line in f:
+            if line.strip():
+                print( current_auth_plugin[:3] + ': ' + line )
 
-    commit; -- this lead to FB crash and message about AV apperaed in firebird.log (checked on WI-T3.0.0.31801)
-
-    rollback;
-
-    -- cleanup:
-    -- ########
-    connect '$(DSN)' user 'sysdba' password 'masterkey';
-
-    --                                    ||||||||||||||||||||||||||||
-    -- ###################################|||  FB 4.0+, SS and SC  |||##############################
-    --                                    ||||||||||||||||||||||||||||
-    -- If we check SS or SC and ExtConnPoolLifeTime > 0 (config parameter FB 4.0+) then current
-    -- DB (bugs.core_NNNN.fdb) will be 'captured' by firebird.exe process and fbt_run utility
-    -- will not able to drop this database at the final point of test.
-    -- Moreover, DB file will be hold until all activity in firebird.exe completed and AFTER this
-    -- we have to wait for <ExtConnPoolLifeTime> seconds after it (discussion and small test see
-    -- in the letter to hvlad and dimitr 13.10.2019 11:10).
-    -- This means that one need to kill all connections to prevent from exception on cleanup phase:
-    -- SQLCODE: -901 / lock time-out on wait transaction / object <this_test_DB> is in use
-    -- #############################################################################################
-    delete from mon$attachments where mon$attachment_id != current_connection;
-    commit;
-
-    drop user tmp$c4766_boss;
-    commit;
+    cleanup( (f_sql_log.name, f_sql_chk.name) )
 
   """,
-  'expected_stderr':
+ 'expected_stdout': 
   """
-    Statement failed, SQLSTATE = 28000
-    add record error
-    -no permission for INSERT access to TABLE PLG
-    Statement failed, SQLSTATE = 28000
-    delete record error
-    -no permission for DELETE access to TABLE PLG
+    Srp: MON$USER                        SYSDBA
+    Srp: MON$REMOTE_PROTOCOL             TCPv6
+    Srp: MON$AUTH_METHOD                 Srp
+
+    Srp: BOSS_SEC_NAME                   TMP_4766_BOSS
+    Srp: BOSS_SEC_PLUGIN                 Srp
+    Srp: BOSS_SEC_IS_ADMIN               <true>
+    Srp: Statement failed, SQLSTATE = 28000
+    Srp: add record error
+    Srp: -no permission for INSERT access to TABLE PLG$SRP_VIEW
+
+    Srp: MNGR_SEC_NAME                   <null>
+    Srp: MNGR_SEC_PLUGIN                 <null>
+    Srp: MNGR_SEC_IS_ADMIN               <null>
+    Srp: Statement failed, SQLSTATE = 28000
+    Srp: delete record error
+    Srp: -no permission for DELETE access to TABLE PLG$SRP_VIEW
+
+    Leg: MON$USER                        SYSDBA
+    Leg: MON$REMOTE_PROTOCOL             TCPv6
+    Leg: MON$AUTH_METHOD                 Srp
+
+    Leg: BOSS_SEC_NAME                   TMP_4766_BOSS
+    Leg: BOSS_SEC_PLUGIN                 Legacy_UserManager
+    Leg: BOSS_SEC_IS_ADMIN               <true>
+    Leg: Statement failed, SQLSTATE = 28000
+    Leg: add record error
+    Leg: -no permission for INSERT access to TABLE PLG$VIEW_USERS
+
+    Leg: MNGR_SEC_NAME                   <null>
+    Leg: MNGR_SEC_PLUGIN                 <null>
+    Leg: MNGR_SEC_IS_ADMIN               <null>
+
+    Leg: Statement failed, SQLSTATE = 28000
+    Leg: find/delete record error
+    Leg: -no permission for DELETE access to TABLE PLG$VIEW_USERS
+
   """,
-  'substitutions':[('TABLE PLG\$VIEW_USERS','TABLE PLG'),
-                   ('TABLE PLG\$SRP_VIEW', 'TABLE PLG'),
-                   ('find/delete', 'delete'),
-                   ('-Effective user is.*', '')
-   ]
+ 'expected_stderr': 
+  """
+  """,
+ 'substitutions':[
+    ('TCPv.*', 'TCP'),
+    ('.*After line \d+.*', ''),
+    ('find/delete', 'delete'),
+    ('TABLE PLG\$.*', 'TABLE PLG')
+  ]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script':
+  """
+import os
+import sys
+import subprocess
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+#--------------------------------------------
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+#--------------------------------------------
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+this_db = db_conn.database_name
+db_conn.close()
+
+f_sql=open(os.path.join(context['files_location'],'core_4766.sql'),'r')
+sql_text = f_sql.read()
+f_sql.close()
+
+# ::: NB :::
+# Only Legacy_UserManager is checked for FB 4.0. Srp has totally different behaviour, at  least for 4.0.0.1714.
+# Sent letter to dimitr and alex, 05.01.2020 22:00.
+
+for current_auth_plugin in ('Legacy_UserManager',):
+    f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_core_4766.' + current_auth_plugin[:3] + '.sql'), 'w', buffering = 0)
+    f_sql_chk.write( sql_text % dict(globals(), **locals()) )
+    f_sql_chk.close()
+
+    f_sql_log = open( '.'.join( (os.path.splitext( f_sql_chk.name )[0], 'log') ), 'w', buffering = 0)
+    subprocess.call( [ fb_home + 'isql', '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
+    f_sql_log.close()
+
+    with open( f_sql_log.name,'r') as f:
+        for line in f:
+            if line.strip():
+                print( current_auth_plugin[:3] + ': ' + line )
+
+    cleanup( (f_sql_log.name, f_sql_chk.name) )
+
+  """,
+ 'expected_stdout': 
+  """
+    Leg: MON$USER                        SYSDBA
+    Leg: MON$REMOTE_PROTOCOL             TCPv6
+    Leg: MON$AUTH_METHOD                 Srp
+
+    Leg: BOSS_SEC_NAME                   TMP_4766_BOSS
+    Leg: BOSS_SEC_PLUGIN                 Legacy_UserManager
+    Leg: BOSS_SEC_IS_ADMIN               <true>
+
+    Leg: Statement failed, SQLSTATE = 28000
+    Leg: add record error
+    Leg: -no permission for INSERT access to TABLE PLG
+    Leg: -Effective user is TMP_4766_BOSS
+
+    Leg: MNGR_SEC_NAME                   <null>
+    Leg: MNGR_SEC_PLUGIN                 <null>
+    Leg: MNGR_SEC_IS_ADMIN               <null>
+
+    Leg: Statement failed, SQLSTATE = 28000
+    Leg: delete record error
+    Leg: -no permission for DELETE access to TABLE PLG
+    Leg: -Effective user is TMP_4766_BOSS
+  """,
+ 'expected_stderr': 
+  """
+  """,
+ 'substitutions':[
+    ('TCPv.*', 'TCP'),
+    ('.*After line \d+.*', ''),
+    ('find/delete', 'delete'),
+    ('TABLE PLG\$.*', 'TABLE PLG')
+  ]
 }
 ]
 }
