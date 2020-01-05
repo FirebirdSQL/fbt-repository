@@ -17,9 +17,9 @@
 
     As result, we have to compare only expected* data and SQL code is equal for diff. FB major versions (and is stored outside).
 
-    # ::: NB :::
-    # Only Legacy_UserManager is checked for FB 4.0. Srp has totally different behaviour, at  least for 4.0.0.1714.
-    # Sent letter to dimitr and alex, 05.01.2020 22:00.
+    ::: NB :::
+    Only Legacy_UserManager is checked for FB 4.0. Srp has totally different behaviour, at  least for 4.0.0.1714.
+    Sent letter to dimitr and alex, 05.01.2020 22:00.
 
     Crash is reproduced on WI-T3.0.0.31374 Firebird 3.0 Beta 1 (build 24-nov-2014).
 
