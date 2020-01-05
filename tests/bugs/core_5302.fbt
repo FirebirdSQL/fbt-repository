@@ -20,14 +20,16 @@
     Ratio for 4.0.0.313:   ~11...13 -- OK
     Ratio for 3.0.1.32568: ~10...11 -- OK
 
-
-    All measures were done on regular PC, OS = Windows XP, CPU 3.0 Ghz, RAM 2 Gb, HDD IDE.
-
     Fix for 4.0 was 07-jul-2016, see here:
     https://github.com/FirebirdSQL/firebird/commit/a75e0af175ea6e803101b5fd62ec91cdf039b951
-
     Fix for 3.0 was 27-jul-2016, see here:
     https://github.com/FirebirdSQL/firebird/commit/96a24228b61003e72c68596faf3c4c4ed0b95ea1
+
+    All measures were done on regular PC, OS = Windows XP, CPU 3.0 Ghz, RAM 2 Gb, HDD IDE.
+    05.01.2020: increased threshold from 15 to 20 (Win 2008 Server R2, ram 8gb)
+    Checked on:
+        4.0.0.1714  SS: 5.922s; 4.0.0.1714  SC: 7.891s; 4.0.0.1714  CS: 9.891s.
+        3.0.5.33221 SS: 4.735s; 3.0.5.33221 SC: 5.718s; 3.0.5.33221 CS: 7.126s.
   """,
 'min_versions': '3.0.1',
 'versions': [
@@ -57,7 +59,7 @@
       declare t0 timestamp;
       declare t1 timestamp;
       declare t2 timestamp;
-      declare max_ratio numeric(12,4) = 15;
+      declare max_ratio numeric(12,4) = 20;
       --                                ^
       --                                |
       --                                +--- #####  T H R E S H O L D  #####
