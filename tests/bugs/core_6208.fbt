@@ -1,0 +1,212 @@
+{
+'id': 'bugs.core_6208',
+'qmid': None,
+'tracker_id': 'CORE-6208',
+'title': 'Grant lost in security.db after backup/restore cycle',
+'description': 
+ """
+    Ticket shows scenario with local protocol which allows security.db to be overwritten.
+    This can not be done when we work using remote protocol, but we can exploit ability
+    to change security DB. This is done by specifying parameter SecurityDatabase in databases.conf
+    and its value is equal to alias of test database that we use:
+        tmp_6208 = <path__and_name_of_test_database> {
+            SecurityDatabase = tmp_6208
+        }
+    
+    Test DB is named here 'fdb_init' and it is created by file copy of $FB_HOME\securityN.db
+    Then file 'databases.conf' as adjusted so that SecurityDatabase will point to this test DB.
+    After this we can connect to $fdb_ini, create user (his name: 'TMP6208DBA') and give him 
+    privilege to create database.
+
+    Futher, we make backup of this test DB and restore it to other name (using PIPE mechanism 
+    in order to skip creation of unneeded .fbk file). New database is named here as 'fdb_rest'.
+    After this, we change state of test DB to full shutdown and overwrite it by $fdb_rest.
+    Finaly, we make connection to this DB (that was just overwritten) and check that output
+    of 'show grants' command contains:
+
+        GRANT CREATE DATABASE TO USER TMP6208DBA
+
+    Confirmed lost of grant on 4.0.0.1691 (build 14-dec-2019).
+    Checked on 4.0.0.1712 SC: 11s, 4.0.0.1714 SS, CS (7s, 16s).
+
+    NOTES, for SUPERSERVER and SUPERCLASSIC.
+    #########################################
+    do NOT put Legacy_Auth or Srp256 at the HEAD of list that must be assigned to AuthClient, i.e.:
+        AuthClient =  Srp256, Srp, Win_Sspi, Legacy_Auth
+        AuthClient =  Legacy_Auth, Srp, Srp256, Win_Sspi
+    Put 'Srp' in the head of this list!
+    Otherwise following error raises if we want to connect to $fdb_init database:
+    =====
+        Statement failed, SQLSTATE = 08006
+        Error occurred during login, please check server firebird.log for details
+        - and firebird.log will contain:
+       	Authentication error
+       	cannot start transaction for password database
+       	Error in isc_start_transaction() API call when working with legacy security database
+       	connection shutdown
+       	Database is shutdown.
+    =====
+    The only way to avoid such error in this case if to make delay for at least 11 seconds.
+    Checked on 4.0.0.1714 SS and SC). Reason remains unclear.
+
+    NOTE about actual ability to create database by this user:
+        create database 'localhost:%(fdb_rest)s' user tmp6208dba password '123'
+    - will fail with:
+        Statement failed, SQLSTATE = 28000 / Your user name and password are not defined.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': """
+import os
+import sys
+import time
+import subprocess
+import shutil
+from subprocess import PIPE
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+#--------------------------------------------
+
+def svc_get_fb_log( fb_home, f_fb_log ):
+
+  global subprocess
+  subprocess.call( [ fb_home + "fbsvcmgr",
+                     "localhost:service_mgr",
+                     "action_get_fb_log"
+                   ],
+                   stdout=f_fb_log, stderr=subprocess.STDOUT
+                 )
+  return
+
+#--------------------------------------------
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+#--------------------------------------------
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+this_db = db_conn.database_name
+fb_vers = str(db_conn.engine_version)[:1] # character for security.db file: engine = 4.0  --> '4'
+sec_db = fb_home + 'security' + fb_vers+ '.fdb'
+db_conn.close()
+
+fdb_init = os.path.join(context['temp_directory'],'tmp_6208_initial.fdb')
+fdb_rest = os.path.join(context['temp_directory'],'tmp_6208_restored.fdb')
+
+cleanup( (fdb_init, fdb_rest) )
+
+shutil.copy2( sec_db, fdb_init )
+
+# Resut: fb_home is full path to FB instance home (with trailing slash).
+shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
+
+alias_data=\
+'''
+    # Added temporarily for executing test core_6208.fbt
+    tmp_6208 = %(fdb_init)s {
+        SecurityDatabase = tmp_6208
+    }
+''' % locals()
+
+f_dbconf=open(fb_home+'databases.conf','a', buffering = 0)
+f_dbconf.seek(0, 2)
+f_dbconf.write(alias_data)
+f_dbconf.close()
+
+sql_init=\
+'''
+    set bail on;
+    create or alter user tmp6208dba password '123' using plugin Srp;
+    grant create database to user tmp6208dba;
+    alter database set linger to 0;
+    commit;
+    --show grants;
+'''
+runProgram('isql',[ 'localhost:' + fdb_init ], sql_init)
+
+
+# https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
+#   output=`dmesg | grep hda`
+#   becomes:
+#   p1 = Popen(["dmesg"], stdout=PIPE)
+#   p2 = Popen(["grep", "hda"], stdin=p1.stdout, stdout=PIPE)
+#   p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+#   output = p2.communicate()[0]
+# gbak -b localhost:$fdb_init stdout | gbak -rep stdin localhost:$fdb_rest
+
+p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', 'localhost:' + fdb_init, 'stdout' ], stdout=PIPE)
+p_getter = subprocess.Popen( [ fb_home+'gbak', '-c', 'stdin',  'localhost:' + fdb_rest ], stdin = p_sender.stdout, stdout = PIPE )
+p_sender.stdout.close()
+p_getter_stdout, p_getter_stderr = p_getter.communicate()
+
+#print('p_getter_stdout:', p_getter_stdout)
+#print('p_getter_stderr:', p_getter_stderr)
+
+runProgram('gfix',['-shut', 'full', '-force', '0', 'localhost:' + fdb_init] )
+runProgram('gfix',['-shut', 'full', '-force', '0', 'localhost:' + fdb_rest] )
+runProgram('gfix',['-online', fdb_rest] )
+
+os.remove( fdb_init )
+shutil.move( fdb_rest, fdb_init )
+
+#runProgram('gfix',['-online', 'localhost:' + fdb_init] )
+#runProgram('gstat',['-h', fdb_init] )
+
+# ::: NB :::
+# Uncomment this delay if AuthClient _not_ starts with 'Srp':
+######################
+#time.sleep(11)
+
+sql_chk=\
+'''
+    set bail on;
+    set list on;
+    select mon$owner owner_6208, mon$sec_database as secdb_6208, rdb$linger as linger_6208 from mon$database cross join rdb$database;
+    select sec$user_name as sec_user from sec$users where sec$user_name = upper('TMP6208DBA');
+    show grants;
+    rollback;
+    --create database 'localhost:%(fdb_rest)s' user tmp6208dba password '123';
+    --select mon$database_name, mon$owner from mon$database;
+    --commit;
+    --drop database;
+'''
+
+runProgram('isql',[ 'localhost:' + fdb_init, '-user', 'tmp6208dba', '-pas', '123' ], sql_chk)
+runProgram('isql',[ 'localhost:' + fdb_init ], 'drop user tmp6208dba using plugin Srp; commit;')
+
+# Following DB shutdown command is needed when AuthClient starts with Legacy_Auth.
+# Otherwise we get:
+# exception: WindowsError: 32 The process cannot access the file because it is being used by another process
+# Checked on 4.0.0.1714 SS and CS
+runProgram('gfix',['-shut', 'full', '-force', '0', 'localhost:' + fdb_init] )
+
+# Restore previous content:
+shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
+
+cleanup( (fdb_init, fb_home+'databases.bak') )
+
+""",
+ 'expected_stdout': 
+  """
+    OWNER_6208                      SYSDBA
+    SECDB_6208                      Self
+    LINGER_6208                     0
+    SEC_USER                        TMP6208DBA
+    GRANT CREATE DATABASE TO USER TMP6208DBA
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[ ('\t+', ' '), ('^((?!6208|SQLSTATE|Error).)*$','') ]
+}
+]
+}
