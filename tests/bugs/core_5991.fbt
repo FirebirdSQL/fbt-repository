@@ -86,7 +86,7 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-
+#os.environ["PYTHONUNBUFFERED"] = "1"
 
 fdb_file="$(DATABASE_LOCATION)tmp_5991.o'clock.fdb"
 if os.path.isfile(fdb_file):
@@ -133,41 +133,19 @@ p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
                   stderr=subprocess.STDOUT
                 )
 
-# Wait! Trace session is initialized not instantly!
-#time.sleep(1)
+# 08.01.2020. This delay is mandatory, otherwise file with trace session info can remain (sometimes)
+# empty when we will read it at the next step:
+time.sleep(1)
 
-
-#####################################################################
-# database = 'C:\FBTESTING\qa\fbt-repo\tmp\tmp_5991.o'clock.fdb'
-# con=fdb.create_database( dsn = "localhost:C:/FBTESTING/qa/fbt-repo/tmp/tmp_5991.o''clock.fdb", user='SYSDBA', password='masterkey')
-
-print( 'Trying to create: "localhost:%s"' % fdb_file.replace("'","''") )
-con = fdb.create_database( dsn = "localhost:%s" % fdb_file.replace("'","''") )
-print( 'Database created OK.' )
-cur = con.cursor()
-cur.execute( "select 'Database name contains single quote.' as result from mon$database where lower(mon$database_name) similar to '%[\\/](tmp_5991.o''clock).fdb'")
-for r in cur:
-    print(r[0])
-#print( 'Database: ',con.database_name,' - created OK, attachment: ', con.attachment_id )
-con.drop_database()
-print( 'Database dropped OK.')
-#####################################################################
-
-# ::: NB ::: Here we have to be idle at least two seconds otherwise trace log will not be filled 
-# with messages about create DB, start Tx, execute statement, rollback Tx and drop DB.
-time.sleep(2)
 
 # Determine active trace session ID (for further stop):
 ########################
-
 trc_lst=open(trc_lst.name, "w")
 subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  "action_trace_list"],
                  stdout=trc_lst, stderr=subprocess.STDOUT
                )
 trc_lst.close()
-
-time.sleep(1)
 
 # Session ID: 5 
 #   user:   
@@ -188,9 +166,29 @@ with open( trc_lst.name,'r') as f:
 
 if trc_ssn==0:
     print("Error parsing trace session ID.")
-    time.sleep(2)
 
 else:
+
+    ###########   W O R K    W I T H    D A T A B A S E    ########
+
+    print( 'Trying to create: "localhost:%s"' % fdb_file.replace("'","''") )
+    con = fdb.create_database( dsn = "localhost:%s" % fdb_file.replace("'","''") )
+    print( 'Database created OK.' )
+    cur = con.cursor()
+    cur.execute( "select 'Database name contains single quote.' as result from mon$database where lower(mon$database_name) similar to '%[\\/](tmp_5991.o''clock).fdb'")
+    for r in cur:
+        print(r[0])
+
+    cur.close()
+    con.drop_database()
+    print( 'Database dropped OK.')
+    #####################################################################
+
+    # ::: NB ::: Here we have to be idle at least 2s (two seconds) otherwise trace log will 
+    # not contain some or all of messages about create DB, start Tx, ES, Tx and drop DB.
+    # See also discussion with hvlad, 08.01.2020 15:16
+    # (subj: "action_trace_stop does not flush trace log (fully or partially)")
+    time.sleep(2)
 
     # Stop trace session:
     #####################
@@ -210,8 +208,6 @@ else:
     p_svcmgr.terminate()
     trc_log.close()
 
-    # do NOT remove this delay:
-    time.sleep(1)
 
     allowed_patterns = {
          '1. TRACE_START'    : re.compile('Trace\s+session\s+ID\s+\d+\s+started\.*', re.IGNORECASE)
@@ -231,18 +227,26 @@ else:
                     if v.search(line):
                         found_patterns[k] = 'FOUND'
 
-                #for i,p in enumerate( allowed_patterns ):
-                #    if p.search(line):
-                #        found_patterns[i] = 'FOUND'
-
     for k,v in sorted( found_patterns.items() ):
         print( 'Pattern', k, ':', v)
+
+    if len( found_patterns ) < len( allowed_patterns ):
+        print('==== INCOMPLETE TRACE LOG: ====')
+        with open( trc_log.name,'r') as f:
+            for line in f:
+                if line.rstrip().split():
+                    print('  ' + line)
+        print('=' * 31)
 
 #< cond "if trc_ssn>0"
 
 # cleanup:
 ##########
 f_list = (trc_lst, trc_cfg, trc_log)
+
+# The next small delay is mandatory, otherwise we will get:
+# exception: WindowsError: 32 The process cannot access the file because it is being used by another process
+time.sleep(1)
 
 for f in f_list:
      os.remove(f.name)
