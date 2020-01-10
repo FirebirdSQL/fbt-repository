@@ -5,39 +5,41 @@
 'title': 'Ability to cancel waiting in lock manager',
 'description': 
  """
- ###   W A R N I N G   ###
-    1) This test launches two child processes with ISQL in async. mode, see Popen() calls.
-       First ISQL will run script with execute block that has:
-         1.1) 'outer' code which update record (direct UPDATE statement)
-         1.2) EXECUTE BLOCK and ES/EDS inside it using OTHER user name than 'outer' code, so new attachment will be created.
-         1.3) This ES/EDS will hang in waiting because it attempts to update the same row as 'outer' code.
-       Second ISQL has task to kill 1st one and run command 'DELETE FROM MON$ATTACHMENT WHERE ...' 
-    2) Instead of infinite wait, transaction is launched with 'LOCK TIMEOUT <n>' clause, where <n> is about few seconds.
-    3) After 1st process will start, we make small delay (1 second) in order to be sure that
-       establishing of all connection actions in this ISQL is completed. DO NOT REMOVE THIS DELAY!
-    4) After 2nd process will issue 'DELETE FROM MON$ATTACHMENTS', 1st session immediatelly finished (EB produces exception).
-       Despite this, ISQL-2 will reconnect and run 'checking query' to be sure that there is no more hanged attachment.
-       In 2.5.0 deleting from mon$att has no effect and checking reconnect + select will show this attachment as alive.
-       This mean that ISQL-1 window finishes *AFTER* ISQL-2, so we have to delay enough time (<n> + 1 or +2 seconds)
-       until both sessions will close for sure. DO NOT REMOVE THIS DELAY!
-       In 2.5.1 and above command 'DELETE FROM MON$ATTACHMENTS' works OK, so ISQL-1 will be closed immediately and AFTER
-       this window with ISQL-2 also will be closed. 
-    5) Test creates following files in its TMP folder:
-       tmp_3323_hang.sql & tmp_3323_hang.log -- script for ISQL-1 and log of its work
-       tmp_3323_kill.sql & tmp_3323_kill.log -- script for ISQL-2 and log of its work
-       After both ISQL windows will finish, test opens LOG files of their work and prints them.
-    6) Test was checked on: WI-V2.5.5.26923 (CS, SC, SS); WI-V3.0.0.32008 (CS, SC, SS).
-       All FB instances are 32 bits, on host with Windows XP.
+    Fully reimplemented 10.01.2020. Reason: ISQL-"killer" could not find record in mon$attachments that should be deleted.
 
-    11-may-2017: refactored (removed old code) + checked again on WI-T4.0.0.638 SC & CS
-    because of new messages that are supplied to client whene DB is in shutdown mode.
+    Test asynchronously launches ISQL with script that will hang because of two concurrent attachments trying to update
+    the same record (second attachment is created using ES/EDS).
+    After this we have to launch second instance of ISQL which will attempt to kill both connections created in the 1st ISQL.
+
+    The *most* problem here is properly determine time that we have to wait until 1st ISQL will really establish its connect!
+    If this time is too short then second ISQL ("killer") will NOT able to see 1st ISQL in mon$attachments and will not be able
+    to delete (because there will be NOT YET attachment to delete!). This mean that 2nd ISQL will finish without really check
+    that it could kill hanged attachments. Test in this case will not finish if 1st ISQL uses tx with infinite WAIT!
+
+    To be sure that 2nd ISQL ("killer") will be able to see 1st one ("hanged") we have to make pretty long PSQL-loop which tries
+    to find any record in mon$attachment that is from concurrent connection (which user name we know for advance: 'tmp$c3323').
+    This PSQL loop must finish as fast as we find record that will be then deleted.
+
+    Lot of runs show that there is a problem in 4.0.0 Classic: it requires too long time in PSQL loop to find such attachment.
+    Time in 4.0 CS can be about 1-2 seconds and number of iterations will be greater than 100.
+    No such problem in all 3.0 and in 4.0 for other modes.
+
+    Checked on:
+        4.0.0.1715 SS: 5.292s.
+        4.0.0.1714 SC: 9.977s.
+        4.0.0.1714 CS: 14.487s.
+        3.0.5.33221 SS: 2.126s.
+        3.0.5.33221 SC: 4.541s.
+        3.0.5.33221 CS: 8.263s.
+        2.5.9.27119 SS: 3.391s.
+        2.5.9.27149 SC: 0.701s.
+
  """,
 'min_versions': '2.5.1',
 'versions': [
 {
  'firebird_version': '2.5',
  'platform': 'All',
- 'page_size': '4096',
  'init_script': 
   """
   """,
@@ -51,12 +53,32 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+clear_ext_pool_statement=''
+usr_plugin_clause=''
+
+if db_conn.engine_version >= 4.0:
+    clear_ext_pool_statement = 'ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL;'
+
+if db_conn.engine_version >= 3.0:
+    # usr_plugin_clause='using plugin Legacy_userManager'
+    usr_plugin_clause='using plugin Srp'
+
 db_conn.close()
+
+
 init_ddl='''
-    drop user tmp$c3323;
+    set term ^;
+    execute block as
+    begin
+        begin
+            execute statement 'drop user tmp$c3323 %(usr_plugin_clause)s' with autonomous transaction;
+            when any do begin end
+        end
+    end^
+    set term ;^
     commit;
 
-    create user tmp$c3323 password '456';
+    create user tmp$c3323 password '456' %(usr_plugin_clause)s;
     commit;
 
     recreate table test(id int);
@@ -66,19 +88,18 @@ init_ddl='''
 
     grant select,update on test to tmp$c3323;
     commit;
-'''
+''' % locals()
+
 runProgram('isql', [dsn], init_ddl)
 
 
 lock_sql='''
     set list on;
     commit;
-
-    -- This lock timeout should be NOT LESS than artificial delay in the script `kill_sql`, see above:
-    set transaction lock timeout 4; -- ####### I N S T E A D     O F     I N F I N I T E    W A I T   #######
+    set transaction wait;
 
     update test set id = -id;
-    select 'starting EB with lock-conflict' as "Point_A:" --------------  t i m e s t a m p   [ A ]
+    select 'starting EB with lock-conflict' as "Point_A:" --------------  p o i n t   [ A ]
           ,id as "id_at_point_A:"
     from test; 
 
@@ -104,7 +125,7 @@ lock_sql='''
     ^
     set term ;^
 
-    select 'finished EB with lock-conflict' as "Point_B" --------------  t i m e s t a m p   [ B ]
+    select 'finished EB with lock-conflict' as "Point_B" --------------  p o i n t   [ B ]
           ,id as "id_at_point_B:"
     from test; 
     rollback;
@@ -114,92 +135,143 @@ hang_sql=open( os.path.join(context['temp_directory'],'tmp_3323_hang.sql'), 'w')
 hang_sql.write(lock_sql)
 hang_sql.close()
 
-hang_log=open( os.path.join(context['temp_directory'],'tmp_3323_hang.log'), 'w')
-hang_log.write('')
-hang_log.close()
-
-hang_log=open(hang_log.name, "w")
+hang_log=open( os.path.join(context['temp_directory'],'tmp_3323_hang.log'), "w", buffering = 0)
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql", dsn, "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
+p_hang = Popen(["isql", dsn, "-c", '96', "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
 
-time.sleep(1)
+#time.sleep(3) # do NOT reduce this delay because this async invocation may be too slow and next ISQL call will NOT see attachment to be killed!
 
 usr=user_name
 pwd=user_password
 script='''
     set list on;
-    select 'starting kill hanged connection' as "point_C:" ------------------  t i m e s t a m p   [ C ]
-          ,id as "id_at_point_C:"
+
+    select 'Intro script that must kill other attachment' as "point_C:" ------------------  p o i n t   [ C ]
     from test; 
 
+    /****************
+        -- Does not help, at least with 'lock timeout 1' !!
+        -- "Killer" attachment can still NOT see other attach (which must be killed) - this occurs on 4.0 Cs only. 10.01.2020
+        commit;
+        set transaction lock timeout 1;
+        set term ^;
+        execute block as
+        begin
+            update test set id = - (2000 + id);
+            when any do begin end
+        end
+        ^
+        set term ;^
+        rollback;
+    *****************/
+
+
+    set term ^;
+    execute block returns( found_other_attach_for_attempts int, found_other_attach_for_ms int ) as
+        declare c smallint = 0;
+        declare t timestamp;
+    begin
+        found_other_attach_for_attempts = 0;
+        t = 'now';
+        while (c = 0) do
+        begin
+            found_other_attach_for_attempts = found_other_attach_for_attempts + 1;
+            in autonomous transaction do
+                select count(*) 
+                from (
+                    select mon$attachment_id 
+                    from mon$attachments a
+                    where mon$user = upper('TMP$C3323' )
+                    rows 1
+                )
+                into c;
+            found_other_attach_for_ms = datediff(millisecond from t to cast('now' as timestamp));
+            if (found_other_attach_for_ms > 5000) then
+            begin
+                suspend;
+                leave;
+            end
+        end
+    end
+    ^
+    set term ;^
+    rollback;
+
+
+    select 'starting kill hanged connection' as "point_D:" ------------------  p o i n t   [ D ]
+          ,id as "id_at_point_D:"
+    from test; 
+
+    select iif( a.mon$attachment_id is not null, '<EXPECTED: NOT NULL>', '### UNEXPECTED: NULL ###' ) as attachment_to_be_killed
+    from rdb$database
+    left join mon$attachments a on mon$user = upper('TMP$C3323' ) 
+    ;
+
+    select 'Running delete from mon$attachments statement'  as "point_E:" ------------------  p o i n t   [ E ]
+    from rdb$database;
+
     set count on;
-    set echo on;
-    delete from mon$attachments where mon$user = upper('TMP$C3323' );
-    set echo off;
+    delete from mon$attachments
+    where mon$user = upper('TMP$C3323' ) 
+    -- returning iif( mon$attachment_id is not null, '<EXPECTED: NOT NULL>', '### UNEXPECTED NULL ###' ) as killed_attachment_id
+    ;
     set count off;
     commit;
 
     connect '$(DSN)' user '%(usr)s' password '%(pwd)s';
 
-    set count on;
-    set echo on;
-    select current_connection, a.* 
-    from mon$attachments a 
-    where a.mon$user = upper('TMP$C3323');
-    set echo off;
-    set count off;
-    commit;
+    %(clear_ext_pool_statement)s
 
-    select 'finished kill hanged connection' as "point_D:"  -----------------  t i m e s t a m p   [ D ]
-          ,id as "id_at_point_D:"
+    select 'Reconnect and look for attachment of other user' as "point_F:" ------------------  p o i n t   [ F ]
+          ,id as "id_at_point_F:"
     from test; 
+
+    select iif( a.mon$attachment_id is null, '<EXPECTED: NULL>', '### UNEXPECTED NOT NULL: attach_id=' || a.mon$attachment_id || '; state=' || coalesce(a.mon$state, '<null>') || ' ###' ) as still_alive_attachment_id
+    from rdb$database r
+    left join mon$attachments a on a.mon$user = upper('TMP$C3323');
     commit;
 
-    drop user tmp$c3323;
+    set blob all;
+
+    --select a.mon$attachment_id, s.*
+    select a.*, s.*
+    from mon$attachments a left join mon$statements s using(mon$attachment_id)
+    where a.mon$user = upper('TMP$C3323')
+    ;
+
+    select 'finished kill hanged connection' as "pointG:"  -----------------  p o i n t   [ G ]
+    from rdb$database; 
     commit;
-    -- #############################  A C H T U N G   #########################
-    -- Following must be always TRUE in order this test work logically correct:
-    -- timestamp values [A], [B], [C] and [D] have to satisfy to this inequality:
-    --
-    --                         [ A ]  <  [ C ]  <  [ D ]  < [ B ]
-    --                           ^         ^         ^        ^
-    --                           |         |         |        |
-    --                           |         |         |        +--- exit from EB with exception in hang_sql, see tmp_3323_hang.log 
-    --                           |         |         |        
-    --                           |         |         +--- finish kill_sql with issuing `SELECT from mon$att` to check that no hanged connection there
-    --                           |         |         
-    --                           |         +--- start kill_sql with issuing `DELETE FROM MON$ATT`, see log in tmp_3323_kill.log
-    --                           |         
-    --                           +--- start of script hang_sql, see log in tmp_3323_hang.log 
-    --                          
-    -- ########################################################################
+
+    drop user tmp$c3323 %(usr_plugin_clause)s;
+    commit;
+
 ''' % locals()
+
 
 kill_sql=open( os.path.join(context['temp_directory'],'tmp_3323_kill.sql'), 'w')
 kill_sql.write(script)
 kill_sql.close()
 
-kill_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), 'w')
-kill_log.write('')
+kill_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), "w", buffering = 0)
+
+subprocess.call( ["isql", dsn, "-c", '96', "-ch", "utf8", "-i" , kill_sql.name],stdout=kill_log, stderr=subprocess.STDOUT )
+
+## Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
+#p_kill = Popen(["isql", dsn, "-ch", "utf8", "-i" , kill_sql.name],stdout=kill_log, stderr=subprocess.STDOUT)
+## Make delay at least on 6 seconds after that point.
+## Otherwise temp database will not be removed and we get:
+## Exception AttributeError: "'Connection' object has no attribute '_Connection__ic'"
+## in <bound method Connection.__del__ of <fdb.fbcore.Connection object at 0x023E4850>> ignored
+## Test cleanup: Exception raised while dropping database.
+#time.sleep(3)
+#p_kill.terminate()
+
 kill_log.close()
-
-kill_log=open(kill_log.name, "w")
-# Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_kill = Popen(["isql", dsn, "-i" , kill_sql.name],stdout=kill_log, stderr=subprocess.STDOUT)
-
-# Make delay at least on 6 seconds after that point.
-# Otherwise temp database will not be removed and we get:
-# Exception AttributeError: "'Connection' object has no attribute '_Connection__ic'"
-# in <bound method Connection.__del__ of <fdb.fbcore.Connection object at 0x023E4850>> ignored
-# Test cleanup: Exception raised while dropping database.
-
-time.sleep(6)
 
 p_hang.terminate()
 hang_log.close()
-p_kill.terminate()
-kill_log.close()
 
 
 with open( hang_log.name,'r') as f:
@@ -210,58 +282,45 @@ with open( kill_log.name,'r') as f:
     print(f.read())
 f.close()
 
+# We have to change DB state to full shutdown and bring it back online
+# in order to prevent "Object in use" while fbtest will try to drop this DB
+#####################################
+runProgram('gfix',[dsn,'-shut','full','-force','0'])
+runProgram('gfix',[dsn,'-online'])
 
 # CLEANUP
 #########
-
 f_list=(hang_sql,kill_sql,kill_log,hang_log)
 
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
+       #pass
 
 
-##################
-# Following messages:
-# 335544510 : lock time-out on wait transaction
-# 335544336 : deadlock
-# 335544451 : update conflicts with concurrent update
-# 335544878 : concurrent transaction number is 27
-# -- were in the output from hang_log only in FB 2.5.0 (checked on WI-V2.5.0.26074 - official release).
-# FB 2.5.1 and above should be able to kill this hanged attachment, so insted of this lines we MUST get:
-# 335544856 : connection shutdown
-# (and check of expected_stdout will be exactly on presense of THIS line)
-# Furthermore, result of `delete from mon$attachments` should be successful and following 
-# commit + select * from mon$att should return 'records affected: 0'
-##################
   """,
  'expected_stdout':
   """
     Point_A:                        starting EB with lock-conflict
     id_at_point_A:                  -1
-
     Statement failed, SQLSTATE = 42000
     Execute statement error at isc_dsql_execute2 :
     335544856 : connection shutdown
     Statement : update test set id = - (1000 + id)
-    Data source : Firebird::localhost:C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3323.FDB
-    -At block line: 6, col: 9
-
+    Data source : Firebird::localhost
+    -At block line
     Point_B                         finished EB with lock-conflict
     id_at_point_B:                  -1
-    
-    point_C:                        starting kill hanged connection
-    id_at_point_C:                  1
-    delete from mon$attachments where mon$user = upper('TMP$C3323' );
-    Records affected: 1
-
-    select current_connection, a.*
-    from mon$attachments a
-    where a.mon$user = upper('TMP$C3323');
-    Records affected: 0
-
-    point_D:                        finished kill hanged connection
+    point_C:                        Intro script that must kill other attachment
+    point_D:                        starting kill hanged connection
     id_at_point_D:                  1
+    ATTACHMENT_TO_BE_KILLED         <EXPECTED: NOT NULL>
+    point_E:                        Running delete from mon$attachments statement
+    Records affected: 1
+    point_F:                        Reconnect and look for attachment of other user
+    id_at_point_F:                  1
+    STILL_ALIVE_ATTACHMENT_ID       <EXPECTED: NULL>
+    pointG:                         finished kill hanged connection
   """,
  'expected_stderr':
   """
@@ -270,11 +329,10 @@ for i in range(len(f_list)):
     ('Data source : Firebird::localhost:.*','Data source : Firebird::localhost'),
     ('After line.*', ''),
     ('.*Killed by database administrator.*', ''),
-    ('set echo off;',''),
-    ('Statement failed, SQLSTATE = HY000', ''),
-    ('record not found for user:.*', ''),
-    ('-At block line: [\d]+, col: [\d]+', '-At block line')
+    ('-At block line:.*', '-At block line'),
+    ('Execute statement error at isc_dsql_(execute2|prepare)','Execute statement error at isc_dsql')
   ]
+
 }
 ]
 }
