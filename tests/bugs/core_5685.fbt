@@ -2,7 +2,7 @@
 'id': 'bugs.core_5685',
 'qmid': None,
 'tracker_id': 'CORE-5685',
-'title': 'Creating SRP SYSDBA with explicit admin (-admin yes in gsec or grant admin role in create user) creates two SYSDBA accounts',
+'title': 'Sometime it is impossible to cancel\kill connection executing external query',
 'description':
   """
     Problem did appear when host "A" established connection to host "B" but could not get completed reply from this "B".
@@ -104,11 +104,11 @@ f_hang_sql.close()
 sql_kill='''
     set list on;
     set blob all;
-    --show version;
+
+    select gen_id(g,1) as ITERATION_NO from rdb$database;
     commit;
     select
-         gen_id(g,1) as ITERATION_NO
-        ,sign(a.mon$attachment_id) as hanging_attach_connection
+         sign(a.mon$attachment_id) as hanging_attach_connection
         ,left(a.mon$remote_protocol,3) as hanging_attach_protocol
         ,s.mon$state as hanging_statement_state
         ,s.mon$sql_text as hanging_statement_blob_id
@@ -145,7 +145,7 @@ p_hang_pid=subprocess.Popen( [ "isql", dsn, "-i", f_hang_sql.name ],
                  stderr = f_hang_err
                )
 
-time.sleep(1)
+time.sleep(2)
 
 
 f_kill_log = open( os.path.join(context['temp_directory'],'tmp_kill_5685.log'), 'w')
@@ -331,11 +331,11 @@ f_hang_sql.close()
 sql_kill='''
     set list on;
     set blob all;
-    --show version;
+    select gen_id(g,1) as ITERATION_NO from rdb$database;
     commit;
+
     select
-         gen_id(g,1) as ITERATION_NO
-        ,sign(a.mon$attachment_id) as hanging_attach_connection
+         sign(a.mon$attachment_id) as hanging_attach_connection
         ,left(a.mon$remote_protocol,3) as hanging_attach_protocol
         ,s.mon$state as hanging_statement_state
         ,s.mon$sql_text as hanging_statement_blob_id
@@ -392,7 +392,7 @@ p_hang_pid.terminate()
 f_hang_log.close()
 f_hang_err.close()
 
-time.sleep(1)
+time.sleep(2)
 
 f_shut_log = open( os.path.join(context['temp_directory'],'tmp_shut_5685.log'), 'w')
 f_shut_err = open( os.path.join(context['temp_directory'],'tmp_shut_5685.err'), 'w')
