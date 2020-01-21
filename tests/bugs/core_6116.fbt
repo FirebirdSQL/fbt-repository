@@ -1,0 +1,79 @@
+{
+'id': 'bugs.core_6116',
+'qmid': None,
+'tracker_id': 'CORE-6116',
+'title': 'The Metadata script extracted using ISQL of a database restored from a Firebird 2.5.9 Backup is invalid/incorrect when table has COMPUTED BY field',
+'description':
+ """
+    Test uses backup of preliminary created database in FB 2.5.9, DDL is the same as in the ticket.
+    This .fbk is restored and we launch ISQL -X in order to get metadata. Then we check that two 
+    in this script with "COMPUTED BY" phrase contain non zero number as width of this field:
+    1) line that belongs to CREATE TABLE statement:
+       FULL_NAME VARCHAR(100) ... COMPUTED BY ...
+    2) line with ALTER COLUMN statement:
+       ALTER FULL_NAME TYPE VARCHAR(100) ... COMPUTED BY ...
+
+    Confirmed bug on: 4.0.0.1723; 3.0.5.33225: found "VARCHAR(0)" in above mentioned lines.
+    Checked on: 4.0.0.1737; 3.0.6.33236 - works fine.
+ """,
+'min_versions': '3.0.5',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'core6116-25.fbk',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import subprocess
+import re
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+
+f_metadata_sql=open( os.path.join(context['temp_directory'],'tmp_meta_6116.sql'), 'w', buffering=0)
+subprocess.call([ 'isql', '-x', dsn ], stdout=f_metadata_sql, stderr=subprocess.STDOUT)
+f_metadata_sql.close()
+
+# FULL_NAME VARCHAR(0) CHARACTER SET WIN1252 COMPUTED BY
+comp_field_initial_ptn = re.compile( 'FULL_NAME\s+VARCHAR\(\d+\).*COMPUTED BY', re.IGNORECASE )
+comp_field_altered_ptn = re.compile( 'ALTER\s+FULL_NAME\s+TYPE\s+VARCHAR\(\d+\).*COMPUTED BY', re.IGNORECASE )
+
+# CREATE TABLE statement must contain line:
+#     FULL_NAME VARCHAR(100) CHARACTER SET WIN1252 COMPUTED BY (CAST(NULL AS VARCHAR(1) CHARACTER SET WIN1252) COLLATE WIN_PTBR),
+# ALTER FULL_NAME statement must contain line:
+#     ALTER FULL_NAME TYPE VARCHAR(100) CHARACTER SET WIN1252 COMPUTED BY ((first_name || ' ' || last_name || ' (' || user_name || ')') collate win_ptbr);
+
+
+# This should be empty:
+with open( f_metadata_sql.name,'r') as f:
+    for line in f:
+        if comp_field_initial_ptn.search(line):
+            words = line.replace('(',' ').replace(')',' ').split() # ['FULL_NAME', 'VARCHAR', '0', ... , 'COMPUTED', 'BY']
+            print( 'Length in "CREATE TABLE" statement: ' + words[2] )
+
+        if comp_field_altered_ptn.search(line):
+            words = line.replace('(',' ').replace(')',' ').split() # ['ALTER', 'FULL_NAME', 'TYPE', 'VARCHAR', '0', ... , 'COMPUTED', 'BY']
+            print( 'Length in "ALTER COLUMN" statement: ' + words[4] )
+
+os.remove( f_metadata_sql.name )
+
+  """,
+ 'expected_stdout': 
+  """
+    Length in "CREATE TABLE" statement: 100
+    Length in "ALTER COLUMN" statement: 100
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
