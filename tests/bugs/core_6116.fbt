@@ -16,7 +16,7 @@
     Confirmed bug on: 4.0.0.1723; 3.0.5.33225: found "VARCHAR(0)" in above mentioned lines.
     Checked on: 4.0.0.1737; 3.0.6.33236 - works fine.
  """,
-'min_versions': '3.0.5',
+'min_versions': '3.0.6',
 'versions': [
 {
  'firebird_version': '3.0',
