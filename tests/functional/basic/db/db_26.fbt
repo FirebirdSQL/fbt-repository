@@ -7845,7 +7845,9 @@ RDB$ACL                         9:9c9
 
 RDB$DESCRIPTION                 <null>
 
+
 Records affected: 491
+
   """,
   'substitutions': [
       ('RDB\$ACL.*','')
