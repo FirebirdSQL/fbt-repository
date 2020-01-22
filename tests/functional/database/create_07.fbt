@@ -1,6 +1,6 @@
 {
 'id': 'functional.database.create_07',
-'qmid': 'functional.database.create.create_database_08',
+'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE - PAGE SIZE 16384',
 'description': '',
@@ -159,6 +159,22 @@ Default Character set: NONE
  'expected_stdout': 
   """        
     PAGE_SIZE                       16384
+  """,
+  'substitutions': [ ('^((?!PAGE_SIZE).)*$','') ]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'page_size': '32768',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """ 
+    set list on;
+    select mon$page_size as page_size from mon$database;
+  """,
+ 'expected_stdout': 
+  """        
+    PAGE_SIZE                       32768
   """,
   'substitutions': [ ('^((?!PAGE_SIZE).)*$','') ]
 }
