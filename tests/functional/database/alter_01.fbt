@@ -1,8 +1,8 @@
 {
 'id': 'functional.database.alter_01',
-'qmid': 'functional.database.alter.alter_database_01',
+'qmid': '',
 'tracker_id': '',
-'title': 'ALTER DATABASE ADD FILE',
+'title': 'Alter database: adding a secondary file',
 'description': 'Adding a secondary file to the database',
 'min_versions': None,
 'versions': [

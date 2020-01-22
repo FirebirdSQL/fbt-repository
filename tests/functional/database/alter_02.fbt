@@ -1,8 +1,8 @@
 {
 'id': 'functional.database.alter_02',
-'qmid': 'functional.database.alter.alter_database_02',
+'qmid': '',
 'tracker_id': '',
-'title': 'ALTER SCHEMA ADD FILE',
+'title': 'ALter database: adding secondary file with alternate keyword',
 'description': 'Adding secondary file with alternate keyword for database.',
 'min_versions': None,
 'versions': [

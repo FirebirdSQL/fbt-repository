@@ -1,6 +1,6 @@
 {
 'id': 'functional.database.create_03',
-'qmid': 'functional.database.create.create_database_04',
+'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE - PAGE SIZE 1024',
 'description': '',

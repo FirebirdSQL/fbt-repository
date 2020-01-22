@@ -1,8 +1,8 @@
 {
 'id': 'functional.database.alter_03',
-'qmid': 'functional.database.alter.alter_database_03',
+'qmid': '',
 'tracker_id': '',
-'title': 'ALTER DATABASE ADD FILE - negative',
+'title': 'Alter database: add file with name of this database or previously added files must fail',
 'description': 'Add same file twice must fail',
 'min_versions': None,
 'versions': [

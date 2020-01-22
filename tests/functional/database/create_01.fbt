@@ -1,6 +1,6 @@
 {
 'id': 'functional.database.create_01',
-'qmid': 'functional.database.create.create_database_01',
+'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE - simple DB',
 'description': '',
