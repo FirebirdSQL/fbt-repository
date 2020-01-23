@@ -2,113 +2,61 @@
 'id': 'functional.database.create_01',
 'qmid': '',
 'tracker_id': '',
-'title': 'CREATE DATABASE - simple DB',
+'title': 
+  """
+    Check ability to specify SET NAMES and DEFAULT CHARACTER SET within one statement.
+    Checked on:
+        4.0.0.1740 SS: 1.157s.
+        3.0.6.33236 SS: 0.808s.
+        2.5.9.27149 SC: 0.508s.
+    NOTE: name of client charset must be enclosed in apostrophes, i.e.: create database ... set names 'win1251' ...
+  """,
 'description': '',
-'min_versions': '2.5.9',
+'min_versions': '2.5',
 'versions': [
 {
- 'firebird_version': '2.5',
+ 'firebird_version': '2.5.0',
  'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-     SHOW DATABASE;
-  """,
- 'expected_stdout': 
-  """
-    Owner: SYSDBA
-    PAGE_SIZE 8192
-    Number of DB pages allocated
-    Sweep interval = 20000
-    Forced Writes are ON
-    Transaction - oldest = 1
-    Transaction - oldest active = 2
-    Transaction - oldest snapshot = 2
-    Transaction - Next = 5
-    ODS = 11.2
-    Default Character set: NONE
-  """,
- 'substitutions': [ 
-     ('PAGE_SIZE .*','PAGE_SIZE'), 
-     ('Sweep.*','Sweep'), 
-     ('Transaction -.*','Transaction'),
-     ('Number of DB pages allocated.*','Number of DB pages allocated'),
-     ('ODS 11.*', 'OSD 11' ),
-  ]
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-     -- 19.01.2016: added line  "Database not encrypted", see  http://sourceforge.net/p/firebird/code/62825
-     -- NOTE: ODS = 12.0 for Windows and Linux amd64; 12.2 for all other platforms.
-     SHOW DATABASE;
-  """,
- 'expected_stdout': 
-  """
-    Owner: SYSDBA
-    PAGE_SIZE 8192
-    Number of DB pages allocated
-    Number of DB pages used
-    Number of DB pages free
-    Sweep interval = 20000
-    Forced Writes are ON
-    Transaction - oldest = 1
-    Transaction - oldest active = 2
-    Transaction - oldest snapshot = 2
-    Transaction - Next = 5
-    ODS = 12.0
-    Database not encrypted
-    Default Character set: NONE
-  """,
- 'substitutions': [ 
-     ('PAGE_SIZE .*','PAGE_SIZE'), 
-     ('Sweep.*','Sweep'), 
-     ('Transaction -.*','Transaction'),
-     ('Number of DB pages allocated.*', 'Number of DB pages allocated'),
-     ('Number of DB pages used.*', 'Number of DB pages used'),
-     ('Number of DB pages free.*', 'Number of DB pages free' ),
-     ('ODS 12.*', 'OSD 12' ),
-  ]
-},
-{
- 'firebird_version': '4.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
+ 'test_type': 'Python',
  'test_script':
+   """
+import os
+import fdb
+
+
+test_db="".join([context[db_path_property], "tmp_create_db_01.fdb"])
+if os.path.isfile(test_db):
+    os.remove(test_db)
+
+db_conn.close()
+
+sql_ddl = "create database 'localhost:%(test_db)s' user '%(user_name)s' password '%(user_password)s' set names 'win1251' default character set utf8"  % dict(globals(), **locals())
+
+con = fdb.create_database( sql_ddl )
+
+cur = con.cursor()
+sql='''
+    select c.rdb$character_set_name as client_char_set, r.rdb$character_set_name as db_char_set
+    from mon$attachments a join rdb$character_sets c on a.mon$character_set_id = c.rdb$character_set_id
+    cross join rdb$database r
+    where a.mon$attachment_id = current_connection
+'''
+
+cur.execute(sql);
+
+hdr=cur.description
+for r in cur:
+    for i in range(0,len(hdr)):
+        print( hdr[i][0],':', r[i] )
+
+con.commit()
+con.drop_database()
+""",
+ 'expected_stdout':
   """
-    show database;
-  """,
- 'expected_stdout': 
+    CLIENT_CHAR_SET : WIN1251
+    DB_CHAR_SET : UTF8
   """
-    Owner: SYSDBA
-    PAGE_SIZE 8192
-    Number of DB pages allocated = 196
-    Number of DB pages used = 176
-    Number of DB pages free = 20
-    Sweep interval = 20000
-    Forced Writes are ON
-    Transaction - oldest = 3
-    Transaction - oldest active = 4
-    Transaction - oldest snapshot = 4
-    Transaction - Next = 7
-    ODS = 13.0
-    Database not encrypted
-    Wire crypt plugin
-    Default Character set: NONE
-  """,
- 'substitutions': [ 
-     ('PAGE_SIZE .*','PAGE_SIZE'), 
-     ('Sweep.*','Sweep'), 
-     ('Transaction -.*','Transaction'),
-     ('Number of DB pages allocated.*', 'Number of DB pages allocated'),
-     ('Number of DB pages used.*', 'Number of DB pages used'),
-     ('Number of DB pages free.*', 'Number of DB pages free' ),
-     ('Wire crypt plugin.*', 'Wire crypt plugin'),
-     ('ODS 13.*', 'OSD 13' ),
-  ]
 }
 ]
 }
