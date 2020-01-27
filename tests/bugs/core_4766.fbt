@@ -15,7 +15,7 @@
     Then we save this variable to temporarily .sql script and run it.
     This action is done for two possible values of auth plugin (see var. current_auth_plugin): Srp and Legacy_UserManager.
 
-    As result, we have to compare only expected* data and SQL code is equal for diff. FB major versions (and is stored outside).
+    As result, we have to compare only expected* data for different FB major versions.
 
     ::: NB :::
     Only Legacy_UserManager is checked for FB 4.0. Srp has totally different behaviour, at  least for 4.0.0.1714.
@@ -24,16 +24,13 @@
     Crash is reproduced on WI-T3.0.0.31374 Firebird 3.0 Beta 1 (build 24-nov-2014).
 
     Checked on:
-        4.0.0.1714 SS: 1.985s.
-        4.0.0.1714 SC: 5.687s.
-        4.0.0.1714 CS: 9.688s.
-        3.0.5.33221 SS: 1.843s.
-        3.0.5.33221 SC: 5.110s.
-        3.0.5.33221 CS: 9.078s.
-    Parameters in firebird.conf:
-        AuthServer = Srp, Srp256, Legacy_Auth, Win_Sspi
-        UserManager = Srp, Legacy_UserManager
-        AuthClient =  Srp, Srp256, Win_Sspi, Legacy_Auth
+        4.0.0.1743 SS: 1.452s.
+        4.0.0.1740 SC: 1.870s.
+        4.0.0.1714 CS: 10.240s.
+        3.0.6.33236 SS: 1.220s.
+        3.0.5.33221 SC: 5.416s.
+        3.0.5.33084 CS: 2.891s.
+
  """,
 'min_versions': '3.0',
 'versions': [
@@ -86,10 +83,6 @@ for current_auth_plugin in ('Srp', 'Legacy_UserManager'):
   """,
  'expected_stdout': 
   """
-    Srp: MON$USER                        SYSDBA
-    Srp: MON$REMOTE_PROTOCOL             TCPv6
-    Srp: MON$AUTH_METHOD                 Srp
-
     Srp: BOSS_SEC_NAME                   TMP_4766_BOSS
     Srp: BOSS_SEC_PLUGIN                 Srp
     Srp: BOSS_SEC_IS_ADMIN               <true>
@@ -104,9 +97,6 @@ for current_auth_plugin in ('Srp', 'Legacy_UserManager'):
     Srp: delete record error
     Srp: -no permission for DELETE access to TABLE PLG$SRP_VIEW
 
-    Leg: MON$USER                        SYSDBA
-    Leg: MON$REMOTE_PROTOCOL             TCPv6
-    Leg: MON$AUTH_METHOD                 Srp
 
     Leg: BOSS_SEC_NAME                   TMP_4766_BOSS
     Leg: BOSS_SEC_PLUGIN                 Legacy_UserManager
@@ -184,20 +174,25 @@ for current_auth_plugin in ('Legacy_UserManager',):
 
     cleanup( (f_sql_log.name, f_sql_chk.name) )
 
+'''
+ 'substitutions':[
+    ('TCPv.*', 'TCP'),
+    ('.*After line \d+.*', ''),
+    ('find/delete', 'delete'),
+    ('TABLE PLG\$.*', 'TABLE PLG')
+  ]
+'''
+
   """,
  'expected_stdout': 
   """
-    Leg: MON$USER                        SYSDBA
-    Leg: MON$REMOTE_PROTOCOL             TCPv6
-    Leg: MON$AUTH_METHOD                 Srp
-
     Leg: BOSS_SEC_NAME                   TMP_4766_BOSS
     Leg: BOSS_SEC_PLUGIN                 Legacy_UserManager
     Leg: BOSS_SEC_IS_ADMIN               <true>
 
     Leg: Statement failed, SQLSTATE = 28000
     Leg: add record error
-    Leg: -no permission for INSERT access to TABLE PLG
+    Leg: -no permission for INSERT access to TABLE PLG$VIEW_USERS
     Leg: -Effective user is TMP_4766_BOSS
 
     Leg: MNGR_SEC_NAME                   <null>
@@ -205,8 +200,8 @@ for current_auth_plugin in ('Legacy_UserManager',):
     Leg: MNGR_SEC_IS_ADMIN               <null>
 
     Leg: Statement failed, SQLSTATE = 28000
-    Leg: delete record error
-    Leg: -no permission for DELETE access to TABLE PLG
+    Leg: find/delete record error
+    Leg: -no permission for DELETE access to TABLE PLG$VIEW_USERS
     Leg: -Effective user is TMP_4766_BOSS
   """,
  'expected_stderr': 
@@ -218,6 +213,7 @@ for current_auth_plugin in ('Legacy_UserManager',):
     ('find/delete', 'delete'),
     ('TABLE PLG\$.*', 'TABLE PLG')
   ]
+
 }
 ]
 }
