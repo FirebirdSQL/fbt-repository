@@ -1,0 +1,138 @@
+{
+'id': 'bugs.core_6233',
+'qmid': None,
+'tracker_id': 'CORE-6233',
+'title': 'Wrong dependencies of stored function on view after backup and restore',
+'description': 
+ """
+    We make backup of this test DB and restore it to other name using PIPE mechanism
+    in order to skip creation of unneeded .fbk file
+    See: https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
+    Confirmed bug on 4.0.0.1740.
+    Checked on 4.0.0.1743: works OK.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'test_script': """
+import os
+import sys
+import time
+import subprocess
+import shutil
+from subprocess import PIPE
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+this_db = db_conn.database_name
+db_conn.close()
+
+fdb_rest = os.path.join(context['temp_directory'],'tmp_6233_restored.fdb')
+
+cleanup( (fdb_rest,) )
+
+
+sql_init=\
+'''
+    set bail on;
+    create or alter procedure p1 as begin end;
+    create or alter function f1 returns integer as begin end;
+    commit;
+
+    set term ^;
+    create or alter view v1 as
+      select 1 as n from rdb$database
+    ^
+
+    create or alter function f1 returns integer as
+      declare ret integer;
+    begin
+      select n from v1 into ret;
+      return ret;
+    end
+    ^
+
+    create or alter procedure p1 returns (ret integer) as
+    begin
+      select n from v1 into ret;
+    end
+    ^
+    set term ;^
+    commit;
+
+'''
+runProgram('isql',[ 'localhost:' + this_db ], sql_init)
+
+
+# https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
+#   output=`dmesg | grep hda`
+#   becomes:
+#   p1 = Popen(["dmesg"], stdout=PIPE)
+#   p2 = Popen(["grep", "hda"], stdin=p1.stdout, stdout=PIPE)
+#   p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
+#   output = p2.communicate()[0]
+# gbak -b localhost:$fdb_init stdout | gbak -rep stdin localhost:$fdb_rest
+
+p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', 'localhost:' + this_db, 'stdout' ], stdout=PIPE)
+p_getter = subprocess.Popen( [ fb_home+'gbak', '-c', 'stdin',  'localhost:' + fdb_rest ], stdin = p_sender.stdout, stdout = PIPE )
+p_sender.stdout.close()
+p_getter_stdout, p_getter_stderr = p_getter.communicate()
+
+
+# ::: NB :::
+# Uncomment this delay if AuthClient _not_ starts with 'Srp':
+######################
+#time.sleep(11)
+
+sql_chk=\
+'''
+    set list on;
+    set count on;
+    select
+       RDB$DEPENDENT_NAME as dep_name
+      ,RDB$DEPENDED_ON_NAME as dep_on_name
+    from rdb$dependencies
+    order by 1,2;
+'''
+
+runProgram('isql',[ 'localhost:' + fdb_rest ], sql_chk)
+
+cleanup( (fdb_rest,) )
+
+""",
+ 'expected_stdout': 
+  """
+    DEP_NAME                        F1
+    DEP_ON_NAME                     V1
+    DEP_NAME                        F1
+    DEP_ON_NAME                     V1
+    DEP_NAME                        P1
+    DEP_ON_NAME                     V1
+    DEP_NAME                        P1
+    DEP_ON_NAME                     V1
+    DEP_NAME                        V1
+    DEP_ON_NAME                     RDB$DATABASE
+    Records affected: 5
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
