@@ -1,15 +1,11 @@
 {
 'id': 'functional.basic.db.db_31',
-'qmid': 'functional.basic.db.db_31',
+'qmid': '',
 'tracker_id': '',
 'title': 'Empty DB - RDB$USER_PRIVILEGES',
 'description': 
  """
     Check for correct content of RDB$USER_PRIVILEGES in empty database.',
-    Checked on:
-        2.5.9.27126: OK, 0.437s.
-        3.0.5.33086: OK, 1.422s.
-        4.0.0.1378: OK, 5.781s.
  """,
 'min_versions': '2.5.7',
 'versions': [
@@ -6784,15 +6780,6 @@ RDB$USER                        SYSDBA
 RDB$GRANTOR                     <null>
 RDB$PRIVILEGE                   G     
 RDB$GRANT_OPTION                1
-RDB$RELATION_NAME                                                                                                                                                                                                                                                                           
-RDB$FIELD_NAME                  <null>
-RDB$USER_TYPE                   8
-RDB$OBJECT_TYPE                 21
-
-RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
-RDB$GRANTOR                     <null>
-RDB$PRIVILEGE                   G     
-RDB$GRANT_OPTION                1
 RDB$RELATION_NAME               ASCII                                                                                                                                                                                                                                                       
 RDB$FIELD_NAME                  <null>
 RDB$USER_TYPE                   8
@@ -11498,7 +11485,7 @@ RDB$OBJECT_TYPE                 9
 
 RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
 RDB$GRANTOR                     <null>
-RDB$PRIVILEGE                   G     
+RDB$PRIVILEGE                   X     
 RDB$GRANT_OPTION                1
 RDB$RELATION_NAME               RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 RDB$FIELD_NAME                  <null>
@@ -12478,8 +12465,7 @@ RDB$USER_TYPE                   8
 RDB$OBJECT_TYPE                 17
 
 
-Records affected: 699
-
+Records affected: 698
   """
 }
 ]
