@@ -18,8 +18,9 @@
     set term ;^
     commit;
 
-    select mon$user,mon$remote_protocol,mon$auth_method from mon$attachments where mon$attachment_id=current_connection;
-    commit;
+    -- removed 27.01.2020 because unneeded for this test:
+    -- select mon$user,mon$remote_protocol,mon$auth_method from mon$attachments where mon$attachment_id=current_connection;
+    -- commit;
 
     execute procedure sp_cleanup;
     commit;
