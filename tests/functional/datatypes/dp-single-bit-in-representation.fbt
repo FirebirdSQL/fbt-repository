@@ -28,7 +28,6 @@
     from (
         select exp(-744.0346068132731393) as e1, exp(-745.1332191019410399) as e2 from rdb$database
     );
-
   """,
  'expected_stdout':
   """
