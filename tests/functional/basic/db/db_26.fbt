@@ -3910,7 +3910,6 @@
   """,
  'expected_stdout': 
   """
-
 RDB$SECURITY_CLASS              SQL$1                                                                                                                                                                                                                                                       
 RDB$ACL                         9:0
         	ACL version 1
@@ -6371,7 +6370,7 @@ RDB$SECURITY_CLASS              SQL$376
 RDB$ACL                         9:9c7
         	ACL version 1
         		person: SYSDBA, privileges: (control, alter, drop, usage)
-        		all users: (*.*), privileges: (usage)
+        		all users: (*.*), privileges: (execute)
 
 RDB$DESCRIPTION                 <null>
 
@@ -7847,7 +7846,6 @@ RDB$DESCRIPTION                 <null>
 
 
 Records affected: 491
-
   """,
   'substitutions': [
       ('RDB\$ACL.*','')
