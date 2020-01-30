@@ -83,25 +83,23 @@
     Statement failed, SQLSTATE = 22003
     Dynamic SQL Error
     -SQL error code = -303
-    -Decimal float overflow.  The exponent of a result is greater than the magnitude allowed.
+    -Floating-point overflow.  The exponent of a floating-point operation is greater than the magnitude allowed.
 
     Statement failed, SQLSTATE = 22003
     Dynamic SQL Error
     -SQL error code = -303
-    -Decimal float overflow.  The exponent of a result is greater than the magnitude allowed.
+    -Floating-point overflow.  The exponent of a floating-point operation is greater than the magnitude allowed.
 
     Statement failed, SQLSTATE = 22003
     Dynamic SQL Error
     -SQL error code = -303
-    -Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+    -Floating-point underflow.  The exponent of a floating-point operation is less than the magnitude allowed.
 
     Statement failed, SQLSTATE = 22003
     Dynamic SQL Error
     -SQL error code = -303
-    -Decimal float underflow.  The exponent of a result is less than the magnitude allowed.
+    -Floating-point underflow.  The exponent of a floating-point operation is less than the magnitude allowed.
   """
 }
 ]
 }
-
-
