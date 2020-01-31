@@ -1,0 +1,78 @@
+{
+'id': 'bugs.core_5802',
+'qmid': None,
+'tracker_id': 'CORE-5802',
+'title': 'Field name max length check wrongly if national characters specified',
+'description':
+ """
+	Though this ticket was fixed only for FB 4.x, Adriano notes that error message
+	was corrected in FB 3.0.6. Thus we check both major versions but use different
+	length of columns: 32 and 64.
+	Checked on:
+		4.0.0.1753 SS: 1.630s.
+		3.0.6.33237 SS: 0.562s. 
+ """,
+'min_versions': '3.0.6',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+	set list on;
+	set sqlda_display on;
+	-- Maximal number of characters in the column for FB 3.x is 31.
+	-- Here we use name of 32 characters and this must raise error
+	-- with text "Name longer than database column size":
+	select 1 as "СъешьЖеЕщёЭтихМягкихФранкоБулок" from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+	Statement failed, SQLSTATE = 42000
+	Dynamic SQL Error
+	-SQL error code = -104
+	-Name longer than database column size  
+  """,
+  'substitutions':[('-At line[:]{0,1}[\s]+[\d]+,[\s]+column[:]{0,1}[\s]+[\d]+', '')]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'database_character_set': 'WIN1251',
+ 'connection_character_set': 'WIN1251',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+	set list on;
+	set sqlda_display on;
+	-- Maximal number of characters in the column for FB 4.x is 63.
+	-- Here we use name of 32 characters and this must raise error
+	-- with text "Name longer than database column size":
+    select 1 as "СъешьЖеЕщёЭтихПрекрасныхФранкоБулокВместоДурацкихМорковныхКотлет" from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+	Statement failed, SQLSTATE = 42000
+	Dynamic SQL Error
+	-SQL error code = -104
+	-Name longer than database column size  
+  """,
+  'substitutions':[('-At line[:]{0,1}[\s]+[\d]+,[\s]+column[:]{0,1}[\s]+[\d]+', '')]
+}
+]
+}
