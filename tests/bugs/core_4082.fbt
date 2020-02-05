@@ -2,14 +2,16 @@
 'id': 'bugs.core_4082',
 'qmid': None,
 'tracker_id': 'CORE-4082',
-'title': 'Wrong error message (should point out the proper expected length)',
-'description': '',
+'title': 'Wrong value of expected length in the sring right truncation error',
+'description':
+ """
+    NB. Ticket title: Wrong error message (should point out the proper expected length)
+ """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'init_script': 
   """
   """,
@@ -18,10 +20,9 @@
   """
     set term ^;
     execute block as
-      declare u varchar(14);
+        declare u varchar(14);
     begin
-        U = gen_uuid();
-        suspend;
+        u = gen_uuid();
     end
     ^
   """,
