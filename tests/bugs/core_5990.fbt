@@ -61,7 +61,7 @@
             as user rdb$get_context('USER_SESSION', 'DBA_USER') password rdb$get_context('USER_SESSION', 'DBA_PSWD')
         into con1;
         insert into att_info(id, established_attach_id) values( gen_id(g,1), :con1 );
-        suspend;
+
     end
     ^
     commit -- <<< NOTA BENE <<<<  C.O.M.M.I.T after each execute block <<<
@@ -75,7 +75,7 @@
             as user rdb$get_context('USER_SESSION', 'DBA_USER') password rdb$get_context('USER_SESSION', 'DBA_PSWD')
         into con1;
         insert into att_info(id, established_attach_id) values( gen_id(g,1), :con1 );
-        suspend;
+
     end
     ^
     commit
@@ -89,7 +89,7 @@
             as user rdb$get_context('USER_SESSION', 'DBA_USER') password rdb$get_context('USER_SESSION', 'DBA_PSWD')
         into con1;
         insert into att_info(id, established_attach_id) values( gen_id(g,1), :con1 );
-        suspend;
+
     end
     ^
     commit
@@ -103,7 +103,7 @@
             as user rdb$get_context('USER_SESSION', 'DBA_USER') password rdb$get_context('USER_SESSION', 'DBA_PSWD')
         into con1;
         insert into att_info(id, established_attach_id) values( gen_id(g,1), :con1 );
-        suspend;
+
     end
     ^
     commit
@@ -117,7 +117,7 @@
             as user rdb$get_context('USER_SESSION', 'DBA_USER') password rdb$get_context('USER_SESSION', 'DBA_PSWD')
         into con1;
         insert into att_info(id, established_attach_id) values( gen_id(g,1), :con1 );
-        suspend;
+
     end
     ^
     commit
@@ -131,7 +131,7 @@
             as user rdb$get_context('USER_SESSION', 'DBA_USER') password rdb$get_context('USER_SESSION', 'DBA_PSWD')
         into con1;
         insert into att_info(id, established_attach_id) values( gen_id(g,1), :con1 );
-        suspend;
+
     end
     ^
     commit
