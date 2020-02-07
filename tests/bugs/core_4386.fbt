@@ -95,26 +95,26 @@ drop_commands = [
 ]
 
 for i,c in enumerate(drop_commands):
+    con2=fdb.connect(dsn = dsn)
+    tx = con2.trans( default_tpb = CUSTOM_TX_PARAMS )
+    #############################################
+    # READ COMMITTED | NO_RECORD_VERSION | NOWAIT
+    #############################################
+    tx.begin()
+    cur2=tx.cursor()
+
     try:
-        con2=fdb.connect(dsn = DB_NAME)
-        tx = con2.trans( default_tpb = CUSTOM_TX_PARAMS )
-        #############################################
-        # READ COMMITTED | NO_RECORD_VERSION | NOWAIT
-        #############################################
-        tx.begin()
-        cur2=tx.cursor()
-
         cur2.execute( c )
-
         tx.commit()
-    except Exception as e:
-        print('\nError when attempt to run "'+ c.strip().upper() + '":')
-        print(e)
+    except kdb.DatabaseError, (errno,errmsg):
+        print(errno, errmsg)
+    #except Exception as e:
+    #    print('Error when attempt to run "'+ c.strip().upper() + '":')
+    #    #print(e)
+    #    print( repr(e) )
     finally:
-        if cur2:
-            cur2.close()
-        if con2:
-            con2.close()
+        cur2.close()
+        con2.close()
 
 cur1.close()
 con1.close()
