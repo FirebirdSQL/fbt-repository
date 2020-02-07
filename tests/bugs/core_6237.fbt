@@ -50,11 +50,11 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 # Number of attach/detach actions for each of checked plugin:
-N_ITER=25
+N_ITER=50
 
 # Minimal ratio (for ALERT) between total time when Srp is used vs such value for Legacy auth plugin.
 # Will be evaluated as datediff(millisecond ...) that were spent for making N_ITER attach/detach actions.
-MIN_RATIO_THRESHOLD = 1.25
+MIN_RATIO_THRESHOLD = 1.33
 
 db_conn.execute_immediate("create or alter user tmp_c6237_leg password 'leg' using plugin Legacy_UserManager")
 db_conn.execute_immediate("create or alter user tmp_c6237_srp password 'srp' using plugin Srp")
@@ -87,7 +87,7 @@ db_conn.execute_immediate("drop user tmp_c6237_srp using plugin Srp")
 db_conn.commit()
 db_conn.close()
 
-#print( 'Legacy, ms: ', elap_ms_for_leg_auth, '; Srp, ms: ', elap_ms_for_srp_auth, '; 1.00  * elap_ms_for_srp_auth / elap_ms_for_leg_auth=', 1.00 * elap_ms_for_srp_auth / elap_ms_for_leg_auth )
+print( 'Legacy, ms: ', elap_ms_for_leg_auth, '; Srp, ms: ', elap_ms_for_srp_auth, '; 1.00  * elap_ms_for_srp_auth / elap_ms_for_leg_auth=', 1.00 * elap_ms_for_srp_auth / elap_ms_for_leg_auth )
 
 elapsed_time_ratio = 1.00 * elap_ms_for_srp_auth / elap_ms_for_leg_auth
 if  elapsed_time_ratio < MIN_RATIO_THRESHOLD:
