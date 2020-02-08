@@ -87,7 +87,7 @@ db_conn.execute_immediate("drop user tmp_c6237_srp using plugin Srp")
 db_conn.commit()
 db_conn.close()
 
-print( 'Legacy, ms: ', elap_ms_for_leg_auth, '; Srp, ms: ', elap_ms_for_srp_auth, '; 1.00  * elap_ms_for_srp_auth / elap_ms_for_leg_auth=', 1.00 * elap_ms_for_srp_auth / elap_ms_for_leg_auth )
+# print( 'Legacy, ms: ', elap_ms_for_leg_auth, '; Srp, ms: ', elap_ms_for_srp_auth, '; 1.00  * elap_ms_for_srp_auth / elap_ms_for_leg_auth=', 1.00 * elap_ms_for_srp_auth / elap_ms_for_leg_auth )
 
 elapsed_time_ratio = 1.00 * elap_ms_for_srp_auth / elap_ms_for_leg_auth
 if  elapsed_time_ratio < MIN_RATIO_THRESHOLD:
