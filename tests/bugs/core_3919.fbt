@@ -5,8 +5,12 @@
 'title': 'Improve SIMILAR TO performance',
 'description':
  """
-     Confirmed normal work on WI-T4.0.0.1598. 
-     Moreover, SIMILAR TO is about 5x faster than LIKE comparison in this test.
+     Confirmed normal work on WI-T4.0.0.1598. Moreover, SIMILAR TO is about 5x faster than LIKE comparison in this test.
+
+     CAUTION.
+     This test must be run only on 4.0+, despite that its 'Fix version' = 3.0 Alpha 1.
+     Performance of SIMILAR TO statement is extremely poor in comparison with LIKE operator:
+     COUNT through the table of 102 records requires 27 seconds vs 16 ms (checked on WI-V6.3.6.33246).
  """,
 'min_versions': '4.0',
 'versions': [
