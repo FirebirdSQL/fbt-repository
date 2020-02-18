@@ -3,13 +3,15 @@
 'qmid': None,
 'tracker_id': 'CORE-4310',
 'title': 'DateAdd(): change input <amount> argument from INT to BIGINT',
-'description': '',
+'description':
+ """
+     See also test for CORE-6241.
+ """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'init_script':
   """
@@ -25,9 +27,8 @@
     set list on;
     
     select 
-         dateadd( 315537897599998 millisecond to timestamp '01.01.0001 00:00:00.001') dts1
-        ,dateadd( -315537897599998 millisecond to timestamp '31.12.9999 23:59:59.999') dts2
-        --datediff( millisecond from timestamp '01.01.0001 00:00:00.000' to timestamp '31.12.9999 23:59:59.999') 
+         dateadd(  315537897599998 millisecond to timestamp '01.01.0001 00:00:00.001' ) dts1
+        ,dateadd( -315537897599998 millisecond to timestamp '31.12.9999 23:59:59.999' ) dts2
     from rdb$database;
   """,
  'expected_stdout': 
@@ -38,7 +39,10 @@
     DTS1                            9999-12-31 23:59:59.9990
     DTS2                            0001-01-01 00:00:00.0010
   """,
-  'substitutions': [('^((?!sqltype|DTS1|DTS2).)*$',''),('[ ]+',' '),('[\t]*',' ')]
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [('^((?!sqltype|DTS1|DTS2|SQLSTATE|exceed|range|valid).)*$',''),('[ ]+',' ')]
 }
 ]
 }
