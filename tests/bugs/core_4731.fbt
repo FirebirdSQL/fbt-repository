@@ -43,7 +43,7 @@
         3.0.4.32947: OK, SS: 22s, CS: 37s
         4.0.0.955: OK,   SS: 35s, CS: 33s
 
-   REFACTORED 18.02.2020: most of initial code was moved into $files_location/core_4731.sql; use Python instead of ISQL.
+   REFACTORED 18.02.2020: most of initial code was moved into $files_location/core_4731.sql; changed test_type to 'Python'.
    Checked 18.02.2020 afte refactoring:
         4.0.0.1773 SS: 11.759s.
         4.0.0.1773 SC: 15.374s.
