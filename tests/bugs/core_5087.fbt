@@ -24,13 +24,25 @@
       that can also point on FB crash: "terminated abnormally".
 
    Checked on WI-V3.0.0.32320, SS/SC/CS.
-
    Estimated time for 3.0: SS = 19", SC = 19", CS = 31".   
    
    ::: NB :::. 
 
    On 2.5 no crash but works VERY slow, even for 5 attachments (checked on WI-V2.5.6.26970, 255 seconds!).
    Setting min_version = 2.6.6 is deferred again until CORE-5106 will not be fixed.
+
+   Refactored 20.02.2020: replaced logic of waiting for all ISQL sessions be ready to do their work (inserts):
+   use table T_LOCK(id int primary key), run aux. attachments (att1) and lock single record in this table.
+   Then launch all planned ISQLs and make them try to insert duplicate into this table. All of them will stay in pause since this time.
+   Wait several seconds, then switch to 'att1' and release record. All launched ISQL sesions will immediately work together at this point.
+
+   Checked on:
+        4.0.0.1779 CS: 16.108s.
+        4.0.0.1766 SC: 15.643s.
+        4.0.0.1773 CS: 18.420s.
+        3.0.6.33251 SS: 16.495s.
+        3.0.6.33247 SC: 13.891s.
+        3.0.6.33247 CS: 16.804s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -40,7 +52,6 @@
  'init_script':
   """
     create sequence g;
-
     recreate table test(
         id int, 
         s varchar(500) unique, 
@@ -54,88 +65,6 @@
         ,address varchar(255)
     );
     commit;
-
-    set term ^;
-    create or alter procedure sys_get_fb_arch (
-         a_connect_with_usr varchar(31) default 'SYSDBA'
-        ,a_connect_with_pwd varchar(31) default 'masterkey'
-    ) returns(
-        fb_arch varchar(50)
-    ) as
-        declare cur_server_pid int;
-        declare ext_server_pid int;
-        declare att_protocol varchar(255);
-        declare v_test_sttm varchar(255);
-        declare v_fetches_beg bigint;
-        declare v_fetches_end bigint;
-    begin
-        
-        -- Aux SP for detect FB architecture.
-
-        select a.mon$server_pid, a.mon$remote_protocol
-        from mon$attachments a
-        where a.mon$attachment_id = current_connection
-        into cur_server_pid, att_protocol;
-
-        if ( att_protocol is null ) then
-            fb_arch = 'Embedded';
-        else if ( upper(current_user) = upper('SYSDBA')
-                  and rdb$get_context('SYSTEM','ENGINE_VERSION') NOT starting with '2.5' 
-                  and exists(select * from mon$attachments a 
-                             where a.mon$remote_protocol is null
-                                   and upper(a.mon$user) in ( upper('Cache Writer'), upper('Garbage Collector'))
-                            ) 
-                ) then
-            fb_arch = 'SuperServer';
-        else
-            begin
-                v_test_sttm =
-                    'select a.mon$server_pid + 0*(select 1 from rdb$database)'
-                    ||' from mon$attachments a '
-                    ||' where a.mon$attachment_id = current_connection';
-
-                select i.mon$page_fetches
-                from mon$io_stats i
-                where i.mon$stat_group = 0  -- db_level
-                into v_fetches_beg;
-            
-                execute statement v_test_sttm
-                on external
-                     'localhost:' || rdb$get_context('SYSTEM', 'DB_NAME')
-                as
-                     user a_connect_with_usr
-                     password a_connect_with_pwd
-                     role left('R' || replace(uuid_to_char(gen_uuid()),'-',''),31)
-                into ext_server_pid;
-            
-                in autonomous transaction do
-                select i.mon$page_fetches
-                from mon$io_stats i
-                where i.mon$stat_group = 0  -- db_level
-                into v_fetches_end;
-            
-                fb_arch = iif( cur_server_pid is distinct from ext_server_pid, 
-                               'Classic', 
-                               iif( v_fetches_beg is not distinct from v_fetches_end, 
-                                    'SuperClassic', 
-                                    'SuperServer'
-                                  ) 
-                             );
-            end
-
-        fb_arch = fb_arch || ' ' || rdb$get_context('SYSTEM','ENGINE_VERSION');
-
-        suspend;
-
-    end 
-    ^ -- sys_get_fb_arch
-
-    set term ;^
-    commit;
-    set heading off;
-
-    -- Obtain FB arch:
-    --select fb_arch from sys_get_fb_arch;
 
     set term ^;
     execute block as
@@ -174,7 +103,7 @@ from subprocess import Popen
 import time
 import shutil
 import difflib
-#import fdb
+import fdb
 
 def svc_get_fb_log( engine, f_fb_log ):
 
@@ -197,8 +126,10 @@ def svc_get_fb_log( engine, f_fb_log ):
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+db_file=db_conn.database_name
+engine = str(db_conn.engine_version)
+
 db_conn.close()
-db_file="$(DATABASE_LOCATION)bugs.core_5087.fdb"
 
 bk_file="$(DATABASE_LOCATION)tmp_5087_chk4alive.fdb"
 
@@ -207,13 +138,13 @@ bk_file="$(DATABASE_LOCATION)tmp_5087_chk4alive.fdb"
 # with source database (i.e. with "bugs.core_5087.fdb"):
 shutil.copy2( db_file, bk_file )
 
-att_chk = kdb.connect(dsn='localhost:'+bk_file) # This leads to adding 1 row into table 'log4attach'
+att_chk = fdb.connect(dsn='localhost:'+bk_file) # This leads to adding 1 row into table 'log4attach'
 
 att_chk.begin()
 cur_chk = att_chk.cursor()
 cur_chk.execute("select 'check_point_1' as msg from rdb$database")
 
-f_chk_log = open( os.path.join(context['temp_directory'],'tmp_chk_5087.log'), 'w')
+f_chk_log = open( os.path.join(context['temp_directory'],'tmp_chk_5087.log'), 'w', buffering=0)
 
 for row in cur_chk:
     f_chk_log.write(row[0])
@@ -223,23 +154,35 @@ att_chk.commit()
 
 # Obtain engine version:
 
-att1 = kdb.connect(dsn=dsn)
-cur1 = att1.cursor()
+att1 = fdb.connect(dsn=dsn)
 
-cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in cur1:
-    engine = row[0]
+att1.execute_immediate('recreate table t_lock(id int primary key)')
+att1.commit()
+att1.execute_immediate('insert into t_lock(id) values(1)')
 
-att1.close()
+# att1.close()
 
-#print('engine='+engine)
-
-f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5087_fblog_before.txt'), 'w')
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5087_fblog_before.txt'), 'w', buffering=0)
 svc_get_fb_log( engine, f_fblog_before )
 f_fblog_before.close()
 
-sql_dml='''
+sql_dml=\
+'''
     commit;
+    set transaction wait;
+    set term ^;
+    execute block as
+    begin
+        insert into t_lock(id) values(1);
+        when any do
+        begin
+         -- nop --
+        end
+    end
+    ^
+    set term ;^
+    commit;
+
     set transaction read committed;
     set term ^;
     execute block as
@@ -268,7 +211,7 @@ sql_dml='''
     commit;
 '''
 
-f_dml_sql = open( os.path.join(context['temp_directory'],'tmp_dml_5087.sql'), 'w')
+f_dml_sql = open( os.path.join(context['temp_directory'],'tmp_dml_5087.sql'), 'w', buffering=0)
 f_dml_sql.write(sql_dml)
 f_dml_sql.close()
 
@@ -279,49 +222,55 @@ p_list = []
 #  Launching dozen of child ISQL processes with doing ES
 ########################################################
 
-if engine.startswith('2.5'):
-    planned_dml_attachments = 5
-else:
-    planned_dml_attachments = 30
-
+planned_dml_attachments = 30
 
 for i in range(0, planned_dml_attachments):
-    sqllog=open( os.path.join(context['temp_directory'],'tmp_dml_5087_'+str(i)+'.log'), 'w')
+    sqllog=open( os.path.join(context['temp_directory'],'tmp_dml_5087_'+str(i)+'.log'), 'w', buffering=0)
     f_list.append(sqllog)
 
 for i in range(len(f_list)):
-    p_isql=Popen( [ "isql" , "localhost:"+db_file, "-i", f_dml_sql.name ], \
-                  stdout=f_list[i], \
-                  stderr=subprocess.STDOUT \
+    ###########################################
+    #   a s y n c h r o n o u s     l a u n c h
+    ###########################################
+    p_isql=Popen( [ "isql" , "localhost:"+db_file, "-i", f_dml_sql.name ],
+                  stdout=f_list[i],
+                  stderr=subprocess.STDOUT
                 )
     p_list.append(p_isql)
 
 
-# Delay: let ISQL sessions do their job:
-time.sleep( 10 )
+# Delay: let ISQL sessions do establish their attachments
+time.sleep( 3 )
 
-f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_5087.log'), 'w')
+# release t_lock record.
+# All launched ISQL sessions can do useful job (INSERT statements) since this point.
+att1.close()
+
+# Let ISQL sessions do some work:
+time.sleep( 5 )
+
+f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_5087.log'), 'w', buffering=0)
 
 ####################################
 # S H U T D O W N    D A T A B A S E
 ####################################
 
-subprocess.call( ["fbsvcmgr","localhost:service_mgr",\
-                  "action_properties", \
-                  "dbname", db_file, \
-                  "prp_shutdown_mode", "prp_sm_full", "prp_force_shutdown", "0" \
-                 ],\
-                 stdout=f_shutdown_log, \
-                 stderr=subprocess.STDOUT \
+subprocess.call( ["fbsvcmgr","localhost:service_mgr",
+                  "action_properties",
+                  "dbname", db_file,
+                  "prp_shutdown_mode", "prp_sm_full", "prp_force_shutdown", "0"
+                 ],
+                 stdout=f_shutdown_log,
+                 stderr=subprocess.STDOUT
                )
 
 # ...and return it to ONLINE because fbtest will try to remove it on exit from here:
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr", \
-                  "action_properties", "prp_db_online", \
-                  "dbname", db_file, \
-                 ], \
-                 stdout = f_shutdown_log, \
-                 stderr = subprocess.STDOUT \
+subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+                  "action_properties", "prp_db_online",
+                  "dbname", db_file,
+                 ],
+                 stdout = f_shutdown_log,
+                 stderr = subprocess.STDOUT
                )
 f_shutdown_log.close()
 
@@ -332,8 +281,8 @@ for i in range(len(f_list)):
 for i in range(len(p_list)):
     p_list[i].terminate()
 
-# Here we must wait because firebird.log will get new messages NOT instantly.
-time.sleep(5)
+# Here we must wait a little because firebird.log will get new messages NOT instantly.
+time.sleep(3)
 
 crashes_in_worker_logs = 0
 for i in range(len(f_list)):
@@ -342,7 +291,7 @@ for i in range(len(f_list)):
         crashes_in_worker_logs += 1
     os.remove(f_list[i].name)
 
-f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5087_fblog_after.txt'), 'w')
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5087_fblog_after.txt'), 'w', buffering=0)
 svc_get_fb_log( engine, f_fblog_after )
 f_fblog_after.close()
 
@@ -358,29 +307,30 @@ f_chk_log.seek(0,2)
 f_chk_log.write('\\n')
 f_chk_log.write('Found crash messages in DML worker logs: ' + str(crashes_in_worker_logs))
 
-sql_chk='''
-set list on;
-set count on;
-select iif( count(distinct att) = %s, 'YES', 'NO!' ) as "All_workers_found ?"
-from (
-  select 
-     att
-    ,count( iif(id >=0, id, null) ) as cnt_in_autonom_tx
-    ,count( iif(id < 0, id, null) ) as cnt_in_common_tx
-  from test 
-  group by att
-)
-where cnt_in_common_tx = 0 and cnt_in_autonom_tx > 0;
-''' % planned_dml_attachments
+sql_chk=\
+'''
+    set list on;
+    set count on;
+    select iif( count(distinct att) = %(planned_dml_attachments)s, 'YES', 'NO. Only ' || count(distinct att) || ' attachments of planned %(planned_dml_attachments)s established.' ) as "All_workers_found ?"
+    from (
+        select 
+            att
+            ,count( iif(id >=0, id, null) ) as cnt_in_autonom_tx
+            ,count( iif(id < 0, id, null) ) as cnt_in_common_tx
+        from test 
+        group by att
+    )
+    where cnt_in_common_tx = 0 and cnt_in_autonom_tx > 0;
+''' % locals()
 
-f_chk_sql = open( os.path.join(context['temp_directory'],'tmp_chk_5087.sql'), 'w')
+f_chk_sql = open( os.path.join(context['temp_directory'],'tmp_chk_5087.sql'), 'w', buffering=0)
 f_chk_sql.write(sql_chk)
 f_chk_sql.close()
 
 f_chk_log.seek(0,2)
-subprocess.call( [ "isql" , "localhost:"+db_file, "-nod", "-i", f_chk_sql.name ], \
-                  stdout=f_chk_log, \
-                  stderr=subprocess.STDOUT \
+subprocess.call( [ "isql" , "localhost:"+db_file, "-nod", "-i", f_chk_sql.name ],
+                  stdout=f_chk_log,
+                  stderr=subprocess.STDOUT
                 )
 
 
@@ -428,15 +378,7 @@ f.close()
 ###############################
 # Cleanup.
 
-k_list=[]
-k_list.append(f_shutdown_log)
-k_list.append(f_dml_sql)
-k_list.append(f_chk_sql)
-k_list.append(f_fblog_before)
-k_list.append(f_fblog_after)
-k_list.append(f_diff_txt)
-k_list.append(f_chk_log)
-
+k_list = [ f_shutdown_log, f_dml_sql, f_chk_sql, f_fblog_before, f_fblog_after, f_diff_txt, f_chk_log ]
 for i in range(len(k_list)):
     if os.path.isfile(k_list[i].name):
         os.remove(k_list[i].name)
