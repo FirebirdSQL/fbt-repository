@@ -1,0 +1,130 @@
+{
+'id': 'bugs.core_6250',
+'qmid': None,
+'tracker_id': 'CORE-6250',
+'title': 'Signature mismatch when creating package body on identical packaged procedure header',
+'description':
+ """
+    Thank Adriano for suggestion.
+    Bug existed because backup/restore process changed value of RDB$PROCEDURE_PARAMETERS.RDB$NULL_FLAG
+    for procedure parameter from NULL to 0 (zero).
+    Test creates trivial package and stores its package body in variable that will be used after b/r.
+    Then we do backup / restore and attempt to apply this stored package body again, see 'sql_pk_body'.
+
+    Confirmed bug on: 4.0.0.1766,  3.0.6.33247. Attempt to apply 'recreate package ...' with the same SQL code fails with:
+        Statement failed, SQLSTATE = 42000 / ... / -Procedure SP_TEST has a signature mismatch on package body PG_TEST
+    Checke on 4.0.0.1782, 3.0.6.33252: works fine.
+ """,
+'min_versions': '3.0.6',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script': 
+  """
+  """,
+ 'test_script': 
+  """
+import os
+import sys
+import subprocess
+from fdb import services
+from subprocess import PIPE
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+dba_privileged_name = 'tmp_c6250_cooldba'
+non_privileged_name = 'tmp_c6250_manager'
+
+#--------------------------------------------
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+#--------------------------------------------
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+this_db = db_conn.database_name
+db_conn.close()
+
+fdb_rest = os.path.join(context['temp_directory'],'tmp_6250_restored.fdb')
+
+cleanup( (fdb_rest,) )
+
+# This part of DDL will be used twise:
+sql_pk_body = \
+'''
+    set term ^;
+    recreate package body pg_test as
+    begin
+        procedure sp_test ( a_since timestamp ) as begin end
+    end
+    ^
+    set term ;^
+'''
+
+sql_init = \
+'''
+    set term ^;
+    create or alter package pg_test as
+    begin
+      procedure sp_test ( a_since timestamp ) ;
+    end
+    ^
+    set term ;^
+
+    %(sql_pk_body)s
+
+    commit;
+''' % dict(globals(), **locals())
+
+runProgram('isql',[ 'localhost:' + this_db ], sql_init )
+
+# https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
+# gbak -b localhost:$fdb_init stdout | gbak -rep stdin localhost:$fdb_rest
+
+p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', 'localhost:' + this_db, 'stdout' ], stdout=PIPE)
+p_getter = subprocess.Popen( [ fb_home+'gbak', '-c', 'stdin',  'localhost:' + fdb_rest ], stdin = p_sender.stdout, stdout = PIPE )
+p_sender.stdout.close()
+p_getter_stdout, p_getter_stderr = p_getter.communicate()
+
+
+f_sql_run = open( os.path.join(context['temp_directory'],'tmp_core_6250_run.sql'), 'w', buffering = 0)
+f_sql_run.write( sql_pk_body )
+f_sql_run.close()
+
+f_run_log = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'log') ), 'w', buffering = 0)
+f_run_err = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'err') ), 'w', buffering = 0)
+subprocess.call( [ fb_home + 'isql', 'localhost:' + fdb_rest, '-q', '-i', f_sql_run.name ], stdout = f_run_log, stderr = f_run_err)
+f_run_log.close()
+f_run_err.close()
+
+
+# Check results:
+# ==============
+
+# 1. Print UNEXPECTED output:
+#############################
+with open( f_run_err.name,'r') as f:
+    for line in f:
+        if line.strip():
+            print( 'UNEXPECTED STDERR: ' + line )
+
+# Cleanup
+#########
+cleanup( [ i.name for i in ( f_sql_run, f_run_log, f_run_err, ) ] + [ fdb_rest, ] )
+
+  """,
+ 'expected_stdout':
+  """
+
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
