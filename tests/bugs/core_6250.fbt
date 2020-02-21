@@ -60,7 +60,7 @@ sql_pk_body = \
     set term ^;
     recreate package body pg_test as
     begin
-        procedure sp_test ( a_since timestamp ) as begin end
+        procedure sp_test ( a_since dm_dts ) as begin end
     end
     ^
     set term ;^
@@ -68,10 +68,12 @@ sql_pk_body = \
 
 sql_init = \
 '''
+    create domain dm_dts timestamp;
+    commit;
     set term ^;
     create or alter package pg_test as
     begin
-      procedure sp_test ( a_since timestamp ) ;
+      procedure sp_test ( a_since dm_dts ) ;
     end
     ^
     set term ;^
