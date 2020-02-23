@@ -1,7 +1,7 @@
 {
 'id': 'functional.tabloid.transactions-autocommit',
 'tracker_id': '',
-'title': "",
+'title': "AUTO COMMIT must be ignored and all its changes must be rolled back if expection raises on some level of execution",
 'description':
  """
     Test does the same actions as described in GTCS/tests/AUTO_COMMIT.3.ESQL.script, see:
