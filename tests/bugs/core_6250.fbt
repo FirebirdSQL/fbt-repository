@@ -12,8 +12,12 @@
     Then we do backup / restore and attempt to apply this stored package body again, see 'sql_pk_body'.
 
     Confirmed bug on: 4.0.0.1766,  3.0.6.33247. Attempt to apply 'recreate package ...' with the same SQL code fails with:
-        Statement failed, SQLSTATE = 42000 / ... / -Procedure SP_TEST has a signature mismatch on package body PG_TEST
-    Checke on 4.0.0.1782, 3.0.6.33252: works fine.
+        Statement failed, SQLSTATE = 42000 / ... / -Procedure ... has a signature mismatch on package body ...
+    Bug was partially fixed in snapshots 4.0.0.1782 and 3.0.6.33252: problem remained if procedure parameter was of built-in
+    datatype rather than domain (i.e. this parameter type was TIMESTAMP or INT etc, instead of apropriate domain).
+
+    Completely fixed in snapshots 4.0.0.1783 and 3.0.6.33254 (checked 23.02.2020).
+    Added special check for parameter that is declared of built-in datatype rather than domain.
  """,
 'min_versions': '3.0.6',
 'versions': [
@@ -58,9 +62,14 @@ cleanup( (fdb_rest,) )
 sql_pk_body = \
 '''
     set term ^;
-    recreate package body pg_test as
+    recreate package body pg_test1 as
     begin
-        procedure sp_test ( a_since dm_dts ) as begin end
+        procedure sp_test1 ( a_since dm_dts ) as begin end
+    end
+    ^
+    recreate package body pg_test2 as
+    begin
+        procedure sp_test2 ( a_since timestamp ) as begin end
     end
     ^
     set term ;^
@@ -71,9 +80,14 @@ sql_init = \
     create domain dm_dts timestamp;
     commit;
     set term ^;
-    create or alter package pg_test as
+    create or alter package pg_test1 as
     begin
-      procedure sp_test ( a_since dm_dts ) ;
+      procedure sp_test1 ( a_since dm_dts ) ;
+    end
+    ^
+    create or alter package pg_test2 as
+    begin
+      procedure sp_test2 ( a_since timestamp ) ;
     end
     ^
     set term ;^
@@ -94,30 +108,28 @@ p_sender.stdout.close()
 p_getter_stdout, p_getter_stderr = p_getter.communicate()
 
 
-f_sql_run = open( os.path.join(context['temp_directory'],'tmp_core_6250_run.sql'), 'w', buffering = 0)
-f_sql_run.write( sql_pk_body )
-f_sql_run.close()
+f_sql_pk_body = open( os.path.join(context['temp_directory'],'tmp_core_6250_run.sql'), 'w', buffering = 0)
+f_sql_pk_body.write( sql_pk_body )
+f_sql_pk_body.close()
 
-f_run_log = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'log') ), 'w', buffering = 0)
-f_run_err = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'err') ), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', 'localhost:' + fdb_rest, '-q', '-i', f_sql_run.name ], stdout = f_run_log, stderr = f_run_err)
-f_run_log.close()
-f_run_err.close()
+f_run_pk_body_log = open( '.'.join( (os.path.splitext( f_sql_pk_body.name )[0], 'log') ), 'w', buffering = 0)
+f_run_pk_body_err = open( '.'.join( (os.path.splitext( f_sql_pk_body.name )[0], 'err') ), 'w', buffering = 0)
+subprocess.call( [ fb_home + 'isql', 'localhost:' + fdb_rest, '-q', '-i', f_sql_pk_body.name ], stdout = f_run_pk_body_log, stderr = f_run_pk_body_err)
+f_run_pk_body_log.close()
+f_run_pk_body_err.close()
 
 
-# Check results:
-# ==============
-
-# 1. Print UNEXPECTED output:
+# Check for UNEXPECTED output:
 #############################
-with open( f_run_err.name,'r') as f:
-    for line in f:
-        if line.strip():
-            print( 'UNEXPECTED STDERR: ' + line )
+for g in ( f_run_pk_body_log, f_run_pk_body_err):
+    with open( g.name,'r') as f:
+        for line in f:
+            if line.strip():
+                print( 'UNEXPECTED ' +('STDOUT' if g == f_run_pk_body_log else 'STDERR')+ ': ' + line )
 
 # Cleanup
 #########
-cleanup( [ i.name for i in ( f_sql_run, f_run_log, f_run_err, ) ] + [ fdb_rest, ] )
+cleanup( [ i.name for i in ( f_sql_pk_body, f_run_pk_body_log, f_run_pk_body_err, ) ] + [ fdb_rest, ] )
 
   """,
  'expected_stdout':
