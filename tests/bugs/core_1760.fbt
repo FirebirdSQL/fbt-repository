@@ -22,7 +22,12 @@
     select 0x0 numeric_hex_0 from rdb$database;
     select 0xf numeric_hex_f from rdb$database;
 
-    select cast('0x0F0000000' as bigint) from rdb$database;
+    -- see letter to Adriano, 24.02.2020 02:03:
+    -- OK:    select cast('0xFFFF' as int) from rdb$database; -- 65535 decimal
+    -- FAILS: select cast('0x10000' as int) from rdb$database; -- 65536 decimal
+
+    select cast('0x0F0000000' as bigint) from rdb$database; -- this FAILS at least since july-2019
+
     select x'deadbeef' from rdb$database;
     select uuid_to_char(x'BA1749B583BF9146B360F54E25FE583E') from rdb$database;
   """,
