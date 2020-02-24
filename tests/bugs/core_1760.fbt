@@ -3,63 +3,32 @@
 'qmid': None,
 'tracker_id': 'CORE-1760',
 'title': 'Support hex numeric and string literals',
-'description': '',
+'description':
+ """
+    See doc\sql.extensions\README.hex_literals.txt
+ """,
 'min_versions': '2.5.0',
 'versions': [
 {
  'firebird_version': '2.5.0',
  'platform': 'All',
  'connection_character_set': 'UTF8',
- 'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """select 0x10, cast('0x0F0000000' as bigint) from rdb$database;
-select x'deadbeef' from rdb$database;
-select uuid_to_char(x'BA1749B583BF9146B360F54E25FE583E') from rdb$database;
-""",
- 'expected_stdout': """Database:  localhost:C:btest2	mpugs.core_1760.fdb, User: SYSDBA
-SQL>
-    CONSTANT                  CAST
-============ =====================
-          16            4026531840
+ 'test_script':
+  """
+    set list on;
+    
+    -- Numeric string literal: { 0x | 0X } <hexit> [ <hexit>... ]
+    select 0x0 numeric_hex_0 from rdb$database;
+    select 0xf numeric_hex_f from rdb$database;
 
-SQL>
-CONSTANT
-========
-DEADBEEF
-
-SQL>
-UUID_TO_CHAR
-===============================================================================
-BA1749B5-83BF-9146-B360-F54E25FE583E
-
-SQL> SQL>"""
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'All',
- 'connection_character_set': 'UTF8',
- 'page_size': '4096',
- 'test_type': 'ISQL',
- 'test_script': """select 0x10, cast('0x0F0000000' as bigint) from rdb$database;
-select x'deadbeef' from rdb$database;
-select uuid_to_char(x'BA1749B583BF9146B360F54E25FE583E') from rdb$database;
-""",
- 'expected_stdout': """
-    CONSTANT                  CAST
-============ =====================
-          16            4026531840
-
-
-CONSTANT
-========
-DEADBEEF
-
-
-UUID_TO_CHAR
-====================================
-BA1749B5-83BF-9146-B360-F54E25FE583E
-
-"""
+    select cast('0x0F0000000' as bigint) from rdb$database;
+    select x'deadbeef' from rdb$database;
+    select uuid_to_char(x'BA1749B583BF9146B360F54E25FE583E') from rdb$database;
+  """,
+ 'expected_stdout':
+  """
+  """
 }
 ]
 }
