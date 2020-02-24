@@ -23,7 +23,7 @@
     1) number after phrase "Tx that is origin of changes:" must always be equal to zero;
     2) number after phrase "Tx that finished now" must be:
       2.1) LESS for 1 than value in the next line: "NEW NUMBER" for subsequent Tx..." - for all DML statements EXCEPT LAST;
-      2.2) EQUAL to "NEW NUMBER" for subsequent Tx..." for LAST statement because it does not change anything (updates empty table);
+      2.2) EQUALS to "NEW NUMBER" for subsequent Tx..." for LAST statement because it does not change anything (updates empty table);
 
     Checked on 4.0.0.1784 SS: 6.327s; 3.0.6.33255 SS: 5.039s.
  """,
@@ -45,7 +45,6 @@
     create procedure sp_worker(a_x int) as
     begin
         insert into test(x) values(:a_x);
-        -- execute statement ('insert into test(x) values(?)') (a_x);
     end
     ^
     set term ;^
