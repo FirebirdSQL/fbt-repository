@@ -10,11 +10,12 @@
     See: https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
     Confirmed bug on 4.0.0.1740.
     Checked on 4.0.0.1743: works OK.
+    Checked result of backporting fix to on 3.0.6.33265: OK.
  """,
-'min_versions': '4.0',
+'min_versions': '3.0.6',
 'versions': [
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'Python',
  'test_script': """
