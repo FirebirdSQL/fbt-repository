@@ -53,6 +53,7 @@ con1.commit()
 
 cur1 = con1.cursor()
 cur1.execute( 'insert into t1(id) values(?)', (1,) )
+con1.commit()
 
 # this lead to corruption of database in 2.5.0
 # page 0 is of wrong type (expected 6, found 1):
