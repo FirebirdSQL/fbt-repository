@@ -18,6 +18,18 @@
         ----------------------------------------------------------
      SQLDA must contain the same datatypes when we use either explicit rule or LEGACY keyword.
      Checked on 4.0.0.1691 SS: 1.113s.
+
+     WARNING, 11.03.2020.
+     Test verifies binding of TIME WITH TIMEZONE data and uses America/Los_Angeles timezone.
+     But there is daylight saving time in the USA, they change clock at the begining of March.
+
+     For this reason query like: "select time '10:00 America/Los_Angeles' from ..." will return
+     different values depending on current date. For example, if we are in Moscow timezone then
+     returned value will be either 20:00 in February or 21:00 in March. 
+     Result for other timezone (e.g. Tokyo) will be differ, etc.
+     For this reason, special replacement will be done in 'substitution' section: we replace
+     value of hours with '??' because it is no matter what's the time there, we have to ensure
+     only the ability to work with such time using SET BIND clause.
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -90,21 +102,21 @@
     check_bind_n38_to_legacy 3.141592653589793
 
     01: sqltype: 560 TIME scale: 0 subtype: 0 len: 4
-    check_bind_time_with_zone_to_time 21:00:00.0000
+    check_bind_time_with_zone_to_time ??:00:00.0000
 
     01: sqltype: 560 TIME scale: 0 subtype: 0 len: 4
-    check_bind_time_with_zone_to_legacy 21:00:00.0000
+    check_bind_time_with_zone_to_legacy ??:00:00.0000
 
     01: sqltype: 510 TIMESTAMP scale: 0 subtype: 0 len: 8
-    check_bind_timestamp_with_zone_to_timestamp 2018-01-01 15:00:00.0000
+    check_bind_timestamp_with_zone_to_timestamp 2018-01-01 ??:00:00.0000
 
     01: sqltype: 510 TIMESTAMP scale: 0 subtype: 0 len: 8
-    check_bind_timestamp_with_zone_to_legacy 2018-01-01 15:00:00.0000
+    check_bind_timestamp_with_zone_to_legacy 2018-01-01 ??:00:00.0000
   """,
   'expected_stderr':
   """
   """,
-  'substitutions':[ ('charset.*', ''), ('.*alias:.*', ''), ('^((?!(sqltype|check_bind_)).)*$',''), ('[ \t]+',' ') ]
+  'substitutions':[ (' \d{2}:00:00.0000', ' ??:00:00.0000'), ('charset.*', ''), ('.*alias:.*', ''), ('^((?!(sqltype|check_bind_)).)*$',''), ('[ \t]+',' ') ]
 }
 ]
 }
