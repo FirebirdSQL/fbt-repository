@@ -2,9 +2,9 @@
 'id': 'functional.datatypes.decfloat-binding-to-legacy',
 'qmid': None,
 'tracker_id': '',
-'title': 
+'title': 'Test ability for DECFLOAT values to be represented as other data types using LEGACY keyword.',
+'description': 
  """
-    Test ability for DECFLOAT values to be represented as other data types using LEGACY keyword.
     We check here that values from DECFLOAT will be actually converted to legacy datatypes 
     according to following table from sql.extensions\README.set_bind.md:
         ----------------------------------------------------------
@@ -18,9 +18,6 @@
         ----------------------------------------------------------
      SQLDA must contain the same datatypes when we use either explicit rule or LEGACY keyword.
      Checked on 4.0.0.1691 SS: 1.113s.
- """,
-'description': 
- """
  """,
 'min_versions': '4.0.0',
 'versions': [
