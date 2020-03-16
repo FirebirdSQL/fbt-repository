@@ -44,12 +44,12 @@
 
     set count on;
     select 'point-1' msg, p.* from proc4 p;
-    select 'point-1' msg, max(p.a) from proc4 p;
-    select 'point-1' msg, p.c from proc4 p;
-    select 'point-1' msg, p.a, p.c from proc4 p order by p.a;
-    select 'point-1' msg, p.a, avg(p.c) from proc4 p group by p.a having avg(p.c) > 35;
-    select 'point-1' msg, p.a, avg(p.c) from proc4 p group by p.a ;
-    select 'point-1' msg, p.a, p.c from proc4 p where p.c = (select avg(x.c) from proc4 x);
+    select 'point-2' msg, max(p.a) from proc4 p;
+    select 'point-3' msg, p.c from proc4 p;
+    select 'point-4' msg, p.a, p.c from proc4 p order by p.a;
+    select 'point-5' msg, p.a, avg(p.c) from proc4 p group by p.a having avg(p.c) > 35;
+    select 'point-6' msg, p.a, avg(p.c) from proc4 p group by p.a ;
+    select 'point-7' msg, p.a, p.c from proc4 p where p.c = (select avg(x.c) from proc4 x);
   """,
  'expected_stdout':
   """
@@ -61,25 +61,25 @@
     Records affected: 1
 
     MSG     MAX
-    point-1 Red
+    point-2 Red
     Records affected: 1
 
     MSG                C
-    point-1           19
+    point-3           19
     Records affected: 1
 
     MSG     A                 C
-    point-1 Red              19
+    point-4 Red              19
     Records affected: 1
 
     Records affected: 0
 
     MSG     A                        AVG
-    point-1 Red                       19
+    point-6 Red                       19
     Records affected: 1
 
     MSG     A                 C
-    point-1 Red              19
+    point-7 Red              19
     Records affected: 1
   """,
  'expected_stderr':
