@@ -1,0 +1,49 @@
+{
+'id': 'functional.gtcs.computed-fields-12',
+'qmid': None,
+'tracker_id': '',
+'title': 'computed-fields-12',
+'description':
+ """
+	Original test see in:
+        https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/CF_ISQL_12.script
+	SQL script for creating test database ('gtcs_sp1.fbk') and fill it with some data:
+        https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/PROCS_QA_INIT_ISQL.script
+    Checked on: 4.0.0.1803 SS; 3.0.6.33265 SS; 2.5.9.27149 SC.
+ """,
+'min_versions': '2.5.0',
+'versions': [
+{
+ 'firebird_version': '2.5',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set heading off;
+    set list on;
+    /*---------------------------------------------*/
+    /* Computed field using another computed field */
+    /*---------------------------------------------*/
+    create table t3 (a integer, af computed by (a*3), afaf computed by (af*2));
+    insert into t3(a) values(10);
+
+    set count on;
+    select * from t3;
+  """,
+ 'expected_stdout':
+  """
+    A                               10
+    AF                              30
+    AFAF                            60
+    Records affected: 1
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[ ('[ \t]+', ' ') ]
+}
+]
+}
