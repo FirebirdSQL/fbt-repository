@@ -3,7 +3,11 @@
 'qmid': None,
 'tracker_id': 'CORE-0185',
 'title': "DB crashes if trigger BU deletes own row",
-'description': '',
+'description':
+ """
+    Ortiginal test:
+    https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/CF_ISQL_26.script
+ """,
 'min_versions': '2.5.0',
 'versions': [
 {
