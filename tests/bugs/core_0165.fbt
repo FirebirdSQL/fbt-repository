@@ -3,7 +3,11 @@
 'qmid': None,
 'tracker_id': 'CORE-0165',
 'title': "Query using VIEW with UNION causes crash",
-'description': '',
+'description': 
+ """
+    Original test see im:
+    https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/CF_ISQL_24.script
+ """,
 'min_versions': '2.5.0',
 'versions': [
 {
