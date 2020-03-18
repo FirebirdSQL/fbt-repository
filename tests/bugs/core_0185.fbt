@@ -6,7 +6,7 @@
 'description':
  """
     Ortiginal test:
-    https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/CF_ISQL_26.script
+    https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/CF_ISQL_28.script
  """,
 'min_versions': '2.5.0',
 'versions': [
