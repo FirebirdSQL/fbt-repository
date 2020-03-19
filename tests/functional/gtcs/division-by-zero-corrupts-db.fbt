@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.division-by-zero-corrupts-db',
 'qmid': None,
 'tracker_id': '',
-'title': 'Zero divide in SP can crash database when call this SP several times.',
+'title': 'GTCS/tests/CF_ISQL_29. Zero divide in SP can crash database when call this SP several times.',
 'description':
  """
 	::: NB ::: 
