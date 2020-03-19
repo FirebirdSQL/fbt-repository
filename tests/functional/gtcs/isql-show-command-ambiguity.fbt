@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.isql-show-command-ambiguity',
 'qmid': None,
 'tracker_id': '',
-'title': 'SHOW TABLE / VIEW: ambiguity between tables and views',
+'title': 'GTCS/tests/CF_ISQL_22. SHOW TABLE / VIEW: ambiguity between tables and views',
 'description':
  """
 	::: NB ::: 
