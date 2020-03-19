@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.computed-fields-14',
 'qmid': None,
 'tracker_id': '',
-'title': 'computed-fields-14',
+'title': 'GTCS/tests/CF_ISQL_14; computed-fields-14',
 'description':
  """
 	Original test see in:
@@ -76,7 +76,7 @@
     -SQL error code -804
     -Count of read-write columns does not equal count of values
   """,
-  'substitutions':[ ('=', ''), ('[ \t]+', ' ') ]
+  'substitutions':[ ('=', ''), ('[ \t]+', ' '), ('attempted update of read-only column.*', 'attempted update of read-only column') ]
 }
 ]
 }
