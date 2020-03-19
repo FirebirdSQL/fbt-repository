@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.gtcs-select-delete-isql',
 'qmid': None,
 'tracker_id': '',
-'title': 'gtcs-select-delete-isql',
+'title': 'GTCS/tests/PROCS_QA_INIT_ISQL. Test for select from SP that deletes record after its output.',
 'description':
  """
 	Original test see in:
