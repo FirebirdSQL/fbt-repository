@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.execute-statement-within-procedure',
 'qmid': None,
 'tracker_id': '',
-'title': 'EXECUTE STATEMENT within a stored procedure could lead to a problems',
+'title': 'GTCS/tests/CF_ISQL_27. EXECUTE STATEMENT within a stored procedure could lead to a problems',
 'description':
  """
 	::: NB ::: 
