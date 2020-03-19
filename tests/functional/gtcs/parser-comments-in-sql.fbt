@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.parser-comments-in-sql',
 'qmid': None,
 'tracker_id': '',
-'title': 'Check for problems with comments (single-line and multi-line)',
+'title': 'GTCS/tests/CF_ISQL_19. Check for problems with comments (single-line and multi-line)',
 'description':
  """
 	::: NB ::: 
