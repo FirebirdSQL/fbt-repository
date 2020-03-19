@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.trigger-variable-assignment',
 'qmid': None,
 'tracker_id': '',
-'title': 'Variable in the AFTER-trigger must be allowed for assignment OLD value in it.',
+'title': 'GTCS/tests/CF_ISQL_21. Variable in the AFTER-trigger must be allowed for assignment OLD value in it.',
 'description':
  """
 	::: NB ::: 
