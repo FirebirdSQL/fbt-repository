@@ -38,12 +38,23 @@ sql_addi=\
     commit;
     -- Check that PK index still in use: following must FAIL:
     insert into department( dept_no, dept_name) values (1, 'k1');
+
+    -- Check that it is ALLOWED to insert record into child table (employee)
+    -- if value of dept_no exists in the parent table (department)
+    -- QUOTE FROM SOURCE TEST:
+    -- "... attempts to insert valid records into another table connected
+    -- to this table by foreign key constraint. The current behaviour is
+    -- that the insertion of valid records fails because of the index being
+    -- inactivated in the other connected table (bug 7517)"
+    set count on;
+    insert into employee values (11, 'e11', 1); -- ==> Records affected: 1
 '''
 
 runProgram('isql', [ dsn], os.linesep.join( (sql_init, sql_addi) ) )
   """,
  'expected_stdout':
   """
+    Records affected: 1
   """,
  'expected_stderr':
   """
@@ -84,12 +95,23 @@ sql_addi=\
     commit;
     -- Check that PK index still in use: following must FAIL:
     insert into department( dept_no, dept_name) values (1, 'k1');
+
+    -- Check that it is ALLOWED to insert record into child table (employee)
+    -- if value of dept_no exists in the parent table (department)
+    -- QUOTE FROM SOURCE TEST:
+    -- "... attempts to insert valid records into another table connected
+    -- to this table by foreign key constraint. The current behaviour is
+    -- that the insertion of valid records fails because of the index being
+    -- inactivated in the other connected table (bug 7517)"
+    set count on;
+    insert into employee values (11, 'e11', 1); -- ==> Records affected: 1
 '''
 
 runProgram('isql', [ dsn], os.linesep.join( (sql_init, sql_addi) ) )
   """,
  'expected_stdout':
   """
+    Records affected: 1
   """,
  'expected_stderr':
   """
