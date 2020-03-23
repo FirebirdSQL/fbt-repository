@@ -1,0 +1,155 @@
+{
+'id': 'bugs.core_6246',
+'qmid': None,
+'tracker_id': 'CORE-6246',
+'title': "Problem with too many number of columns in resultset.",
+'description':
+ """
+    We create .sql with 32767 columns and run it with requirement to display SQLDA.
+    All lines in produced output with 'charset: ' substring must contain only one value: 3.
+    We extract charset value from each line and add it to a unique list (set), with checking 
+    after each processed line that this unique list has length 1.
+
+    Confirmed bug on 3.0.6.33272: first 32108 fields are shown in SQLDA with 'charset: 0 NONE'.
+    String 'charset: 3 UNICODE_FSS' appeared only since 32109-th column and up to the end.
+
+    Checked on 3.0.6.33273 - works fine.
+    ::: NOTE :::
+    Currently attempt to run query with 32767 columns on 4.0 will raise:
+        Statement failed, SQLSTATE = HY000
+        request size limit exceeded
+    Section for 4.0 intentionally contains temp message about missed implementation.
+    Will be removed after fix CORE-6216 (see commet by Adriano in CORE-6246, date: 22/Mar/20 01:40 AM).
+ """,
+'min_versions': '3.0.6',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+import sys
+import subprocess
+from fdb import services
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+db_conn.close()
+
+MAX_FOR_PASS=32767
+#MAX_FOR_PASS=32
+
+fld_list = ','.join( ('x1.rdb$field_name',) * MAX_FOR_PASS )
+
+# Create .sql with <MAX_FOR_PASS> columns:
+##########################################
+sql_test=\
+'''
+set sqlda_display on;
+set planonly;
+select
+    %(fld_list)s
+from rdb$fields as x1 rows 1;
+''' % locals()
+
+f_pass_sql = open( os.path.join(context['temp_directory'],'tmp_6246_pass.sql'), 'w', buffering = 0)
+f_pass_sql.write( sql_test )
+f_pass_sql.close()
+
+f_pass_log = open( '.'.join( (os.path.splitext( f_pass_sql.name )[0], 'log') ), 'w', buffering = 0)
+f_pass_err = open( '.'.join( (os.path.splitext( f_pass_sql.name )[0], 'err') ), 'w', buffering = 0)
+
+# This can take about 25-30 seconds:
+####################################
+subprocess.call( [ fb_home + 'isql', dsn, '-q', '-i', f_pass_sql.name ], stdout = f_pass_log, stderr = f_pass_err)
+
+f_pass_log.close()
+f_pass_err.close()
+
+# Checks:
+#########
+# 1. Result of STDERR must be empty:
+with open(f_pass_err.name,'r') as f:
+    for line in f:
+        if line.split():
+            print('UNEXPECTED STDERR: '+line)
+
+# 2. All fields must have charset=3, i.e. only "charset: 3" must present in these strings:
+
+# NN: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 93 charset: 3 UNICODE_FSS 
+#  0     1      2    3     4       5    6    7     8  9   10    11   12      13
+
+# where NN = '01:', '02:', '03:', ... '32767:'
+charset_unique_list=set()
+i=0
+with open(f_pass_log.name,'r') as f:
+    #lines = f.readlines()
+    #charset_unique_list.add( tuple( [ x.split()[-2] for x in lines if 'sqltype: 452 TEXT' in x] ) )
+    for line in f:
+        i += 1
+        if 'sqltype: 452 TEXT' in line:
+            charset_id = line.split()[-2]
+            charset_unique_list.add( charset_id )
+            if charset_id != '3':
+                print('UNEXPECTED charset in SQLDA at line #' + str(i)+': ' + charset_id )
+                break
+    
+print( 'Unique list of charsets:', ' '.join( charset_unique_list ) )
+
+cleanup( [ i.name for i in ( f_pass_sql, f_pass_log, f_pass_err) ] )
+
+  """,
+ 'expected_stdout': 
+  """
+    Unique list of charsets: 3
+  """,
+ 'expected_stderr': 
+  """
+  """
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """
+temp_msg=\
+'''
+Currently implemented only for FB 3.0.x. Waiting for fix CORE-6216.
+Watch for https://github.com/FirebirdSQL/firebird
+Branch: refs/heads/master
+'''
+print(temp_msg)
+  """,
+ 'expected_stdout': 
+  """
+    Unique list of charsets: 3
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+
+
+]
+}
