@@ -1,5 +1,5 @@
 {
-'id': 'functional.gtcs.transactions-autocommit',
+'id': 'functional.gtcs.transactions-autocommit-2',
 'tracker_id': '',
 'title': "GTCS/tests/AUTO_COMMIT.2.ESQL. AUTO COMMIT must be ignored and all its changes must be rolled back if exception raises on some level of execution",
 'description':
