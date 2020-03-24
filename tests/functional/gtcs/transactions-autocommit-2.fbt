@@ -1,7 +1,7 @@
 {
 'id': 'functional.gtcs.transactions-autocommit-2',
 'tracker_id': '',
-'title': "GTCS/tests/AUTO_COMMIT.2.ESQL. AUTO COMMIT must be ignored and all its changes must be rolled back if exception raises on some level of execution",
+'title': "GTCS/tests/AUTO_COMMIT.2.ESQL. Changes within AUTO COMMIT must be cancelled when exception raises in some TRIGGER.",
 'description':
  """
 	Original test see in:
