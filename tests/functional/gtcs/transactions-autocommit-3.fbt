@@ -8,7 +8,7 @@
     https://github.com/FirebirdSQL/fbtcs/commit/166cb8b72a0aad18ef8ece34977d6d87d803616e#diff-69d4c7d7661d57fdf94aaf32a3377c82
 
     It creates three tables, each with single SMALLINT column (thus max value that we can put in it is 32767).
-    Then it ñreates three procedures which do insert values in 'their' table plus call "next level" SP 
+    Then it creates three procedures which do insert values in 'their' table plus call "next level" SP 
     with passing there input value multiplied by 100. 
     When sp_ins_1 is called with argument = 3 then sp_ins_2 will insert into test_2 table value = 300 
     and sp_ins_3 will insert into test_3 value = 30000.
