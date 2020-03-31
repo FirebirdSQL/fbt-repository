@@ -2,7 +2,7 @@
 'id': 'bugs.core_5475',
 'qmid': None,
 'tracker_id': 'CORE-5475',
-'title': "Cache physical numbers of often used data pages to reduce number of fetches of pointer pages",
+'title': "Provide ability to filter out info and warnings from trace log",
 'description': 
  """
    For FB 2.5 we verify that one may to suppress messages like TRACE_INIT/FINI ("log_initfini false")
