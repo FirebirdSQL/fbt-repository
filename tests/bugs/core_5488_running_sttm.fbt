@@ -2,7 +2,7 @@
 'id': 'bugs.core_5488',
 'qmid': None,
 'tracker_id': 'CORE-5488',
-'title': 'Timeouts for running SQL statements and idle connections',
+'title': 'Timeout for running SQL statement (SET STATEMENT TIMEOUT <N>)',
 'description':
  """
     ::: NB:::
