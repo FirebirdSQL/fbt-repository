@@ -10,6 +10,13 @@
    Added separate code for 4.0 because isc_update_conflict now can be primary code of exception reason
    (after consulting with Vlad, letter 06-aug-2018 16:27).
 
+   01-apr-2020. Expected STDERR section for 4.0.x was changed BACK TO PREVIOUS set of messages, i.e.:
+       1. Statement failed, SQLSTATE = 40001
+       2. deadlock <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  THIS LINE APPEARED SINCE 4.0.0.1848
+       3. update conflicts with concurrent update
+       4. concurrent transaction number is ...
+   Confirmed by Alex, letter 31.03.2020 12:01.
+
    Checked on:
         3.0.4.33022: OK, 5.453s.
         4.0.0.1158: OK, 5.313s.
@@ -188,6 +195,7 @@ for i in range(len(f_list)):
  'expected_stdout':
   """
     Statement failed, SQLSTATE = 40001
+    deadlock
     update conflicts with concurrent update
     concurrent transaction number is 8
   """,
@@ -196,6 +204,7 @@ for i in range(len(f_list)):
   """,
   'substitutions':[
       ('[\-]{0,1}concurrent transaction number is [0-9]+', 'concurrent transaction number is'),
+      ('[\-]{0,1}update conflicts.*', 'update conflicts.*'),
       ('After line [0-9]+ in file .*', '')
   ]
 }
