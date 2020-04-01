@@ -2,7 +2,7 @@
 'id': 'bugs.core_5488_session_idle',
 'qmid': None,
 'tracker_id': 'CORE-5488',
-'title': 'Timeouts for running SQL statements and idle connections',
+'title': 'Timeout for IDLE connection (SET SESSION IDLE TIMEOUT <N>)',
 'description':
  """
    We create .sql script with 
@@ -14,7 +14,7 @@
    * shell ping 127.0.0.1 -- for Windows
    * shell sleep -- for Linux.
    
-   Befor .sql we launch trace with logging events for parsing them at final stage of test.
+   Before .sql we launch trace with logging events for parsing them at final stage of test.
 
    When this .sql script is launched and falls into delay, session timeout must be triggered
    and second statement should raise exception.
@@ -57,7 +57,7 @@ fbv=db_conn.firebird_version # 'WI-...' ==> Windows; 'LI-' ==> Linux
 db_conn.close()
 
 # 2017-03-08T17:36:33.6870 (3720:00D22BD0) ATTACH_DATABASE | START_TRANSACTION | EXECUTE_STATEMENT_FINISH | ...
-trace_dts_pattern=re.compile('20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d{4}\s+\(\w{4}:\w{8}\)')
+trace_dts_pattern=re.compile('.*(ATTACH_DATABASE|START_TRANSACTION|EXECUTE_STATEMENT_FINISH|ROLLBACK_TRANSACTION|DETACH_DATABASE)')
 
 session_idle_timeout=1
 shell_sleep_sec=session_idle_timeout + 2
@@ -101,7 +101,7 @@ txt = '''# Generated auto, do not edit!
       }
 '''
 
-f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.cfg'), 'w')
+f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.cfg'), 'w', buffering = 0)
 f_trc_cfg.write(txt)
 f_trc_cfg.close()
 
@@ -109,18 +109,18 @@ f_trc_cfg.close()
 # S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
 # ##############################################################
 
-f_trc_log=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.log'), "w")
-f_trc_err=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.err'), "w")
+f_trc_log=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.log'), "w", buffering = 0)
+f_trc_err=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.err'), "w", buffering = 0)
 
 p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],
                  stdout=f_trc_log,
                  stderr=f_trc_err
                )
 
-time.sleep(1)
+time.sleep(2)
 
-f_isql_log=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.log'), 'w')
-f_isql_err=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.err'), 'w')
+f_isql_log=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.log'), 'w', buffering = 0)
+f_isql_err=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.err'), 'w', buffering = 0)
 
 ######################
 # S T A R T    I S Q L
@@ -138,12 +138,12 @@ f_isql_err.close()
 # ####################################################
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
-f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.lst'), 'w')
+f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.lst'), 'w', buffering = 0)
 subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
 f_trc_lst.close()
 
 # !!! DO NOT REMOVE THIS LINE !!!
-time.sleep(1)
+time.sleep(2)
 
 trcssn=0
 with open( f_trc_lst.name,'r') as f:
@@ -209,9 +209,11 @@ with open(f_isql_err.name, 'r') as f:
 # CLEANUP
 #########
 f_list=(f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_sql_cmd, f_isql_log, f_isql_err )
+
 for i in range(len(f_list)):
    if os.path.isfile(f_list[i].name):
        os.remove(f_list[i].name)
+
 
   """,
  'expected_stdout': 
