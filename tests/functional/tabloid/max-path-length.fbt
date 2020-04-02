@@ -491,7 +491,7 @@ trc_log.close()
 f_bat_log = '.'.join( ( os.path.splitext( f_tmp_bat.name )[0], 'log') )
 f_bat_err = '.'.join( ( os.path.splitext( f_tmp_bat.name )[0], 'err') )
 
-with open(f_bat_err,'r') as f:
+with open(f_bat_err,'r', buffering = 0) as f:
     for line in f:
         if line.split():
             print( 'Unexpected STDERR: ' + line )
@@ -509,7 +509,7 @@ services_patterns = {
 }
 
 found_patterns={}
-with open( trc_log.name,'r') as f:
+with open( trc_log.name,'r', buffering = 0) as f:
     for line in f:
         if line.rstrip().split():
             if 'FAILED START_SERVICE' in line:
@@ -538,6 +538,10 @@ for k,v in sorted( found_patterns.items() ):
     print( 'Pattern', k, ':', v)
 
 ################################################
+
+# 02.04.2020, WindowsError: 32 The process cannot access the file because it is being used by another process
+#############
+time.sleep(2)
 
 #cleanup:
 f_list = [ i.name for i in (trc_cfg, trc_log, trc_lst, f_isql_cmd, f_tmp_bat) ]
