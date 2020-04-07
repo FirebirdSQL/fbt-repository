@@ -54,7 +54,12 @@ N_ITER=50
 
 # Minimal ratio (for ALERT) between total time when Srp is used vs such value for Legacy auth plugin.
 # Will be evaluated as datediff(millisecond ...) that were spent for making N_ITER attach/detach actions.
-MIN_RATIO_THRESHOLD = 1.33
+
+MIN_RATIO_THRESHOLD = 1.41
+#                      ^
+#                     ###################
+#                     ###  THRESHOLD  ###
+#                     ###################
 
 db_conn.execute_immediate("create or alter user tmp_c6237_leg password 'leg' using plugin Legacy_UserManager")
 db_conn.execute_immediate("create or alter user tmp_c6237_srp password 'srp' using plugin Srp")
