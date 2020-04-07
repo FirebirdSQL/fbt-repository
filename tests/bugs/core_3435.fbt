@@ -23,6 +23,27 @@
  'test_type': 'ISQL',
  'test_script':
   """
+    set term ^;
+    create or alter function fn_get_next_laptop_model(a_code type of column laptop.code ) returns varchar(50) deterministic  as
+    begin
+        return ( select p.model from laptop p where p.code > :a_code order by p.code rows 1 );
+    end
+    ^
+    create or alter function fn_get_next_laptop_speed(a_code type of column laptop.code ) returns int deterministic  as
+    begin
+        return ( select p.speed from laptop p where p.code > :a_code order by p.code rows 1 );
+    end
+    ^
+    create or alter function fn_get_next_laptop_price(a_code type of column laptop.code ) returns numeric(12,2) deterministic  as
+    begin
+        return ( select p.price from laptop p where p.code > :a_code order by p.code rows 1 );
+    end
+    ^
+    set term ;^
+    commit;
+
+    --------------------------------
+
     select 'test-1' as msg, l1.*, x.*
     from laptop l1
     cross join lateral
@@ -70,6 +91,46 @@
             where pr1.type=pr2.type
             order by pr2.model
         ) x;
+
+    ---------------------------
+
+    -- Check ability to use in LATERAL datasource procedural objects instead of usual tables:
+
+    select 'test-4' as msg, p.code, p.model, p.speed, p.price, x.*
+    from laptop p
+    left join lateral (
+        select
+            fn_get_next_laptop_model(p.code) as model_for_next_code
+            ,fn_get_next_laptop_speed(p.code) as speed_for_next_code
+            ,fn_get_next_laptop_price(p.code) as price_for_next_code
+        from rdb$database
+    ) x on 1=1;
+    
+    ----------------------------
+
+    -- Check ability to use recursive datasource as LATERAL:
+
+    with recursive
+    r1 as (
+        select 1 i, cast(1 as decfloat(34)) f from rdb$database
+        union all
+        select r.i+1, r.f * (r.i+1) from r1 as r where r.i < 10
+    )
+    --select * from r1
+
+    select 'test-5' as msg, r1.i, sum( rx.xf ) factorials_running_total
+    from r1
+    inner join lateral (
+        select rx.f as xf
+        from r1 as rx
+        where rx.i <= r1.i
+    ) rx
+    on true
+    group by 1,2
+    order by 3 desc;
+
+
+
   """,
  'expected_stdout':
   """
@@ -99,6 +160,27 @@
     test-3 A          1276  Printer 
     test-3 D          1288  Printer 
     test-3 A          1401  Printer 
+
+    MSG            CODE MODEL        SPEED                 PRICE MODEL_FOR_NEXT_CODE SPEED_FOR_NEXT_CODE   PRICE_FOR_NEXT_CODE
+    test-4            1 1298           350                700.00 1321                                500                970.00
+    test-4            2 1321           500                970.00 1750                                750               1200.00
+    test-4            3 1750           750               1200.00 1298                                600               1050.00
+    test-4            4 1298           600               1050.00 1752                                750               1150.00
+    test-4            5 1752           750               1150.00 1298                                450                950.00
+    test-4            6 1298           450                950.00 <null>                           <null>                <null>
+
+
+    MSG               I                   FACTORIALS_RUNNING_TOTAL
+    test-5           10                                    4037913
+    test-5            9                                     409113
+    test-5            8                                      46233
+    test-5            7                                       5913
+    test-5            6                                        873
+    test-5            5                                        153
+    test-5            4                                         33
+    test-5            3                                          9
+    test-5            2                                          3
+    test-5            1                                          1
   """,
  'expected_stderr':
   """
