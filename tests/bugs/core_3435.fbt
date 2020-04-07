@@ -1,0 +1,109 @@
+{
+'id': 'bugs.core_3435',
+'qmid': None,
+'tracker_id': 'CORE-3435',
+'title': 'Lateral derived tables',
+'description':
+ """
+    Test is based on public database from sql-ex.ru and several example queries from sql-tutorial.ru:
+    http://www.sql-tutorial.ru/ru/book_cross_apply/page2.html
+
+    Example queries are published here with kind permission of Sergey Moiseenko, 07.04.2020 11:46.
+    ::: NB :::
+    This is INITIAL test of LATERAL-JOIN functional. Additional examples will be implemented later.
+
+    Checked on 4.0.0.1865 SS: 1.360s.
+ """,
+'versions': [
+{
+ 'firebird_version': '4.0.0',
+ 'platform': 'All',
+ 'database': 'Restore',
+ 'backup_file': 'sql-ex-open-data.fbk',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    select 'test-1' as msg, l1.*, x.*
+    from laptop l1
+    cross join lateral
+    (
+        select max(price) max_price, min(price) min_price
+        from laptop l2
+        join product p1 on l2.model = p1.model
+        where p1.maker =
+            (
+                select p2.maker
+                from product p2
+                where p2.model = l1.model
+            )
+    ) x;
+
+    ----------------------
+
+    select 'test-2' as msg, l1.code as curr_core, x.code as lead_code
+    from laptop l1
+    left join lateral
+        (
+            select first 1 l2.*
+            from laptop l2
+            where
+                l1.model < l2.model
+                or (l1.model = l2.model and l1.code < l2.code)
+            order by l2.model, l2.code
+        ) x on 1=1
+    order by l1.model
+    ;
+
+    --------------------------
+
+    select 'test-3' as msg, x.*
+    from
+        (
+            select distinct
+            p.type
+            from product p
+        ) pr1
+    cross join lateral
+        (
+            select first 3 pr2.*
+            from product pr2
+            where pr1.type=pr2.type
+            order by pr2.model
+        ) x;
+  """,
+ 'expected_stdout':
+  """
+    MSG            CODE MODEL        SPEED          RAM                      HD                 PRICE       SCREEN             MAX_PRICE             MIN_PRICE 
+    test-1            1 1298           350           32       4.000000000000000                700.00           11               1150.00                700.00 
+    test-1            2 1321           500           64       8.000000000000000                970.00           12                970.00                970.00 
+    test-1            3 1750           750          128       12.00000000000000               1200.00           14               1200.00               1200.00 
+    test-1            4 1298           600           64       10.00000000000000               1050.00           15               1150.00                700.00 
+    test-1            5 1752           750          128       10.00000000000000               1150.00           14               1150.00                700.00 
+    test-1            6 1298           450           64       10.00000000000000                950.00           12               1150.00                700.00 
+
+    MSG       CURR_CORE    LEAD_CODE 
+    test-2            1            4 
+    test-2            4            6 
+    test-2            6            2 
+    test-2            2            3 
+    test-2            3            5 
+    test-2            5       <null> 
+
+    MSG    MAKER      MODEL TYPE 
+    test-3 A          1298  Laptop 
+    test-3 C          1321  Laptop 
+    test-3 B          1750  Laptop 
+    test-3 B          1121  PC 
+    test-3 A          1232  PC 
+    test-3 A          1233  PC 
+    test-3 A          1276  Printer 
+    test-3 D          1288  Printer 
+    test-3 A          1401  Printer 
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[ ('[ \t]+', ' '), ('===.*', '') ]
+}
+]
+}
