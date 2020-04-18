@@ -7,6 +7,7 @@
  """
     Confirmed crash on WI-V3.0.5.33220, WI-T4.0.0.1871 - but only when run MERGE statements with parameters from Python. NO crash when run it from ISQL.
     No crash on 4.0.0.1881, but message "No SQLDA for input values provided" will raise for any number of input parameters: 2 or 3.
+    18.04.2020: checked on 3.0.6.33288. Reduced minimal allowed version to 3.0.6.
  """,
 'min_versions': '3.0.6',
 'versions': [
