@@ -2,9 +2,10 @@
 'id': 'bugs.core_6219',
 'qmid': None,
 'tracker_id': 'CORE-6219',
-'title': 'DECFLOAT values and queries with ORDER BY and/or windowed (analitical) functions',
+'title': 'Add support for special (inf/nan) values when sorting DECFLOAT values',
 'description':
  """
+     Old descr: DECFLOAT values and queries with ORDER BY and/or windowed (analitical) functions.
      Confirmed wrong order of data in 4.0.0.1796.
      Checked on 4.0.0.1799 - all fine.
  """,
