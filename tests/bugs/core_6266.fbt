@@ -2,9 +2,10 @@
 'id': 'bugs.core_6266',
 'qmid': None,
 'tracker_id': 'CORE-6266',
-'title': "Don't close attach while deleting record from MON$ATTACHMENTS using ORDER BY clause",
+'title': "Deleting records from MON$ATTACHMENTS using ORDER BY clause doesn't close the corresponding attachments",
 'description':
  """
+    Old title: Don't close attach while deleting record from MON$ATTACHMENTS using ORDER BY clause.
     Confirmed bug on 3.0.6.33271.
     Checked on 3.0.6.33272 (SS/CS) - works fine.
     ::: NOTE :::
