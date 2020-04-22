@@ -1578,33 +1578,21 @@
  'expected_stdout': 
   """
     RDB$FIELD_NAME                  RDB$DESCRIPTION                                                                                                                                                                                                                                             
-
     RDB$FIELD_NAME                  RDB$EXPRESSION_BLR                                                                                                                                                                                                                                          
-
     RDB$FIELD_NAME                  RDB$EXPRESSION_SOURCE                                                                                                                                                                                                                                       
-
     RDB$FIELD_NAME                  RDB$FOREIGN_KEY                                                                                                                                                                                                                                             
-
     RDB$FIELD_NAME                  RDB$INDEX_ID                                                                                                                                                                                                                                                
-
     RDB$FIELD_NAME                  RDB$INDEX_INACTIVE                                                                                                                                                                                                                                          
-
     RDB$FIELD_NAME                  RDB$INDEX_NAME                                                                                                                                                                                                                                              
-
     RDB$FIELD_NAME                  RDB$INDEX_TYPE                                                                                                                                                                                                                                              
-
     RDB$FIELD_NAME                  RDB$RELATION_NAME                                                                                                                                                                                                                                           
-
     RDB$FIELD_NAME                  RDB$SEGMENT_COUNT                                                                                                                                                                                                                                           
-
     RDB$FIELD_NAME                  RDB$STATISTICS                                                                                                                                                                                                                                              
-
     RDB$FIELD_NAME                  RDB$SYSTEM_FLAG                                                                                                                                                                                                                                             
-
     RDB$FIELD_NAME                  RDB$UNIQUE_FLAG                                                                                                                                                                                                                                             
 
-
     Records affected: 13
+
 
     RDB$INDEX_NAME                  RDB$INDEX_0                                                                                                                                                                                                                                                 
     RDB$RELATION_NAME               RDB$RELATIONS                                                                                                                                                                                                                                               
@@ -2320,6 +2308,34 @@
     EXPR_BLR_BLOB_ID                <null>
     EXPR_SRC_BLOB_ID                <null>
 
+    RDB$INDEX_NAME                  RDB$INDEX_55                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PUBLICATIONS                                                                                                                                                                                                                                            
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 1
+    RDB$SEGMENT_COUNT               1
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_56                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               RDB$PUBLICATION_TABLES                                                                                                                                                                                                                                      
+    RDB$INDEX_ID                    1
+    RDB$UNIQUE_FLAG                 1
+    RDB$SEGMENT_COUNT               2
+    RDB$INDEX_INACTIVE              0
+    RDB$INDEX_TYPE                  <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$STATISTICS                  <null>
+    RDB$FOREIGN_KEY                 <null>
+    DECRIPTN_BLOB_ID                <null>
+    EXPR_BLR_BLOB_ID                <null>
+    EXPR_SRC_BLOB_ID                <null>
+
     RDB$INDEX_NAME                  RDB$INDEX_6                                                                                                                                                                                                                                                 
     RDB$RELATION_NAME               RDB$INDEX_SEGMENTS                                                                                                                                                                                                                                          
     RDB$INDEX_ID                    1
@@ -2377,7 +2393,7 @@
     EXPR_SRC_BLOB_ID                <null>
 
 
-    Records affected: 55
+    Records affected: 57
   """,
   'substitutions': [
        ('RDB\$INDEX_NAME[\s]+RDB\$INDEX.*','RDB\$INDEX_NAME RDB\$INDEX')
