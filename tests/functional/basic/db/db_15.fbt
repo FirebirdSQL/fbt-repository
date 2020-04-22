@@ -680,7 +680,7 @@
   """,
  'expected_stdout': 
   """
-     RDB$INDEX_NAME                  RDB$INDEX_0                                                                                                                                                                                                                                                 
+    RDB$INDEX_NAME                  RDB$INDEX_0                                                                                                                                                                                                                                                 
     RDB$FIELD_NAME                  RDB$RELATION_NAME                                                                                                                                                                                                                                           
     RDB$FIELD_POSITION              0
     RDB$STATISTICS                  <null>
@@ -1035,7 +1035,22 @@
     RDB$FIELD_POSITION              0
     RDB$STATISTICS                  <null>
 
-    Records affected: 71
+    RDB$INDEX_NAME                  RDB$INDEX_55                                                                                                                                                                                                                                                
+    RDB$FIELD_NAME                  RDB$PUBLICATION_NAME                                                                                                                                                                                                                                        
+    RDB$FIELD_POSITION              0
+    RDB$STATISTICS                  <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_56                                                                                                                                                                                                                                                
+    RDB$FIELD_NAME                  RDB$PUBLICATION_NAME                                                                                                                                                                                                                                        
+    RDB$FIELD_POSITION              1
+    RDB$STATISTICS                  <null>
+
+    RDB$INDEX_NAME                  RDB$INDEX_56                                                                                                                                                                                                                                                
+    RDB$FIELD_NAME                  RDB$TABLE_NAME                                                                                                                                                                                                                                              
+    RDB$FIELD_POSITION              0
+    RDB$STATISTICS                  <null>
+
+    Records affected: 74
   """,
   'substitutions': [
       ('RDB\$INDEX_NAME[\s]+RDB\$INDEX.*','RDB\$INDEX_NAME RDB\$INDEX')
