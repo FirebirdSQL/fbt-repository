@@ -8,9 +8,7 @@
     Old title: Don't close attach while deleting record from MON$ATTACHMENTS using ORDER BY clause.
     Confirmed bug on 3.0.6.33271.
     Checked on 3.0.6.33272 (SS/CS) - works fine.
-    ::: NOTE :::
-    Section for 4.0 intentionally contains temp message about missed implementation.
-    Will be removed after fix for 4.0 will appear.
+    22.04.2020. Checked separately on 4.0.0.1931 SS/CS: all OK. FB 4.0 can also be tested since this build.
  """,
 'min_versions': '3.0.0',
 'versions': [
@@ -84,32 +82,6 @@ for k,v in sorted(  con_list.items() ):
         #print('Got exception:', sys.exc_info()[0])
         #print(e[0])
 
-  """,
- 'expected_stdout': 
-  """
-    Number of attachments that remains alive:  0
-  """,
- 'expected_stderr': 
-  """
-  """
-}
-,
-{
- 'firebird_version': '4.0',
- 'platform': 'All',
- 'test_type': 'Python',
- 'init_script':
-  """
-  """,
- 'test_script':
-  """
-temp_msg=\
-'''
-Currently implemented only for FB 3.0.x.
-Watch for https://github.com/FirebirdSQL/firebird
-Branch: refs/heads/master
-'''
-print(temp_msg)
   """,
  'expected_stdout': 
   """
