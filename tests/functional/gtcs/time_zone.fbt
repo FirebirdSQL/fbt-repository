@@ -1820,7 +1820,7 @@
     attempt to store duplicate value (visible to active transactions) in unique index "TIMESTAMPTZ_UK"
     -Problematic key value is ("V" = '2018-01-01 14:33:33.0000 +02:00')
   """,
-  #'substitutions':[('[ \t]+', ' ')]
+  'substitutions':[('[ \t]+', ' ')]
 }
 ]
 }
