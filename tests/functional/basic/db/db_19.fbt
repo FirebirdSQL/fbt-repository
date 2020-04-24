@@ -60,7 +60,8 @@
   """,
  'expected_stdout': 
   """
-    RDB$PARAMETER_NAME              DST_OFFSET                                                                                                                                                                                                                                                  
+
+    RDB$PARAMETER_NAME              RDB$DST_OFFSET                                                                                                                                                                                                                                              
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            3
     RDB$PARAMETER_TYPE              1
@@ -76,7 +77,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              EFFECTIVE_OFFSET                                                                                                                                                                                                                                            
+    RDB$PARAMETER_NAME              RDB$EFFECTIVE_OFFSET                                                                                                                                                                                                                                        
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            4
     RDB$PARAMETER_TYPE              1
@@ -92,7 +93,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              END_TIMESTAMP                                                                                                                                                                                                                                               
+    RDB$PARAMETER_NAME              RDB$END_TIMESTAMP                                                                                                                                                                                                                                           
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            1
     RDB$PARAMETER_TYPE              1
@@ -108,7 +109,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              FROM_TIMESTAMP                                                                                                                                                                                                                                              
+    RDB$PARAMETER_NAME              RDB$FROM_TIMESTAMP                                                                                                                                                                                                                                          
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            1
     RDB$PARAMETER_TYPE              0
@@ -124,7 +125,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              START_TIMESTAMP                                                                                                                                                                                                                                             
+    RDB$PARAMETER_NAME              RDB$START_TIMESTAMP                                                                                                                                                                                                                                         
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            0
     RDB$PARAMETER_TYPE              1
@@ -140,7 +141,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              TIME_ZONE_NAME                                                                                                                                                                                                                                              
+    RDB$PARAMETER_NAME              RDB$TIME_ZONE_NAME                                                                                                                                                                                                                                          
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            0
     RDB$PARAMETER_TYPE              0
@@ -156,7 +157,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              TO_TIMESTAMP                                                                                                                                                                                                                                                
+    RDB$PARAMETER_NAME              RDB$TO_TIMESTAMP                                                                                                                                                                                                                                            
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            2
     RDB$PARAMETER_TYPE              0
@@ -172,7 +173,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-    RDB$PARAMETER_NAME              ZONE_OFFSET                                                                                                                                                                                                                                                 
+    RDB$PARAMETER_NAME              RDB$ZONE_OFFSET                                                                                                                                                                                                                                             
     RDB$PROCEDURE_NAME              TRANSITIONS                                                                                                                                                                                                                                                 
     RDB$PARAMETER_NUMBER            2
     RDB$PARAMETER_TYPE              1
@@ -188,9 +189,7 @@
     RDB$RELATION_NAME               <null>
     RDB$PACKAGE_NAME                RDB$TIME_ZONE_UTIL                                                                                                                                                                                                                                          
 
-
     Records affected: 8
-
   """
 }
 ]
