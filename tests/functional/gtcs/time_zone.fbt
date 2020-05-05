@@ -8,6 +8,7 @@
 	Original test see in:
     https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/FB_SQL_TIME_ZONE.script
     Checked on 4.0.0.1931.
+    05.05.2020: added block for CORE-6271 (from GTCS). Checked on 4.0.0.1954.
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -373,7 +374,35 @@
       from rdb$database;
 
 
-    ---
+    -- ::::: beg of block added 05.05.2020 :::::
+    -- Tests for CORE-6271 - Bind time with time zone to legacy produces wrong values.
+
+    set time zone '-03:00'; -- temply change from -02:00
+
+    select 'point-44b' as msg,
+           cast(time '10:11:12.1345' as time),
+           cast(time '10:11:12.1345' as time with time zone),
+           substring(cast(time '10:11:12.1345' as timestamp) from 12),
+           substring(cast(time '10:11:12.1345' as timestamp with time zone) from 12) from rdb$database;
+
+    select cast(timestamp '2020-05-20 10:11:12.1345' as time),
+           cast(timestamp '2020-05-20 10:11:12.1345' as time with time zone),
+           cast(timestamp '2020-05-20 10:11:12.1345' as timestamp),
+           cast(timestamp '2020-05-20 10:11:12.1345' as timestamp with time zone) from rdb$database;
+
+    select cast(time '10:11:12.1345 america/sao_paulo' as time),
+           cast(time '10:11:12.1345 america/sao_paulo' as time with time zone),
+           substring(cast(time '10:11:12.1345 america/sao_paulo' as timestamp) from 12),
+           substring(cast(time '10:11:12.1345 america/sao_paulo' as timestamp with time zone) from 12) from rdb$database;
+
+    select cast(timestamp '2020-05-20 10:11:12.1345 america/sao_paulo' as time),
+           cast(timestamp '2020-05-20 10:11:12.1345 america/sao_paulo' as time with time zone),
+           cast(timestamp '2020-05-20 10:11:12.1345 america/sao_paulo' as timestamp),
+           cast(timestamp '2020-05-20 10:11:12.1345 america/sao_paulo' as timestamp with time zone) from rdb$database;
+
+    set time zone '-02:00'; -- restore previous!
+
+    -- ::::: end of block inserted 05.05.2020 :::::
 
 
     select 'point-45' as msg,
@@ -484,6 +513,7 @@
     recreate table timetz (n integer, v time with time zone);
     create unique index timetz_uk on timetz (v);
 
+    insert into timetz values (0, '11:33:33 America/Sao_Paulo'); -- ::::: added 05.05.2020 :::::
     insert into timetz values (1, '11:33:33.456');
     insert into timetz values (2, '11:33:33.456 -1');
     insert into timetz values (3, '11:33:33.456 +1');
@@ -495,6 +525,7 @@
     insert into timetz values (7, '12:33:33 +0');
     insert into timetz values (8, '13:33:33 +1');
     insert into timetz values (9, '14:33:33 +2');
+    insert into timetz values (10, '11:33:33 -03'); -- ::::: added 05.05.2020 :::::
 
     select 'point-53' as msg,
            n, v, cast(v as time)
@@ -1056,6 +1087,35 @@
 
 
 
+    MSG                             point-44b
+    CAST                            10:11:12.1345
+    CAST                            10:11:12.1345 -03:00
+    SUBSTRING                       10:11:12.1345
+    SUBSTRING                       10:11:12.1345 -03:00
+
+
+
+    CAST                            10:11:12.1345
+    CAST                            10:11:12.1345 -03:00
+    CAST                            2020-05-20 10:11:12.1345
+    CAST                            2020-05-20 10:11:12.1345 -03:00
+
+
+
+    CAST                            10:11:12.1345
+    CAST                            10:11:12.1345 America/Sao_Paulo
+    SUBSTRING                       10:11:12.1345
+    SUBSTRING                       10:11:12.1345 America/Sao_Paulo
+
+
+
+    CAST                            10:11:12.1345
+    CAST                            10:11:12.1345 America/Sao_Paulo
+    CAST                            2020-05-20 10:11:12.1345
+    CAST                            2020-05-20 10:11:12.1345 America/Sao_Paulo
+
+
+
     MSG                             point-45
     AT                              20:01:02.0000 -05:00
     AT                              23:01:02.0000 -02:00
@@ -1189,6 +1249,11 @@
     V                               11:33:33.4560 -02:00
     CAST                            11:33:33.4560
 
+    MSG                             point-53
+    N                               0
+    V                               11:33:33.0000 America/Sao_Paulo
+    CAST                            12:33:33.0000
+
 
 
     MSG                             point-54
@@ -1214,6 +1279,10 @@
     MSG                             point-54
     N                               1
     V                               11:33:33.4560 -02:00
+
+    MSG                             point-54
+    N                               0
+    V                               11:33:33.0000 America/Sao_Paulo
 
 
 
@@ -1262,6 +1331,11 @@
     V                               11:33:33.4560 -02:00
     CAST                            11:33:33.4560
 
+    MSG                             point-55
+    N                               0
+    V                               11:33:33.0000 America/Sao_Paulo
+    CAST                            12:33:33.0000
+
 
 
     MSG                             point-56
@@ -1309,6 +1383,11 @@
     V                               11:33:33.4560 -02:00
     CAST                            11:33:33.4560
 
+    MSG                             point-56
+    N                               0
+    V                               11:33:33.0000 America/Sao_Paulo
+    CAST                            12:33:33.0000
+
 
 
     MSG                             point-57
@@ -1346,6 +1425,10 @@
     MSG                             point-57
     N                               1
     V                               11:33:33.4560 -02:00
+
+    MSG                             point-57
+    N                               0
+    V                               11:33:33.0000 America/Sao_Paulo
 
 
 
@@ -1393,6 +1476,11 @@
     N                               1
     V                               11:33:33.4560 -02:00
     CAST                            11:33:33.4560
+
+    MSG                             point-58
+    N                               0
+    V                               11:33:33.0000 America/Sao_Paulo
+    CAST                            12:33:33.0000
 
 
 
@@ -1787,6 +1875,7 @@
     TZ1                             America/Sao_Paulo
     TZ2                             America/New_York
     TZ3                             America/Sao_Paulo
+
   """,
  'expected_stderr':
   """
@@ -1807,6 +1896,10 @@
     Statement failed, SQLSTATE = 23000
     attempt to store duplicate value (visible to active transactions) in unique index "TIMETZ_UK"
     -Problematic key value is ("V" = '14:33:33.0000 +02:00')
+
+    Statement failed, SQLSTATE = 23000
+    attempt to store duplicate value (visible to active transactions) in unique index "TIMETZ_UK"
+    -Problematic key value is ("V" = '11:33:33.0000 -03:00')
 
     Statement failed, SQLSTATE = 23000
     attempt to store duplicate value (visible to active transactions) in unique index "TIMESTAMPTZ_UK"
