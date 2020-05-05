@@ -28,7 +28,7 @@
       binary(20);
       varbinary(20);
 
-    Checked on 4.0.0.1935. 
+    Checked on 4.0.0.1954.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -178,7 +178,7 @@
  'expected_stderr':
   """
   """,
-  #'substitutions':[ ('[ \t]+', ' '), ('F116_BLOB_ID.*', ''), ('F216_BLOB_ID.*', '') ]
+  'substitutions':[ ('[ \t]+', ' '), ('F116_BLOB_ID.*', ''), ('F216_BLOB_ID.*', '') ]
 }
 ]
 }
