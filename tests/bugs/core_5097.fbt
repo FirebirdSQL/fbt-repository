@@ -2,7 +2,7 @@
 'id': 'bugs.core_5097',
 'qmid': None,
 'tracker_id': 'CORE-5097',
-'title': '',
+'title': 'COMPUTED-BY expressions are not converted to their field type inside the engine',
 'description': 
  """
  """,
