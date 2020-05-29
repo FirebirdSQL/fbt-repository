@@ -1,0 +1,478 @@
+{
+'id': 'bugs.core_6316',
+'qmid': None,
+'tracker_id': 'CORE-6316',
+'title': 'Unable to specify new 32k page size',
+'description': 
+ """
+    NOTE. Issues remain for some kind of commands: parser should be more rigorous.
+    Sent letter to Alex and Dmitry, 29.05.2020 12:28.
+    Checked on 4.0.0.2006.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':
+  """
+import os
+import sys
+#import fdb
+from fdb import services
+
+DB_NAME=os.path.join(context['temp_directory'],'tmp_6316.fdb')
+DB_USER=user_name
+DB_PSWD=user_password
+page_list= (
+   "9223372036854775809"
+  ,"9223372036854775808"
+  ,"9223372036854775807"
+  ,"4294967297"
+  ,"4294967296"
+  ,"4294967295"
+  ,"2147483649"
+  ,"2147483648"
+  ,"2147483647"
+  ,"65537"
+  ,"32769"
+  ,"32768"
+  ,"32767"
+  ,"16385"
+  ,"16384"
+  ,"16383"
+  ,"8193"
+  ,"8192"
+  ,"8191"
+  ,"4097"
+  ,"4096"
+  ,"4095"
+  ,"2049"
+  ,"2048"
+  ,"2047"
+  ,"1025"
+  ,"1024"
+  ,"1023"
+  ,"0"
+  ,"0x10000"
+  ,"0xFFFF"
+  ,"0x8000"
+  ,"0x7FFF"
+  ,"0x4000"
+  ,"0x3FFF"
+  ,"0x2000"
+  ,"0x1FFF"
+  ,"0x1000"
+  ,"0xFFF"
+  ,"0x800"
+  ,"0x7FF"
+  ,"0x400"
+  ,"0x3FF"
+  ,"default"
+  ,"null"
+  ,"qwerty"
+  ,"-32768"
+)
+
+'''
+  ,"32k"
+  ,"16k"
+  ,"8k"
+  ,"4k"
+  ,"2k"
+  ,"1k"
+  ,"0k"
+'''
+
+sttm_proto="create database 'localhost:%(DB_NAME)s' user %(DB_USER)s password '%(DB_PSWD)s' page_size %(i)s"
+
+svc = services.connect( user = DB_USER, password = DB_PSWD )
+#k=0
+for i in page_list:
+    for j in (1,2):
+        if os.path.isfile(DB_NAME):
+            os.remove(DB_NAME)
+      
+        try:
+            # ::: NB ::: No error occured until we specify 'DEFAULT CHARACTER SET ....'
+            sttm_actual = sttm_proto % locals() + ( ' default character set win1251' if j==1 else '' )
+
+            print('Try create with page_size=%(i)s, clause "DEFAULT CHARACTER SET": ' % locals() + (  'present' if 'default character set' in sttm_actual else 'absent' )  )
+            con = fdb.create_database( sql = sttm_actual)
+
+            cur = con.cursor()
+            cur.execute('select mon$database_name,mon$page_size,left(cast(mon$creation_date as varchar(50)),24) from mon$database')
+            for r in cur:
+                print('DB created. Actual page_size:', r[1] )
+            cur.close()
+
+            con.close()
+            svc.shutdown( DB_NAME, services.SHUT_FULL, services.SHUT_FORCE, 0)
+
+            if os.path.isfile(DB_NAME):
+                os.remove(DB_NAME)
+        except Exception as e:
+            print(e[0])
+
+svc.close()
+
+  """,
+ 'expected_stdout':
+  """
+    Try create with page_size=9223372036854775809, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 9223372036854775809 
+
+    Try create with page_size=9223372036854775809, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=9223372036854775808, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 9223372036854775808 
+
+    Try create with page_size=9223372036854775808, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=9223372036854775807, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 9223372036854775807 
+
+    Try create with page_size=9223372036854775807, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=4294967297, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 4294967297 
+
+    Try create with page_size=4294967297, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=4294967296, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 4294967296 
+
+    Try create with page_size=4294967296, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=4294967295, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 4294967295 
+
+    Try create with page_size=4294967295, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=2147483649, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 2147483649 
+
+    Try create with page_size=2147483649, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=2147483648, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - 2147483648 
+
+    Try create with page_size=2147483648, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=2147483647, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=2147483647, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=65537, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=65537, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=32769, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=32769, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=32768, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=32768, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 32768 
+
+    Try create with page_size=32767, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 16384 
+
+    Try create with page_size=32767, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 16384 
+
+    Try create with page_size=16385, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 16384 
+
+    Try create with page_size=16385, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 16384 
+
+    Try create with page_size=16384, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 16384 
+
+    Try create with page_size=16384, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 16384 
+
+    Try create with page_size=16383, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=16383, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=8193, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=8193, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=8192, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=8192, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=8191, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=8191, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=4097, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=4097, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=4096, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=4096, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=4095, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=4095, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=2049, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=2049, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=2048, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=2048, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=2047, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=2047, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=1025, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=1025, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=1024, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=1024, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=1023, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=1023, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 4096 
+
+    Try create with page_size=0, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x10000, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x10000, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0xFFFF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0xFFFF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x8000, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x8000, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x7FFF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x7FFF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x4000, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x4000, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x3FFF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x3FFF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x2000, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x2000, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x1FFF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x1FFF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x1000, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x1000, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0xFFF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0xFFF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x800, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x800, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x7FF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x7FF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x400, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x400, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x3FF, clause "DEFAULT CHARACTER SET": present 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=0x3FF, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=default, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - default 
+
+    Try create with page_size=default, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=null, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - null 
+
+    Try create with page_size=null, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=qwerty, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - qwerty 
+
+    Try create with page_size=qwerty, clause "DEFAULT CHARACTER SET": absent 
+    DB created. Actual page_size: 8192 
+
+    Try create with page_size=-32768, clause "DEFAULT CHARACTER SET": present 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - - 
+
+    Try create with page_size=-32768, clause "DEFAULT CHARACTER SET": absent 
+    Error while creating database: 
+    - SQLCODE: -104 
+    - Dynamic SQL Error 
+    - SQL error code = -104 
+    - Token unknown - line 1, column 114 
+    - - 
+  """,
+ 'expected_stderr':
+  """
+  """
+}
+]
+}
