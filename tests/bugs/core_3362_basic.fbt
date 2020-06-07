@@ -868,9 +868,7 @@
     -- 25.09.2016: case with NOT IN and ALL predicates, see letters to hvlad, dimitr from this date:
 
     recreate table t1(id int, x int);
-
-    --create index t1_xa on t1(x);
-    --create descending index t1_xd on t1(x);
+    recreate view v_t1_checked as select * from t1 where true with check option; -- temply (?) added 07.06.2020 because of fixed core-2274
     commit;
 
     insert into t1(id, x) values(1,10);
@@ -879,7 +877,9 @@
     insert into t1(id, x) values(4,40);
     commit;
 
-    merge into t1 t using t1 s on 
+    -- ::: NB ::: 07.06.2020: HERE WE USE VIEW DECLARED WITH CHECK OPTION, i.e. this view has two with system TRIGGERS
+    merge into v_t1_checked t
+    using t1 s on 
     t.x not in ( select x from t1 z where z.x is null or z.x > all(select x from t1 y where y.id<>z.id ) )
     when matched then update set x = null
     ;
@@ -904,7 +904,9 @@
     rollback;
 
 
-    merge into t1 t using t1 s on 
+    -- ::: NB ::: 07.06.2020: HERE WE USE VIEW DECLARED WITH CHECK OPTION, i.e. this view has two with system TRIGGERS
+    merge into v_t1_checked t
+    using t1 s on 
     t.x not in ( select x from t1 z where z.x is null or z.x > all(select x from t1 y where y.id<>z.id ) )
     when matched then update set x = null
     ;
