@@ -9,6 +9,7 @@
    More complex cases (which involve not only SQL but also PSQL features) will 
    follow in separate .fbt(s) in order to keep size of each test in reasonable limits.
    Checked on WI-T4.0.0.371, WI-V3.0.1.32597.
+   Checked on 4.0.0.2028 (after fix core-2274) -- see below, view v_t1_updatable.
  """,
 'min_versions': '3.0.1',
 'versions': [
@@ -868,17 +869,44 @@
     -- 25.09.2016: case with NOT IN and ALL predicates, see letters to hvlad, dimitr from this date:
 
     recreate table t1(id int, x int);
-    recreate view v_t1_checked as select * from t1 where true with check option; -- temply (?) added 07.06.2020 because of fixed core-2274
+    --recreate view v_t1_checked as select * from t1 where true with check option; -- temply (?) added 07.06.2020 because of fixed core-2274
+
+    -- 08.06.2020: 'WITH CHECK OPTION' no more helps.
+    -- We have to create 'truly-updatable' view in order to avoid 
+    -- Statement failed, SQLSTATE = 21000
+    -- Multiple source records cannot match the same target during MERGE
+    recreate view v_t1_updatable as select * from t1;
+    set term ^;
+    create or alter trigger v_t1_biud for v_t1_updatable active before insert or update or delete position 0 as
+        declare v_old_id int;
+        declare v_old_x int;
+        declare v_new_id int;
+        declare v_new_x int;
+    begin
+        if (not deleting) then
+            begin
+                if (inserting) then
+                    insert into t1(id, x) values(new.id, new.x);
+                else
+                    update t1 set id = new.id, x = new.x where id = old.id;
+            end
+        else
+            begin
+                delete from t1 where id = old.id;
+            end
+    end
+    ^
+    set term ;^
     commit;
 
-    insert into t1(id, x) values(1,10);
-    insert into t1(id, x) values(2,20);
-    insert into t1(id, x) values(3,30);
-    insert into t1(id, x) values(4,40);
+    insert into v_t1_updatable(id, x) values(1,10);
+    insert into v_t1_updatable(id, x) values(2,20);
+    insert into v_t1_updatable(id, x) values(3,30);
+    insert into v_t1_updatable(id, x) values(4,40);
     commit;
 
-    -- ::: NB ::: 07.06.2020: HERE WE USE VIEW DECLARED WITH CHECK OPTION, i.e. this view has two with system TRIGGERS
-    merge into v_t1_checked t
+
+    merge into v_t1_updatable t
     using t1 s on 
     t.x not in ( select x from t1 z where z.x is null or z.x > all(select x from t1 y where y.id<>z.id ) )
     when matched then update set x = null
@@ -904,8 +932,7 @@
     rollback;
 
 
-    -- ::: NB ::: 07.06.2020: HERE WE USE VIEW DECLARED WITH CHECK OPTION, i.e. this view has two with system TRIGGERS
-    merge into v_t1_checked t
+    merge into v_t1_updatable t
     using t1 s on 
     t.x not in ( select x from t1 z where z.x is null or z.x > all(select x from t1 y where y.id<>z.id ) )
     when matched then update set x = null
