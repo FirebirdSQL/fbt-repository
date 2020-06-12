@@ -1,0 +1,187 @@
+{
+'id': 'bugs.core_6319',
+'qmid': '',
+'tracker_id': 'CORE-6319',
+'title': 'NBACKUP locks db file on error',
+'description': 
+ """ 
+   We create level-0 copy of test DB (so called "stand-by DB") and obtain DB backup GUID for just performed action.
+   Then we create incremental copy using this GUID ("nbk_iter_01") and obtain new DB backup GUID again.
+   After this we repeat - create next incrementa copy using this (new) GUID ("nbk_iter_02")
+
+   (note: cursor for 'select h.rdb$guid from rdb$backup_history h order by h.rdb$backup_id desc rows 1' can be used
+   to get last database backup GUID instead of running 'gstat -h').
+
+   Further, we try to apply two incrementa copies but in WRONG order of restore: specify <nbk_iter_02> twise instead
+   of proper order: <nbk_iter_01> and after this - <nbk_iter_02>.
+
+   First and second attempts should issue THE SAME message:
+   "Wrong order of backup files or invalid incremental backup file detected, file: <nbk_02>".
+
+   We do this check both for NBACKUP and FBSVCMGR.
+
+   Confirmed bug on 4.0.0.2000: second attempt to run restore using FBSVCMGR issues:
+   =====
+       Error opening database file: [disk]:\path\to\standby_db.dfb
+       process cannot access the file <nbk_iter_02> because it is being used by another process
+   =====
+   - and file <nbk_iter_02> could not be deleted after this until restart of FB.
+
+   Works fine on 4.0.0.2025 CS/SS.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+      create table test(id int, s varchar(10) unique using index test_s, t timestamp, b blob);
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import subprocess
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+
+db_source='$(DATABASE_LOCATION)bugs.core_6319.fdb'
+db_standby='$(DATABASE_LOCATION)tmp_core_6319.standby.fdb'
+nbk_iter_01='$(DATABASE_LOCATION)tmp_core_6319.nbk_01'
+nbk_iter_02='$(DATABASE_LOCATION)tmp_core_6319.nbk_02'
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
+cleanup( (db_standby, nbk_iter_01, nbk_iter_02,) )
+
+# 1. Create standby copy: make clone of source DB using nbackup -b 0:
+########################
+f_nbk0_log=open( os.path.join(context['temp_directory'],'tmp_nbk0_6319.log'), 'w')
+f_nbk0_err=open( os.path.join(context['temp_directory'],'tmp_nbk0_6319.err'), 'w')
+subprocess.call( ['nbackup', '-b', '0', db_source, db_standby], stdout=f_nbk0_log, stderr=f_nbk0_err )
+f_nbk0_log.close()
+f_nbk0_err.close()
+
+get_last_bkup_guid_sttm = 'select h.rdb$guid from rdb$backup_history h order by h.rdb$backup_id desc rows 1'
+
+# Read DB-backup GUID after this 1st nbackup run:
+#####################
+cur = db_conn.cursor()
+cur.execute(get_last_bkup_guid_sttm)
+for r in cur:
+   db_guid = r[0]
+
+
+# Create 1st copy using just obtained DB backup GUID:
+############
+f_nbk1_log=open( os.path.join(context['temp_directory'],'tmp_nbk1_6319.log'), 'w')
+f_nbk1_err=open( os.path.join(context['temp_directory'],'tmp_nbk1_6319.err'), 'w')
+subprocess.call( ['nbackup', '-b', db_guid, db_source, nbk_iter_01], stdout=f_nbk1_log, stderr=f_nbk1_err )
+f_nbk1_log.close()
+f_nbk1_err.close()
+
+# Re-read DB backup GUID: it is changed after each new nbackup!
+########################
+cur.execute(get_last_bkup_guid_sttm)
+for r in cur:
+   db_guid = r[0]
+
+
+# Create 2nd copy using LAST obtained GUID of backup:
+############
+f_nbk2_log=open( os.path.join(context['temp_directory'],'tmp_nbk2_6319.log'), 'w')
+f_nbk2_err=open( os.path.join(context['temp_directory'],'tmp_nbk2_6319.err'), 'w')
+subprocess.call( ['nbackup', '-b', db_guid, db_source, nbk_iter_02], stdout=f_nbk2_log, stderr=f_nbk2_err )
+f_nbk2_log.close()
+f_nbk2_err.close()
+
+
+# Try to merge standby DB and SECOND copy, i.e. wrongly skip 1st incremental copy.
+# NB: we do this TWISE. And both time this attempt should fail with:
+# "Wrong order of backup files or invalid incremental backup file detected, file:  ..."
+########################
+f_nbk_poor_log=open( os.path.join(context['temp_directory'],'tmp_nbk_poor_6319.log'), 'w')
+f_nbk_poor_err=open( os.path.join(context['temp_directory'],'tmp_nbk_poor_6319.err'), 'w')
+subprocess.call( ['nbackup', '-inplace', '-restore', 'localhost:'+ db_standby, nbk_iter_02], stdout=f_nbk_poor_log, stderr=f_nbk_poor_err )
+subprocess.call( ['nbackup', '-inplace', '-restore', 'localhost:'+ db_standby, nbk_iter_02], stdout=f_nbk_poor_log, stderr=f_nbk_poor_err )
+f_nbk_poor_log.close()
+f_nbk_poor_err.close()
+
+# Try to do the same using FBSVCMGR.
+# We also do this twise and both attempts must finish the same as previous pair:
+# Wrong order of backup files or invalid incremental backup file detected, file: C:/FBTESTING/qa/fbt-repo/tmp/tmp_core_6319.nbk_02
+# On 4.0.0.2000 second attempt raised:
+# Error opening database file: [disk]:\path\to\standby_db.dfb
+# process cannot access the file <nbk_iter_02> because it is being used by another process
+####################
+f_svc_poor_log=open( os.path.join(context['temp_directory'],'tmp_svc_res_poor_6319.log'), 'w')
+f_svc_poor_err=open( os.path.join(context['temp_directory'],'tmp_svc_res_poor_6319.err'), 'w')
+subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'nbk_inplace',  'dbname', db_standby, 'nbk_file', nbk_iter_02], stdout=f_svc_poor_log, stderr=f_svc_poor_err )
+subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'nbk_inplace',  'dbname', db_standby, 'nbk_file', nbk_iter_02], stdout=f_svc_poor_log, stderr=f_svc_poor_err )
+f_svc_poor_log.close()
+f_svc_poor_err.close()
+
+
+# Try to apply incremental copies in proper order, also using FBSVCMGR.
+# No errors must occur in this case:
+####################################
+f_svc_good_log=open( os.path.join(context['temp_directory'],'tmp_svc_res_good_6319.log'), 'w')
+f_svc_good_err=open( os.path.join(context['temp_directory'],'tmp_svc_res_good_6319.err'), 'w')
+subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'nbk_inplace',  'dbname', db_standby, 'nbk_file', nbk_iter_01], stdout=f_svc_good_log, stderr=f_svc_good_err )
+subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'nbk_inplace',  'dbname', db_standby, 'nbk_file', nbk_iter_02], stdout=f_svc_good_log, stderr=f_svc_good_err )
+f_svc_good_log.close()
+f_svc_good_err.close()
+
+
+# Check. All of these files must be empty:
+###################################
+f_list=(f_nbk0_err, f_nbk1_err, f_nbk2_err, f_nbk_poor_log, f_svc_poor_log, f_svc_good_log, f_svc_good_err)
+for i in range(len(f_list)):
+    with open( f_list[i].name,'r') as f:
+        for line in f:
+            if line.split():
+                print( 'UNEXPECTED output in file '+f_list[i].name+': '+line.upper() )
+
+# BOTH lines in every of: {f_nbk_poor_err, f_svc_poor_err} -- must be equal:
+# "Wrong order of backup files or invalid incremental backup file detected, file ..."
+for e in (f_nbk_poor_err, f_svc_poor_err):
+    i=0
+    with open( e.name,'r') as f:
+        for line in f:
+            if line:
+                i += 1
+                if 'Wrong order of backup' in line or 'invalid incremental backup' in line:
+                    print( 'Attempt %d. Error message is expected.' % i )
+                else:
+                    print( ('Attempt %d. Error message is UNEXPECTED: ' + line + ', file: ' + e.name ) % i )
+
+# Cleanup.
+##########
+
+f_list=[ i.name for i in (f_nbk0_log,f_nbk0_err, f_nbk1_log,f_nbk1_err, f_nbk2_log,f_nbk2_err, f_nbk_poor_log, f_nbk_poor_err, f_svc_poor_log, f_svc_poor_err, f_svc_good_log, f_svc_good_err) ] + [ db_standby, nbk_iter_01, nbk_iter_02 ]
+cleanup(f_list)
+
+  """,
+ 'expected_stdout':
+  """
+    Attempt 1. Error message is expected.
+    Attempt 2. Error message is expected.
+    Attempt 1. Error message is expected.
+    Attempt 2. Error message is expected.
+  """,
+ 'expected_stderr':
+  """
+  """
+},
+]
+}
