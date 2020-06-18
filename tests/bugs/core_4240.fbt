@@ -72,7 +72,6 @@
  'expected_stdout': 
   """
   CODE_HORSE  CODE_FATHER  CODE_MOTHER MARK              DEPTH 
-============ ============ ============ ========== ============ 
            1            2            3                       0 
            2            4            5 f                     1 
            3            4            5 m                     1 
@@ -80,7 +79,8 @@
            4       <null>       <null> fm                    2 
            5       <null>       <null> mf                    2 
            5       <null>       <null> mm                    2 
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' '), ('=', '') ]
 }
 ]
 }
