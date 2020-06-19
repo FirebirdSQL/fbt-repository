@@ -2,7 +2,7 @@
 'id': 'bugs.core_5823',
 'qmid': None,
 'tracker_id': 'CORE-5823',
-'title': "",
+'title': "No permission for SELECT access to blob field in stored procedure",
 'description':
  """
     Confirmed bug on 3.0.4.33034
