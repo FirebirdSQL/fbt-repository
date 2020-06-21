@@ -13,6 +13,10 @@
         4.0.0.1635 SS: 0.909s.
         3.0.5.33182 SS: 0.740s.
         2.5.9.27146 SC: 0.212s.
+
+    21.06.2020, 4.0.0.2068 (see also: CORE-6337):
+    changed subtype from 0 to 1 for cast (-70000 as numeric (18,5)) / cast (1.95583 as numeric (18,5))
+    (after discuss with dimitr, letter 21.06.2020 08:43).
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -59,7 +63,7 @@
   """,
  'expected_stdout': 
   """
-    01: sqltype: 32752 NUMERIC(38) scale: -10 subtype: 0 len: 16
+    01: sqltype: 32752 NUMERIC(38) scale: -10 subtype: 1 len: 16
     DIV_RESULT_1 -35790.4316837352
 
     01: sqltype: 32762 DECFLOAT(34) scale: 0 subtype: 0 len: 16
