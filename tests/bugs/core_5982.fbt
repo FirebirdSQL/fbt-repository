@@ -9,11 +9,13 @@
     Checked on:
         4.0.0.1421: OK, 2.098s.
         3.0.5.33097: OK, 1.294s.
+
+    24.06.2020: changed min_version to 2.5 because problem was fixed in 2.5.9.27151.
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.9',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'init_script': 
   """
@@ -22,8 +24,19 @@
  'test_script': 
   """
     set bail on;
+    set term ^;
+    execute block as
+    begin
+        begin
+            execute statement 'drop user tmp$c5982' with autonomous transaction;
+            when any do begin end
+        end
+    end^
+    set term ;^
+    commit;
 
-    create or alter user tmp$c5982 password '123';
+
+    create user tmp$c5982 password '123';
     commit;
     recreate table my_table ( 
        my_num integer
