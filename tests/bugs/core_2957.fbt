@@ -15,6 +15,7 @@
         ** sum(<bigint>) - its type is "32752 numeric(38)";
         ** added new column: sum(<decfloat>) - it will have type "32762 decfloat(34)".
     Checked on: 4.0.0.1635 SS: 1.236s; 3.0.5.33182 SS: 1.001s.
+    25.06.2020, 4.0.0.2076: changed types in SQLDA from numeric to int128 // after discuss with Alex about CORE-6342.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -106,13 +107,13 @@
  'expected_stdout':
   """
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    02: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 0 len: 16
+    02: sqltype: 32752 INT128 Nullable scale: 0 subtype: 0 len: 16
     03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
     04: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
     05: sqltype: 32762 DECFLOAT(34) Nullable scale: 0 subtype: 0 len: 16
     06: sqltype: 32762 DECFLOAT(34) Nullable scale: 0 subtype: 0 len: 16
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    02: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 0 len: 16
+    02: sqltype: 32752 INT128 Nullable scale: 0 subtype: 0 len: 16
     03: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
     04: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
     05: sqltype: 32762 DECFLOAT(34) Nullable scale: 0 subtype: 0 len: 16
