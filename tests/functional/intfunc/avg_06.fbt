@@ -5,7 +5,8 @@
 'title': 'AVG - Integer OverFlow',
 'description': 
  """
-   Refactored 14.10.2019: adjusted expected_stdout/stderr
+    Refactored 14.10.2019: adjusted expected_stdout/stderr
+    25.06.2020, 4.0.0.2076: changed types in SQLDA from numeric to int128 // after discuss with Alex about CORE-6342.
  """,
 'versions': [
 {
@@ -105,7 +106,7 @@
    """
     INPUT message field count: 0
     OUTPUT message field count: 1
-    01: sqltype: 32752 NUMERIC(38) Nullable scale: 0 subtype: 0 len: 16
+    01: sqltype: 32752 INT128 Nullable scale: 0 subtype: 0 len: 16
     : name: AVG_RESULT alias: AVG_RESULT
     : table: V_TEST owner: SYSDBA
    """,
