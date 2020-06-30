@@ -5,6 +5,8 @@
 'title': 'Basic test for binary functions against INT128 datatype',
 'description': 
  """
+    Test verifies https://github.com/FirebirdSQL/firebird/commit/137c3a96e51b8bc34cb74732687067e96c971226
+    (Postfix for CORE-6342: enable support of int128 in bin_* family of functions).
     Checked on 4.0.0.2083 (intermediate build 30.06.2020 16:38).
  """,
 'min_versions': '4.0.0',
