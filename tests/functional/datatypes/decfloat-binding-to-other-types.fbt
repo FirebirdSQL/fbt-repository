@@ -32,6 +32,8 @@
     Checked on: WI-T4.0.0.1710.
 
     25.06.2020, 4.0.0.2076: changed types in SQLDA from numeric to int128 // after discuss with Alex about CORE-6342.
+    01.07.2020, 4.0.0.2084: adjusted expected output ('subtype' values). Added SET BIND from decfloat to INT128.
+    Removed unnecessary lines from output and added substitution section for result to be properly filtered.
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -46,109 +48,71 @@
 
     -- set decfloat bind char;
     set bind of decfloat to char;
-    select 
-        123456789012345678901234567890.1234
+    select 123456789012345678901234567890.1234 as decfloat_to_char
     from rdb$database;
 
     -- set decfloat bind double precision;
     set bind of decfloat to double precision;
-    select 
-        123456789012345678901234567890.1234
+    select 123456789012345678901234567890.1234 as decfloat_to_double
     from rdb$database;
 
     -- set decfloat bind bigint;
     set bind of decfloat to bigint;
-    select 
-        1234567890123456789.1234
+    select 1234567890123456789.1234 as decfloat_to_bigint
     from rdb$database;
 
     -- set decfloat bind bigint, 0;
     set bind of decfloat to numeric(18,0);
-    select 
-        1234567890123456789.1234
+    select 1234567890123456789.1234 as decfloat_to_bigint_0
     from rdb$database;
 
 
     -- Alex' samples, letter 25.05.2017 21:56
     -- set decfloat bind bigint, 3;
     set bind of decfloat to numeric(18,3);
-    select cast(1234.5678 as decfloat(16)) from rdb$database; -- 1234.568
+    select cast(1234.5678 as decfloat(16)) as decfloat_to_bigint_3
+    from rdb$database; -- 1234.568
 
 
     -- set decfloat bind bigint, 8;
     set bind of decfloat to numeric(18,8);
-    select cast(1234.5678 as decfloat(16)) from rdb$database; -- 1234.56780000
+    select cast(1234.5678 as decfloat(16)) as decfloat_to_bigint_9
+    from rdb$database; -- 1234.56780000
+
+    set bind of decfloat to int128;
+    -- -170141183460469231731687303715884105728 ; 170141183460469231731687303715884105727
+    select cast( 1701411834604692317316873037158841.05727 as decfloat(34)) as decfloat_to_int128
+    from rdb$database;
 
   """,
   'expected_stdout':
   """
-    INPUT message field count: 0
-
-    OUTPUT message field count: 1
-    01: sqltype: 32752 INT128 scale: -4 subtype: 2 len: 16
-      :  name: CONSTANT  alias: CONSTANT
-      : table:   owner: 
-
-    CONSTANT                                  123456789012345678901234567890.1234
-
-
-
-    INPUT message field count: 0
-
-    OUTPUT message field count: 1
-    01: sqltype: 32752 INT128 scale: -4 subtype: 2 len: 16
-      :  name: CONSTANT  alias: CONSTANT
-      : table:   owner: 
-
-    CONSTANT                                  123456789012345678901234567890.1234
-
-
-
-    INPUT message field count: 0
-
-    OUTPUT message field count: 1
-    01: sqltype: 32752 INT128 scale: -4 subtype: 2 len: 16
-      :  name: CONSTANT  alias: CONSTANT
-      : table:   owner: 
-
-    CONSTANT                                             1234567890123456789.1234
-
-
-
-    INPUT message field count: 0
-
-    OUTPUT message field count: 1
-    01: sqltype: 32752 INT128 scale: -4 subtype: 2 len: 16
-      :  name: CONSTANT  alias: CONSTANT
-      : table:   owner: 
-
-    CONSTANT                                             1234567890123456789.1234
-
-
-
-    INPUT message field count: 0
-
-    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: -4 subtype: 0 len: 16
+    :  name: CONSTANT  alias: DECFLOAT_TO_CHAR
+    DECFLOAT_TO_CHAR                          123456789012345678901234567890.1234
+    01: sqltype: 32752 INT128 scale: -4 subtype: 0 len: 16
+    :  name: CONSTANT  alias: DECFLOAT_TO_DOUBLE
+    DECFLOAT_TO_DOUBLE                        123456789012345678901234567890.1234
+    01: sqltype: 32752 INT128 scale: -4 subtype: 0 len: 16
+    :  name: CONSTANT  alias: DECFLOAT_TO_BIGINT
+    DECFLOAT_TO_BIGINT                                   1234567890123456789.1234
+    01: sqltype: 32752 INT128 scale: -4 subtype: 0 len: 16
+    :  name: CONSTANT  alias: DECFLOAT_TO_BIGINT_0
+    DECFLOAT_TO_BIGINT_0                                 1234567890123456789.1234
     01: sqltype: 580 INT64 scale: -3 subtype: 1 len: 8
-      :  name: CAST  alias: CAST
-      : table:   owner: 
-
-    CAST                            1234.568
-
-
-
-    INPUT message field count: 0
-
-    OUTPUT message field count: 1
+    :  name: CAST  alias: DECFLOAT_TO_BIGINT_3
+    DECFLOAT_TO_BIGINT_3            1234.568
     01: sqltype: 580 INT64 scale: -8 subtype: 1 len: 8
-      :  name: CAST  alias: CAST
-      : table:   owner: 
-
-    CAST                            1234.56780000
+    :  name: CAST  alias: DECFLOAT_TO_BIGINT_9
+    DECFLOAT_TO_BIGINT_9            1234.56780000
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+    :  name: CAST  alias: DECFLOAT_TO_INT128
+    DECFLOAT_TO_INT128                         1701411834604692317316873037158841
   """,
   'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[ ('^((?!sqltype|DECFLOAT_TO_).)*$',''), ('[ \t]+',' ') ]
 }
 ]
 }
