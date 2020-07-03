@@ -1,0 +1,255 @@
+{
+'id': 'bugs.core_6147',
+'qmid': None,
+'tracker_id': 'CORE-6147',
+'title': 'PLG$SRP table, PLG$SRP_VIEW View instructions are strangely added in the metadata script extracted when Windows trusted authentication is enabled',
+'description': 
+ """
+   We create copy of %FIREBIRD_HOME%\database.conf and change it content by adding lines:
+        tmp_alias_6147 = ...
+        {
+            SecurityDatabase = tmp_alias_6147
+        }
+   Then we create trest DB in embedded mode, create SYSDBA that belongs to this DB and create global mapping.
+   We check content of rdb$auth_mapping table after this step in order to ensure that mapping was actually created.
+
+   After this we do connect to DB using Win_SSPI and extract metadata.
+   
+   ::: NOTE :::
+   References to the table PLG$SRP and view PLG$SRP_VIEW *always* present in extracted metadata,
+   regardless of using auth plugin (and this is NOT a bug!).
+
+   Fix was introduced in 4.0.0.2087: extracted metadata must contain "OR ALTER" clause in:
+       CREATE OR ALTER GLOBAL MAPPING TRUSTED_AUTH_C6147 ...
+              ^^^^^^^^
+   Builds before 4.0.0.2084 did not add this clause in extracted metadata script (checked 4.0.0.2076).
+   (see also discussion with Alex, 02-jun-2020 08:23).
+
+   ### NB ###
+   For unclear reason ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL + DROP DATABASE do not work as expected in this test:
+   test DB remains opened by firebird.exe about 5...7 seconds after test finish, and 'drop database' does not issues any error.
+   Because of this it was decided to forcedly change DB state to full shutdown in order to have ability to drop it.
+   To be investigated later.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script':"""\
+
+import os
+import subprocess
+from subprocess import Popen
+import difflib
+import datetime
+import time
+import shutil
+import re
+from fdb import services
+
+#os.environ.pop("ISC_USER")
+#os.environ.pop("ISC_PASSWORD")
+
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+#--------------------------------------------
+
+
+fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+# Resut: fb_home is full path to FB instance home (with trailing slash).
+
+dts = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+dbconf_bak = fb_home+'databases_'+dts+'.bak'
+
+shutil.copy2( fb_home+'databases.conf', dbconf_bak )
+
+tmp_fdb=os.path.join(context['temp_directory'],'tmp_6147.fdb')
+
+cleanup( tmp_fdb, )
+
+text2app=\
+'''
+# Temporarily added by fbtest, CORE-6147. Should be removed auto:
+##############################
+tmp_alias_6147 = %(tmp_fdb)s
+{
+    SecurityDatabase = tmp_alias_6147
+}
+##############################
+''' % locals()
+
+f_dbconf=open(fb_home+'databases.conf','a')
+f_dbconf.seek(0, 2)
+f_dbconf.write( text2app )
+f_dbconf.close()
+
+sql_txt=\
+'''
+    set bail on;
+    create database 'tmp_alias_6147' user %(user_name)s;
+    create user %(user_name)s password '%(user_password)s';
+    commit;
+    create or alter global mapping trusted_auth_c6147 using plugin win_sspi from any user to user;
+    commit;
+
+    recreate view v_map_info as
+    select
+         rdb$map_name              --    test_wmap
+        ,rdb$map_using            --     p
+        ,rdb$map_plugin           --     win_sspi
+        ,rdb$map_db               --     <null>
+        ,rdb$map_from_type        --     user
+        ,rdb$map_from
+        ,rdb$map_to_type          --     0
+        ,rdb$map_to
+        ,rdb$system_flag          --     0
+    from rdb$auth_mapping where rdb$map_name = upper('trusted_auth_c6147')
+    ;
+    commit;
+
+    set list on;
+    set count on;
+    select * from v_map_info;
+''' % dict(globals(), **locals())
+
+f_prepare_sql = open( os.path.join(context['temp_directory'],'tmp_6147_prepare.sql'), 'w', buffering=0)
+f_prepare_sql.write(sql_txt)
+flush_and_close( f_prepare_sql )
+
+f_prepare_log=open( os.path.join(context['temp_directory'],'tmp_6147_prepare.log'), 'w', buffering=0)
+subprocess.call( [ fb_home + "isql", "-q", "-i", f_prepare_sql.name ], stdout=f_prepare_log, stderr=subprocess.STDOUT )
+flush_and_close( f_prepare_log )
+
+
+# Extract metadata from test DB:
+##################
+f_medatata_log=open( os.path.join(context['temp_directory'],'tmp_6147_meta.mapping.sql'), 'w', buffering = 0)
+subprocess.call( [fb_home+'isql', '-x', 'localhost:tmp_alias_6147' ], stdout=f_medatata_log, stderr=subprocess.STDOUT )
+flush_and_close( f_medatata_log )
+
+
+# Remove global mapping:
+########################
+f_cleanup_sql = open( os.path.join(context['temp_directory'],'tmp_6147_cleanup.sql'), 'w', buffering=0)
+sql_txt='''
+    set bail on;
+    -- NB: here we have to connect as "common" SYSDBA (using Srp) rather than Win_SSPI.
+    -- Otherwise global mapping can not be deleted:
+    -- ############################################
+    -- Statement failed, SQLSTATE = 28000
+    -- unsuccessful metadata update
+    -- -DROP MAPPING TRUSTED_AUTH_C6147 failed
+    -- -Unable to perform operation
+    -- -System privilege CHANGE_MAPPING_RULES is missing
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    -- This I can not explain: why user who did create global mapping can not delete it ???
+    -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    connect 'localhost:tmp_alias_6147' user %(user_name)s password %(user_password)s;
+    drop global mapping trusted_auth_c6147;
+    commit;
+
+    set list on;
+    set count on;
+    select * from v_map_info;
+
+    -- DOES NOT HELP! DATABASE FILE REMAINS OPENED BY FIREBIRD!
+    -- ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL; -- !! mandatory otherwise database file will be kept by engine and fbtest will not able to drop it !!
+    -- drop database; --> does not raise errot when clear pool but DB file still remains opened !!!
+''' % dict(globals(), **locals())
+
+f_cleanup_sql.write(sql_txt)
+f_cleanup_sql.close()
+
+f_cleanup_log = open( os.path.join(context['temp_directory'],'tmp_6147_cleanup.log'), 'w', buffering=0)
+subprocess.call( [ fb_home + "isql", "-q", "-i", f_cleanup_sql.name ], stdout=f_cleanup_log, stderr=subprocess.STDOUT )
+flush_and_close( f_cleanup_log )
+
+subprocess.call( ['gfix', 'localhost:tmp_alias_6147', '-shut', 'single', '-force', '0', '-user', user_name, '-pas', user_password] )
+
+# RESTORE original config:
+##########################
+shutil.copy2( dbconf_bak, fb_home+'databases.conf' )
+os.remove(dbconf_bak)
+cleanup( [ tmp_fdb ] )
+
+
+with open(f_prepare_log.name, 'r') as f:
+    for line in f:
+        if line.split():
+            print('PREPARE: ' + line)
+
+with open(f_medatata_log.name, 'r') as f:
+    for line in f:
+        if 'MAPPING TRUSTED_AUTH_C6147' in line.upper():
+            print('METADATA: ' + line)
+
+with open(f_cleanup_log.name, 'r') as f:
+    for line in f:
+        if line.split():
+            print('CLEANUP: ' + line)
+
+time.sleep(1)
+
+
+f_list=( 
+     f_prepare_sql
+    ,f_prepare_log
+    ,f_medatata_log
+    ,f_cleanup_sql
+    ,f_cleanup_log
+)
+cleanup( [ i.name for i in f_list ] )
+
+
+  """,
+ 'expected_stdout':
+  """
+    PREPARE: RDB$MAP_NAME                    TRUSTED_AUTH_C6147
+    PREPARE: RDB$MAP_USING                   P
+    PREPARE: RDB$MAP_PLUGIN                  WIN_SSPI
+    PREPARE: RDB$MAP_DB                      <null>
+    PREPARE: RDB$MAP_FROM_TYPE               USER
+    PREPARE: RDB$MAP_FROM                    *
+    PREPARE: RDB$MAP_TO_TYPE                 0
+    PREPARE: RDB$MAP_TO                      <null>
+    PREPARE: RDB$SYSTEM_FLAG                 0
+    PREPARE: Records affected: 1
+
+    METADATA: CREATE MAPPING TRUSTED_AUTH_C6147 USING PLUGIN WIN_SSPI FROM ANY "USER" TO USER ;
+    METADATA: CREATE OR ALTER GLOBAL MAPPING TRUSTED_AUTH_C6147 USING PLUGIN WIN_SSPI FROM ANY "USER" TO USER ;
+
+    CLEANUP: Records affected: 0
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[  ('[ \t]+',' ') ]
+}
+]
+}
