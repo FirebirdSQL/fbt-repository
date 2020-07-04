@@ -7,11 +7,12 @@
  """
     Checked on build 4.0.0.2073 with timestamp 24.06.2020 13:40 (intermediate).
     NOTE: test tries several cases + checks that string with maximum limit of length (65533) can be properly parsed.
+    04.07.2020: changed min_version to 3.0.6 - checked on 3.0.6.33332.
  """,
-'min_versions': '4.0.0',
+'min_versions': '3.0.6',
 'versions': [
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
