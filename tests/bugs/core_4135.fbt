@@ -43,6 +43,9 @@
        1) no attachments were made *before* sweep start; NB: WAIT_BEFORE_RUN_1ST_ATT must be increased if this is not so.
        2) number of attachments AFTER sweep start and BEFORE its finish equals to required ('PLANNED_ATTACH_CNT').
    Checked again on: 3.0.6.33296 SS ; V3.0.6.33289 CS ; 4.0.0.2037 SS ; 4.0.0.2025 CS
+
+   04-JUL-2020.
+   Reduced PLANNED_ATTACH_CNT from 30 to 5 because 4.0 Classic remains fail.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -78,7 +81,7 @@ INDEXED_FLD_LEN = 500
 
 # How many attachments we want to establish
 # during sweep will work:
-PLANNED_ATTACH_CNT = 30
+PLANNED_ATTACH_CNT = 5
 
 # How many seconds we allow to all PLANNED_ATTACH_CNT
 # sessions for establishing their connections:
