@@ -9,7 +9,7 @@
     List of AuthClient plugins must contain Win_Sspi in order to reproduce this test expected results.
     Otherwise firebird.log will not contain any message like "Available context(s): ..."
 
-    Checked on 4.0.0.2119 (SS/CS): OK.
+    Checked on 3.0.7.33348, 4.0.0.2119 (SS/CS): OK.
  """,
 'min_versions': '3.0.7',
 'versions': [
