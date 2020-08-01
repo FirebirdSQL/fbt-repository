@@ -44,7 +44,8 @@
         When update conflict is detected the following is performed:  
         ...
         e) then engine <...> creates new statement-level snapshot and restart execution of top-level statement.
-
+    
+    Checked on 4.0.0.2119
  """,
 'min_versions': '4.0',
 'versions': [
