@@ -1,0 +1,294 @@
+{
+'id': 'functional.transactions.read-consist-sttm-restart-on-delete-03',
+'qmid': '',
+'tracker_id': '',
+'title': "READ CONSISTENCY. Check creation of new statement-level snapshot and restarting changed caused by DELETE. Test-03.",
+'description': 
+ """
+    Initial article for reading:
+        https://asktom.oracle.com/pls/asktom/f?p=100:11:::::P11_QUESTION_ID:11504247549852
+        Note on terms which are used there: "BLOCKER", "LONG" and "FIRSTLAST" - their names are slightly changed here
+        to: LOCKER-1, WORKER and LOCKER-2 respectively.
+    See also: doc\README.read_consistency.md
+
+    **********************************************
+
+    This test verifies that statement-level snapshot and restart will be performed when "main" session ("worker") when it does
+    DELETE statement and is involved in update conflicts.
+    ("When update conflict is detected <...> then engine <...> creates new statement-level snapshot and restart execution...")
+
+    ::: NB :::
+    This test uses script %FBT_REPO%\files\read-consist-sttm-restart-DDL.sql which contains common DDL for all other such tests.
+    Particularly, it contains two TRIGGERS (TLOG_WANT and TLOG_DONE) which are used for logging of planned actions and actual
+    results against table TEST. These triggers launched AUTONOMOUS transactions in order to have ability to see results in any
+    outcome of test.
+
+    ###############
+    Following scenario if executed here:
+    * add new table that is child to test: TDETL (with FK that references TEST and 'on delete cascade' clause)
+    * three rows are inserted into the table TEST, with IDs: 2, 3 and 5.
+
+    * session 'locker-1' ("BLOCKER" in Tom Kyte's article ): issues 'update set id=id where id = 5'
+
+    * session 'worker' ("LONG" in TK article) has mission:
+        delete from test where id >= 3 order by id; // within Tx with TIL = read committed read consistency
+        It will SKIP record with ID=2, lock record with ID = 3 but will hang on row with ID = 5 because of locker-1;
+
+    * session 'locker-2' ("FIRSTLAST" in TK article): replaces ID = 2 with new value = 4, then commits and locks this record
+      again (issues 'update test set id=id where id=4'). Later this will cause FIRST restart of session-'worker' statement.
+
+    * session 'locker-1' releases row with ID = 5 and inserts new row with ID = 6. Beside of this it adds row in the child table
+      TDETL with (id,pid) = (6, 6001). Then it issues COMMIT and lock just added row again: 'update test set id=id where id=6'.
+      Session-worker at this moment must STILL WAIT for record with ID = 4 that was locked by locker-2.
+
+    * locker-2 issues COMMIT; session-worker must perform FIRST restart of statement because new record (with ID = 4) appeared
+      in the set that this session must change. After restart it successfully locks IDs = 4 and 5, but ID = 6 still inaccessible
+      because of locker-1.
+
+    * locker-1 issues COMMIT; session-worker must perform SECOND restart and lock the last remained record with ID=6.
+
+    Expected result:
+    * session-'worker' must *successfully* complete deletion of all rows which it could see at the starting point (ID=3 and 5)
+      PLUS rows with ID = 4 (ex. ID=2) and 6  (this ID is new, it did not exist at the statement start).
+      As result, all rows must be deleted.
+
+    * we must see witness of statement-level restart as three distinct values in TLOG_DONE.SNAP_NO column
+      // it was evaluated using rdb$get_context('SYSTEM', 'SNAPSHOT_NUMBER') -- see trigger TEST_AIUD;
+    * we must see TWO distinct values in TLOG_DONE.REC_VERS field column (see triggers TEST_BIUD and TEST_AIUD).
+    ################
+
+    
+    Checked on 4.0.0.2126
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import subprocess
+from subprocess import Popen
+import re
+import difflib
+from fdb import services
+import time
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+fb_home = services.connect(host='localhost').get_home_directory()
+
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+
+#--------------------------------------------
+
+sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
+
+f_init_log=open( os.path.join(context['temp_directory'],'read-consist-sttm-restart-DDL.log'), 'w')
+f_init_err=open( ''.join( ( os.path.splitext(f_init_log.name)[0], '.err') ), 'w')
+
+subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', sql_init_ddl], stdout=f_init_log, stderr=f_init_err )
+flush_and_close(f_init_log)
+flush_and_close(f_init_err)
+
+sql_addi='''
+    create table detl(id int, PID int references test on delete cascade on update cascade);
+    commit;
+    insert into test(id, x) values(2,2);
+    insert into test(id, x) values(3,3);
+    insert into test(id, x) values(5,5);
+    insert into detl(id, pid) values(2000, 2);
+    insert into detl(id, pid) values(2001, 2);
+    insert into detl(id, pid) values(2002, 2);
+    insert into detl(id, pid) values(3001, 3);
+    insert into detl(id, pid) values(5001, 5);
+    insert into detl(id, pid) values(5001, 5);
+    commit;
+'''
+runProgram('isql', [ dsn, '-q' ], sql_addi)
+
+
+con_lock_1 = fdb.connect( dsn = dsn )
+con_lock_2 = fdb.connect( dsn = dsn )
+
+
+#########################
+###  L O C K E R - 1  ###
+#########################
+
+con_lock_1.execute_immediate( 'update test set id=id where id=5' )
+
+sql_text='''
+    connect '%(dsn)s';
+    set list on;
+    set autoddl off;
+    set term ^;
+    execute block returns (whoami varchar(30)) as
+    begin
+        whoami = 'WORKER'; -- , ATT#' || current_connection;
+        rdb$set_context('USER_SESSION','WHO', whoami);
+        -- suspend;
+    end
+    ^
+    set term ;^
+    commit;
+    SET KEEP_TRAN_PARAMS ON;
+    set transaction read committed read consistency;
+    --select current_connection, current_transaction from rdb$database;
+    set list off;
+    set wng off;
+    --set plan on;
+    set count on;
+
+    delete from test where id >= 3 order by id; -- THIS MUST BE LOCKED
+
+    -- check results:
+    -- ###############
+
+    select id from test; -- this will produce output only after all lockers do their commit/rollback
+
+    -- select * from v_worker_log v where upper(v.op) = upper('del');
+
+    /*
+    Expected result here:
+        OLD_ID       NEW_ID OP         REC_VERS      SNAP_NO
+        ====== ============ ====== ============ ============
+             3       <null> DEL              39            5
+             3       <null> DEL              52           14
+             3       <null> DEL              52           24
+             4       <null> DEL              52           24
+             5       <null> DEL              52           24
+             6       <null> DEL              52           24
+    */
+
+    -- /*
+    select d.op ,count(distinct d.snap_no) as statement_snapshots_count, count(distinct d.rec_vers) rec_vers_count
+    from tlog_done d
+    where d.who starting with upper('worker') and d.op=upper('del')
+    group by d.op;
+    --*/
+
+'''  % dict(globals(), **locals())
+
+f_worker_sql=open( os.path.join(context['temp_directory'],'tmp_sttm_restart_on_delete_03.sql'), 'w')
+f_worker_sql.write(sql_text)
+flush_and_close(f_worker_sql)
+
+
+f_worker_log=open( ''.join( ( os.path.splitext(f_worker_sql.name)[0], '.log') ), 'w')
+f_worker_err=open( ''.join( ( os.path.splitext(f_worker_log.name)[0], '.err') ), 'w')
+
+############################################################################
+###  L A U N C H     W O R K E R    U S I N G     I S Q L,   A S Y N C.  ###
+############################################################################
+
+p_worker = Popen( [ fb_home+'isql', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
+time.sleep(1)
+
+
+#########################
+###  L O C K E R - 2  ###
+#########################
+con_lock_2.execute_immediate( 'update test set id=4 where id=2;' )
+con_lock_2.commit()
+con_lock_2.execute_immediate( 'update test set id=id where id=4;' )
+
+
+con_lock_1.commit() # release record with ID=5 (allow it to be deleted by session-worker)
+
+# Add record which did not exists when session-worker statement started.
+# Add also child record for it, then commit + re-lock just added record:
+con_lock_1.execute_immediate('insert into test(id,x) values(6,6)')
+con_lock_1.execute_immediate('insert into detl(id, pid) values(6001, 6)')
+con_lock_1.commit()
+con_lock_1.execute_immediate('update test set id=id where id=6')
+
+con_lock_2.commit() # release record with ID=4. At this point session-worker will be allowed to delete rows with ID=4 and 5.
+
+con_lock_1.commit() # release record with ID=6. It is the last record which also must be deleted by session-worker.
+
+# Let ISQL finishes output to its log:
+time.sleep(1)
+
+p_worker.terminate()
+
+flush_and_close(f_worker_log)
+flush_and_close(f_worker_err)
+
+# Close lockers:
+################
+for c in (con_lock_1, con_lock_2):
+    c.close()
+
+
+# CHECK RESULTS
+###############
+
+for f in (f_init_err, f_worker_err):
+    with open(f.name,'r') as g:
+        for line in g:
+            if line:
+                print( 'UNEXPECTED STDERR IN ' + g.name + ':' +  line)
+
+with open(f_worker_log.name,'r') as f:
+    for line in f:
+        print(line)
+
+time.sleep(1)
+
+# Cleanup.
+##########
+f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
+cleanup( f_list )
+
+  """,
+ 'expected_stdout':
+  """
+    Records affected: 4
+    Records affected: 0
+
+    OP     STATEMENT_SNAPSHOTS_COUNT        REC_VERS_COUNT 
+    ====== ========================= ===================== 
+    DEL                            3                     2 
+
+    Records affected: 1
+
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[('=',''), ('[ \t]+',' ')]
+},
+]
+}
