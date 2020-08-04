@@ -1,8 +1,8 @@
 {
-'id': 'functional.transactions.read-consist-sttm-restart-on-delete-01',
+'id': 'functional.transactions.read-consist-sttm-restart-on-delete-02',
 'qmid': '',
 'tracker_id': '',
-'title': "READ CONSISTENCY. Check creation of new statement-level snapshot and restarting changed caused by DELETE. Test-01.",
+'title': "READ CONSISTENCY. Check creation of new statement-level snapshot and restarting changed caused by DELETE. Test-02.",
 'description': 
  """
     Initial article for reading:
