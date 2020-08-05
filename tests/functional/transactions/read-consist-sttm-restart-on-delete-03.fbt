@@ -238,8 +238,10 @@ con_lock_2.commit() # release record with ID=4. At this point session-worker wil
 
 con_lock_1.commit() # release record with ID=6. It is the last record which also must be deleted by session-worker.
 
-# Let ISQL finishes output to its log:
-time.sleep(1)
+# Let ISQL finishes output to its log.
+# ::: NB ::: do NOT reduce this delay less than two seconds otherwise
+# ISQL log can remain empty and test will be considered as failed.
+time.sleep(2)
 
 p_worker.terminate()
 

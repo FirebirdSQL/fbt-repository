@@ -246,8 +246,10 @@ con_lock_1.commit() # <<< THIS MUST CANCEL ALL PERFORMED DELETIONS OF SESSION-WO
 con_lock_2.commit()
 
 
-# Let ISQL finishes output to its log:
-time.sleep(1)
+# Let ISQL finishes output to its log.
+# ::: NB ::: do NOT reduce this delay less than two seconds otherwise
+# ISQL log can remain empty and test will be considered as failed.
+time.sleep(2)
 
 p_worker.terminate()
 
