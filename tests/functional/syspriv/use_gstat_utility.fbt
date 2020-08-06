@@ -246,7 +246,7 @@ sql_final='''
 runProgram('isql',[dsn,'-user',user_name, '-pas', user_password], sql_final)
 
 f_list = [ i.name for i in ( f_db_stat_log, f_db_stat_err, f_db_encr_log, f_db_encr_err ) ]
-#cleanup( f_list )
+cleanup( f_list )
 
   """,
   'expected_stdout':
