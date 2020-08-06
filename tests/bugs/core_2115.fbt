@@ -114,14 +114,43 @@ import subprocess
 import zipfile
 import filecmp
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
+
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#-------------------------------------------
 
 zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_2115.zip'), 'r' )
 for name in zf.namelist():
-  zo=zf.open(name, 'rU')
-  fn=open( os.path.join(context['temp_directory'],name), 'w')
-  fn.write( zo.read().replace('\\r','') )
-  fn.close()
+    zo=zf.open(name, 'rU')
+    fn=open( os.path.join(context['temp_directory'],name), 'w')
+    fn.write( zo.read().replace('\\r','') )
+    fn.close()
 
 ### do NOT: preserves Carriage Return character from Windows: zf.extractall( context['temp_directory'] )
 zf.close()
@@ -215,39 +244,24 @@ zf.close()
 sql_long_plans_qry=os.path.join(context['temp_directory'],'tmp_core_2115_queries_with_long_plans.sql')
 sql_long_plans_chk=os.path.join(context['temp_directory'],'tmp_core_2115_check_txt_of_long_plans.log')
 
-sql_long_plans_res=open( os.path.join(context['temp_directory'],'tmp_core_2115_current_txt_of_long_plans.log'), 'w')
+sql_long_plans_res=open( os.path.join(context['temp_directory'],'tmp_core_2115_current_txt_of_long_plans.log'), 'w', buffering=0)
 
-subprocess.call(["isql", dsn, "-user","SYSDBA","-password","masterkey","-i", sql_long_plans_qry],\
-                stdout=sql_long_plans_res, stderr=subprocess.STDOUT)
-sql_long_plans_res.close()
+subprocess.call(["isql", dsn, "-i", sql_long_plans_qry], stdout=sql_long_plans_res, stderr=subprocess.STDOUT)
+flush_and_close( sql_long_plans_res )
+
 
 if filecmp.cmp( sql_long_plans_chk, sql_long_plans_res.name):
-  print("Current plans match to original ones.")
+    print("Current plans match to original ones.")
 else:
-  print("Found at least one MISMATCH with original plans.")
+    print("Found at least one MISMATCH with original plans.")
 
-'''
-if os.path.isfile(sql_long_plans_qry):
-    os.remove(sql_long_plans_qry)
 
-if os.path.isfile(sql_long_plans_chk):
-    os.remove(sql_long_plans_chk)
+# cleanup
+##########
 
-if os.path.isfile(sql_long_plans_res.name):
-    os.remove(sql_long_plans_res.name)
-'''
+f_list = [ sql_long_plans_qry, sql_long_plans_chk, sql_long_plans_res.name ]
+cleanup( f_list )
 
-f_list=( 
-     sql_long_plans_qry
-    ,sql_long_plans_chk 
-    ,sql_long_plans_res
-)
-
-'''
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-'''
 
   """,
  'expected_stdout': 
