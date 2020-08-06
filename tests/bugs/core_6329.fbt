@@ -56,7 +56,7 @@ def cleanup( f_names_list ):
 
 fb_home = services.connect(host='localhost', user= THIS_DBA_USER, password= THIS_DBA_PSWD).get_home_directory()
 
-f_sql_cmd = open( os.path.join(context['temp_directory'],'tmp_6329.sql'), 'w', buffering=0)
+f_sql_make_map = open( os.path.join(context['temp_directory'],'tmp_6329.sql'), 'w', buffering=0)
 f_sql_txt=\
 '''
     set bail on;
@@ -66,14 +66,14 @@ f_sql_txt=\
     commit;
 ''' % locals()
 
-f_sql_cmd.write(f_sql_txt)
-f_sql_cmd.close()
+f_sql_make_map.write(f_sql_txt)
+f_sql_make_map.close()
 
 # do NOT remove this delay otherwise can get 'Windows error 2: file not found'.
 time.sleep(1)
 
 f_prepare_log=open( os.path.join(context['temp_directory'],'tmp_6329_prepare.log'), 'w', buffering=0)
-subprocess.call( [ fb_home + "isql", "-q", "-i", f_sql_cmd.name ], stdout=f_prepare_log, stderr=subprocess.STDOUT )
+subprocess.call( [ fb_home + "isql", "-q", "-i", f_sql_make_map.name ], stdout=f_prepare_log, stderr=subprocess.STDOUT )
 f_prepare_log.close()
 
 f_backup_log=open( os.path.join(context['temp_directory'],'tmp_6329_backup.log'), 'w', buffering=0)
@@ -84,7 +84,7 @@ f_backup_log.close()
 # Remove global mapping:
 ########################
 
-f_sql_cmd = open( os.path.join(context['temp_directory'],'tmp_6329_cleanup.sql'), 'w', buffering=0)
+f_sql_drop_map = open( os.path.join(context['temp_directory'],'tmp_6329_cleanup.sql'), 'w', buffering=0)
 f_sql_txt='''
     set bail on;
     connect 'localhost:%(THIS_FDB)s' user %(THIS_DBA_USER)s password '%(THIS_DBA_PSWD)s';
@@ -92,11 +92,11 @@ f_sql_txt='''
     drop global mapping win_system;
     commit;
 ''' % locals()
-f_sql_cmd.write(f_sql_txt)
-f_sql_cmd.close()
+f_sql_drop_map.write(f_sql_txt)
+f_sql_drop_map.close()
 
 f_cleanup_log = open( os.path.join(context['temp_directory'],'tmp_6329_cleanup.log'), 'w', buffering=0)
-subprocess.call( [ fb_home + "isql", "-q", "-i", f_sql_cmd.name ], stdout=f_cleanup_log, stderr=subprocess.STDOUT )
+subprocess.call( [ fb_home + "isql", "-q", "-i", f_sql_drop_map.name ], stdout=f_cleanup_log, stderr=subprocess.STDOUT )
 f_cleanup_log.close()
 
 # Checks:
@@ -133,7 +133,7 @@ with open( f_cleanup_log.name,'r') as f:
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
 
-f_list=( f_sql_cmd, f_prepare_log, f_backup_log, f_cleanup_log )
+f_list=( f_sql_make_map, f_sql_drop_map, f_prepare_log, f_backup_log, f_cleanup_log )
 cleanup( [ i.name for i in f_list ] )
 
 os.remove(THIS_FBK)
