@@ -34,6 +34,18 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 DB_PATH = os.sep.join( db_conn.database_name.split(os.sep)[:-1] )
 
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#-------------------------------------------
+
 dbx = os.path.join( DB_PATH, 'tmp_5364.fdb')
 if os.path.isfile(dbx):
     os.remove(dbx)
@@ -67,8 +79,11 @@ with open(f_gfix_online_err.name, 'r') as f:
         if line.split():
             print(line)
 
-if os.path.isfile(dbx):
-    os.remove(dbx)
+# cleanup
+##########
+
+f_list = [ i.name for i in ( f_gfix_online_log, f_gfix_online_err ) ] + [ dbx, ]
+cleanup( f_list )
 
   """,
  'expected_stdout':
