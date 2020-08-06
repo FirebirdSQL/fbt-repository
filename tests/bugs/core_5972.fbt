@@ -135,7 +135,7 @@ finally:
 if fb_major >= 4.0:
     runProgram( fb_home+'isql', ['-q', dsn], 'ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL;' )
 
-cleanup( (f_apply_ddl_sql.name, f_apply_ddl_log.name,) )
+cleanup( (f_apply_ddl_sql.name, f_apply_ddl_log.name, fdb_repl) )
 
   """,
  'expected_stdout': 
