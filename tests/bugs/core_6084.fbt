@@ -11,6 +11,8 @@
    When clause 'START WITH' absent then initial value of sequence must be 1.
 
    Test verifies several possible cases for this by making different START/INCREMENT clauses combination.
+   See also: doc/README.incompatibilities.3to4.txt
+   See also: tests\functional\generator\alter_01.fbt
 
    Checked on 4.0.0.2131.
  """,
