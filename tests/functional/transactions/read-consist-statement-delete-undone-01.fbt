@@ -34,6 +34,12 @@
        This will made this row visible to session-worker when it will resume its DML. 
 
     * session 'locker-1': commit (and allows lead session-worker to delete row with ID = 1).
+       At this point session-WORKER will:
+       ** set write-lock on row with ID=1 (but worker does  *not* update it yet! It only set write-lock);
+       ** tries to find all other rows in the set which is produced by query - but no more records can be found now;
+       ** makes UNDO of deletions which it did before (i.e. for records with ID 5...2) - but remain these recors be locked;
+       ** start query again - and now it is waiting for record with ID=8
+
        Then locker-1 inserts row with ID = 7, issues 'commit' (second time) and re-lock this row again (update ... where id = 7).
        This will made this row visible to session-worker when it will resume its DML. 
     
@@ -48,10 +54,8 @@
     * session 'locker-2': commit (this allows session-worker to delete row with ID = 6).
        Then locker-2 inserts row with ID = 10, issues 'commit' (second time) and re-lock this row again (update ... where id = 10).
        This will made this row visible to session-worker when it will resume its DML. 
-       NOTE: this record will cause session-worker to UNDO all changes that it was performed before - see "WHERE NOT EXISTS(...)" in its DML expression.
+       NOTE: this record will cause session-worker immediately UNDO all changes that it was performed before - see "WHERE NOT EXISTS(...)" in its DML expression.
 
-    * session 'locker-1': commit.
-      session-worker must immediately cancel its DML because now it sees record with ID = 10 which violates NOT-EXISTS requirements.
 
     Expected result:
     * session-'worker' must be cancelled. No rows must be deleted, PLUS new rows must remain (with ID = 6 ... 10).
@@ -59,6 +63,7 @@
 
     ################
 
+    Additional comments for this case - see letter from Vlad, 05-aug-2020 00:51.
     
     Checked on 4.0.0.2126
  """,
