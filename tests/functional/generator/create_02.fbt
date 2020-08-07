@@ -12,21 +12,6 @@ CREATE GENERATOR
 'min_versions': None,
 'versions': [
 {
- 'firebird_version': '1.0',
- 'platform': 'All',
- 'init_script': """CREATE GENERATOR test;
-commit;
-""",
- 'test_type': 'ISQL',
- 'test_script': 'CREATE GENERATOR test;',
- 'expected_stderr': """Statement failed, SQLCODE = -607
-
-unsuccessful metadata update
--DEFINE GENERATOR failed
--attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_11"
-"""
-},
-{
  'firebird_version': '2.5.0',
  'platform': 'All',
  'init_script': """CREATE GENERATOR test;
@@ -42,32 +27,22 @@ unsuccessful metadata update
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'init_script': """CREATE GENERATOR test;
-commit;
+ 'init_script':
+  """
+    CREATE GENERATOR test;
+    commit;
 """,
  'test_type': 'ISQL',
- 'test_script': 'CREATE GENERATOR test;',
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-unsuccessful metadata update
--CREATE SEQUENCE TEST failed
--Sequence TEST already exists
-
-"""
-},
-{
- 'firebird_version': '2.1',
- 'platform': 'All',
- 'init_script': """CREATE GENERATOR test;
-commit;
-""",
- 'test_type': 'ISQL',
- 'test_script': 'CREATE GENERATOR test;',
- 'expected_stderr': """Statement failed, SQLCODE = -607
-unsuccessful metadata update
--DEFINE GENERATOR failed
--attempt to store duplicate value (visible to active transactions) in unique index "RDB$INDEX_11"
--Problematic key value is ("RDB$GENERATOR_NAME" = 'TEST')
-"""
+ 'test_script':
+  """
+    CREATE GENERATOR test;
+  """,
+ 'expected_stderr':
+  """Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -CREATE SEQUENCE TEST failed
+    -Sequence TEST already exists
+  """
 }
 ]
 }
