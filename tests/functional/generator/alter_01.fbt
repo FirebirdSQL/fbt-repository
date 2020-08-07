@@ -1,0 +1,131 @@
+{
+'id': 'functional.generator.alter_01',
+'qmid': '',
+'tracker_id': '',
+'title': 'Run ALTER SEQUENCE',
+'description':
+ """
+   Create sequence and try several cases of ALTER SEQUENCE statement.
+   Then check result that is stored in RDB$GENERATORS table and gen_id(<seq>, 0) value.
+   NB:  we have to issue 'COMMIT' after each ALTER SEQUENCE statement in order to see new values in RDB.
+
+   07-aug-2020: we have to separate test for 3.0 and 4.0 because INITIAL value of new sequence
+   in FB 4.x now differs from "old good zero" (this is so since CORE-6084 was fixed).
+
+   See also: doc/README.incompatibilities.3to4.txt
+ """,
+'min_versions': '3.0',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate generator g;
+    recreate view v_info as select rdb$initial_value as rdb_init, rdb$generator_increment as rdb_incr, gen_id(g,0) as gen_id_0 from rdb$generators where rdb$generator_name=upper('g');
+    commit;
+    select 'point-00' as msg, v.* from v_info v;
+
+    set heading off;
+
+    alter sequence g increment by -1; commit;
+    select 'point-01' as msg, v.* from v_info v;
+
+    alter sequence g increment by 1; commit;
+    select 'point-02' as msg, v.* from v_info v;
+
+    alter sequence g restart with 0; commit;
+    select 'point-03' as msg, v.* from v_info v;
+
+    alter sequence g restart with -1; commit;
+    select 'point-04' as msg, v.* from v_info v;
+
+    alter sequence g restart with -1 increment by -1; commit;
+    select 'point-05' as msg, v.* from v_info v;
+
+    alter sequence g restart with -1 increment by 1; commit;
+    select 'point-06' as msg, v.* from v_info v;
+
+    alter sequence g restart with 1 increment by -1; commit;
+    select 'point-07' as msg, v.* from v_info v;
+
+    alter sequence g restart with 1 increment by 1; commit;
+    select 'point-08' as msg, v.* from v_info v;
+    commit;
+
+  """,
+ 'expected_stdout': 
+  """
+    MSG                   RDB_INIT     RDB_INCR              GEN_ID_0
+    ======== ===================== ============ =====================
+    point-00                     0            1                     0
+    point-01                     0           -1                     0
+    point-02                     0            1                     0
+    point-03                     0            1                     0
+    point-04                    -1            1                    -1
+    point-05                    -1           -1                    -1
+    point-06                    -1            1                    -1
+    point-07                     1           -1                     1
+    point-08                     1            1                     1
+  """,
+  'substitutions': [ ('===.*', ''), ('[ \t]+',' ') ]
+},
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate generator g;
+    recreate view v_info as select rdb$initial_value as rdb_init, rdb$generator_increment as rdb_incr, gen_id(g,0) as gen_id_0 from rdb$generators where rdb$generator_name=upper('g');
+    commit;
+    select 'point-00' as msg, v.* from v_info v;
+
+    set heading off;
+
+    alter sequence g increment by -1; commit;
+    select 'point-01' as msg, v.* from v_info v;
+
+    alter sequence g increment by 1; commit;
+    select 'point-02' as msg, v.* from v_info v;
+
+    alter sequence g restart with 0; commit;
+    select 'point-03' as msg, v.* from v_info v;
+
+    alter sequence g restart with -1; commit;
+    select 'point-04' as msg, v.* from v_info v;
+
+    alter sequence g restart with -1 increment by -1; commit;
+    select 'point-05' as msg, v.* from v_info v;
+
+    alter sequence g restart with -1 increment by 1; commit;
+    select 'point-06' as msg, v.* from v_info v;
+
+    alter sequence g restart with 1 increment by -1; commit;
+    select 'point-07' as msg, v.* from v_info v;
+
+    alter sequence g restart with 1 increment by 1; commit;
+    select 'point-08' as msg, v.* from v_info v;
+    commit;
+
+
+  """,
+ 'expected_stdout': 
+  """
+    MSG                   RDB_INIT     RDB_INCR              GEN_ID_0
+    ======== ===================== ============ =====================
+    point-00                     1            1                     0
+    point-01                     1           -1                     0
+    point-02                     1            1                     0
+    point-03                     0            1                    -1
+    point-04                    -1            1                    -2
+    point-05                    -1           -1                     0
+    point-06                    -1            1                    -2
+    point-07                     1           -1                     2
+    point-08                     1            1                     0
+  """,
+  'substitutions': [ ('===.*', ''), ('[ \t]+',' ') ]
+}
+]
+}
