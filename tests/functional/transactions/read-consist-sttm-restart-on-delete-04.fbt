@@ -84,6 +84,10 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+# How long can we wait for session-worker completition, seconds
+# (ISQL often can not complete its job for several seconds!):
+MAX_TIME_FOR_WAITING_WORKER_FINISH = 60
+
 db_conn.close()
 fb_home = services.connect(host='localhost').get_home_directory()
 
@@ -126,9 +130,12 @@ flush_and_close(f_init_err)
 sql_addi='''insert into test(id, x) select row_number()over(),row_number()over() from rdb$types rows 5;'''
 runProgram('isql', [ dsn, '-q' ], sql_addi)
 
+locker_tpb = fdb.TPB()
+locker_tpb.lock_timeout = MAX_TIME_FOR_WAITING_WORKER_FINISH
+locker_tpb.lock_resolution = fdb.isc_tpb_wait
 
-con_lock_1 = fdb.connect( dsn = dsn )
-con_lock_2 = fdb.connect( dsn = dsn )
+con_lock_1 = fdb.connect( dsn = dsn, isolation_level=locker_tpb )
+con_lock_2 = fdb.connect( dsn = dsn, isolation_level=locker_tpb )
 
 
 #########################
@@ -156,37 +163,32 @@ sql_text='''
     --select current_connection, current_transaction from rdb$database;
     set list off;
     set wng off;
+
+    -- This is need to ensure that main script will not finish until ISQL session
+    -- completed its mission. Locker will issue the same sttatement ('INSERT INTO FLAG VALUES(1)')
+    -- and will wait (because of attempt to add duplicate value) for enough time that is defined by
+    -- LOCK TIMEOUT parameter of its connection object ('isolation_level=locker_tpb', see above).
+    -- Max time of waiting by locker is defined by MAX_TIME_FOR_WAITING_WORKER_FINISH variable:
+    insert into flag(id) values(1);
+
     --set plan on;
     set count on;
-
     delete from test where id <= 2 order by id DESC rows 4; -- THIS MUST BE LOCKED
 
     -- check results:
     -- ###############
 
-    select id from test; -- this will produce output only after all lockers do their commit/rollback
+    select id from test;
 
-    -- select * from v_worker_log v where upper(v.op) = upper('del');
+    select * from v_worker_log v where upper(v.op) = upper('del');
 
     /*
-    Expected result here:
-        OLD_ID       NEW_ID OP         REC_VERS      SNAP_NO
-        ====== ============ ====== ============ ============
-             2       <null> DEL              34            5
-             2       <null> DEL              53           20
-             1       <null> DEL              53           20
-             2       <null> DEL              53           32
-             1       <null> DEL              53           32
-            -3       <null> DEL              76           32
-            -4       <null> DEL              53           32
-    */
-
-    -- /*
     select d.op ,count(distinct d.snap_no) as statement_snapshots_count, count(distinct d.rec_vers) rec_vers_count
     from tlog_done d
     where d.who starting with upper('worker') and d.op=upper('del')
     group by d.op;
     --*/
+    rollback; -- Locker-N will resume main script only after this.
 
 '''  % dict(globals(), **locals())
 
@@ -236,7 +238,21 @@ con_lock_2.commit() # This releases row with ID=-3. No more locked rows so sessi
 # Let ISQL finishes output to its log.
 # ::: NB ::: do NOT reduce this delay less than two seconds otherwise
 # ISQL log can remain empty and test will be considered as failed.
-time.sleep(2)
+#time.sleep(2)
+
+#####################
+# Here we let ISQL finish its mission.
+# This will force script to be waiting for enough time until ISQL session finish its job
+# because table FLAG already has uncommitted value of ID=1 (see ISQL script at the above)
+# and we attempt here to insert duplicate value:
+try:
+    # Will wait until ISQL session ("worker") will issue final ROLLBACK or timeout 
+    # defined by <MAX_TIME_FOR_WAITING_WORKER_FINISH> is expired:
+    con_lock_1.execute_immediate('insert into flag(id) values(1)')
+except Exception as e:
+    pass
+con_lock_1.close()
+######################
 
 p_worker.terminate()
 
@@ -267,11 +283,9 @@ time.sleep(1)
 # Cleanup.
 ##########
 f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
-cleanup( f_list )
+#cleanup( f_list )
 
-  """,
- 'expected_stdout':
-  """
+'''
     Records affected: 4
 
               ID 
@@ -286,11 +300,36 @@ cleanup( f_list )
 
     Records affected: 1
 
+
+'''
+
+  """,
+ 'expected_stdout':
+  """
+    Records affected: 4
+
+              ID 
+    ============ 
+              -5 
+
+    Records affected: 1
+
+          OLD_ID       NEW_ID OP                  REC_VERS               SNAP_NO 
+    ============ ============ ====== ===================== ===================== 
+               2       <null> DEL                        2                     2 
+               2       <null> DEL                        3                     3 
+               1       <null> DEL                        3                     3 
+               2       <null> DEL                        3                     4 
+               1       <null> DEL                        3                     4 
+              -3       <null> DEL                        4                     4 
+              -4       <null> DEL                        3                     4 
+
+    Records affected: 7
   """,
  'expected_stderr':
   """
   """,
-  'substitutions':[('=',''), ('[ \t]+',' ')]
+  #'substitutions':[('=',''), ('[ \t]+',' ')]
 },
 ]
 }
