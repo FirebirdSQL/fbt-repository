@@ -12,8 +12,9 @@
    07-aug-2020: we have to separate test for 3.0 and 4.0 because INITIAL value of new sequence
    in FB 4.x now differs from "old good zero" (this is so since CORE-6084 was fixed).
 
-   13-aug-2020: changed code after introduction of fix for CORE-6386: column RDB$GENERATORD.RDB$INITIAL_VALUE
-   must NOT changed on any kind of ALTER EQUENCE statement, even when it contains 'RESTART WITH' clause.
+   13-aug-2020: changed code for FB 4.x after introduction of fix for CORE-6386: value that was initially
+   written into RDB$GENERATORD.RDB$INITIAL_VALUE column must NOT changed on any kind of ALTER EQUENCE
+   statement, even when it contains 'RESTART WITH' clause. Checked on 4.0.0.2151.
 
    See also: doc/README.incompatibilities.3to4.txt
  """,
