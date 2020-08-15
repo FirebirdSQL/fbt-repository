@@ -2,7 +2,7 @@
 'id': 'functional.transactions.read-consist-statement-delete-undone-01',
 'qmid': '',
 'tracker_id': '',
-'title': "READ CONSISTENCY. DELETE statement results must be UNDONE on requirement that appears after this statement start. Test-01",
+'title': "READ CONSISTENCY. Changes produced by DELETE statement must be UNDONE when cursor resultset becomes empty after this statement start. Test-01",
 'description': 
  """
     Initial article for reading:
@@ -23,49 +23,90 @@
     Following scenario if executed here:
     * five rows are inserted into the table TEST, with IDs: 1...5.
 
-    * session 'locker-1' ("BLOCKER" in Tom Kyte's article ): issues 'update test set id = id where id=1'.
+    * session 'locker-1' ("BLOCKER" in Tom Kyte's article ):
+            update test set id = id where id=1;
 
     * session 'worker' ("LONG" in TK article) has mission:
-        delete from test where not exists(select * from test where id >= 10) order by id desc; // within Tx with TIL = read committed read consistency
-        Execution will have PLAN ORDER <DESCENDING_INDEX>.
-        It will delete rows starting with ID = 5 and down to ID = 2, but hang on row with ID = 1 because of locker-1;
+            delete from test where not exists(select * from test where id >= 10) order by id desc;  // using TIL = read committed read consistency
+    
+        // Execution will have PLAN ORDER <DESCENDING_INDEX>.
+        // It will delete rows starting with ID = 5 and down to ID = 2, but hang on row with ID = 1 because of locker-1;
 
-    * session 'locker-2' ("FIRSTLAST" in TK article): inserts row with ID = 6 then issues 'commit' and re-lock this row again (update ... where id = 6).
-       This will made this row visible to session-worker when it will resume its DML. 
+    * session 'locker-2' ("FIRSTLAST" in TK article):
+            (1) insert into test(id) values(6);
+            (2) commit;
+            (3) update test set id=id where id = 6;
+
+        // session-'worker' remains waiting at this point because row with ID = 5 is still occupied by by locker-1
+        // but worker must further see record with (new) id = 6 because its TIL was changed to RC NO RECORD_VERSION.
 
     * session 'locker-1': commit (and allows lead session-worker to delete row with ID = 1).
-       At this point session-WORKER will:
-       ** set write-lock on row with ID=1 (but worker does  *not* update it yet! It only set write-lock);
-       ** tries to find all other rows in the set which is produced by query - but no more records can be found now;
-       ** makes UNDO of deletions which it did before (i.e. for records with ID 5...2) - but remain these recors be locked;
-       ** start query again - and now it is waiting for record with ID=8
+            (1) commit;
+            (2) insert into test(id) values(7);
+            (3) commit;
+            (4) update test set id=id where id = 7;
 
-       Then locker-1 inserts row with ID = 7, issues 'commit' (second time) and re-lock this row again (update ... where id = 7).
-       This will made this row visible to session-worker when it will resume its DML. 
+        // This: '(1) commit' - will release record with ID = 1. Worker sees this record and put write-lock on it.
+        // [DOC]: "b) engine put write lock on conflicted record"
+        // Because of TIL = RC NRV session-'worker' must see all committed records regardless on its own snapshot.
+        // Worker resumes search for any rows which with taking in account required order of its DML (i.e. 'ORDER BY ID DESC').
+        // [DOC]: "c) engine continue to evaluate remaining records of update\delete cursor and put write locks on it too"
+        // Worker starts to search records which must be involved in its DML and *found* first sucn row: it has ID = 7.
+        // Then it goes on and stops on ID=6 because id is occupied by locker-2.
+        // BECAUSE OF FACT THAT AT LEAST ONE ROW *WAS FOUND* - STATEMENT-LEVEL RESTART *NOT* YET OCCURS HERE.
+        // [DOC]: "d) when there is *no more* records to fetch, engine start to undo all actions performed since
+        //            top-level statement execution starts and preserve already taken write locks
+        //         e) then engine restores transaction isolation mode as READ COMMITTED *READ CONSISTENCY*, 
+        //            creates new statement-level snapshot and restart execution of top-level statement."
+
     
-    * session 'locker-2': commit (this allows session-worker to delete row with ID = 6).
-       Then locker-2 inserts row with ID = 8, issues 'commit' (second time) and re-lock this row again (update ... where id = 8).
-       This will made this row visible to session-worker when it will resume its DML. 
+    * session 'locker-2':
+            (1) commit;
+            (2) insert into test(id) values(8);
+            (3) commit;
+            (4) update test set id=id where id = 8;
+
+        // This: '(1) commit' - will release record with ID = 6. Worker sees this record and put write-lock on it.
+        // [DOC]: "b) engine put write lock on conflicted record"
+        // Because of TIL = RC NRV session-'worker' must see all committed records regardless on its own snapshot.
+        // Worker resumes search for any rows which with taking in account required order of its DML (i.e. 'ORDER BY ID DESC')
+        // [DOC]: "c) engine continue to evaluate remaining records of update\delete cursor and put write locks on it too"
+        // Worker starts to search records which must be involved in its DML and *found* first sucn row: it has ID = 8.
+        // Then it goes on stops on ID=7 because id is occupied by locker-1.
+        // BECAUSE OF FACT THAT AT LEAST ONE ROW *WAS FOUND* - STATEMENT-LEVEL RESTART *NOT* YET OCCURS HERE.
+        // [DOC]: "d) when there is *no more* records to fetch, engine start to undo all actions performed since
+        //            top-level statement execution starts and preserve already taken write locks
+        //         e) then engine restores transaction isolation mode as READ COMMITTED *READ CONSISTENCY*, 
+        //            creates new statement-level snapshot and restart execution of top-level statement."
     
     * session 'locker-1': commit (this allows session-worker to delete row with ID = 7).
-       Then locker-1 inserts row with ID = 9, issues 'commit' (second time) and re-lock this row again (update ... where id = 9).
-       This will made this ro visible to session-worker when it will restart its DML. 
+            (1) commit;
+            (2) insert into test(id) values(9);
+            (3) commit;
+            (4) update test set id=id where id = 9;
+       
+       // Comments here are similar to previous one: STATEMENT-LEVEL RESTART *NOT* YET OCCURS HERE.
 
     * session 'locker-2': commit (this allows session-worker to delete row with ID = 6).
-       Then locker-2 inserts row with ID = 10, issues 'commit' (second time) and re-lock this row again (update ... where id = 10).
-       This will made this row visible to session-worker when it will resume its DML. 
-       NOTE: this record will cause session-worker immediately UNDO all changes that it was performed before - see "WHERE NOT EXISTS(...)" in its DML expression.
+            (1) commit;
+            (2) insert into test(id) values(10);
+            (3) commit;
+            (4) update test set id=id where id = 10;
+
+       // This will made this row visible to session-worker when it will resume its DML. 
+       // NOTE: this record will cause session-worker immediately UNDO all changes that it was performed before - see "WHERE NOT EXISTS(...)" in its DML expression.
 
 
     Expected result:
     * session-'worker' must be cancelled. No rows must be deleted, PLUS new rows must remain (with ID = 6 ... 10).
-    * we must NOT see any restart witnesses because statement no rows actually were affected by session-worker statement.
+    * we must NOT see statement-level restart because no rows actually were affected by session-worker statement.
+      Column TLOG_DONE.SNAP_NO must contain only one unique value that relates to start of DELETE statement.
 
     ################
 
     Additional comments for this case - see letter from Vlad, 05-aug-2020 00:51.
     
-    Checked on 4.0.0.2126
+    Checked on 4.0.0.2151 SS/CS
  """,
 'min_versions': '4.0',
 'versions': [
@@ -129,12 +170,27 @@ subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', sql_init_ddl], stdout=f_ini
 flush_and_close(f_init_log)
 flush_and_close(f_init_err)
 
-sql_addi='''insert into test(id, x) select row_number()over(),row_number()over() from rdb$types rows 5;'''
+# add rows with ID = 1,2,3,4,5:
+sql_addi='''
+    set term ^;
+    execute block as
+    begin
+        rdb$set_context('USER_SESSION', 'WHO', 'INIT_DATA');
+    end
+    ^
+    set term ;^
+    insert into test(id, x)
+    select row_number()over(),row_number()over()
+    from rdb$types rows 5;
+    commit;
+'''
 runProgram('isql', [ dsn, '-q' ], sql_addi)
 
 
 con_lock_1 = fdb.connect( dsn = dsn )
 con_lock_2 = fdb.connect( dsn = dsn )
+con_lock_1.execute_immediate( "execute block as begin rdb$set_context('USER_SESSION', 'WHO', 'LOCKER #1'); end" )
+con_lock_2.execute_immediate( "execute block as begin rdb$set_context('USER_SESSION', 'WHO', 'LOCKER #2'); end" )
 
 
 #########################
@@ -170,26 +226,17 @@ sql_text='''
     -- check results:
     -- ###############
 
-    select id from test; -- this will produce output only after all lockers do their commit/rollback
+    select id from test order by id; -- this will produce output only after all lockers do their commit/rollback
 
-    -- select * from v_worker_log v where upper(v.op) = upper('del');
+    select v.old_id, v.op, v.snap_no_rank
+    from v_worker_log v
+    where v.op = 'del';
 
-    /*
-    Expected result here:
-    OLD_ID       NEW_ID OP         REC_VERS      SNAP_NO
-    ====== ============ ====== ============ ============
-         5       <null> DEL              34            5
-         4       <null> DEL              34            5
-         3       <null> DEL              34            5
-         2       <null> DEL              34            5
-    */
+    set width who 10;
+    -- DO NOT check this! Values can differ here from one run to another!
+    --select id, trn, who, old_id, new_id, op, rec_vers, global_cn, snap_no from tlog_done order by id;
 
-    -- /*
-    select d.op ,count(distinct d.snap_no) as statement_snapshots_count, count(distinct d.rec_vers) rec_vers_count
-    from tlog_done d
-    where d.who starting with upper('worker') and d.op=upper('del')
-    group by d.op;
-    --*/
+    rollback;
 
 '''  % dict(globals(), **locals())
 
@@ -205,7 +252,7 @@ f_worker_err=open( ''.join( ( os.path.splitext(f_worker_log.name)[0], '.err') ),
 ###  L A U N C H     W O R K E R    U S I N G     I S Q L,   A S Y N C.  ###
 ############################################################################
 
-p_worker = Popen( [ fb_home+'isql', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
+p_worker = Popen( [ fb_home+'isql', '-pag', '999999', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
 time.sleep(1)
 
 
@@ -251,12 +298,8 @@ con_lock_1.commit() # <<< THIS MUST CANCEL ALL PERFORMED DELETIONS OF SESSION-WO
 con_lock_2.commit()
 
 
-# Let ISQL finishes output to its log.
-# ::: NB ::: do NOT reduce this delay less than two seconds otherwise
-# ISQL log can remain empty and test will be considered as failed.
-time.sleep(2)
-
-p_worker.terminate()
+# Here we wait for ISQL complete its mission:
+p_worker.wait()
 
 flush_and_close(f_worker_log)
 flush_and_close(f_worker_err)
@@ -287,34 +330,34 @@ time.sleep(1)
 f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
 cleanup( f_list )
 
-
   """,
  'expected_stdout':
   """
     Records affected: 0
 
-              ID 
-    ============ 
-               1 
-               2 
-               3 
-               4 
-               5 
-               6 
-               7 
-               8 
-               9 
-              10 
+         ID 
+    ======= 
+          1 
+          2 
+          3 
+          4 
+          5 
+          6 
+          7 
+          8 
+          9 
+         10 
 
     Records affected: 10
 
+     OLD_ID OP              SNAP_NO_RANK 
+    ======= ====== ===================== 
+          5 DEL                        1 
+          4 DEL                        1 
+          3 DEL                        1 
+          2 DEL                        1 
 
-    OP     STATEMENT_SNAPSHOTS_COUNT        REC_VERS_COUNT 
-    ====== ========================= ===================== 
-    DEL                            1                     1 
-
-    Records affected: 1
-
+    Records affected: 4
   """,
  'expected_stderr':
   """
