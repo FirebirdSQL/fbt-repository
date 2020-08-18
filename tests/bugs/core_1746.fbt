@@ -5,25 +5,30 @@
 'title': 'Expression index can be created while doing inserts into table',
 'description':
  """
-   We check three cases of Tx setting: WAIT, NO WAIT and LOCK TIMEOUT n.
+    We check three cases of Tx setting: WAIT, NO WAIT and LOCK TIMEOUT n.
 
-   First ISQL session always inserts some number of rows and falls in delay (it is created
-   artificially by attempting to insert duplicate key in index in Tx with lock timeout = 7).
+    First ISQL session always inserts some number of rows and falls in delay (it is created
+    artificially by attempting to insert duplicate key in index in Tx with lock timeout = 7).
 
-   Second ISQL is launched in SYNC mode after small delay (3 seconds) and starts transaction 
-   with corresponding WAIT/NO WAIT/LOCK TIMEOUT clause.
+    Second ISQL is launched in SYNC mode after small delay (3 seconds) and starts transaction 
+    with corresponding WAIT/NO WAIT/LOCK TIMEOUT clause.
 
-   If Tx starts with NO wait or lock timeout then this (2nd) ISQL always MUST FAIL.
+    If Tx starts with NO wait or lock timeout then this (2nd) ISQL always MUST FAIL.
 
-   After 2nd ISQL will finish, we have to wait yet 5 seconds for 1st ISQL will gone.
-   Total time of these two delays (3+5=8) must be greater than lock timeout in the script which 
-   is running by 1st ISQL (7 seconds).
+    After 2nd ISQL will finish, we have to wait yet 5 seconds for 1st ISQL will gone.
+    Total time of these two delays (3+5=8) must be greater than lock timeout in the script which 
+    is running by 1st ISQL (7 seconds).
 
-   Initial version of this test did use force interruption of both ISQL processes but this was unneeded,
-   though it helped to discover some other bug in engine which produced bugcheck - see CORE-5275.
+    Initial version of this test did use force interruption of both ISQL processes but this was unneeded,
+    though it helped to discover some other bug in engine which produced bugcheck - see CORE-5275.
 
-   Checked on: WI-V2.5.6.27015 (SC), WI-V2.5.6.27015 (CS, SC, SS), WI-T4.0.0.258 (SS).
-   OS: Windows XP.
+    Checked on:
+        4.0.0.2164 SS: 37.707s.
+        4.0.0.2119 SS: 37.982s.
+        4.0.0.2164 CS: 39.116s.
+        3.0.7.33356 SS: 36.675s.
+        3.0.7.33356 CS: 37.839s.
+        2.5.9.27150 SC: 35.755s.
  """,
 'min_versions': '2.5.6',
 'versions': [
@@ -83,8 +88,18 @@ rows_to_add=1000
 sql_bulk_insert='''\
     set bail on;
     set list on;
-    alter sequence g restart with 0;
+
+    -- do NOT use it !! >>> alter sequence g restart with 0; -- gen_id(g,1) will return 0 rather than 1 since 06-aug-2020 on FB 4.x !!
+    
     delete from test;
+    set term ^;
+    execute block as
+        declare c bigint;
+    begin
+        c = gen_id(g, -gen_id(g, 0)); -- restart sequence
+    end
+    ^
+    set term ;^
     commit;
     
     set transaction lock timeout 7; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY, see below auton Tx start.
