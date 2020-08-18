@@ -2,8 +2,18 @@
 'id': 'bugs.core_3018',
 'qmid': None,
 'tracker_id': 'CORE-3018',
-'title': 'RECREATE, ALTER and CREATE OR ALTER SEQUENCE/GENERATOR statements',
-'description': '',
+'title': 'Check ability to use RECREATE, ALTER and CREATE OR ALTER SEQUENCE/GENERATOR statements',
+'description':
+  """
+    NOTE: FB 4.x has incompatible behaviour with all previous versions since build 4.0.0.2131 (06-aug-2020):
+    statement 'alter sequence <seq_name> restart with 0' changes rdb$generators.rdb$initial_value to -1 thus
+    next call of gen_id(<seq_name>,1) will return 0 (ZERO!) rather than 1. 
+    See also CORE-6084 and its fix: https://github.com/FirebirdSQL/firebird/commit/23dc0c6297825b2e9006f4d5a2c488702091033d
+    This is considered as *expected* and is noted in doc/README.incompatibilities.3to4.txt
+
+    For this reason, old code was removed and now test checks only ability to use statements rather than results of them.
+    Checked on: 4.0.0.2119; 4.0.0.2164; 3.0.7.33356.
+  """,
 'min_versions': '3.0',
 'versions': [
 {
@@ -12,39 +22,36 @@
  'test_type': 'ISQL',
  'test_script': 
   """
-    create sequence g1 start with 9223372036854775807 increment by -2147483647;
-    show sequence g1;
-    alter sequence g1 restart with -9223372036854775808;
-    show sequence g1;
-    alter sequence g1 increment by 2147483647;
-    show sequence g1;
-    recreate sequence g1 start with -9223372036854775808 increment by -2147483647;
-    show sequence g1;
-    recreate sequence g1 start with -1;
-    show sequence g1;
-    recreate sequence g1 increment by -2;
-    show sequence g1;
-/*
-    OLD data, _before_ CORE-5133 ("ALTER SEQUENCE RESTART WITH does not change the initial value") was fixed:
+    -- Only FIRST of following statements must fail with 
+    -- SQLSTATE = 42000 / Dynamic SQL Error / -SQL error code = -104 / -Unexpected end of command.
+    -- All subsequent must pass w/o errors.
+    create or alter sequence g01;
+    
+    create or alter sequence g02 start with 2;
+    
+    create or alter sequence g03 start with 2 increment by 3;
+    
+    create or alter sequence g04 restart increment by 4;
 
-    Generator G1, current value: 9223372036854775807, initial value: 9223372036854775807, increment: -2147483647
-    Generator G1, current value: -9223372036854775808, initial value: 9223372036854775807, increment: -2147483647
-    Generator G1, current value: -9223372036854775808, initial value: 9223372036854775807, increment: 2147483647
-    Generator G1, current value: -9223372036854775808, initial value: -9223372036854775808, increment: -2147483647
-    Generator G1, current value: -1, initial value: -1, increment: 1
-    Generator G1, current value: 0, initial value: 0, increment: -2
+    --#####################################################
 
-*/
+    recreate sequence g05;
+    
+    recreate sequence g06 start with 6;
+    
+    recreate sequence g07 start with 7 increment by 8;
   """,
  'expected_stdout': 
   """
-    Generator G1, current value: 9223372036854775807, initial value: 9223372036854775807, increment: -2147483647
-    Generator G1, current value: -9223372036854775808, initial value: -9223372036854775808, increment: -2147483647
-    Generator G1, current value: -9223372036854775808, initial value: -9223372036854775808, increment: 2147483647
-    Generator G1, current value: -9223372036854775808, initial value: -9223372036854775808, increment: -2147483647
-    Generator G1, current value: -1, initial value: -1, increment: 1
-    Generator G1, current value: 0, initial value: 0, increment: -2
+  """,
+ 'expected_stderr': 
   """
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Unexpected end of command
+  """,
+  'substitutions':[('end of command.*', 'end of command')]
 }
 ]
 }
