@@ -6,6 +6,7 @@
 'description':
  """
    Checked on WI-T4.0.0.546. Works fine.
+   18.08.2020: replaced expected_stdout, checked on 4.0.0.2164.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -83,12 +84,12 @@
   """,
  'expected_stdout': 
   """
-    ID_DEFAULT                      -33
-    ID_ALWAYS                       33
+    ID_DEFAULT                      -11
+    ID_ALWAYS                       11
     ID_DEFAULT                      -7654321
     ID_ALWAYS                       7654321
+    ID_DEFAULT                      -33
     ID_DEFAULT                      -55
-    ID_DEFAULT                      -77
   """,
  'expected_stderr': 
   """
