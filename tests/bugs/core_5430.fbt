@@ -6,6 +6,7 @@
 'description':
  """
    Checked on 4.0.0.474
+   18.08.2020: replaced expected_stdout, checked on 4.0.0.2164.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -49,12 +50,12 @@
   """,
  'expected_stdout': 
   """
-    TEST1_ID                        12346
-    TEST2_ID                        34567
-    TEST3_ID                        33333
-    TEST1_RESTARTED_ID              12346
-    TEST2_RESTARTED_ID              45678
-    TEST3_CHNG_INCR_ID              11111
+    TEST1_ID                        12345
+    TEST2_ID                        12345
+    TEST3_ID                        1
+    TEST1_RESTARTED_ID              12345
+    TEST2_RESTARTED_ID              23456
+    TEST3_CHNG_INCR_ID              -22222
   """,
  'expected_stderr': 
   """
