@@ -5,11 +5,23 @@
 'title': 'Cursors should ignore changes made by the same statement',
 'description':
  """
-   This test verifies BASIC issues that were accumulated in miscenaleous tickets.
-   More complex cases (which involve not only SQL but also PSQL features) will 
-   follow in separate .fbt(s) in order to keep size of each test in reasonable limits.
-   Checked on WI-T4.0.0.371, WI-V3.0.1.32597.
-   Checked on 4.0.0.2028 (after fix core-2274) -- see below, view v_t1_updatable.
+    This test verifies BASIC issues that were accumulated in miscenaleous tickets.
+    More complex cases (which involve not only SQL but also PSQL features) will 
+    follow in separate .fbt(s) in order to keep size of each test in reasonable limits.
+    Checked on WI-T4.0.0.371, WI-V3.0.1.32597.
+    Checked on 4.0.0.2028 (after fix core-2274) -- see below, view v_t1_updatable.
+
+    :::::::::::::::::::::::::::::::::::::::: NB ::::::::::::::::::::::::::::::::::::
+    18.08.2020. FB 4.x has incompatible behaviour with all previous versions since build 4.0.0.2131 (06-aug-2020):
+    statement 'alter sequence <seq_name> restart with 0' changes rdb$generators.rdb$initial_value to -1 thus next call
+    gen_id(<seq_name>,1) will return 0 (ZERO!) rather than 1. 
+    See also CORE-6084 and its fix: https://github.com/FirebirdSQL/firebird/commit/23dc0c6297825b2e9006f4d5a2c488702091033d
+    ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    This is considered as *expected* and is noted in doc/README.incompatibilities.3to4.txt
+
+    Because of this, it was decided to replace 'alter sequence restart...' with subtraction of two gen values:
+    c = gen_id(<g>, -gen_id(<g>, 0)) -- see procedure sp_restart_sequences.
+
  """,
 'min_versions': '3.0.1',
 'versions': [
@@ -22,6 +34,7 @@
  'test_type': 'ISQL',
  'test_script': 
   """
+    create or alter procedure sp_restart_sequences as begin end;
     set  term ^;
     execute block as
     begin
@@ -42,6 +55,17 @@
     create sequence g2;
     commit;
 
+    set term ^;
+    create or alter procedure sp_restart_sequences as
+        declare c bigint;
+    begin
+        c = gen_id(g1, -gen_id(g1, 0));
+        c = gen_id(g2, -gen_id(g2, 0));
+    end
+    ^
+    set term ;^
+    commit;
+
     set list on;
 
 
@@ -54,9 +78,7 @@
     insert into test values(0);
     commit;
 
-    alter sequence g1 restart with 0;
-    alter sequence g2 restart with 0;
-
+    execute procedure sp_restart_sequences;
     commit;
 
     insert into test(x) select gen_id(g2, 1) from test where gen_id(g1, 1) < 10;
@@ -78,8 +100,9 @@
 
     -- CORE-634 Bad treatment of FIRST/SKIP in subselect
 
-    alter sequence g1 restart with 0;
-    alter sequence g2 restart with 0;
+    execute procedure sp_restart_sequences;
+    commit;
+
     recreate table test(x int);
     commit;
 
@@ -134,8 +157,9 @@
 
     -- CORE-2799 Changing sort directon in delete statement cause deletion of all records in table
 
-    alter sequence g1 restart with 0;
-    alter sequence g2 restart with 0;
+    execute procedure sp_restart_sequences;
+    commit;
+
     recreate table test(x int);
     create index test_x_asc on test(x);
     create descending index test_x_dec on test(x);
