@@ -5,17 +5,36 @@
 'title': '### ADDITIONAL TEST ### Lookup (or scan) in descending index could be very inefficient for some keys',
 'description': 
  """
-   This is ADDITIONAL test for issue in ticket: "Pavel Zotov added a comment - 23/Dec/13 04:02 PM".
-   Separate fix was required for this issue, see comments in
-   https://sourceforge.net/p/firebird/mailman/message/31785278/
-   ===
-      + 2013-12-25 10:57  hvlad 
-      +   M src/jrd/btr.cpp
-      +Additional fix for bug CORE-4302 : Lookup (or scan) in descending index could be very inefficient...
-   ===
-   Excessive fetches count reproduced on WI-T3.0.0.30566 (Alpha1 release).
-   Current results were checked on Windows (2.5.6.26994, 3.0.0.32484, 4.0.0.138) and POSIX (4.0.0.138)
-   29.07.2016. On 4.0.0.316 number of fetches is ~99 thus new threshold was added for engine = 4.0.
+    This is ADDITIONAL test for issue in ticket: "Pavel Zotov added a comment - 23/Dec/13 04:02 PM".
+    Separate fix was required for this issue, see comments in
+    https://sourceforge.net/p/firebird/mailman/message/31785278/
+    ===
+       + 2013-12-25 10:57  hvlad 
+       +   M src/jrd/btr.cpp
+       +Additional fix for bug CORE-4302 : Lookup (or scan) in descending index could be very inefficient...
+    ===
+    Excessive fetches count reproduced on WI-T3.0.0.30566 (Alpha1 release).
+    Current results were checked on Windows (2.5.6.26994, 3.0.0.32484, 4.0.0.138) and POSIX (4.0.0.138)
+    29.07.2016. On 4.0.0.316 number of fetches is ~99 thus new threshold was added for engine = 4.0.
+
+    :::::::::::::::::::::::::::::::::::::::: NB ::::::::::::::::::::::::::::::::::::
+    18.08.2020. FB 4.x has incompatible behaviour with all previous versions since build 4.0.0.2131 (06-aug-2020):
+    statement 'alter sequence <seq_name> restart with 0' changes rdb$generators.rdb$initial_value to -1 thus next call
+    gen_id(<seq_name>,1) will return 0 (ZERO!) rather than 1. 
+    See also CORE-6084 and its fix: https://github.com/FirebirdSQL/firebird/commit/23dc0c6297825b2e9006f4d5a2c488702091033d
+    ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    This is considered as *expected* and is noted in doc/README.incompatibilities.3to4.txt
+
+    Because of this, it was decided to replace 'alter sequence restart...' with subtraction of two gen values:
+    c = gen_id(<g>, -gen_id(<g>, 0)) -- see procedure sp_restart_sequences.
+
+    Checked on:
+        4.0.0.2164 SS: 3.232s.
+        4.0.0.2119 SS: 3.128s.
+        4.0.0.2164 CS: 3.286s.
+        3.0.7.33356 SS: 2.550s.
+        3.0.7.33356 CS: 3.325s.
+        2.5.9.27150 SC: 2.597s.
  """,
 'min_versions': '2.5.3',
 'versions': [
@@ -28,18 +47,30 @@
   """,
  'test_script': 
   """
-    recreate table td(id int, s varchar(50)); commit;
+    create or alter procedure sp_restart_sequences as begin end;
+    recreate table td(id int, s varchar(50));
+    commit;
     set term ^;
     execute block as
     begin
       begin
-        execute statement 'create sequence g';
+        execute statement 'drop sequence g';
         when any do begin end
       end
     end^
     set term ;^
     commit;
-    alter sequence g restart with 0;
+    create sequence g;
+    commit;
+
+    set term ^;
+    create or alter procedure sp_restart_sequences as
+        declare c bigint;
+    begin
+        c = gen_id(g, -gen_id(g, 0));
+    end
+    ^
+    set term ;^
     commit;
 
     recreate table t_mon(rn smallint, pg_fetches bigint);
@@ -69,7 +100,7 @@
     commit;
 
     create descending index td_s_des on td(s); commit;
-    alter sequence g restart with 0;
+    execute procedure sp_restart_sequences;
     commit;
 
     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
