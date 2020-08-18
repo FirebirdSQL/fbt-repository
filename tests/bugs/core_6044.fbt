@@ -9,8 +9,12 @@
 	with name = 63 on-ascii characters and then ask it using 'show sequ' command.
 	Also, FB crashe when we created a table with column which name contains 63 
 	non-ascii characters and then this table metadata is queried by 'show table <T>' command.
-	
     Checked on 4.0.0.1485: OK, 1.576s. 
+	
+	18.08.2020: added filter for 'current value: ...' of sequence. FB 4.x became incompatible
+	with previous versions since 06-aug-2020.
+    See also CORE-6084 and its fix: https://github.com/FirebirdSQL/firebird/commit/23dc0c6297825b2e9006f4d5a2c488702091033d
+	
  """,
 'min_versions': '4.0',
 'versions': [
@@ -61,7 +65,8 @@
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions': [('current value.*', 'current value')]
 }
 ]
 }
