@@ -43,15 +43,6 @@
 
      set term ^;
      execute block as
-     begin
-         begin
-             execute statement 'create sequence g';
-         when any do begin end
-         end
-     end
-     ^
-
-     execute block as
      declare i int = 0;
      begin
        while (i < 100000) do
@@ -65,28 +56,26 @@
      commit;
 
      create descending index t1_desc_idx on t1 (val);
-     alter sequence g restart with 0;
-
      commit;
 
      set list on;
       
-     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
+     insert into t_mon(rn, pg_fetches) values( 1, (select pg_fetches from v_mon));
      select * from t1 where val <= 1 order by val desc rows 1;
      commit;
-     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
+     insert into t_mon(rn, pg_fetches) values( 2, (select pg_fetches from v_mon));
      commit;
 
-     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
+     insert into t_mon(rn, pg_fetches) values( 3, (select pg_fetches from v_mon));
      select * from t1 where val <= 2 order by val desc rows 1;
      commit;
-     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
+     insert into t_mon(rn, pg_fetches) values( 4, (select pg_fetches from v_mon));
      commit;
      
-     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
+     insert into t_mon(rn, pg_fetches) values( 5, (select pg_fetches from v_mon));
      select * from t1 where val <= 3 order by val desc rows 1;
      commit;
-     insert into t_mon(rn, pg_fetches) values( gen_id(g,1), (select pg_fetches from v_mon));
+     insert into t_mon(rn, pg_fetches) values( 6, (select pg_fetches from v_mon));
      commit;
 
      select 
