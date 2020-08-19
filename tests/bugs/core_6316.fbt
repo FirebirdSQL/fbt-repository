@@ -472,7 +472,8 @@ svc.close()
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[('Token unknown.*line.*', 'Token unknown')]
 }
 ]
 }
