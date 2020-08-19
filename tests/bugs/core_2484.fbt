@@ -3,40 +3,111 @@
 'qmid': '',
 'tracker_id': 'CORE-2484',
 'title': 'Success message when connecting to tiny trash database file',
-'description': '',
+'description':
+ """
+     We make invalid FDB file by creating binary file and write small data piece to it.
+	 Then we try to connect to such "database" using ISQL with passing trivial command
+	 like 'select current_timestamp' for execution.
+	 ISQL must raise error and quit (obviously without any result to STDOUT).
+	 
+	 ::: NB :::
+	 If Windows with non-ascii language is used then message about overlapped IO
+	 ("-Overlapped I/O operation is in progress") will be translated by OS to localized
+	 text and it will be displayed in STDERR. This message must be suppressed or ignored.
+	 
+	 Because of this, it was decided to redirect output of ISQL to logs and open
+	 them using codecs.open() with errors='ignore' option.
+	 We check presense of error message in STDERR file created by ISQL.
+	 It is ennough to verify that STDERR log contains pattern 'SQLSTATE = '.
+	 Checked on 4.0.0.2164; 3.0.7.33356
+ """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'Windows',
+ 'database_character_set': 'UTF8',
+ 'connection_character_set': 'UTF8',
  'test_type': 'Python',
  'test_script':
   """
 import os
+import subprocess
+import codecs
+import re
+import time
 
 db_conn.close()
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-f_fake_fdb = open( os.path.join(context['temp_directory'],'tmp_2484_fake.fdb'), 'w')
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#---------------------------------------------
+
+f_fake_fdb = open( os.path.join(context['temp_directory'],'tmp_2484_fake.fdb'), 'wb')
 f_fake_fdb.write('ŒåŁä')
-f_fake_fdb.close()
+flush_and_close( f_fake_fdb )
 
-runProgram('isql',['-q', f_fake_fdb.name],'quit;')
+f_fake_sql = open( os.path.splitext(f_fake_fdb.name)[0]+'.sql', 'w')
+f_fake_sql.write('set heading off; select current_timestamp from rdb$database; quit;')
+flush_and_close( f_fake_sql )
 
-os.remove(f_fake_fdb.name)
+f_fake_log = open( os.path.splitext(f_fake_fdb.name)[0]+'.log', 'w')
+f_fake_err = open( os.path.splitext(f_fake_fdb.name)[0]+'.err', 'w')
+subprocess.call( [ "isql", 'localhost:' + f_fake_fdb.name, "-i", f_fake_sql.name ],
+                 stdout = f_fake_log,
+                 stderr = f_fake_err
+               )
+flush_and_close( f_fake_log )
+flush_and_close( f_fake_err )
+
+
+p = re.compile('SQLSTATE\s+=\s+',re.IGNORECASE)
+with codecs.open( filename = f_fake_err.name, mode = 'r', errors = 'ignore') as f:
+    for line in f:
+	    if p.search(line):
+			print(line)
+
+with codecs.open( filename = f_fake_log.name, mode = 'r', errors = 'ignore') as f:
+    for line in f:
+	    if p.search(line):
+			print('UNEXPECTED STDOUT: ' + line)
+
+time.sleep(1)
+f_list = [ i.name for i in ( f_fake_fdb, f_fake_sql, f_fake_log, f_fake_err ) ]
+cleanup( f_list )
 
   """,
  'expected_stdout':
   """
+	Statement failed, SQLSTATE = 08001  
   """,
  'expected_stderr':
   """
-    Statement failed, SQLSTATE = 08001
-    I/O error during "ReadFile" operation for file "C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\TMP_2484_FAKE.FDB"
-    -Error while trying to read from file
-  """,
-  'substitutions':[('.*for file.*', '.*for file')]
+  """
 },
 {
  'firebird_version': '3.0',
