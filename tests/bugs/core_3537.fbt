@@ -5,28 +5,36 @@
 'title': "There is no need to undo changes made in GTT created with ON COMMIT DELETE ROWS option when transaction is rolled back",
 'description': 
  """
-   19.12.2016. 
-   After discuss with hvlad it was decided to use fetches & marks values that are issued in trace 
-   ROLLBACK_TRANSACTION statistics and evaluate ratio of these values with:
-   1) number of inserted rows(see 'NUM_ROWS_TO_BE_ADDED' constant);
-   2) number of data pages that table occupies (it's retieved via 'gstat -t T_FIX_TAB').
+    19.12.2016. 
+    After discuss with hvlad it was decided to use fetches & marks values that are issued in trace 
+    ROLLBACK_TRANSACTION statistics and evaluate ratio of these values with:
+    1) number of inserted rows(see 'NUM_ROWS_TO_BE_ADDED' constant);
+    2) number of data pages that table occupies (it's retieved via 'gstat -t T_FIX_TAB').
 
-   We use three tables with the same DDL: permanent ('t_fix_tab'), GTT PRESERVE and GTT DELETE rows.
-   All these tables are subject to DML which does insert rows.
-   Permanent table is used for retrieving statistics of data pages that are in use after this DML.
-   Number of rows that we add into tables should not be very high, otherwise rollback will be done via TIP,
-   i.e. without real undone actions ==> we will not see proper ratios. 
-   After serveral runs it was decided to use value = 45000 (rows).
+    We use three tables with the same DDL: permanent ('t_fix_tab'), GTT PRESERVE and GTT DELETE rows.
+    All these tables are subject to DML which does insert rows.
+    Permanent table is used for retrieving statistics of data pages that are in use after this DML.
+    Number of rows that we add into tables should not be very high, otherwise rollback will be done via TIP,
+    i.e. without real undone actions ==> we will not see proper ratios. 
+    After serveral runs it was decided to use value = 45000 (rows).
 
-   All ratios should belong to some range with +/-5% of possible difference from one run to another.
-   Concrete values of ratio were found after several runs on 2.5.7, 3.0.2 & 4.0.0
+    All ratios should belong to some range with +/-5% of possible difference from one run to another.
+    Concrete values of ratio were found after several runs on 2.5.7, 3.0.2 & 4.0.0
 
-   Checked on 2.5.7.27030 (SS/SC), WI-V3.0.2.32644 (SS/SC/CS) and WI-T4.0.0.468 (SS/SC); 4.0.0.633 (CS/SS)
+    Checked on 2.5.7.27030 (SS/SC), WI-V3.0.2.32644 (SS/SC/CS) and WI-T4.0.0.468 (SS/SC); 4.0.0.633 (CS/SS)
 
-   Notes.
-   1. We can estimate volume of UNDO changes in trace statistics for ROLLBACK event.
-      This statistics was added since 2.5.2 (see CORE-3598).
-   2. We have to use 'gstat -t <table>'instead of 'fbsvcmgr sts_table <...>'in 2.5.x - see CORE-5426.
+    Notes.
+    1. We can estimate volume of UNDO changes in trace statistics for ROLLBACK event.
+       This statistics was added since 2.5.2 (see CORE-3598).
+    2. We have to use 'gstat -t <table>'instead of 'fbsvcmgr sts_table <...>'in 2.5.x - see CORE-5426.
+
+    19.08.2020. Fixed wrong expression for difference evaluation in percents. Checked on:
+        4.0.0.2164 SS: 8.674s.
+        4.0.0.2119 SS: 9.736s.
+        4.0.0.2164 CS: 10.328s.
+        3.0.7.33356 SS: 7.333s.
+        3.0.7.33356 CS: 9.700s.
+        2.5.9.27150 SC: 5.884s.
 
  """,
 'min_versions': '2.5.2',
@@ -354,37 +362,43 @@ with open( f_trc_log.name,'r') as f:
                                                                         #  2.5.7      3.0.2, 4.0.0
                                                                         # ---------------------
 '''
-fetches2rows_gtt_sav = (1.00 * gtt_sav_fetches / NUM_ROWS_TO_BE_ADDED,   9.1219,      5.1465  )
-fetches2rows_gtt_del = (1.00 * gtt_del_fetches / NUM_ROWS_TO_BE_ADDED,   0.0245,      0.00015 )
-marks2rows_gtt_sav = (1.00 * gtt_sav_marks / NUM_ROWS_TO_BE_ADDED,       2.0732,      2.05186 )
-marks2rows_gtt_del = (1.00 * gtt_del_marks / NUM_ROWS_TO_BE_ADDED,       0.0245,      0.000089 )
+ratio_fetches_to_row_count_for_GTT_PRESERVE_ROWS = (1.00 * gtt_sav_fetches / NUM_ROWS_TO_BE_ADDED,   9.1219,      5.1465  )
+ratio_fetches_to_row_count_for_GTT_DELETE_ROWS = (1.00 * gtt_del_fetches / NUM_ROWS_TO_BE_ADDED,   0.0245,      0.00015 )
+ratio_marks_to_row_count_for_GTT_PRESERVE_ROWS = (1.00 * gtt_sav_marks / NUM_ROWS_TO_BE_ADDED,       2.0732,      2.05186 )
+ratio_marks_to_row_count_for_GTT_DELETE_ROWS = (1.00 * gtt_del_marks / NUM_ROWS_TO_BE_ADDED,       0.0245,      0.000089 )
                                                                    
-fetches2dp_gtt_sav = (1.00 * gtt_sav_fetches / dp_cnt,                   373.85,      209.776 )
-fetches2dp_gtt_del = (1.00 * gtt_del_fetches / dp_cnt,                   1.0063,      0.00634 )
-marks2dp_gtt_sav = (1.00 * gtt_sav_marks / dp_cnt,                       84.9672,     83.6358 )
-marks2dp_gtt_del = (1.00 * gtt_del_marks / dp_cnt,                       1.0036,      0.00362 )
+ratio_fetches_to_datapages_for_GTT_PRESERVE_ROWS = (1.00 * gtt_sav_fetches / dp_cnt,                   373.85,      209.776 )
+ratio_fetches_to_datapages_for_GTT_DELETE_ROWS = (1.00 * gtt_del_fetches / dp_cnt,                   1.0063,      0.00634 )
+ratio_marks_to_datapages_for_GTT_PRESERVE_ROWS = (1.00 * gtt_sav_marks / dp_cnt,                       84.9672,     83.6358 )
+ratio_marks_to_datapages_for_GTT_DELETE_ROWS = (1.00 * gtt_del_marks / dp_cnt,                       1.0036,      0.00362 )
 '''
                                                                            #  2.5.7      3.0.2, 4.0.0
                                                                            # ------------------------
 check_data={
-   'fetches2rows_gtt_sav' : (1.00 * gtt_sav_fetches / NUM_ROWS_TO_BE_ADDED,   9.1219,      5.1465  )
-  ,'fetches2rows_gtt_del' : (1.00 * gtt_del_fetches / NUM_ROWS_TO_BE_ADDED,   0.0245,      0.00015 )
-  ,'marks2rows_gtt_sav' : (1.00 * gtt_sav_marks / NUM_ROWS_TO_BE_ADDED,       2.0732,      2.05186 )
-  ,'marks2rows_gtt_del' : (1.00 * gtt_del_marks / NUM_ROWS_TO_BE_ADDED,       0.0245,      0.000089 )
-  ,'fetches2dp_gtt_sav' : (1.00 * gtt_sav_fetches / dp_cnt,                   373.85,      209.776 )
-  ,'fetches2dp_gtt_del' : (1.00 * gtt_del_fetches / dp_cnt,                   1.0063,      0.00634 )
-  ,'marks2dp_gtt_sav' : (1.00 * gtt_sav_marks / dp_cnt,                       84.9672,     83.6358 )
-  ,'marks2dp_gtt_del' : (1.00 * gtt_del_marks / dp_cnt,                       1.0036,      0.00362 )
+   'ratio_fetches_to_row_count_for_GTT_PRESERVE_ROWS' : (1.00 * gtt_sav_fetches / NUM_ROWS_TO_BE_ADDED,   9.1219,      5.1465  )
+  ,'ratio_fetches_to_row_count_for_GTT_DELETE_ROWS' : (1.00 * gtt_del_fetches / NUM_ROWS_TO_BE_ADDED,   0.0245,      0.00015 )
+  ,'ratio_marks_to_row_count_for_GTT_PRESERVE_ROWS' : (1.00 * gtt_sav_marks / NUM_ROWS_TO_BE_ADDED,       2.0732,      2.05186 )
+  ,'ratio_marks_to_row_count_for_GTT_DELETE_ROWS' : (1.00 * gtt_del_marks / NUM_ROWS_TO_BE_ADDED,       0.0245,      0.000089 )
+  ,'ratio_fetches_to_datapages_for_GTT_PRESERVE_ROWS' : (1.00 * gtt_sav_fetches / dp_cnt,                   373.85,      209.776 )
+  ,'ratio_fetches_to_datapages_for_GTT_DELETE_ROWS' : (1.00 * gtt_del_fetches / dp_cnt,                   1.0063,      0.00634 )
+  ,'ratio_marks_to_datapages_for_GTT_PRESERVE_ROWS' : (1.00 * gtt_sav_marks / dp_cnt,                       84.9672,     83.6358 )
+  ,'ratio_marks_to_datapages_for_GTT_DELETE_ROWS' : (1.00 * gtt_del_marks / dp_cnt,                       1.0036,      0.00362 )
 }
 
 
 i = 1 if engine.startswith('2.5') else 2
-mult = 1.05
+
+MAX_DIFF_PERCENT=5.00
+#                ^
+#############################
+###   T H R E S H O L D   ###
+#############################
+
 fail = False
 for k, v in sorted(check_data.iteritems()):
   msg = ( 'Check ' + k + ': ' + 
-          ( 'OK' if v[i]/mult <=v[0] <= v[i]*mult
-            else 'value '+str(v[0])+' not in range '+str(v[i]) + ' +/-'+str(mult*100-100)+'%'
+          ( 'OK' if v[i] * ((100 - MAX_DIFF_PERCENT)/100) <= v[0] <= v[i] * (100+MAX_DIFF_PERCENT)/100
+            else 'value '+str(v[0])+' not in range '+str( v[i] ) + ' +/-'+str(MAX_DIFF_PERCENT)+'%'
           )
         )
   print(msg)
@@ -407,14 +421,14 @@ for i in range(len(f_list)):
   """,
  'expected_stdout': 
   """
-    Check fetches2dp_gtt_del: OK
-    Check fetches2dp_gtt_sav: OK
-    Check fetches2rows_gtt_del: OK
-    Check fetches2rows_gtt_sav: OK
-    Check marks2dp_gtt_del: OK
-    Check marks2dp_gtt_sav: OK
-    Check marks2rows_gtt_del: OK
-    Check marks2rows_gtt_sav: OK
+    Check ratio_fetches_to_datapages_for_GTT_DELETE_ROWS: OK
+    Check ratio_fetches_to_datapages_for_GTT_PRESERVE_ROWS: OK
+    Check ratio_fetches_to_row_count_for_GTT_DELETE_ROWS: OK
+    Check ratio_fetches_to_row_count_for_GTT_PRESERVE_ROWS: OK
+    Check ratio_marks_to_datapages_for_GTT_DELETE_ROWS: OK
+    Check ratio_marks_to_datapages_for_GTT_PRESERVE_ROWS: OK
+    Check ratio_marks_to_row_count_for_GTT_DELETE_ROWS: OK
+    Check ratio_marks_to_row_count_for_GTT_PRESERVE_ROWS: OK
   """,
  'expected_stderr': 
   """
