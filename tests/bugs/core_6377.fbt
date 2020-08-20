@@ -1,0 +1,108 @@
+{
+'id': 'bugs.core_6377',
+'qmid': '',
+'tracker_id': '',
+'title': "Bugcheck 179",
+'description': 
+ """
+    Confirmed on 4.0.0.2126, got in STDERR when restore:
+      gbak: ERROR:OVERRIDING SYSTEM VALUE should be used to override the value of an identity column defined as 'GENERATED ALWAYS' in table/view IDENTITY_ALWAYS
+      gbak: ERROR:gds_$compile_request failed
+      gbak:Exiting before completion due to errors
+
+    Checked on 4.0.0.2170 SS/CS -- all fine.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+    create table identity_always(id bigint generated always as identity constraint pk_identity_always primary key);
+    insert into identity_always default values; 
+    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import sys
+import subprocess
+from subprocess import PIPE
+from fdb import services
+import time
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+fb_home = services.connect(host='localhost').get_home_directory()
+
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+
+#--------------------------------------------
+
+# https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
+
+tmp_restdb = os.path.join(context['temp_directory'],'tmp_6377_rest.fdb')
+cleanup( tmp_restdb, )
+
+f_br_err=open( os.path.join(context['temp_directory'],'tmp_6377_br.err'), 'w')
+p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', dsn, 'stdout' ], stdout=PIPE)
+p_getter = subprocess.Popen( [ fb_home+'gbak', '-rep', 'stdin',  'localhost:' + tmp_restdb ], stdin = p_sender.stdout, stdout = PIPE, stderr = f_br_err)
+p_sender.stdout.close()
+p_getter_stdout, p_getter_stderr = p_getter.communicate()
+
+flush_and_close(f_br_err)
+
+# This must PASS without errors:
+runProgram('isql', [ 'localhost:' + tmp_restdb ], 'insert into identity_always default values;')
+
+# CHECK RESULTS
+###############
+with open(f_br_err.name,'r') as g:
+    for line in g:
+        if line:
+            print( 'UNEXPECTED STDERR IN ' + g.name + ':' +  line)
+
+time.sleep(1)
+
+# Cleanup.
+##########
+f_list = [ i.name for i in (f_br_err,) ] + [ tmp_restdb, ]
+cleanup( f_list )
+
+  """,
+ 'expected_stdout':
+  """
+  """,
+ 'expected_stderr':
+  """
+  """
+},
+]
+}
