@@ -6,12 +6,12 @@
 'description':
   """
     Confirmed bug on 4.0.0.2087.
-    Checked on 4.0.0.2170 -- all fine.
+    Checked on 4.0.0.2170, 3.0.7.33357 -- all fine.
   """,
-'min_versions': '4.0',
+'min_versions': '3.0.7',
 'versions': [
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'init_script':
   """
