@@ -2,7 +2,7 @@
 'id': 'bugs.core_6377',
 'qmid': '',
 'tracker_id': '',
-'title': "Bugcheck 179",
+'title': "Unable to restore database with tables using GENERATED ALWAYS AS IDENTITY columns (ERROR:OVERRIDING SYSTEM VALUE should be used)",
 'description': 
  """
     Confirmed on 4.0.0.2126, got in STDERR when restore:
