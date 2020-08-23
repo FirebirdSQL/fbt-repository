@@ -44,6 +44,17 @@ import datetime
 import subprocess
 from fdb import services
 
+# 23.08.2020: !!! REMOVING OS-VARIABLE ISC_USER IS MANDATORY HERE !!!
+# This variable could be set by other .fbts which was performed before current within batch mode (i.e. when fbt_run is called from <rundaily>)
+# NB: os.unsetenv('ISC_USER') actually does NOT affect on content of os.environ dictionary, see: https://docs.python.org/2/library/os.html
+# We have to remove OS variable either by os.environ.pop() or using 'del os.environ[...]', but in any case this must be enclosed intro try/exc:
+#os.environ.pop('ISC_USER')
+try:
+    del os.environ["ISC_USER"]
+except KeyError as e:
+    pass
+
+
 THIS_COMPUTER_NAME = socket.gethostname()
 CURRENT_WIN_ADMIN = getpass.getuser()
 
@@ -248,6 +259,16 @@ import time
 import datetime
 import subprocess
 from fdb import services
+
+# 23.08.2020: !!! REMOVING OS-VARIABLE ISC_USER IS MANDATORY HERE !!!
+# This variable could be set by other .fbts which was performed before current within batch mode (i.e. when fbt_run is called from <rundaily>)
+# NB: os.unsetenv('ISC_USER') actually does NOT affect on content of os.environ dictionary, see: https://docs.python.org/2/library/os.html
+# We have to remove OS variable either by os.environ.pop() or using 'del os.environ[...]', but in any case this must be enclosed intro try/exc:
+#os.environ.pop('ISC_USER')
+try:
+    del os.environ["ISC_USER"]
+except KeyError as e:
+    pass
 
 THIS_COMPUTER_NAME = socket.gethostname()
 CURRENT_WIN_ADMIN = getpass.getuser()
