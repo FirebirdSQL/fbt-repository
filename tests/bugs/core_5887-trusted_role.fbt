@@ -45,8 +45,42 @@ from fdb import services
 import socket
 import getpass
 
-#os.environ["ISC_USER"] = user_name
-#os.environ["ISC_PASSWORD"] = user_password
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
+# 23.08.2020: !!! REMOVING OS-VARIABLE ISC_USER IS MANDATORY HERE !!!
+# This variable could be set by other .fbts which was performed before current within batch mode (i.e. when fbt_run is called from <rundaily>)
+# NB: os.unsetenv('ISC_USER') actually does NOT affect on content of os.environ dictionary, see: https://docs.python.org/2/library/os.html
+# We have to remove OS variable either by os.environ.pop() or using 'del os.environ[...]', but in any case this must be enclosed intro try/exc:
+#os.environ.pop('ISC_USER')
+try:
+    del os.environ["ISC_USER"]
+except KeyError as e:
+    pass
+
 
 THIS_DBA_USER=user_name
 THIS_DBA_PSWD=user_password
@@ -111,22 +145,18 @@ f_sql_txt='''
 ''' % locals()
 
 f_sql_cmd.write(f_sql_txt)
-f_sql_cmd.close()
+flush_and_close( f_sql_cmd )
 
-# 25.04.2020: do NOT remove this delay otherwise can get 'Windows error 2: file not found'.
-time.sleep(1)
 
 f_sql_log=open( os.path.join(context['temp_directory'],'tmp_5887_trusted_role.log'), 'w', buffering=0)
 subprocess.call( [ fb_home + "isql", "-q", "-i", f_sql_cmd.name ], stdout=f_sql_log, stderr=subprocess.STDOUT )
-f_sql_log.close()
+flush_and_close( f_sql_log )
 
 with open( f_sql_log.name,'r') as f:
     for line in f:
         print(line)
 
-f_list = (f_sql_cmd, f_sql_log)
-for f in f_list:
-     os.remove(f.name)
+cleanup( [x.name for x in  (f_sql_cmd, f_sql_log)] )
 
 
   """,
