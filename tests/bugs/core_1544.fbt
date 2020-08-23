@@ -1,8 +1,8 @@
 {
 'id': 'bugs.core_1544',
 'qmid': None,
-'tracker_id': 'CORE-1544',
-'title': 'CORE-1544',
+'tracker_id': '',
+'title': 'RDB$procedures generator overflow',
 'description': '',
 'min_versions': '',
 'versions': [
