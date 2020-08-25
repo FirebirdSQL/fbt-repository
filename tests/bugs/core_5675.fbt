@@ -20,6 +20,10 @@
         
    For this reason it was decided currently to limit scope by specifying numbers with abs() less than 2^31 - untill fdb driver will be fixed.
    See letter from dimitr 08-jan-2018 20:56
+
+   25.08.2020: adjusted name of function from services that must work here:
+   its name is "_render_sized_integer_for_spb" rather than old "_renderSizedIntegerForSPB".
+   Checked on 4.0.0.2173; 3.0.7.33357; 2.5.9.27152.
  """,
 'min_versions': '2.5.8',
 'versions': [
@@ -45,13 +49,17 @@ con = services.connect(host='localhost', user='sysdba', password='masterkey')
 dec_values=(  1,     -1,   127,  -128,   128,  -256, 255,  -32768, 32767, 32768, -65536, 65535, 65536 ) #,    32767, -32768, 32768, -32769,  2147483647, -2147483648, 2147483648, -2147483649, 3000000000, 3000000000000, 9223372036854775807 )
 num_ctypes=( 'b',   'b',   'b',   'b',   'b',   'B',  'B',    'h',   'h',   'h',    'H',   'H',   'H' ) #,     'i',    'i',   'i',    'i',         'i',         'i',         'q',        'q',        'q',          'q',                  'q' )
 
+#dec_values=(  1,     -1,   127,  -128,   128,  -256, 255,  -32768, 32767, 32768, -65536, 65535, 65536 ,    32767, -32768, 32768, -32769,  2147483647, -2147483648, 2147483648, -2147483649, 3000000000, 3000000000000, 9223372036854775807 )
+#num_ctypes=( 'b',   'b',   'b',   'b',   'b',   'B',  'B',    'h',   'h',   'h',    'H',   'H',   'H' ,      'i',    'i',   'i',    'i',         'i',         'i',        'q',         'q',        'q',           'q',                  'q')
+
 
 for i in range(0, len(dec_values)):
    num = dec_values[i]
    fmt = num_ctypes[i]
    msg = ['Try revert bytes in decimal value:', "{:12d}".format(num), ' using struct format: ', '"'+fmt+'"']
    try:
-       (numericFormat, numericBytes) = services._renderSizedIntegerForSPB(num, fmt)
+       # OLD name of function: (numericFormat, numericBytes) = services._renderSizedIntegerForSPB(num, fmt)
+       (numericFormat, numericBytes) = services._render_sized_integer_for_spb(num, fmt)
        rev = binascii.hexlify(numericBytes)
    except Exception, e:
        rev = e[0]
