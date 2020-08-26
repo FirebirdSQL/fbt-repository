@@ -18,8 +18,7 @@
     After this we can connect to $fdb_ini, create user (his name: 'TMP6208DBA') and give him 
     privilege to create database.
 
-    Futher, we make backup of this test DB and restore it to other name (using PIPE mechanism 
-    in order to skip creation of unneeded .fbk file). New database is named here as 'fdb_rest'.
+    Futher, we make backup of this test DB and restore it. New database name is 'fdb_rest'.
     After this, we change state of test DB to full shutdown and overwrite it by $fdb_rest.
     Finaly, we make connection to this DB (that was just overwritten) and check that output
     of 'show grants' command contains:
@@ -27,32 +26,18 @@
         GRANT CREATE DATABASE TO USER TMP6208DBA
 
     Confirmed lost of grant on 4.0.0.1691 (build 14-dec-2019).
-    Checked on 4.0.0.1712 SC: 11s, 4.0.0.1714 SS, CS (7s, 16s).
 
-    NOTES, for SUPERSERVER and SUPERCLASSIC.
-    #########################################
-    do NOT put Legacy_Auth or Srp256 at the HEAD of list that must be assigned to AuthClient, i.e.:
-        AuthClient =  Srp256, Srp, Win_Sspi, Legacy_Auth
-        AuthClient =  Legacy_Auth, Srp, Srp256, Win_Sspi
-    Put 'Srp' in the head of this list!
-    Otherwise following error raises if we want to connect to $fdb_init database:
-    =====
-        Statement failed, SQLSTATE = 08006
-        Error occurred during login, please check server firebird.log for details
-        - and firebird.log will contain:
-       	Authentication error
-       	cannot start transaction for password database
-       	Error in isc_start_transaction() API call when working with legacy security database
-       	connection shutdown
-       	Database is shutdown.
-    =====
-    The only way to avoid such error in this case if to make delay for at least 11 seconds.
-    Checked on 4.0.0.1714 SS and SC). Reason remains unclear.
+    26.08.2020.
+    IT CRUSIAL FOR THIS TEST DO MAKE ALL RESTORE AND FURTHER ACTIONS IN LOCAL/EMBEDDED PROTOCOL.
+    Discissed with Alex, see letter 24.08.2020 19:49.
 
-    NOTE about actual ability to create database by this user:
-        create database 'localhost:%(fdb_rest)s' user tmp6208dba password '123'
-    - will fail with:
-        Statement failed, SQLSTATE = 28000 / Your user name and password are not defined.
+    Main problem is in SuperClassic: after restore finish, we can not connect to this DB by TCP,
+    error is
+        "Statement failed, SQLSTATE = 08006 / Error occurred during login, please check server firebird.log for details"
+    Server log contains in this case: "Srp Server / connection shutdown / Database is shutdown."
+
+    Checked initially on 4.0.0.1712 SC: 11s, 4.0.0.1714 SS, CS (7s, 16s).
+    Checked again 26.08.2020 on 4.0.0.2173 SS/CS/SC.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -100,6 +85,7 @@ sec_db = fb_home + 'security' + fb_vers+ '.fdb'
 db_conn.close()
 
 fdb_init = os.path.join(context['temp_directory'],'tmp_6208_initial.fdb')
+fdb_bkup = os.path.join(context['temp_directory'],'tmp_6208_initial.fbk')
 fdb_rest = os.path.join(context['temp_directory'],'tmp_6208_restored.fdb')
 
 cleanup( (fdb_init, fdb_rest) )
@@ -113,6 +99,7 @@ alias_data=\
 '''
     # Added temporarily for executing test core_6208.fbt
     tmp_6208 = %(fdb_init)s {
+        # RemoteAccess = true
         SecurityDatabase = tmp_6208
     }
 ''' % locals()
@@ -129,84 +116,136 @@ sql_init=\
     grant create database to user tmp6208dba;
     alter database set linger to 0;
     commit;
-    --show grants;
 '''
-runProgram('isql',[ 'localhost:' + fdb_init ], sql_init)
+runProgram('isql',[ fdb_init ], sql_init)
+
+#########################################################################
+
+f_backup_log = open( os.path.join(context['temp_directory'],'tmp_6208.backup.log'), 'w', buffering = 0)
+f_backup_err = open( ''.join( (os.path.splitext(f_backup_log.name)[0], '.err' ) ), 'w', buffering = 0)
+
+subprocess.call( [ os.path.join( fb_home, 'gfix'), '-h', '54321', fdb_init ], stdout = f_backup_log, stderr = f_backup_err)
+subprocess.call( [ os.path.join( fb_home, 'gstat'), '-h', fdb_init ], stdout = f_backup_log, stderr = f_backup_err)
+subprocess.call( [ os.path.join( fb_home, 'gbak'), '-b', fdb_init, fdb_bkup, '-v', '-st', 'tdrw' ], stdout = f_backup_log, stderr = f_backup_err)
+
+f_backup_log.close()
+f_backup_err.close()
+
+########################################################################
+
+cleanup( [ fdb_rest ] )
+
+f_restore_log = open( os.path.join(context['temp_directory'],'tmp_6208.restore.log'), 'w', buffering = 0)
+f_restore_err = open( ''.join( (os.path.splitext(f_restore_log.name)[0], '.err' ) ), 'w', buffering = 0)
+
+subprocess.call( [ os.path.join( fb_home, 'gbak'), '-c', fdb_bkup, fdb_rest, '-v', '-st', 'tdrw' ], stdout = f_restore_log, stderr = f_restore_err)
+
+f_restore_log.close()
+f_restore_err.close()
+
+########################################################################
 
 
-# https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
-#   output=`dmesg | grep hda`
-#   becomes:
-#   p1 = Popen(["dmesg"], stdout=PIPE)
-#   p2 = Popen(["grep", "hda"], stdin=p1.stdout, stdout=PIPE)
-#   p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
-#   output = p2.communicate()[0]
-# gbak -b localhost:$fdb_init stdout | gbak -rep stdin localhost:$fdb_rest
+runProgram('gfix',['-shut', 'full', '-force', '0', fdb_init] )
+runProgram('gfix',['-shut', 'full', '-force', '0', fdb_rest] )
 
-p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', 'localhost:' + fdb_init, 'stdout' ], stdout=PIPE)
-p_getter = subprocess.Popen( [ fb_home+'gbak', '-c', 'stdin',  'localhost:' + fdb_rest ], stdin = p_sender.stdout, stdout = PIPE )
-p_sender.stdout.close()
-p_getter_stdout, p_getter_stderr = p_getter.communicate()
-
-#print('p_getter_stdout:', p_getter_stdout)
-#print('p_getter_stderr:', p_getter_stderr)
-
-runProgram('gfix',['-shut', 'full', '-force', '0', 'localhost:' + fdb_init] )
-runProgram('gfix',['-shut', 'full', '-force', '0', 'localhost:' + fdb_rest] )
-runProgram('gfix',['-online', fdb_rest] )
-
-os.remove( fdb_init )
 shutil.move( fdb_rest, fdb_init )
 
-#runProgram('gfix',['-online', 'localhost:' + fdb_init] )
-#runProgram('gstat',['-h', fdb_init] )
+runProgram('gfix',['-online', fdb_init] )
 
-# ::: NB :::
-# Uncomment this delay if AuthClient _not_ starts with 'Srp':
-######################
-#time.sleep(11)
+###############
+#time.sleep(8.5)
+###############
 
 sql_chk=\
 '''
     set bail on;
     set list on;
-    select mon$owner owner_6208, mon$sec_database as secdb_6208, rdb$linger as linger_6208 from mon$database cross join rdb$database;
-    select sec$user_name as sec_user from sec$users where sec$user_name = upper('TMP6208DBA');
-    show grants;
+    -- set echo on;
+	-- ##########################
+    -- SuperClassic:
+    -- Statement failed, SQLSTATE = 08006
+    -- Error occurred during login, please check server firebird.log for details
+    -- firebird.log:
+	-- Srp Server
+	-- connection shutdown
+	-- Database is shutdown.
+	-- ##########################
+    -- connect 'localhost:%(fdb_init)s' user tmp6208dba password '123';
+    connect '%(fdb_init)s' user tmp6208dba password '123';
+    select
+         d.mon$owner as "mon$database.mon$owner"
+        ,d.mon$sec_database as "mon$database.mon$sec_database"
+        ,r.rdb$linger as "rdb$database.rdb$linger"
+        --,a.mon$remote_protocol as "mon$attachments.mon$remote_protocol"
+        ,current_user as whoami
+    from mon$database d
+    join mon$attachments a on a.mon$attachment_id = current_connection
+    cross join rdb$database r
+
+    ;
+
+    select
+        s.sec$user_name as "sec$users.sec_user"
+       ,c.sec$user_type as "sec$db_creators.sec$user_type"
+    from sec$users s
+    left join sec$db_creators c on s.sec$user_name = c.sec$user
+    where sec$user_name = upper('TMP6208DBA');
     rollback;
-    --create database 'localhost:%(fdb_rest)s' user tmp6208dba password '123';
-    --select mon$database_name, mon$owner from mon$database;
-    --commit;
-    --drop database;
-'''
 
-runProgram('isql',[ 'localhost:' + fdb_init, '-user', 'tmp6208dba', '-pas', '123' ], sql_chk)
-runProgram('isql',[ 'localhost:' + fdb_init ], 'drop user tmp6208dba using plugin Srp; commit;')
+    connect '%(fdb_init)s';
+    drop user tmp6208dba using plugin Srp;
+    commit;
+''' % locals()
 
-# Following DB shutdown command is needed when AuthClient starts with Legacy_Auth.
-# Otherwise we get:
-# exception: WindowsError: 32 The process cannot access the file because it is being used by another process
-# Checked on 4.0.0.1714 SS and CS
-runProgram('gfix',['-shut', 'full', '-force', '0', 'localhost:' + fdb_init] )
+f_chk_sql = open( os.path.join(context['temp_directory'],'tmp_6208_chk.sql'), 'w', buffering = 0)
+f_chk_sql.write(sql_chk)
+f_chk_sql.close()
+
+# 4debug only:
+#f_gstat_log = open( os.path.join(context['temp_directory'],'tmp_6208_gstat.log'), 'w', buffering = 0)
+#subprocess.call( ["gstat", "-h", fdb_init ], stdout = f_gstat_log, stderr = subprocess.STDOUT)
+#f_gstat_log.close()
+
+f_chk_log = open( os.path.join(context['temp_directory'],'tmp_6208_chk.log'), 'w', buffering = 0)
+subprocess.call( ["isql", "-q", "-i", f_chk_sql.name ], stdout = f_chk_log, stderr = subprocess.STDOUT)
+f_chk_log.close()
+
+#######runProgram('isql',[ fdb_init ], 'drop user tmp6208dba using plugin Srp; commit;')
+
+f_shut_log = open( os.path.join(context['temp_directory'],'tmp_6208_shut.log'), 'w', buffering = 0)
+subprocess.call( ["gfix", "-shut", "full", "-force", "0",  fdb_init ], stdout = f_shut_log, stderr = subprocess.STDOUT)
+subprocess.call( ["gstat", "-h", fdb_init ], stdout = f_shut_log, stderr = subprocess.STDOUT)
+f_shut_log.close()
+
 
 # Restore previous content:
 shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
 
-cleanup( (fdb_init, fb_home+'databases.bak') )
+with open(f_chk_log.name,'r') as f:
+   for line in f:
+      print(line)
+
+
+# cleanup:
+##########
+time.sleep(1)
+cleanup( [x.name for x in (f_backup_log, f_backup_err, f_restore_log, f_restore_err, f_chk_sql, f_chk_log, f_shut_log) ] + [ fdb_init, fdb_bkup, fb_home+'databases.bak' ] )
 
 """,
  'expected_stdout': 
   """
-    OWNER_6208                      SYSDBA
-    SECDB_6208                      Self
-    LINGER_6208                     0
-    SEC_USER                        TMP6208DBA
-    GRANT CREATE DATABASE TO USER TMP6208DBA
+    mon$database.mon$owner          SYSDBA
+    mon$database.mon$sec_database   Self
+    rdb$database.rdb$linger         0
+    WHOAMI                          TMP6208DBA
+    sec$users.sec_user              TMP6208DBA
+    sec$db_creators.sec$user_type   8
   """,
  'expected_stderr': 
   """
   """,
-  'substitutions':[ ('\t+', ' '), ('^((?!6208|SQLSTATE|Error).)*$','') ]
+  'substitutions':[ ('\t+', ' ') ]
 }
 ]
 }
