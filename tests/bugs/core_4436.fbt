@@ -2,7 +2,7 @@
 'id': 'bugs.core_4436',
 'qmid': '',
 'tracker_id': 'CORE-4436',
-'title': '',
+'title': 'Support for different hash algorithms in HASH system function',
 'description':
  """
    Test verifies only:
