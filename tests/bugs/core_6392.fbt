@@ -15,16 +15,16 @@
     which prove successful results for each action.
 
     Confirmed bug on 4.0.0.2173.
-    Checked on 4.0.0.2180 SS/SC/CS: all fine.
+    Checked on 3.0.7.33358; 4.0.0.2180 SS/SC/CS: all fine.
 
     ::: NOTE :::
     Some problem still exists when DB file or folder has name which last character is '.' or ' ' (dot or space).
     Database will be created but attempt to backup raises: "gbak: ERROR:cannot open backup file ..."
  """,
-'min_versions': '4.0',
+'min_versions': '3.0.7',
 'versions': [
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'Windows',
  'test_type': 'Python',
  'test_script': """
@@ -118,7 +118,7 @@ if exist "%(tmpdir)s\\%(dbname)s" del "%(tmpdir)s\\%(dbname)s"
     echo set bail on;
     echo create database "%(tmpdir)s\\%(dbname)s";
     echo set list on;
-    echo select %(chksql)s as "CHECK POINT. Result of creation:" from mon$database;
+    echo select %(chksql)s as "CHECK POINT. Result:" from mon$database;
 ) > !tmpsql!
 
 echo CHECK POINT. Trying to create database.
@@ -187,13 +187,13 @@ with open(f_extlog.name, 'r') as f:
 # CLEANUP
 #########
 time.sleep(1)
-cleanup( [extbat, extlog] )
+#cleanup( [extbat, extlog] )
 
 """,
  'expected_stdout': 
   """
     CHECK POINT. Trying to create database.
-    CHECK POINT. Result of creation: SUCCESS.
+    CHECK POINT. Result: SUCCESS.
 
     CHECK POINT. Trying to BACKUP without "-se" switch.
     closing file, committing, and finishing
@@ -216,7 +216,7 @@ cleanup( [extbat, extlog] )
  'expected_stderr': 
   """
   """,
-  #'substitutions':[ ('\t+', ' ') ]
+  'substitutions':[ ('[\t ]+', ' ') ]
 }
 ]
 }
