@@ -358,7 +358,7 @@ cleanup( f_list )
  'expected_stderr':
   """
   """,
-  #'substitutions':[('=',''), ('[ \t]+',' ')]
+  'substitutions':[('=',''), ('[ \t]+',' ')]
 },
 ]
 }
