@@ -342,7 +342,7 @@ time.sleep(1)
 f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
 cleanup( f_list )
 
-shutil.copy2(this_fdb, this_dbg)
+#shutil.copy2(this_fdb, this_dbg)
 
   """,
  'expected_stdout':
