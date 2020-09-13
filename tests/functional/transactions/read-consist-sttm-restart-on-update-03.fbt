@@ -37,26 +37,26 @@
         // Because of detecting update conflist, worker changes here its TIL to RC NO RECORD_VERSION.
 
     * session 'locker-2' ("FIRSTLAST" in TK article):
-            (1) insert into test(id) values( 11);
+            (1) insert into test(id) values( 110);
             (2) insert into test(id) values(-11);
             (3) commit;
-            (4) update test set id=-d where id = 11;
+            (4) update test set id=-d where id = 110;
             (5) update test set id=-d where id = -11;
 
         // session-'worker' remains waiting at this point because row with ID = 2 is still occupied by by locker-1.
-        // Recordû with (new) IDs = -11 and 11 will be seen further because worker's TIL was changed to RC NO RECORD_VERSION.
+        // Records with (new) IDs = -11 and 110 will be seen further because worker's TIL was changed to RC NO RECORD_VERSION.
 
     * session 'locker-1':
             (1) commit;
-            (2) insert into test(id) values(12);
+            (2) insert into test(id) values(120);
             (3) insert into test(id) values(-12);
             (4) commit;
-            (5) update test set id=-d where id = 12;
+            (5) update test set id=-d where id = 120;
             (6) update test set id=-d where id = -12;
 
-        // This: '(1) commit' - removes record with id = 5.
+        // This: '(1) commit' - releases record with id = 2.
         // Because of TIL = RC NRV session-'worker' must see all committed records regardless on its own snapshot.
-        // Thus worker sees record with id = -11 (which is locked now by locker-2) and puts write-lock on it.
+        // Thus worker sees records with id = -11 and 110 (which is locked now by locker-2) and puts write-lock on them.
         // [DOC]: "b) engine put write lock on conflicted record"
         // BECAUSE OF FACT THAT AT LEAST ONE ROW *WAS FOUND* - STATEMENT-LEVEL RESTART *NOT* YET OCCURS HERE.
         // [DOC]: "d) when there is *no more* records to fetch, engine start to undo all actions performed since
@@ -66,40 +66,40 @@
 
     * session 'locker-2':
             (1) commit;
-            (2) insert into test(id) values(13);
+            (2) insert into test(id) values(130);
             (3) insert into test(id) values(-13);
             (4) commit;
-            (5) update test set id=-d where id = 13;
+            (5) update test set id=-d where id = 130;
             (6) update test set id=-d where id = -13;
         
-        // This: '(1) commit' - removes record with id = -11.
+        // This: '(1) commit' - releases records with IDs = -11 and 110.
         // Because of TIL = RC NRV session-'worker' must see all committed records regardless on its own snapshot.
-        // Thus worker sees record with id = -12 (which is locked now by locker-1) and puts write-lock on it.
+        // Thus worker sees records with id = -12 and 120 (which is locked now by locker-1) and puts write-lock on them.
         // BECAUSE OF FACT THAT AT LEAST ONE ROW *WAS FOUND* - STATEMENT-LEVEL RESTART *NOT* YET OCCURS HERE.
 
     * session 'locker-1':
             (1) commit;
-            (2) insert into test(id) values(14);
+            (2) insert into test(id) values(140);
             (3) insert into test(id) values(-14);
             (4) commit;
-            (5) update test set id=-d where id = 14;
+            (5) update test set id=-d where id = 140;
             (6) update test set id=-d where id = -14;
 
-        // This: '(1) commit' - removes record with id = -12.
+        // This: '(1) commit' - releases records with IDs = -12 and 120.
         // Because of TIL = RC NRV session-'worker' must see all committed records regardless on its own snapshot.
-        // Thus worker sees record with id = -13 (which is locked now by locker-2) and puts write-lock on it.
+        // Thus worker sees records with id = -13 and 130 (which is locked now by locker-2) and puts write-lock on them.
         // BECAUSE OF FACT THAT AT LEAST ONE ROW *WAS FOUND* - STATEMENT-LEVEL RESTART *NOT* YET OCCURS HERE.
 
     * session 'locker-2':
             (1) commit;
 
-        // This removes record with id = -13.
-        // Worker still waits for record with id = -14 which is occupied by locker-1.
+        // This releases records with id = -13 and 130.
+        // Worker still waits for records with id = -14 and 140 which are occupied by locker-1.
 
     * session 'locker-1':
             (1) commit;
 
-        // This removes record with id = -14.
+        // This releases records with id = -14 and 140.
         // At this point there are no more records to be locked (by worker) that meet cursor condition: worker did put
         // write locks on all rows that meet its cursor conditions.
         // BECAUSE OF FACT THAT NO MORE RECORDS FOUND TO BE LOCKED, WORKER DOES UNDO BUT KEEP LOCKS AND THEN
@@ -107,7 +107,7 @@
 
 
     Expected result:
-    * session-'worker' must update of only rows with ID = 1...4 (reverting sign of IDs value).
+    * session-'worker' must update all rows.
 
     * Two unique values must be in the column TLOG_DONE.SNAP_NO for session-'worker' when it performed UPDATE statement: first of them
       was created by initial statement start and second reflects SINGLE restart (this column has values which are evaluated using
@@ -205,7 +205,7 @@ con_lock_2.execute_immediate( "execute block as begin rdb$set_context('USER_SESS
 ###  L O C K E R - 1  ###
 #########################
 
-con_lock_1.execute_immediate( 'update test set id=-id where id = 2' )
+con_lock_1.execute_immediate( 'update test set id=id where id = 2' )
 
 sql_text='''
     connect '%(dsn)s';
@@ -265,20 +265,20 @@ time.sleep(1)
 #########################
 ###  L O C K E R - 2  ###
 #########################
-con_lock_2.execute_immediate( 'insert into test(id) values(11)' )
+con_lock_2.execute_immediate( 'insert into test(id) values(110)' )
 con_lock_2.execute_immediate( 'insert into test(id) values(-11)' )
 con_lock_2.commit()
-con_lock_2.execute_immediate( 'update test set id=id where id = 11' )
+con_lock_2.execute_immediate( 'update test set id=id where id = 110' )
 con_lock_2.execute_immediate( 'update test set id=id where id = -11' )
 
 #########################
 ###  L O C K E R - 1  ###
 #########################
 con_lock_1.commit()
-con_lock_1.execute_immediate( 'insert into test(id) values(12)' )
+con_lock_1.execute_immediate( 'insert into test(id) values(120)' )
 con_lock_1.execute_immediate( 'insert into test(id) values(-12)' )
 con_lock_1.commit()
-con_lock_1.execute_immediate( 'update test set id=id where id = 12' )
+con_lock_1.execute_immediate( 'update test set id=id where id = 120' )
 con_lock_1.execute_immediate( 'update test set id=id where id = -12' )
 
 
@@ -286,20 +286,20 @@ con_lock_1.execute_immediate( 'update test set id=id where id = -12' )
 ###  L O C K E R - 2  ###
 #########################
 con_lock_2.commit()
-con_lock_2.execute_immediate( 'insert into test(id) values(13)' )
+con_lock_2.execute_immediate( 'insert into test(id) values(130)' )
 con_lock_2.execute_immediate( 'insert into test(id) values(-13)' )
 con_lock_2.commit()
-con_lock_2.execute_immediate( 'update test set id=id where id = 13' )
+con_lock_2.execute_immediate( 'update test set id=id where id = 130' )
 con_lock_2.execute_immediate( 'update test set id=id where id = -13' )
 
 #########################
 ###  L O C K E R - 1  ###
 #########################
 con_lock_1.commit()
-con_lock_1.execute_immediate( 'insert into test(id) values(14)' )
+con_lock_1.execute_immediate( 'insert into test(id) values(140)' )
 con_lock_1.execute_immediate( 'insert into test(id) values(-14)' )
 con_lock_1.commit()
-con_lock_1.execute_immediate( 'update test set id=id where id = 14' )
+con_lock_1.execute_immediate( 'update test set id=id where id = 140' )
 con_lock_1.execute_immediate( 'update test set id=id where id = -14' )
 
 #########################
@@ -342,16 +342,48 @@ time.sleep(1)
 # Cleanup.
 ##########
 f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
-#cleanup( f_list )
+cleanup( f_list )
 
   """,
  'expected_stdout':
   """
+    Records affected: 10
+
+         ID 
+    ======= 
+       -140 
+       -130 
+       -120 
+       -110 
+         -2 
+         -1 
+         11 
+         12 
+         13 
+         14 
+
+    Records affected: 10
+
+     OLD_ID OP              SNAP_NO_RANK 
+    ======= ====== ===================== 
+          1 UPD                        1 
+        -14 UPD                        2 
+        -13 UPD                        2 
+        -12 UPD                        2 
+        -11 UPD                        2 
+          1 UPD                        2 
+          2 UPD                        2 
+        110 UPD                        2 
+        120 UPD                        2 
+        130 UPD                        2 
+        140 UPD                        2 
+
+    Records affected: 11
   """,
  'expected_stderr':
   """
   """,
-  #'substitutions':[('=',''), ('[ \t]+',' ')]
+  'substitutions':[('=',''), ('[ \t]+',' ')]
 },
 ]
 }
