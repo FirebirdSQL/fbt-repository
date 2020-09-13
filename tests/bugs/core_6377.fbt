@@ -63,7 +63,6 @@ def cleanup( f_names_list ):
             if os.path.isfile( f_names_list[i]):
                 print('ERROR: can not remove file ' + f_names_list[i])
 
-
 #--------------------------------------------
 
 # https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
