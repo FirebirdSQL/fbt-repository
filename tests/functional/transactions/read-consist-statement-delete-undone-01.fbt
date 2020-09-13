@@ -259,44 +259,53 @@ time.sleep(1)
 #########################
 ###  L O C K E R - 2  ###
 #########################
-
 # Add record so that it **will* be included in the set of rows that must be affected by session-worker:
 con_lock_2.execute_immediate( 'insert into test(id, x) values(6, 6);' )
 con_lock_2.commit()
 con_lock_2.execute_immediate( 'update test set id = id where id = 6;' )
 
+#########################
+###  L O C K E R - 1  ###
+#########################
 con_lock_1.commit() # releases record with ID=1 (allow it to be deleted by session-worker)
-
 # Add record so that it **will* be included in the set of rows that must be affected by session-worker:
 con_lock_1.execute_immediate( 'insert into test(id, x) values(7, 7);' )
 con_lock_1.commit()
 con_lock_1.execute_immediate( 'update test set id = id where id = 7;' )
 
-
+#########################
+###  L O C K E R - 2  ###
+#########################
 con_lock_2.commit() # releases record with ID = 6, but session-worker is waiting for record with ID = 7 (that was added by locker-1).
-
 con_lock_2.execute_immediate( 'insert into test(id, x) values(8, 8);' )
 con_lock_2.commit()
 con_lock_2.execute_immediate( 'update test set id = id where id = 8;' )
 
 
+#########################
+###  L O C K E R - 1  ###
+#########################
 con_lock_1.commit() # releases record with ID = 7, but session-worker is waiting for record with ID = 8 (that was added by locker-2).
-
 con_lock_1.execute_immediate( 'insert into test(id, x) values(9, 9);' )
 con_lock_1.commit()
 con_lock_1.execute_immediate( 'update test set id = id where id = 9;' )
 
 
+#########################
+###  L O C K E R - 2  ###
+#########################
 con_lock_2.commit() # releases record with ID = 8, but session-worker is waiting for record with ID = 9 (that was added by locker-1).
-
 con_lock_2.execute_immediate( 'insert into test(id, x) values(10, 10);' )
 con_lock_2.commit()
 con_lock_2.execute_immediate( 'update test set id = id where id = 10;' )
          
 
+#########################
+###  L O C K E R - 1  ###
+#########################
 con_lock_1.commit() # <<< THIS MUST CANCEL ALL PERFORMED DELETIONS OF SESSION-WORKER
-con_lock_2.commit()
 
+con_lock_2.commit()
 
 # Here we wait for ISQL complete its mission:
 p_worker.wait()
