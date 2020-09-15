@@ -2,7 +2,7 @@
 'id': 'bugs.core_2268',
 'qmid': None,
 'tracker_id': 'CORE-2268',
-'title': 'CORE-2268',
+'title': 'GFIX causes BUGCHECK errors with non valid transaction numbers',
 'description': '',
 'min_versions': '',
 'versions': [
