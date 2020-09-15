@@ -2,7 +2,7 @@
 'id': 'bugs.core_4934',
 'qmid': None,
 'tracker_id': 'CORE-4934',
-'title': "CTE Aliases",
+'title': "Different collation ID for altered computed column",
 'description': '',
 'min_versions': '3.0',
 'versions': [
