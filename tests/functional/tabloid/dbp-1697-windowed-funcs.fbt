@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.dbp-1697-windowed-funcs',
 'qmid': None,
 'tracker_id': '',
-'title': '',
+'title': 'Query for test SUM()OVER() and COUNT()OVER().',
 'description': '',
 'min_versions': '3.0',
 'versions': [
