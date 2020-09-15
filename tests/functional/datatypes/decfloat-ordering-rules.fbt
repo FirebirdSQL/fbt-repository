@@ -2,9 +2,10 @@
 'id': 'functional.datatypes.decfloat-special-functions',
 'qmid': None,
 'tracker_id': '',
-'title': 
+'title': 'Test functions that are designed specially for DECFLOAT handling',
+'description': 
  """
-    Test functions that are designed specially for DECFLOAT handling:
+    Test verifies work of:
         - COMPARE_DECFLOAT - compares two DECFLOAT values to be equal, different or unordered.
             Returns SMALLINT value which can be as follows:
             0 - values are equal
@@ -24,9 +25,6 @@
         -nan < -snan < -inf < -0.1 < -0.10 < -0 < 0 < 0.10 < 0.1 < inf < snan < nan
 
     Checked on 4.0.0.1714.
- """,
-'description': 
- """
  """,
 'min_versions': '4.0.0',
 'versions': [
