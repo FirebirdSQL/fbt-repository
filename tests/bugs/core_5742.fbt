@@ -2,7 +2,7 @@
 'id': 'bugs.core_5742',
 'qmid': None,
 'tracker_id': 'CORE-5742',
-'title': '',
+'title': 'Incorrect error message in iSQL when trying to create database with wrong password',
 'description':
  """
      We can just attempt to create current test database with wrong password.
