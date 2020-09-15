@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.oltp-emul_30-compiler-check',
 'qmid': None,
 'tracker_id': '',
-'title': "",
+'title': "Compiler check. Test ability to compile source code of OLTP-EMUL test.",
 'description': '',
 'min_versions': '3.0',
 'versions': [
