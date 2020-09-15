@@ -2,9 +2,7 @@
 'id': 'functional.datatypes.decfloat-loose-accuracy',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
- """,
+'title':'Test for preseving accuracy when evaluate sum of values with huge dfference in magnitude.',
 'description': 
  """
     Wide range of terms can lead to wrong result of sum.
