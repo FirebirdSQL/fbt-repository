@@ -2,8 +2,8 @@
 'id': 'bugs.core_4950',
 'qmid': None,
 'tracker_id': 'CORE-4950',
-'title': "",
-'description': 'Statistics for any system index can not be updated/recalculated',
+'title': "Statistics for any system index can not be updated/recalculated",
+'description': '',
 'min_versions': '3.0',
 'versions': [
 {
