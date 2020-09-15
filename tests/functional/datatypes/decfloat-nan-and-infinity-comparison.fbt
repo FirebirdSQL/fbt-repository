@@ -2,10 +2,7 @@
 'id': 'functional.datatypes.decfloat-nan-and-infinity-comparison',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
-   DECFLOAT should not throw exceptions when +/-NaN, +/-sNaN and +/-Infinity is used in comparisons
- """,
+'title': 'DECFLOAT should not throw exceptions when +/-NaN, +/-sNaN and +/-Infinity is used in comparisons',
 'description': 
  """
     Checked on 4.0.0.920.
