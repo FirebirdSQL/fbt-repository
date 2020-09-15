@@ -2,10 +2,7 @@
 'id': 'functional.datatypes.decfloat-scalar-functions',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
-   Test common math functions that should work with DECFLOAT datatype.
- """,
+'title': 'Test common math functions that should work with DECFLOAT datatype.',
 'description': 
  """
     See CORE-5535 and doc\sql.extensions\README.data_types:
