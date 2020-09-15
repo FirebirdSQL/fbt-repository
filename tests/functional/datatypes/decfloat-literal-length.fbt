@@ -2,10 +2,7 @@
 'id': 'functional.datatypes.decfloat-literal-length',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
-   Literal length currently is limited with 1024 characters (including decimal separator and minus sign if any)
- """,
+'title': 'Literal length currently is limited with 1024 characters (including decimal separator and minus sign if any)',
 'description': 
  """
     See CORE-5535 and doc\sql.extensions\README.data_types:
