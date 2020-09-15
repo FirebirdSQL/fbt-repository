@@ -2,21 +2,17 @@
 'id': 'functional.datatypes.decfloat-literal-interpr',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
-   Check interpretation of numeric literals. When literal can not be fit in any of "pre-4.0"
-   numeric datatypes DECFLOAT datatype it should be considered as DECFLOAT(34).
-   FB40CS, build 4.0.0.651: OK, 1.375s
-
-   ::: NB :::
-   Currently only double precision form of literals is checked. 
-   Literals with value out bigint scope are not checked - waiting for reply from Alex, letter 24.05.2017 21:16
-
- """,
+'title':'Test interpretation of numeric literals.',
 'description': 
  """
+    When literal can not be fit in any of "pre-4.0" then DECFLOAT should be considered as DECFLOAT(34).
     See CORE-5535 and doc\sql.extensions\README.data_types
     See also letter from Alex, 24.05.2017 19:28.
+
+    Checked on: FB40CS, build 4.0.0.651: OK, 1.375s
+    ::: NB :::
+    Currently only double precision form of literals is checked. 
+    Literals with value out bigint scope are not checked - waiting for reply from Alex, letter 24.05.2017 21:16
  """,
 'min_versions': '4.0.0',
 'versions': [
