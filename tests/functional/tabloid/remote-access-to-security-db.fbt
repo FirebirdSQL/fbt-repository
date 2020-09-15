@@ -1,7 +1,7 @@
 {
 'id': 'functional.tabloid.remote-access-to-security-db',
 'tracker_id': '',
-'title': "",
+'title': "Verify ability to make REMOTE connect to security.db ",
 'description':
  """
    This test verifies only ability to make REMOTE connect to security.db 
