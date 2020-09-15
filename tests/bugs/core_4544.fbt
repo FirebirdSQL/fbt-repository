@@ -2,8 +2,8 @@
 'id': 'bugs.core_4544',
 'qmid': None,
 'tracker_id': 'CORE-4544',
-'title': "",
-'description': 'Allow hiding source code of procedures and triggers in FB 3',
+'title': "Allow hiding source code of procedures and triggers in FB 3",
+'description': '',
 'min_versions': '3.0',
 'versions': [
 {
