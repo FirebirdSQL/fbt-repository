@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.dbp-4391-combo-full-join-and-windowed-funcs2',
 'qmid': None,
 'tracker_id': '',
-'title': '',
+'title': 'Common SQL. Check correctness of the results',
 'description': '',
 'min_versions': '3.0',
 'versions': [
