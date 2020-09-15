@@ -2,8 +2,8 @@
 'id': 'functional.monitoring.04',
 'qmid': 'functional.monitoring.monitoring_04',
 'tracker_id': '',
-'title': '',
-'description': 'SYSDBA must see all attachments and their transactions, non-privileged user - only those which was of his login.',
+'title': 'Monitoring: SYSDBA must see all attachments and their transactions, non-privileged user - only those which was of his login.',
+'description': '',
 'min_versions': None,
 'versions': [
 {
