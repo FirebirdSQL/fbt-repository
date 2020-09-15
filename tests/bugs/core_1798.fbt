@@ -2,7 +2,7 @@
 'id': 'bugs.core_1798',
 'qmid': 'bugs.core_1798',
 'tracker_id': '',
-'title': '',
+'title': 'RDB$DB_KEY evaluates to NULL in INSERT ... RETURNING',
 'description': '',
 'versions': [
 {
