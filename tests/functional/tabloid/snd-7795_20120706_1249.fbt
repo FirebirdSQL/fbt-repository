@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.snd-7795_20120706_1249',
 'qmid': None,
 'tracker_id': '',
-'title': '',
+'title': 'Common SQL. Check correctness of the results',
 'description':
  """
     NB: new datatype in FB 4.0 was introduces: numeric(38,0).
