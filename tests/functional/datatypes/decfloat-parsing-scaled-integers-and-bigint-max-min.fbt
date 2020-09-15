@@ -2,10 +2,7 @@
 'id': 'functional.datatypes.decfloat-parsing-scaled-integers-and-bigint-max-min',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
-   Test DECFLOAT values to be interpreted s bigint
- """,
+'title': 'Interpretation of DECFLOAT values as BIGINT',
 'description': 
  """
     Check commit: "Fixed parsing of scaled integers and MAX/MIN INT64", 2017-05-28
