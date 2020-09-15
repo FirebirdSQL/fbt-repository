@@ -2,7 +2,7 @@
 'id': 'bugs.core_5908',
 'qmid': None,
 'tracker_id': 'CORE-5908',
-'title': '',
+'title': 'Enhance dynamic libraries loading related error messages',
 'description': 
  """
    We intentionally try to load unit from non-existent UDR module with name "udrcpp_foo".
