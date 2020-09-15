@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.bus-3103-windowed-funcs',
 'qmid': None,
 'tracker_id': '',
-'title': '',
+'title': 'Query for test MAX()OVER().',
 'description': '',
 'min_versions': '3.0',
 'versions': [
