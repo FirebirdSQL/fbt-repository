@@ -2,7 +2,7 @@
 'id': 'bugs.core_4483',
 'qmid': None,
 'tracker_id': 'CORE-4483',
-'title': "",
+'title': "Changed data not visible in WHEN-section if exception occured inside SP that has been called from this code",
 'description': '',
 'min_versions': '4.0',
 'versions': [
