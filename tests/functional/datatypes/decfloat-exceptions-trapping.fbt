@@ -2,10 +2,7 @@
 'id': 'functional.datatypes.decfloat-exceptions-trapping',
 'qmid': None,
 'tracker_id': '',
-'title': 
- """
-   Test exception trapping for result of DECFLOAT operations.
- """,
+'title': 'Test exception trapping for result of DECFLOAT operations.',
 'description': 
  """
     See CORE-5535 and doc\sql.extensions\README.data_types:
