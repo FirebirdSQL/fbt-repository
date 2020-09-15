@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.dbp-0951-multiple-nested-cte',
 'qmid': None,
 'tracker_id': '',
-'title': '',
+'title': 'Query for test multiple CTEs',
 'description': '',
 'min_versions': '3.0',
 'versions': [
