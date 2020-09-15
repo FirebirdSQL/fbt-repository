@@ -2,7 +2,7 @@
 'id': 'bugs.core_2291',
 'qmid': None,
 'tracker_id': 'CORE-2291',
-'title': 'BUGCHECK 284',
+'title': 'BUGCHECK 284 (cannot restore singleton select data (284), file: rse.cpp ...)',
 'description': '',
 'min_versions': '2.0.6',
 'versions': [
