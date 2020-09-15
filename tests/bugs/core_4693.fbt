@@ -2,7 +2,7 @@
 'id': 'bugs.core_4693',
 'qmid': None,
 'tracker_id': 'CORE-4693',
-'title': "CTE Aliases",
+'title': "CTE Aliases ('Column unknown' when recursive CTE contain join with *alias* rather than table name)",
 'description': '',
 'min_versions': '2.5.0',
 'versions': [
