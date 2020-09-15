@@ -2,7 +2,7 @@
 'id': 'functional.tabloid.dbp-1940_20040130_1740',
 'qmid': None,
 'tracker_id': '',
-'title': '',
+'title': 'Common SQL. Check correctness of the results',
 'description': '',
 'min_versions': '2.5.3',
 'versions': [
