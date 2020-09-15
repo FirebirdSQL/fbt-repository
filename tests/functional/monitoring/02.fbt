@@ -2,7 +2,7 @@
 'id': 'functional.monitoring.02',
 'qmid': 'functional.monitoring.monitoring_02',
 'tracker_id': '',
-'title': '',
+'title': 'Monitoring: get data about active statements from current attachment (WHERE-filter: mon$statements.mon$state=1).',
 'description': '',
 'min_versions': None,
 'versions': [
