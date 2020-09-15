@@ -2,7 +2,7 @@
 'id': 'bugs.core_1248',
 'qmid': 'bugs.core_1248-21',
 'tracker_id': '',
-'title': '',
+'title': ' Incorrect timestamp arithmetic when one of operands is negative number',
 'description': '',
 'versions': [
 {
