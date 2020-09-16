@@ -190,7 +190,7 @@ for main_iter in (0,1):
 
     '''  % dict(globals(), **locals())
 
-    f_worker_sql=open( os.path.join(context['temp_directory'],'tmp_sttm_restart_on_delete_04.sql'), 'w')
+    f_worker_sql=open( os.path.join(context['temp_directory'],'tmp_sttm_restart_max_limit.sql'), 'w')
     f_worker_sql.write(sql_text)
     flush_and_close(f_worker_sql)
 
