@@ -555,7 +555,7 @@ cleanup( f_list )
      ,('[ \t]+',' ')
      ,('.*After line \d+.*', '')
      ,('.*[\-]?concurrent transaction number is \d+', 'concurrent transaction number is')
-     ,('[\-]?At block line: \d+1.*', '')
+     ,('.*At\s+block\s+line(:)?\s+\d+(,)?\s+col(:)?\s+\d+', '')
    ]
 
 },
