@@ -20,6 +20,15 @@
    Checked on:
         3.0.4.33022: OK, 5.453s.
         4.0.0.1158: OK, 5.313s.
+
+   21.09.2020: removed separate section for 4.0 because error messages equal to FB 3.x. Changed 'substitution' section.
+
+   Waiting for completion of child ISQL async process is done by call <isql_PID>.wait() instead of old (and "fragile")
+   assumption about maximal time that it could last before forcedly terminate it.
+
+   Replaced direct specification of executable 'isql' with context['isql_path'] in order to remove dependence on PATH
+   (suggested by dimitr, letter 28.08.2020, 13:42; otherwise directory with isql must be added into PATH list).
+
  """,
 'min_versions': '3.0',
 'versions': [
@@ -40,49 +49,81 @@ import os
 import subprocess
 from subprocess import Popen
 import time
+import fdb
 
 db_conn.close()
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-att1 = kdb.connect(dsn=dsn)
+#-----------------------------------
 
-# C:\Python27\Lib\site-packages\fdb\ibase.py 
-#tpb1 = ( [ fdb.isc_tpb_concurrency, fdb.isc_tpb_wait ] )
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
 
-# Start SNAPSHOT transaction (as in OLTP-EMUL):
-#att1.begin( tpb=tpb1 )
+    file_handle.close()
 
-cur1 = att1.cursor()
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+
+#--------------------------------------------
+
+att1 = fdb.connect( dsn = dsn)
 
 # Delete record but not yet commit - it's a time 
 # to make another connection:
-cur1.execute("delete from test where id = 1")
+att1.execute_immediate("delete from test where id = 1")
+
+sql_cmd=\
+'''
+    set list on;
+    -- set echo on;
+    commit;
+    set transaction lock timeout 20;
+    select x from test where id = 1 with lock;
+'''
 
 f_select_with_lock_sql = open( os.path.join(context['temp_directory'],'tmp_4388_select_with_lock.sql'), 'w')
-f_select_with_lock_sql.write('set list on; set echo on; select x from test where id = 1 with lock;')
+f_select_with_lock_sql.write(sql_cmd)
 f_select_with_lock_sql.close()
+
+#context['isql_path']
 
 f_select_with_lock_log = open( os.path.join(context['temp_directory'],'tmp_4388_select_with_lock.log'), 'w')
 
-p_hanged_isql=\
-    subprocess.Popen( ["isql", dsn, "-n", "-i", f_select_with_lock_sql.name ],
-                     stdout = f_select_with_lock_log,
-                     stderr = subprocess.STDOUT
-                   )
-f_select_with_lock_log.close()
+p_hanged_isql=subprocess.Popen(   [ context['isql_path'], dsn, "-n", "-i", f_select_with_lock_sql.name ],
+                                  stdout = f_select_with_lock_log,
+                                  stderr = subprocess.STDOUT
+                              )
 
-time.sleep(1)
+# Let ISQL to be loaded and establish its attachment:
+time.sleep(2)
 
-# Here we return to att1 and make COMMIT deleted record:
+# Return to att1 and make COMMIT of deleted record:
+#############
 att1.commit()
 att1.close()
+#############
 
-time.sleep(1)
+# Wait until ISQL complete its mission:
+p_hanged_isql.wait()
 
-p_hanged_isql.terminate()
-f_select_with_lock_sql.close()
+flush_and_close(f_select_with_lock_log)
 
 with open(f_select_with_lock_log.name,'r') as f:
     print(f.read())
@@ -90,14 +131,9 @@ f.close()
 
 ###############################
 # Cleanup.
-
-f_list=[]
-f_list.append(f_select_with_lock_sql)
-f_list.append(f_select_with_lock_log)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+time.sleep(1)
+f_list = [ i.name for i in (f_select_with_lock_sql, f_select_with_lock_log) ]
+cleanup( f_list )
 
   """,
  'expected_stdout':
@@ -105,108 +141,16 @@ for i in range(len(f_list)):
     Statement failed, SQLSTATE = 40001
     deadlock
     -update conflicts with concurrent update
-    -concurrent transaction number is 8
+    -concurrent transaction number is 13
   """,
  'expected_stderr':
   """
   """,
-  'substitutions':[
-      ('.* transaction number is [0-9]+', '.* transaction'),
-      ('After line [0-9]+ in file .*', '')
+ 'substitutions':[
+      ('(-)?concurrent\s+transaction\s+number(\s+is)?\s+\d+', 'concurrent transaction')
+     ,('After\s+line\s+\d+.*', '')
   ]
-},
-{
- 'firebird_version': '4.0',
- 'platform': 'All',
- 'init_script':
-  """
-    create table test(id int primary key, x int);
-    commit;
-    insert into test values(1, 100);
-    commit;
-  """,
- 'test_type': 'Python',
- 'test_script': 
-  """\
-import os
-import subprocess
-from subprocess import Popen
-import time
 
-db_conn.close()
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-
-att1 = kdb.connect(dsn=dsn)
-
-# C:\Python27\Lib\site-packages\fdb\ibase.py 
-#tpb1 = ( [ fdb.isc_tpb_concurrency, fdb.isc_tpb_wait ] )
-
-# Start SNAPSHOT transaction (as in OLTP-EMUL):
-#att1.begin( tpb=tpb1 )
-
-cur1 = att1.cursor()
-
-# Delete record but not yet commit - it's a time 
-# to make another connection:
-cur1.execute("delete from test where id = 1")
-
-f_select_with_lock_sql = open( os.path.join(context['temp_directory'],'tmp_4388_select_with_lock.sql'), 'w')
-f_select_with_lock_sql.write('set list on; set echo on; select x from test where id = 1 with lock;')
-f_select_with_lock_sql.close()
-
-f_select_with_lock_log = open( os.path.join(context['temp_directory'],'tmp_4388_select_with_lock.log'), 'w')
-
-p_hanged_isql=\
-    subprocess.Popen( ["isql", dsn, "-n", "-i", f_select_with_lock_sql.name ],
-                     stdout = f_select_with_lock_log,
-                     stderr = subprocess.STDOUT
-                   )
-f_select_with_lock_log.close()
-
-time.sleep(1)
-
-# Here we return to att1 and make COMMIT deleted record:
-att1.commit()
-att1.close()
-
-time.sleep(1)
-
-p_hanged_isql.terminate()
-f_select_with_lock_sql.close()
-
-with open(f_select_with_lock_log.name,'r') as f:
-    print(f.read())
-f.close()
-
-###############################
-# Cleanup.
-
-f_list=[]
-f_list.append(f_select_with_lock_sql)
-f_list.append(f_select_with_lock_log)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
-  """,
- 'expected_stdout':
-  """
-    Statement failed, SQLSTATE = 40001
-    deadlock
-    update conflicts with concurrent update
-    concurrent transaction number is 8
-  """,
- 'expected_stderr':
-  """
-  """,
-  'substitutions':[
-      ('[\-]{0,1}concurrent transaction number is [0-9]+', 'concurrent transaction number is'),
-      ('[\-]{0,1}update conflicts.*', 'update conflicts.*'),
-      ('After line [0-9]+ in file .*', '')
-  ]
 }
 ]
 }
