@@ -113,6 +113,7 @@
     ################
 
     Checked on 4.0.0.2195
+    24.09.2020: added for-loop in order to check different target objects: TABLE ('test') and VIEW ('v_test'), see 'checked_mode'.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -167,196 +168,236 @@ def cleanup( f_names_list ):
 
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
 
-f_init_log=open( os.path.join(context['temp_directory'],'read-consist-sttm-restart-DDL.log'), 'w')
-f_init_err=open( ''.join( ( os.path.splitext(f_init_log.name)[0], '.err') ), 'w')
+for checked_mode in('table', 'view'):
 
-subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', sql_init_ddl], stdout=f_init_log, stderr=f_init_err )
-flush_and_close(f_init_log)
-flush_and_close(f_init_err)
+    target_obj = 'test' if checked_mode == 'table' else 'v_test'
 
-# add rows with ID = 1, 2, ..., 5:
-sql_addi='''
-    set term ^;
-    execute block as
-    begin
-        rdb$set_context('USER_SESSION', 'WHO', 'INIT_DATA');
-    end
-    ^
-    set term ;^
-    insert into test(id, x)
-    select row_number()over(),row_number()over()
-    from rdb$types rows 5;
-    commit;
-'''
-runProgram('isql', [ dsn, '-q' ], sql_addi)
+    f_init_log=open( os.path.join(context['temp_directory'],'read-consist-sttm-restart-DDL.log'), 'w')
+    f_init_err=open( ''.join( ( os.path.splitext(f_init_log.name)[0], '.err') ), 'w')
 
-con_lock_1 = fdb.connect( dsn = dsn )
-con_lock_2 = fdb.connect( dsn = dsn )
-con_lock_1.execute_immediate( "execute block as begin rdb$set_context('USER_SESSION', 'WHO', 'LOCKER #1'); end" )
-con_lock_2.execute_immediate( "execute block as begin rdb$set_context('USER_SESSION', 'WHO', 'LOCKER #2'); end" )
+    # RECREATION OF ALL DB OBJECTS:
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', sql_init_ddl], stdout=f_init_log, stderr=f_init_err )
+    flush_and_close(f_init_log)
+    flush_and_close(f_init_err)
 
+    # add rows with ID = 1, 2, ..., 5:
+    sql_addi='''
+        set term ^;
+        execute block as
+        begin
+            rdb$set_context('USER_SESSION', 'WHO', 'INIT_DATA');
+        end
+        ^
+        set term ;^
+        insert into %(target_obj)s(id, x)
+        select row_number()over(),row_number()over()
+        from rdb$types rows 5;
+        commit;
+    ''' % locals()
+    runProgram('isql', [ dsn, '-q' ], sql_addi)
 
-#########################
-###  L O C K E R - 1  ###
-#########################
-
-con_lock_1.execute_immediate( 'update test set id=id where id = 5' )
-
-sql_text='''
-    connect '%(dsn)s';
-    set list on;
-    set autoddl off;
-    set term ^;
-    execute block returns (whoami varchar(30)) as
-    begin
-        whoami = 'WORKER'; -- , ATT#' || current_connection;
-        rdb$set_context('USER_SESSION','WHO', whoami);
-        -- suspend;
-    end
-    ^
-    set term ;^
-    commit;
-    --set echo on;
-    SET KEEP_TRAN_PARAMS ON;
-    set transaction read committed read consistency;
-    --select current_connection, current_transaction from rdb$database;
-    set list off;
-    set wng off;
-    --set plan on;
-    set count on;
-
-    update test set id = -id order by id; -- THIS MUST BE LOCKED
-
-    -- check results:
-    -- ###############
-
-    select id from test order by id; -- this will produce output only after all lockers do their commit/rollback
-
-    select v.old_id, v.op, v.snap_no_rank
-    from v_worker_log v
-    where v.op = 'upd';
-
-    set width who 10;
-    -- DO NOT check this! Values can differ here from one run to another!
-    -- select id, trn, who, old_id, new_id, op, rec_vers, global_cn, snap_no from tlog_done order by id;
-
-    rollback;
-
-'''  % dict(globals(), **locals())
-
-f_worker_sql=open( os.path.join(context['temp_directory'],'tmp_sttm_restart_on_update_01.sql'), 'w')
-f_worker_sql.write(sql_text)
-flush_and_close(f_worker_sql)
+    con_lock_1 = fdb.connect( dsn = dsn )
+    con_lock_2 = fdb.connect( dsn = dsn )
+    con_lock_1.execute_immediate( "execute block as begin rdb$set_context('USER_SESSION', 'WHO', 'LOCKER #1'); end" )
+    con_lock_2.execute_immediate( "execute block as begin rdb$set_context('USER_SESSION', 'WHO', 'LOCKER #2'); end" )
 
 
-f_worker_log=open( ''.join( ( os.path.splitext(f_worker_sql.name)[0], '.log') ), 'w')
-f_worker_err=open( ''.join( ( os.path.splitext(f_worker_log.name)[0], '.err') ), 'w')
+    #########################
+    ###  L O C K E R - 1  ###
+    #########################
 
-############################################################################
-###  L A U N C H     W O R K E R    U S I N G     I S Q L,   A S Y N C.  ###
-############################################################################
+    con_lock_1.execute_immediate( 'update %(target_obj)s set id=id where id = 5'  % locals())
 
-p_worker = Popen( [ fb_home+'isql', '-pag', '999999', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
-time.sleep(1)
+    sql_text='''
+        connect '%(dsn)s';
+        set list on;
+        set autoddl off;
+        set term ^;
+        execute block returns (whoami varchar(30)) as
+        begin
+            whoami = 'WORKER'; -- , ATT#' || current_connection;
+            rdb$set_context('USER_SESSION','WHO', whoami);
+            -- suspend;
+        end
+        ^
+        set term ;^
+        commit;
+        --set echo on;
+        SET KEEP_TRAN_PARAMS ON;
+        set transaction read committed read consistency;
+        --select current_connection, current_transaction from rdb$database;
+        set list off;
+        set wng off;
+        --set plan on;
+        set count on;
 
-#########################
-###  L O C K E R - 2  ###
-#########################
-con_lock_2.execute_immediate( 'insert into test(id) values(-11)' )
-con_lock_2.commit()
-con_lock_2.execute_immediate( 'update test set id=id where id = -11' )
+        update %(target_obj)s set id = -id order by id; -- THIS MUST BE LOCKED
 
-#########################
-###  L O C K E R - 1  ###
-#########################
-con_lock_1.commit()
-con_lock_1.execute_immediate( 'insert into test(id) values(-12)' )
-con_lock_1.commit()
-con_lock_1.execute_immediate( 'update test set id=id where id = -12' )
+        -- check results:
+        -- ###############
 
+        select id from %(target_obj)s order by id; -- this will produce output only after all lockers do their commit/rollback
 
-#########################
-###  L O C K E R - 2  ###
-#########################
-con_lock_2.commit()
-con_lock_2.execute_immediate( 'insert into test(id) values(-13)' )
-con_lock_2.commit()
-con_lock_2.execute_immediate( 'update test set id=id where id = -13' )
+        select v.old_id, v.op, v.snap_no_rank
+        from v_worker_log v
+        where v.op = 'upd';
 
-#########################
-###  L O C K E R - 1  ###
-#########################
-con_lock_1.commit()
+        set width who 10;
+        -- DO NOT check this! Values can differ here from one run to another!
+        -- select id, trn, who, old_id, new_id, op, rec_vers, global_cn, snap_no from tlog_done order by id;
 
-#########################
-###  L O C K E R - 2  ###
-#########################
-con_lock_2.commit() # WORKER will complete his job after this
+        rollback;
 
+    '''  % dict(globals(), **locals())
 
-# Here we wait for ISQL complete its mission:
-p_worker.wait()
-
-flush_and_close(f_worker_log)
-flush_and_close(f_worker_err)
-
-# Close lockers:
-################
-for c in (con_lock_1, con_lock_2):
-    c.close()
+    f_worker_sql=open( os.path.join(context['temp_directory'],'tmp_sttm_restart_on_update_01.sql'), 'w')
+    f_worker_sql.write(sql_text)
+    flush_and_close(f_worker_sql)
 
 
-# CHECK RESULTS
-###############
-with open(f_worker_log.name,'r') as f:
-    for line in f:
-        print(line)
+    f_worker_log=open( ''.join( ( os.path.splitext(f_worker_sql.name)[0], '.log') ), 'w')
+    f_worker_err=open( ''.join( ( os.path.splitext(f_worker_log.name)[0], '.err') ), 'w')
 
-for f in (f_init_err, f_worker_err):
-    with open(f.name,'r') as g:
-        for line in g:
-            if line:
-                print( 'UNEXPECTED STDERR IN ' + g.name + ':' +  line)
+    ############################################################################
+    ###  L A U N C H     W O R K E R    U S I N G     I S Q L,   A S Y N C.  ###
+    ############################################################################
 
-time.sleep(1)
+    p_worker = Popen( [ fb_home+'isql', '-pag', '999999', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
+    time.sleep(1)
+
+    #########################
+    ###  L O C K E R - 2  ###
+    #########################
+    con_lock_2.execute_immediate( 'insert into %(target_obj)s(id) values(-11)' % locals())
+    con_lock_2.commit()
+    con_lock_2.execute_immediate( 'update %(target_obj)s set id=id where id = -11' % locals())
+
+    #########################
+    ###  L O C K E R - 1  ###
+    #########################
+    con_lock_1.commit()
+    con_lock_1.execute_immediate( 'insert into %(target_obj)s(id) values(-12)' % locals() )
+    con_lock_1.commit()
+    con_lock_1.execute_immediate( 'update %(target_obj)s set id=id where id = -12' % locals() )
+
+
+    #########################
+    ###  L O C K E R - 2  ###
+    #########################
+    con_lock_2.commit()
+    con_lock_2.execute_immediate( 'insert into %(target_obj)s(id) values(-13)' % locals() )
+    con_lock_2.commit()
+    con_lock_2.execute_immediate( 'update %(target_obj)s set id=id where id = -13' % locals() )
+
+    #########################
+    ###  L O C K E R - 1  ###
+    #########################
+    con_lock_1.commit()
+
+    #########################
+    ###  L O C K E R - 2  ###
+    #########################
+    con_lock_2.commit() # WORKER will complete his job after this
+
+
+    # Here we wait for ISQL complete its mission:
+    p_worker.wait()
+
+    flush_and_close(f_worker_log)
+    flush_and_close(f_worker_err)
+
+    # Close lockers:
+    ################
+    for c in (con_lock_1, con_lock_2):
+        c.close()
+
+
+    # CHECK RESULTS
+    ###############
+    with open(f_worker_log.name,'r') as f:
+        for line in f:
+            print('checked_mode: %(checked_mode)s, STDLOG: %(line)s' % locals())
+
+    for f in (f_init_err, f_worker_err):
+        with open(f.name,'r') as g:
+            for line in g:
+                if line:
+                    print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+
+#<for checked mode in(...)
 
 # Cleanup.
 ##########
+time.sleep(1)
 f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
 cleanup( f_list )
 
   """,
  'expected_stdout':
   """
-    Records affected: 8
-
-         ID 
-    ======= 
-         -5 
-         -4 
-         -3 
-         -2 
-         -1 
-         11 
-         12 
-         13 
-    Records affected: 8
-
-     OLD_ID OP              SNAP_NO_RANK 
-    ======= ====== ===================== 
-          1 UPD                        1 
-          2 UPD                        1 
-          3 UPD                        1 
-          4 UPD                        1 
-        -13 UPD                        2 
-        -12 UPD                        2 
-        -11 UPD                        2 
-          1 UPD                        2 
-          2 UPD                        2 
-          3 UPD                        2 
-          4 UPD                        2 
-          5 UPD                        2 
-    Records affected: 12
+    checked_mode: table, STDLOG: Records affected: 8
+    checked_mode: table, STDLOG:
+    checked_mode: table, STDLOG:      ID
+    checked_mode: table, STDLOG: =======
+    checked_mode: table, STDLOG:      -5
+    checked_mode: table, STDLOG:      -4
+    checked_mode: table, STDLOG:      -3
+    checked_mode: table, STDLOG:      -2
+    checked_mode: table, STDLOG:      -1
+    checked_mode: table, STDLOG:      11
+    checked_mode: table, STDLOG:      12
+    checked_mode: table, STDLOG:      13
+    checked_mode: table, STDLOG:
+    checked_mode: table, STDLOG: Records affected: 8
+    checked_mode: table, STDLOG:
+    checked_mode: table, STDLOG:  OLD_ID OP              SNAP_NO_RANK
+    checked_mode: table, STDLOG: ======= ====== =====================
+    checked_mode: table, STDLOG:       1 UPD                        1
+    checked_mode: table, STDLOG:       2 UPD                        1
+    checked_mode: table, STDLOG:       3 UPD                        1
+    checked_mode: table, STDLOG:       4 UPD                        1
+    checked_mode: table, STDLOG:     -13 UPD                        2
+    checked_mode: table, STDLOG:     -12 UPD                        2
+    checked_mode: table, STDLOG:     -11 UPD                        2
+    checked_mode: table, STDLOG:       1 UPD                        2
+    checked_mode: table, STDLOG:       2 UPD                        2
+    checked_mode: table, STDLOG:       3 UPD                        2
+    checked_mode: table, STDLOG:       4 UPD                        2
+    checked_mode: table, STDLOG:       5 UPD                        2
+    checked_mode: table, STDLOG:
+    checked_mode: table, STDLOG: Records affected: 12
+    checked_mode: view, STDLOG: Records affected: 8
+    checked_mode: view, STDLOG:
+    checked_mode: view, STDLOG:      ID
+    checked_mode: view, STDLOG: =======
+    checked_mode: view, STDLOG:      -5
+    checked_mode: view, STDLOG:      -4
+    checked_mode: view, STDLOG:      -3
+    checked_mode: view, STDLOG:      -2
+    checked_mode: view, STDLOG:      -1
+    checked_mode: view, STDLOG:      11
+    checked_mode: view, STDLOG:      12
+    checked_mode: view, STDLOG:      13
+    checked_mode: view, STDLOG:
+    checked_mode: view, STDLOG: Records affected: 8
+    checked_mode: view, STDLOG:
+    checked_mode: view, STDLOG:  OLD_ID OP              SNAP_NO_RANK
+    checked_mode: view, STDLOG: ======= ====== =====================
+    checked_mode: view, STDLOG:       1 UPD                        1
+    checked_mode: view, STDLOG:       2 UPD                        1
+    checked_mode: view, STDLOG:       3 UPD                        1
+    checked_mode: view, STDLOG:       4 UPD                        1
+    checked_mode: view, STDLOG:     -13 UPD                        2
+    checked_mode: view, STDLOG:     -12 UPD                        2
+    checked_mode: view, STDLOG:     -11 UPD                        2
+    checked_mode: view, STDLOG:       1 UPD                        2
+    checked_mode: view, STDLOG:       2 UPD                        2
+    checked_mode: view, STDLOG:       3 UPD                        2
+    checked_mode: view, STDLOG:       4 UPD                        2
+    checked_mode: view, STDLOG:       5 UPD                        2
+    checked_mode: view, STDLOG:
+    checked_mode: view, STDLOG: Records affected: 12
   """,
  'expected_stderr':
   """
