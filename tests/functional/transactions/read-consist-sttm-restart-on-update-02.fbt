@@ -317,12 +317,13 @@ for checked_mode in('table', 'view'):
     ###############
     with open(f_worker_log.name,'r') as f:
         for line in f:
-            print('checked_mode: %(checked_mode)s, STDLOG: %(line)s' % locals())
+            if line.strip():
+                print('checked_mode: %(checked_mode)s, STDLOG: %(line)s' % locals())
 
     for f in (f_init_err, f_worker_err):
         with open(f.name,'r') as g:
             for line in g:
-                if line:
+                if line.strip():
                     print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
 
 #<for checked mode in(...)
@@ -336,16 +337,15 @@ cleanup( f_list )
  'expected_stdout':
   """
     checked_mode: table, STDLOG: Records affected: 4
-    checked_mode: table, STDLOG:
+
     checked_mode: table, STDLOG:      ID
     checked_mode: table, STDLOG: =======
     checked_mode: table, STDLOG:      -4
     checked_mode: table, STDLOG:      -3
     checked_mode: table, STDLOG:      -2
     checked_mode: table, STDLOG:      -1
-    checked_mode: table, STDLOG:
     checked_mode: table, STDLOG: Records affected: 4
-    checked_mode: table, STDLOG:
+
     checked_mode: table, STDLOG:  OLD_ID OP              SNAP_NO_RANK
     checked_mode: table, STDLOG: ======= ====== =====================
     checked_mode: table, STDLOG:       1 UPD                        1
@@ -356,20 +356,20 @@ cleanup( f_list )
     checked_mode: table, STDLOG:       2 UPD                        2
     checked_mode: table, STDLOG:       3 UPD                        2
     checked_mode: table, STDLOG:       4 UPD                        2
-    checked_mode: table, STDLOG:
     checked_mode: table, STDLOG: Records affected: 8
-  
+
+
+    
     checked_mode: view, STDLOG: Records affected: 4
-    checked_mode: view, STDLOG:
+
     checked_mode: view, STDLOG:      ID
     checked_mode: view, STDLOG: =======
     checked_mode: view, STDLOG:      -4
     checked_mode: view, STDLOG:      -3
     checked_mode: view, STDLOG:      -2
     checked_mode: view, STDLOG:      -1
-    checked_mode: view, STDLOG:
     checked_mode: view, STDLOG: Records affected: 4
-    checked_mode: view, STDLOG:
+
     checked_mode: view, STDLOG:  OLD_ID OP              SNAP_NO_RANK
     checked_mode: view, STDLOG: ======= ====== =====================
     checked_mode: view, STDLOG:       1 UPD                        1
@@ -380,7 +380,6 @@ cleanup( f_list )
     checked_mode: view, STDLOG:       2 UPD                        2
     checked_mode: view, STDLOG:       3 UPD                        2
     checked_mode: view, STDLOG:       4 UPD                        2
-    checked_mode: view, STDLOG:
     checked_mode: view, STDLOG: Records affected: 8
   """,
  'expected_stderr':
