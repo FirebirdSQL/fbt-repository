@@ -232,8 +232,8 @@ for checked_mode in('table', 'view'):
         --set plan on;
         set count on;
 
-        merge into test t -- THIS MUST BE LOCKED
-        using(select * from test where id >= 3 order by id) s on t.id = s.id
+        merge into %(target_obj)s t -- THIS MUST BE LOCKED
+        using(select * from %(target_obj)s where id >= 3 order by id) s on t.id = s.id
         when matched then
            DELETE
         ;
