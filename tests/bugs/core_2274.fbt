@@ -2,7 +2,7 @@
 'id': 'bugs.core_2274',
 'qmid': None,
 'tracker_id': 'CORE-2274',
-'title': 'Varchar length limit is not enforced when assigning string with trailing spaces in MBCS',
+'title': 'MERGE non-standard behaviour, accepts multiple matches',
 'description':
  """
    Confirmed bug on 4.0.0.2011
