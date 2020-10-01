@@ -213,10 +213,10 @@ end
 set term ;^
 commit;
 
-commit;
+-- /*
 alter trigger test_biud active;
 alter trigger test_aiud active;
 alter trigger trg_commit active;
 alter trigger trg_rollback active;
 commit;
-
+-- */
