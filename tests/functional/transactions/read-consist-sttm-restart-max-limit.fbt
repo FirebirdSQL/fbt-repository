@@ -115,10 +115,12 @@ def cleanup( f_names_list ):
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
 
 for target_object_type in('table', 'view'):
+#for target_object_type in('table', ):
 
     target_obj = 'test' if target_object_type == 'table' else 'v_test'
 
     for checked_DML in('upd', 'mer', 'del', 'lok'):
+    #for checked_DML in('lok',):
         worker_dml = "select 'UNKNOWN MODE' as msg from rdb$database"
         if checked_DML == 'upd':
             worker_dml = 'update %(target_obj)s set id = id * 100 where id <= 2 order by id DESC;' % locals()
@@ -134,12 +136,13 @@ for target_object_type in('table', 'view'):
             worker_dml = 'set term ^; execute block as declare c int; begin for select id from %(target_obj)s where id<=2 order by id desc with lock into c do begin end end^ set term ;^' % locals()
 
         for main_iter in (0,1):
+        #for main_iter in (1,):
 
             ###################################################################################
             ###  H O W    M A N Y    R E S T A R T S    W E    W A N T    T O    C H E C K  ###
             ###################################################################################
-            ROWS_TO_ADD = 10 + main_iter
-            ############################
+            ROWS_TO_ADD = 10 + 2 * main_iter
+
 
             f_init_log=open( os.path.join(context['temp_directory'],'read-consist-sttm-restart-DDL.log'), 'w')
             f_init_err=open( ''.join( ( os.path.splitext(f_init_log.name)[0], '.err') ), 'w')
@@ -370,11 +373,13 @@ cleanup( f_list )
     target_object_type: table, checked_DML = upd, iter = 0, worker STDLOG:     -12 UPD                       11
     target_object_type: table, checked_DML = upd, iter = 0, worker STDLOG:
     target_object_type: table, checked_DML = upd, iter = 0, worker STDLOG: Records affected: 31
-    target_object_type: table, checked_DML = upd, iter = 1, restarts number to be tested: 11
+
+    target_object_type: table, checked_DML = upd, iter = 1, restarts number to be tested: 12
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG: Records affected: 2
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:      ID
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG: =======
+    target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:     -14
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:     -13
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:     -12
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:     -11
@@ -389,7 +394,7 @@ cleanup( f_list )
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:       1
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:       2
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:
-    target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG:  OLD_ID OP              SNAP_NO_RANK
     target_object_type: table, checked_DML = upd, iter = 1, worker STDLOG: ======= ====== =====================
@@ -419,8 +424,9 @@ cleanup( f_list )
     target_object_type: table, checked_DML = upd, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: table, checked_DML = upd, iter = 1, worker STDERR: deadlock
     target_object_type: table, checked_DML = upd, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: table, checked_DML = upd, iter = 1, worker STDERR: -concurrent transaction number is 342
+    target_object_type: table, checked_DML = upd, iter = 1, worker STDERR: -concurrent transaction number is 343
     target_object_type: table, checked_DML = upd, iter = 1, worker STDERR: After line 18 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: table, checked_DML = mer, iter = 0, restarts number to be tested: 10
     target_object_type: table, checked_DML = mer, iter = 0, worker STDLOG: Records affected: 12
     target_object_type: table, checked_DML = mer, iter = 0, worker STDLOG:
@@ -476,11 +482,13 @@ cleanup( f_list )
     target_object_type: table, checked_DML = mer, iter = 0, worker STDLOG:     -12 UPD                       11
     target_object_type: table, checked_DML = mer, iter = 0, worker STDLOG:
     target_object_type: table, checked_DML = mer, iter = 0, worker STDLOG: Records affected: 31
-    target_object_type: table, checked_DML = mer, iter = 1, restarts number to be tested: 11
+
+    target_object_type: table, checked_DML = mer, iter = 1, restarts number to be tested: 12
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG: Records affected: 2
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:      ID
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG: =======
+    target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:     -14
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:     -13
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:     -12
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:     -11
@@ -495,7 +503,7 @@ cleanup( f_list )
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:       1
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:       2
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:
-    target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG:  OLD_ID OP              SNAP_NO_RANK
     target_object_type: table, checked_DML = mer, iter = 1, worker STDLOG: ======= ====== =====================
@@ -525,8 +533,9 @@ cleanup( f_list )
     target_object_type: table, checked_DML = mer, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: table, checked_DML = mer, iter = 1, worker STDERR: deadlock
     target_object_type: table, checked_DML = mer, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: table, checked_DML = mer, iter = 1, worker STDERR: -concurrent transaction number is 690
+    target_object_type: table, checked_DML = mer, iter = 1, worker STDERR: -concurrent transaction number is 696
     target_object_type: table, checked_DML = mer, iter = 1, worker STDERR: After line 18 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: table, checked_DML = del, iter = 0, restarts number to be tested: 10
     target_object_type: table, checked_DML = del, iter = 0, worker STDLOG: Records affected: 12
     target_object_type: table, checked_DML = del, iter = 0, worker STDLOG: Records affected: 0
@@ -566,11 +575,13 @@ cleanup( f_list )
     target_object_type: table, checked_DML = del, iter = 0, worker STDLOG:     -12 DEL                       11
     target_object_type: table, checked_DML = del, iter = 0, worker STDLOG:
     target_object_type: table, checked_DML = del, iter = 0, worker STDLOG: Records affected: 31
-    target_object_type: table, checked_DML = del, iter = 1, restarts number to be tested: 11
+
+    target_object_type: table, checked_DML = del, iter = 1, restarts number to be tested: 12
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG: Records affected: 2
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:      ID
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG: =======
+    target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:     -14
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:     -13
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:     -12
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:     -11
@@ -585,7 +596,7 @@ cleanup( f_list )
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:       1
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:       2
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:
-    target_object_type: table, checked_DML = del, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: table, checked_DML = del, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG:  OLD_ID OP              SNAP_NO_RANK
     target_object_type: table, checked_DML = del, iter = 1, worker STDLOG: ======= ====== =====================
@@ -615,8 +626,9 @@ cleanup( f_list )
     target_object_type: table, checked_DML = del, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: table, checked_DML = del, iter = 1, worker STDERR: deadlock
     target_object_type: table, checked_DML = del, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: table, checked_DML = del, iter = 1, worker STDERR: -concurrent transaction number is 1037
+    target_object_type: table, checked_DML = del, iter = 1, worker STDERR: -concurrent transaction number is 1049
     target_object_type: table, checked_DML = del, iter = 1, worker STDERR: After line 18 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: table, checked_DML = lok, iter = 0, restarts number to be tested: 10
     target_object_type: table, checked_DML = lok, iter = 0, worker STDLOG:
     target_object_type: table, checked_DML = lok, iter = 0, worker STDLOG:      ID
@@ -636,10 +648,12 @@ cleanup( f_list )
     target_object_type: table, checked_DML = lok, iter = 0, worker STDLOG:
     target_object_type: table, checked_DML = lok, iter = 0, worker STDLOG: Records affected: 12
     target_object_type: table, checked_DML = lok, iter = 0, worker STDLOG: Records affected: 0
-    target_object_type: table, checked_DML = lok, iter = 1, restarts number to be tested: 11
+
+    target_object_type: table, checked_DML = lok, iter = 1, restarts number to be tested: 12
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:      ID
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG: =======
+    target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:     -14
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:     -13
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:     -12
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:     -11
@@ -654,14 +668,15 @@ cleanup( f_list )
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:       1
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:       2
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG:
-    target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: table, checked_DML = lok, iter = 1, worker STDLOG: Records affected: 0
     target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: deadlock
     target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: -concurrent transaction number is 1264
+    target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: -concurrent transaction number is 1282
     target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: -At block line: 1, col: 39
     target_object_type: table, checked_DML = lok, iter = 1, worker STDERR: After line 19 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: view, checked_DML = upd, iter = 0, restarts number to be tested: 10
     target_object_type: view, checked_DML = upd, iter = 0, worker STDLOG: Records affected: 12
     target_object_type: view, checked_DML = upd, iter = 0, worker STDLOG:
@@ -717,11 +732,13 @@ cleanup( f_list )
     target_object_type: view, checked_DML = upd, iter = 0, worker STDLOG:     -12 UPD                       11
     target_object_type: view, checked_DML = upd, iter = 0, worker STDLOG:
     target_object_type: view, checked_DML = upd, iter = 0, worker STDLOG: Records affected: 31
-    target_object_type: view, checked_DML = upd, iter = 1, restarts number to be tested: 11
+
+    target_object_type: view, checked_DML = upd, iter = 1, restarts number to be tested: 12
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG: Records affected: 2
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:      ID
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG: =======
+    target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:     -14
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:     -13
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:     -12
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:     -11
@@ -736,7 +753,7 @@ cleanup( f_list )
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:       1
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:       2
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:
-    target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG:  OLD_ID OP              SNAP_NO_RANK
     target_object_type: view, checked_DML = upd, iter = 1, worker STDLOG: ======= ====== =====================
@@ -766,8 +783,9 @@ cleanup( f_list )
     target_object_type: view, checked_DML = upd, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: view, checked_DML = upd, iter = 1, worker STDERR: deadlock
     target_object_type: view, checked_DML = upd, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: view, checked_DML = upd, iter = 1, worker STDERR: -concurrent transaction number is 1606
+    target_object_type: view, checked_DML = upd, iter = 1, worker STDERR: -concurrent transaction number is 1630
     target_object_type: view, checked_DML = upd, iter = 1, worker STDERR: After line 18 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: view, checked_DML = mer, iter = 0, restarts number to be tested: 10
     target_object_type: view, checked_DML = mer, iter = 0, worker STDLOG: Records affected: 12
     target_object_type: view, checked_DML = mer, iter = 0, worker STDLOG:
@@ -823,11 +841,13 @@ cleanup( f_list )
     target_object_type: view, checked_DML = mer, iter = 0, worker STDLOG:     -12 UPD                       11
     target_object_type: view, checked_DML = mer, iter = 0, worker STDLOG:
     target_object_type: view, checked_DML = mer, iter = 0, worker STDLOG: Records affected: 31
-    target_object_type: view, checked_DML = mer, iter = 1, restarts number to be tested: 11
+
+    target_object_type: view, checked_DML = mer, iter = 1, restarts number to be tested: 12
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG: Records affected: 2
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:      ID
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG: =======
+    target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:     -14
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:     -13
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:     -12
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:     -11
@@ -842,7 +862,7 @@ cleanup( f_list )
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:       1
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:       2
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:
-    target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG:  OLD_ID OP              SNAP_NO_RANK
     target_object_type: view, checked_DML = mer, iter = 1, worker STDLOG: ======= ====== =====================
@@ -872,8 +892,9 @@ cleanup( f_list )
     target_object_type: view, checked_DML = mer, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: view, checked_DML = mer, iter = 1, worker STDERR: deadlock
     target_object_type: view, checked_DML = mer, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: view, checked_DML = mer, iter = 1, worker STDERR: -concurrent transaction number is 1953
+    target_object_type: view, checked_DML = mer, iter = 1, worker STDERR: -concurrent transaction number is 1983
     target_object_type: view, checked_DML = mer, iter = 1, worker STDERR: After line 18 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: view, checked_DML = del, iter = 0, restarts number to be tested: 10
     target_object_type: view, checked_DML = del, iter = 0, worker STDLOG: Records affected: 12
     target_object_type: view, checked_DML = del, iter = 0, worker STDLOG: Records affected: 0
@@ -913,11 +934,13 @@ cleanup( f_list )
     target_object_type: view, checked_DML = del, iter = 0, worker STDLOG:     -12 DEL                       11
     target_object_type: view, checked_DML = del, iter = 0, worker STDLOG:
     target_object_type: view, checked_DML = del, iter = 0, worker STDLOG: Records affected: 31
-    target_object_type: view, checked_DML = del, iter = 1, restarts number to be tested: 11
+
+    target_object_type: view, checked_DML = del, iter = 1, restarts number to be tested: 12
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG: Records affected: 2
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:      ID
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG: =======
+    target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:     -14
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:     -13
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:     -12
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:     -11
@@ -932,7 +955,7 @@ cleanup( f_list )
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:       1
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:       2
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:
-    target_object_type: view, checked_DML = del, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: view, checked_DML = del, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG:  OLD_ID OP              SNAP_NO_RANK
     target_object_type: view, checked_DML = del, iter = 1, worker STDLOG: ======= ====== =====================
@@ -962,8 +985,9 @@ cleanup( f_list )
     target_object_type: view, checked_DML = del, iter = 1, worker STDERR: Statement failed, SQLSTATE = 40001
     target_object_type: view, checked_DML = del, iter = 1, worker STDERR: deadlock
     target_object_type: view, checked_DML = del, iter = 1, worker STDERR: -update conflicts with concurrent update
-    target_object_type: view, checked_DML = del, iter = 1, worker STDERR: -concurrent transaction number is 2300
+    target_object_type: view, checked_DML = del, iter = 1, worker STDERR: -concurrent transaction number is 2336
     target_object_type: view, checked_DML = del, iter = 1, worker STDERR: After line 18 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
+
     target_object_type: view, checked_DML = lok, iter = 0, restarts number to be tested: 10
     target_object_type: view, checked_DML = lok, iter = 0, worker STDLOG:
     target_object_type: view, checked_DML = lok, iter = 0, worker STDLOG:      ID
@@ -988,7 +1012,8 @@ cleanup( f_list )
     target_object_type: view, checked_DML = lok, iter = 0, worker STDERR: -SQL error code = -104
     target_object_type: view, checked_DML = lok, iter = 0, worker STDERR: -WITH LOCK can be used only with a single physical table
     target_object_type: view, checked_DML = lok, iter = 0, worker STDERR: After line 19 in file C:\FBTESTING\qa\fbt-repo\tmp\tmp_sttm_restart_max_limit.sql
-    target_object_type: view, checked_DML = lok, iter = 1, restarts number to be tested: 11
+
+    target_object_type: view, checked_DML = lok, iter = 1, restarts number to be tested: 12
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:      ID
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG: =======
@@ -1005,8 +1030,9 @@ cleanup( f_list )
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:      11
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:      12
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:      13
+    target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:      14
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG:
-    target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG: Records affected: 13
+    target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG: Records affected: 14
     target_object_type: view, checked_DML = lok, iter = 1, worker STDLOG: Records affected: 0
     target_object_type: view, checked_DML = lok, iter = 1, worker STDERR: Statement failed, SQLSTATE = 42000
     target_object_type: view, checked_DML = lok, iter = 1, worker STDERR: Dynamic SQL Error
@@ -1023,8 +1049,8 @@ cleanup( f_list )
      ,('.*After line \d+.*', '')
      ,('.*[\-]?concurrent transaction number is \d+', 'concurrent transaction number is')
      ,('.*At\s+block\s+line(:)?\s+\d+(,)?\s+col(:)?\s+\d+', '')
+     ,('.After\s+line\s+\d+\s+.*', '')
    ]
-
 },
 ]
 }
