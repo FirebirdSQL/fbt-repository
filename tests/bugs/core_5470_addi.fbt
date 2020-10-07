@@ -73,11 +73,9 @@ fb_isql = fb_home+'isql'
 sql_chk = os.path.join(context['files_location'],'core_5470_addi.sql') 
 tmp_log = os.path.join(context['temp_directory'],'core_5470_addi.log')
 
-txt = \
-'''
-    @echo off
-    chcp 1251
-    %(fb_isql)s %(dsn)s -ch win1251 -user %(user_name)s -pas %(user_password)s -i %(sql_chk)s 1>%(tmp_log)s 2>&1
+txt = '''@echo off
+chcp 1251>nul
+%(fb_isql)s %(dsn)s -ch win1251 -user %(user_name)s -pas %(user_password)s -i %(sql_chk)s 1>%(tmp_log)s 2>&1
 ''' % dict(globals(), **locals())
 
 f_tmp_bat=open( os.path.join(context['temp_directory'],'tmp_run_5470.bat'), 'w', buffering = 0)
