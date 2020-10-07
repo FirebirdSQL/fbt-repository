@@ -75,6 +75,7 @@ tmp_log = os.path.join(context['temp_directory'],'core_5470_addi.log')
 
 txt = \
 '''
+    @echo off
     chcp 1251
     %(fb_isql)s %(dsn)s -ch win1251 -user %(user_name)s -pas %(user_password)s -i %(sql_chk)s 1>%(tmp_log)s 2>&1
 ''' % dict(globals(), **locals())
