@@ -5,8 +5,15 @@
 'title': "Change behavior of skipped and repeated wall times within time zones",
 'description':
  """
-    Confirmed wrong output on 4.0.0.1421.
-    Works OK on 4.0.0.1524
+    Confirmed wrong output on 4.0.0.1421. Works OK on 4.0.0.1524
+
+    27.10.2020.
+    Parser changed after following fixes:
+        - CORE-6427 - Whitespace as date separator causes conversion error.
+        - CORE-6429 - Timezone offset in timestamp/time literal and CAST should follow SQL standard syntax only.
+    See: https://github.com/FirebirdSQL/firebird/commit/ff37d445ce844f991242b1e2c1f96b80a5d1636d
+    Adjusted expected stdout/stderr after discuss with Adriano.
+    Checked on 4.0.0.2238
  """,
 'min_versions': '4.0',
 'versions': [
@@ -48,14 +55,18 @@
  'expected_stdout': 
   """
     2017-11-05 01:30:00.0000 America/New_York
-    2017-11-05 01:30:00.0000 -04:00
-    0
     2017-03-12 03:30:00.0000 America/New_York
-    2017-03-12 02:30:00.0000 -05:00
-    0
   """,
  'expected_stderr': 
   """
+    Statement failed, SQLSTATE = 22009
+    Invalid time zone offset: -04 - must use format +/-hours:minutes and be between -14:00 and +14:00
+    Statement failed, SQLSTATE = 22009
+    Invalid time zone offset: -04 - must use format +/-hours:minutes and be between -14:00 and +14:00
+    Statement failed, SQLSTATE = 22009
+    Invalid time zone offset: -05 - must use format +/-hours:minutes and be between -14:00 and +14:00
+    Statement failed, SQLSTATE = 22009
+    Invalid time zone offset: -05 - must use format +/-hours:minutes and be between -14:00 and +14:00
   """
 }
 ]
