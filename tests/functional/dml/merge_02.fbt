@@ -1,0 +1,59 @@
+{
+'id': 'functional.dml.merge.02',
+'qmid': '',
+'tracker_id': '',
+'title': 'merge STATEMENT can have only one RETURNING after all WHEN sub-statements.',
+'description': '',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'init_script':
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    set list on;
+
+    recreate table ta(id int primary key, x int, y int);
+    recreate table tb(id int primary key, x int, y int);
+    commit;
+
+    -- [ 1 ] must PASS:
+    merge into tb t
+    using ta s on s.id = t.id
+    when NOT matched then insert values(1,2,3) ---------------- (a)
+    when matched then delete returning old.id, old.x, old.y --- (b)
+    ;
+    rollback;
+
+    -- [ 2 ] must FAIL with
+    -- Statement failed, SQLSTATE = 42000 / ... / -Token unknown / -when
+
+    merge into tb t
+    using ta s on s.id = t.id
+    when matched then delete returning old.id, old.x, old.y --- (b)
+    when NOT matched then insert values(1,2,3) ---------------- (a)
+    ;
+
+    rollback; 
+  """,
+ 'expected_stdout':
+  """
+    ID                              <null>
+    X                               <null>
+    Y                               <null>
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    Dynamic SQL Error
+    -SQL error code = -104
+    -Token unknown - line 4, column 5
+    -when
+  """,
+  'substitutions': [('-Token unknown .*', ''), ('[ \t]+',' ')]
+}
+]
+}
