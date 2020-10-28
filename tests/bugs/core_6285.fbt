@@ -7,6 +7,11 @@
  """
     Test only verifies ability to use statements described in the ticket.
     Checked on 4.0.0.1920.
+
+    28.10.2020
+    Replaced 'ADD ... to publication' and 'DROP ... from publication' with
+    'INCLUDE ...' and 'EXCLUDE ...' respectively (after reply from dimitr).
+    Checked on 4.0.0.2240.
  """,
 'versions': [
 {
@@ -34,21 +39,21 @@
      select 'rdb$pub after disable for the WHOLE DATABASE' as msg, p.* from RDB$PUBLICATIONS p;
      commit;
 
-     alter database add all to publication;
+     alter database include all to publication;
      commit;
      select 'rdb$pub after ADD ALL tables to publication' as msg, p.* from RDB$PUBLICATION_TABLES p;
 
 
-     alter database drop all from publication;
+     alter database exclude all from publication;
      commit;
      select 'rdb$pub after DROP ALL tables from publication' as msg, p.* from rdb$database left join RDB$PUBLICATION_TABLES p on 1=1;
 
 
-     alter database add table test2, test3 to publication;
+     alter database include table test2, test3 to publication;
      commit;
      select 'rdb$pub after ADD LIST of some tables to publication' as msg, p.* from RDB$PUBLICATION_TABLES p;
 
-     alter database drop table test2, test3 from publication;
+     alter database exclude table test2, test3 from publication;
      commit;
      select 'rdb$pub after DROP LIST of some tables from publication' as msg, p.* from  rdb$database left join RDB$PUBLICATION_TABLES p on 1=1;
   """,
