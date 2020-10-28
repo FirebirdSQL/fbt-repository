@@ -5,6 +5,11 @@
 'title': 'Whitespace as date separator causes conversion error',
 'description':
  """
+   NOTE: only space and TAB are allowed to usage as whitespace.
+   Characters like chr(10) or chr(13) are not allowed:
+       cast( '01.01.00 03:04:05.678' || ascii_char(10) as timestamp)
+   -- leads to "Statement failed, SQLSTATE = 22009 / Invalid time zone region:"
+   
    Checked on 4.0.0.2238.
  """,
 'min_versions': '4.0',
