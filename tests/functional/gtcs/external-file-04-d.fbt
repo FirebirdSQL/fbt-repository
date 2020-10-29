@@ -25,7 +25,7 @@ import sys
 import subprocess
 import time
 
-tmp_file = os.path.join(context['temp_directory'],'tmp_ext_03_d.tmp')
+tmp_file = os.path.join(context['temp_directory'],'tmp_ext_04_d.tmp')
 if os.path.isfile( tmp_file):
      os.remove( tmp_file )
 
@@ -51,7 +51,7 @@ sql_cmd=\
 
 runProgram('isql', [ '-q' ], sql_cmd)
 
-f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_ext_03_d.sql'), 'w')
+f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_ext_04_d.sql'), 'w')
 f_sql_chk.write(sql_cmd)
 f_sql_chk.close()
 
