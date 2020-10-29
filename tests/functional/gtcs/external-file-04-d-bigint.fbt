@@ -2,7 +2,7 @@
 'id': 'functional.gtcs.external-file-04-d-bigint',
 'qmid': None,
 'tracker_id': '',
-'title': 'GTCS/tests/external-file-04-d. Test for external table with field of BIGINT datatype',
+'title': 'GTCS/tests/external-file-04-d-bigint. Test for external table with field of BIGINT datatype',
 'description':
  """
 	There is no similar test in GTCS, but for INTEGER datatype see:
