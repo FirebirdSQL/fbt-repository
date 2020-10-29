@@ -593,14 +593,6 @@
     ;
     select * from tb;
     rollback;
-    
-    merge into tb t
-    using ta s
-    on s.id = t.id
-    when matched and t.id = 1 then delete returning tb.id, tb.x, tb.y
-    -- doesn`t compile: when matched and t.id = 4 then update set t.x = t.x + s.x, t.y = t.y - s.y returning tb.id, tb.x, tb.y
-    ;
-    rollback;  
   """,
  'expected_stdout': 
   """
@@ -619,11 +611,6 @@
                5          550         -500
               -2          200          222
                3          300          333
-    
-    
-              ID            X            Y
-    ============ ============ ============
-               1           10           11
   """,
   'substitutions': [('=.*','')]
 }
