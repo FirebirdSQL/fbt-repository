@@ -1,0 +1,90 @@
+{
+'id': 'bugs.core_6437',
+'tracker_id': 'CORE-6437',
+'title': "gfix cannot set big value for buffers",
+'description':
+ """
+    New database must be created in THIS code rather than "outside" (in fbtest) for reproducing bug.
+    Confirmed bug on 4.0.0.2225.
+    Checked on:
+        4.0.0.2249 SS: 3.284s.
+        3.0.2.32703 SS: 2.645s.
+        3.0.7.33387 SS: 3.301s.
+        3.0.6.33328 CS: 6.145s.
+ """,
+'min_versions': '3.0.1',
+'versions': [
+{
+ 'firebird_version': '3.0',
+ 'platform': 'All',
+ 'page_size': '4096',
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+import os
+import subprocess
+from fdb import services
+
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+
+fb_home = services.connect(host='localhost', user=user_name, password=user_password).get_home_directory()
+
+db_name = os.path.join(context['temp_directory'],'tmp_gfix_6437.fdb')
+
+cleanup( db_name )
+
+runProgram(fb_home + 'isql',[ '-q' ], "create database '%(db_name)s';" % locals())
+
+f_run_log=open( os.path.join(context['temp_directory'],'tmp_gfix_6437.log'), 'w')
+subprocess.call( [ fb_home + "gfix", db_name, "-buffers", "1000000" ], stdout=f_run_log, stderr=subprocess.STDOUT )
+flush_and_close(f_run_log)
+
+with open(f_run_log.name,'r') as f:
+    for line in f:
+        if 'file' in line:
+            print('UNEXPECTED GFIX OUTPUT: ' + line)
+
+runProgram(fb_home + 'isql',[ db_name ], 'set heading off;select mon$page_buffers from mon$database;')
+
+cleanup( (db_name, f_run_log.name) )
+  """,
+ 'expected_stdout': 
+  """
+    1000000
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
