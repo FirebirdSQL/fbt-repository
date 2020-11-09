@@ -41,71 +41,67 @@ commit;
 CREATE UNIQUE INDEX UQ_CMS_WIKI ON CMS_WIKI (NAME, SITE_ID);
 
 commit;
-
+set heading off;
 select name from CMS_WIKI;
 """,
- 'expected_stdout': """NAME
-===============================================================================
-.menu
-awards.htm
-affiliate_program.htm
-user_guide.htm
-forms/feedback.htm
-faq.htm
-products.htm
-zonetick_v2.7_plan.htm
-fxstreet.htm
-confirmed.htm
-index.htm
-mail/confirm
-launch.htm
-.menu
-forms/why_uninstall.htm
-modification_guidelines.htm
-forms/feature_request.htm
-addition_minneapolis.htm
-cities.htm
-index.htm
+ 'expected_stdout':
+  """
+	.menu
+	awards.htm
+	affiliate_program.htm
+	user_guide.htm
+	forms/feedback.htm
+	faq.htm
+	products.htm
+	zonetick_v2.7_plan.htm
+	fxstreet.htm
+	confirmed.htm
+	index.htm
+	mail/confirm
+	launch.htm
+	.menu
+	forms/why_uninstall.htm
+	modification_guidelines.htm
+	forms/feature_request.htm
+	addition_minneapolis.htm
+	cities.htm
+	index.htm
 
-NAME
-===============================================================================
-index.meta
-index.htm
-database_format_discussion.htm
-.menu
-profiles.htm
-modification_guidelines.htm
-update.htm
-oem.htm
-content_providers.htm
-addition_hamburg.htm
-forms/confirm.htm
-packs.htm
-zonetick_v2.7_released.htm
-quotes.htm
-skins.htm
-feedback.htm
-addition_phoenix.htm
-zonetick_v3.0_plan.htm
-wrtimetracker_v0.4_released.htm
-zonetick_v2.7_beta.htm
+	index.meta
+	index.htm
+	database_format_discussion.htm
+	.menu
+	profiles.htm
+	modification_guidelines.htm
+	update.htm
+	oem.htm
+	content_providers.htm
+	addition_hamburg.htm
+	forms/confirm.htm
+	packs.htm
+	zonetick_v2.7_released.htm
+	quotes.htm
+	skins.htm
+	feedback.htm
+	addition_phoenix.htm
+	zonetick_v3.0_plan.htm
+	wrtimetracker_v0.4_released.htm
+	zonetick_v2.7_beta.htm
 
-NAME
-===============================================================================
-jobs.htm
-contact.htm
-wrtimetracker/faq.htm
-wrtimetracker/user_manual.htm
-addition_salt_lake_city.htm
-wrtimetracker/index.htm
-wrtimetracker/license.htm
-addition_singapore.htm
-addition_lipetsk.htm
-addition_miami.htm
-addition_miami.htm
-.menu_zonetick
 
-"""
+	jobs.htm
+	contact.htm
+	wrtimetracker/faq.htm
+	wrtimetracker/user_manual.htm
+	addition_salt_lake_city.htm
+	wrtimetracker/index.htm
+	wrtimetracker/license.htm
+	addition_singapore.htm
+	addition_lipetsk.htm
+	addition_miami.htm
+	addition_miami.htm
+	.menu_zonetick
+  """
 }
 ]
 }
