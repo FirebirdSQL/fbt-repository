@@ -9,27 +9,33 @@
 {
  'firebird_version': '2.1.5',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': """SET TERM ^ ;
-CREATE OR ALTER TRIGGER TRG$START
-  INACTIVE ON TRANSACTION START POSITION 0
-AS
-BEGIN
-    RDB$SET_CONTEXT('USER_SESSION', 'TRANS_ID', CURRENT_TRANSACTION);
-END
-^
-SET TERM ; ^
-COMMIT;""",
+ 'init_script':
+  """
+	set term ^ ;
+	create or alter trigger trg$start inactive on transaction start position 0 as
+	begin
+		rdb$set_context('USER_SESSION', 'TRANS_ID', current_transaction);
+	end
+	^
+	set term ; ^
+	commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """SELECT RDB$GET_CONTEXT('USER_SESSION', 'TRANS_ID') FROM RDB$DATABASE;
-""",
- 'expected_stdout': """Database:  localhost:C:\fbtestnew\tmp\bugs.core_3418.fdb, User: SYSDBA
-SQL>
-RDB$GET_CONTEXT
-===============================================================================
-<null>
-
-SQL>"""
+ 'test_script':
+  """
+    set list on;
+    select rdb$get_context('USER_SESSION', 'TRANS_ID') as ctx_var from rdb$database;
+  """,
+ 'expected_stdout':
+  """
+    CTX_VAR                         <null>  
+  """,
+ 'expected_stderr':
+  """
+  """,
+  'substitutions':[
+    ('[ \t]+', ' '),
+  ]
 }
 ]
 }
