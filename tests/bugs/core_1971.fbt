@@ -9,42 +9,56 @@
 {
  'firebird_version': '2.5.0',
  'platform': 'All',
- 'page_size': '4096',
- 'init_script': """CREATE TABLE T_LINKS (
-    LINK_TYPE INTEGER,
-    RIGHT_ID INTEGER,
-    PROP_VALUE VARCHAR(1024)
-  );
+ 'init_script':
+  """
+    create table t_links (
+      link_type integer,
+      right_id integer,
+      prop_value varchar(1024)
+    );
 
-INSERT INTO T_LINKS (LINK_TYPE,RIGHT_ID,PROP_VALUE) VALUES(2,161,'2001');
-INSERT INTO T_LINKS (LINK_TYPE,RIGHT_ID,PROP_VALUE) VALUES(2,161,'2002');
-INSERT INTO T_LINKS (LINK_TYPE,RIGHT_ID,PROP_VALUE) VALUES(2,161,'2003');
-INSERT INTO T_LINKS (LINK_TYPE,RIGHT_ID,PROP_VALUE) VALUES(10,161,'ANY STRING');
-
-commit;
-""",
+    insert into t_links (link_type,right_id,prop_value) values(2,161,'2001');
+    insert into t_links (link_type,right_id,prop_value) values(2,161,'2002');
+    insert into t_links (link_type,right_id,prop_value) values(2,161,'2003');
+    insert into t_links (link_type,right_id,prop_value) values(10,161,'any string');
+    commit;
+  """,
  'test_type': 'ISQL',
- 'test_script': """SELECT * FROM T_LINKS
-  WHERE (RIGHT_ID=161 AND LINK_TYPE=2) AND CAST(PROP_VALUE AS INTEGER)<>2001;
+ 'test_script':
+  """
+    set list on;
+    select * from t_links
+    where (right_id=161 and link_type=2) and cast(prop_value as integer)<>2001;
 
-SELECT * FROM T_LINKS
-  WHERE CAST(PROP_VALUE AS INTEGER)<>2001 AND (RIGHT_ID=161 AND LINK_TYPE=2);
-""",
- 'expected_stdout': """
-   LINK_TYPE     RIGHT_ID PROP_VALUE
-============ ============ ===============================================================================
-           2          161 2002
-           2          161 2003
-
-
-   LINK_TYPE     RIGHT_ID PROP_VALUE
-============ ============ ===============================================================================
-           2          161 2002
-           2          161 2003
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 22018
-conversion error from string "ANY STRING"
-"""
+    select * from t_links
+    where cast(prop_value as integer)<>2001 and (right_id=161 and link_type=2);
+  """,
+ 'expected_stdout':
+  """
+	LINK_TYPE                       2
+	RIGHT_ID                        161
+	PROP_VALUE                      2002
+	
+	LINK_TYPE                       2
+	RIGHT_ID                        161
+	PROP_VALUE                      2003
+	
+	LINK_TYPE                       2
+	RIGHT_ID                        161
+	PROP_VALUE                      2002
+	
+	LINK_TYPE                       2
+	RIGHT_ID                        161
+	PROP_VALUE                      2003  
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "any string"
+  """,
+  'substitutions':[
+    ('[ \t]+', ' '),
+  ]
 }
 ]
 }
