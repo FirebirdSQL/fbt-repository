@@ -10,27 +10,45 @@
  'firebird_version': '2.5.0',
  'platform': 'All',
  'connection_character_set': 'UTF8',
- 'page_size': '4096',
  'test_type': 'ISQL',
- 'test_script': """SELECT MON$VARIABLE_NAME, MON$VARIABLE_VALUE FROM MON$CONTEXT_VARIABLES;
-commit;
-select rdb$set_context('USER_SESSION', 'MyVar', 493) from rdb$database;
-commit;
-SELECT MON$VARIABLE_NAME, MON$VARIABLE_VALUE FROM MON$CONTEXT_VARIABLES;
+ 'test_script':
+  """
+    set list on;
+	set count on;
+	select mon$variable_name, mon$variable_value from mon$context_variables;
+	commit;
+	set term ^;
+	execute block as
+	    declare c int;
+	begin
+	    c = rdb$set_context('USER_SESSION', 'SESSION_LEVEL_VARIABLE', 1);
+	end
+	^
+	commit
+	^
+	execute block as
+	    declare c int;
+	begin
+	    c = rdb$set_context('USER_TRANSACTION', 'TRANSACTION_LEVEL_VARIABLE', 1);
+	end
+	^
+	select mon$variable_name, mon$variable_value from mon$context_variables
+	^
+  """,
+ 'expected_stdout':
+  """
+	Records affected: 0
 
-""",
- 'expected_stdout': """Database:  localhost:C:\fbtest2\tmp\bugs.core_1750.fdb, User: SYSDBA
-SQL> SQL> SQL>
-RDB$SET_CONTEXT
-===============
-              0
-
-SQL> SQL>
-MON$VARIABLE_NAME                                                                MON$VARIABLE_VALUE
-=============================================================================== ===============================================================================
-MyVar                                                                            493
-
-SQL> SQL>"""
+	MON$VARIABLE_NAME               SESSION_LEVEL_VARIABLE
+	MON$VARIABLE_VALUE              1
+	MON$VARIABLE_NAME               TRANSACTION_LEVEL_VARIABLE
+	MON$VARIABLE_VALUE              1
+	
+	Records affected: 2  
+  """,
+ 'expected_stderr':
+  """
+  """
 }
 ]
 }
