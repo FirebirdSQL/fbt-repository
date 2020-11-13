@@ -6182,7 +6182,6 @@
   """,
  'expected_stdout': 
   """
-
 RDB$USER                        22                                                                                                                                                                                                                                                          
 RDB$GRANTOR                     <null>
 RDB$PRIVILEGE                   D     
@@ -6449,6 +6448,15 @@ RDB$GRANTOR                     <null>
 RDB$PRIVILEGE                   S     
 RDB$GRANT_OPTION                0
 RDB$RELATION_NAME               RDB$COLLATIONS                                                                                                                                                                                                                                              
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 0
+
+RDB$USER                        PUBLIC                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   S     
+RDB$GRANT_OPTION                0
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
 RDB$FIELD_NAME                  <null>
 RDB$USER_TYPE                   8
 RDB$OBJECT_TYPE                 0
@@ -9140,6 +9148,96 @@ RDB$GRANTOR                     <null>
 RDB$PRIVILEGE                   G     
 RDB$GRANT_OPTION                1
 RDB$RELATION_NAME               RDB$COLLATION_NAME                                                                                                                                                                                                                                          
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 9
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   D     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 0
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   I     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 0
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   R     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 0
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   S     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 0
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   U     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 0
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   G     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG_DEFAULT                                                                                                                                                                                                                                          
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 9
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   G     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG_ID                                                                                                                                                                                                                                               
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 9
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   G     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG_IS_SET                                                                                                                                                                                                                                           
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 9
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   G     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG_NAME                                                                                                                                                                                                                                             
+RDB$FIELD_NAME                  <null>
+RDB$USER_TYPE                   8
+RDB$OBJECT_TYPE                 9
+
+RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
+RDB$GRANTOR                     <null>
+RDB$PRIVILEGE                   G     
+RDB$GRANT_OPTION                1
+RDB$RELATION_NAME               RDB$CONFIG_VALUE                                                                                                                                                                                                                                            
 RDB$FIELD_NAME                  <null>
 RDB$USER_TYPE                   8
 RDB$OBJECT_TYPE                 9
@@ -12592,7 +12690,7 @@ RDB$USER_TYPE                   8
 RDB$OBJECT_TYPE                 17
 
 
-Records affected: 712
+Records affected: 723
   """
 }
 ]
