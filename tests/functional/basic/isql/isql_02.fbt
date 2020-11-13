@@ -240,7 +240,7 @@ Collations:
  'test_type': 'ISQL',
  'test_script':
   """
-      show system;
+    show system;
   """,
  'expected_stdout': 
   """
@@ -260,6 +260,7 @@ Collations:
     RDB$CHARACTER_SETS
     RDB$CHECK_CONSTRAINTS
     RDB$COLLATIONS
+    RDB$CONFIG
     RDB$DATABASE
     RDB$DB_CREATORS
     RDB$DEPENDENCIES
