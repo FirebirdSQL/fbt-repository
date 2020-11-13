@@ -3489,7 +3489,25 @@ DESCR_BLOB_ID                   <null>
 RUNTIME_BLOB_ID                 <null>
 EXT_DESCR_BLOB_ID               <null>
 
-Records affected: 53
+RDB$RELATION_ID                 53
+RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
+RDB$SYSTEM_FLAG                 1
+RDB$DBKEY_LENGTH                8
+RDB$FORMAT                      0
+RDB$FIELD_ID                    6
+RDB$FLAGS                       <null>
+RDB$RELATION_TYPE               3
+RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
+RDB$EXTERNAL_FILE               <null>
+VIEW_BLR_BLOB_ID                <null>
+VIEW_SRC_BLOB_ID                <null>
+DESCR_BLOB_ID                   <null>
+RUNTIME_BLOB_ID                 <null>
+EXT_DESCR_BLOB_ID               <null>
+
+
+Records affected: 54
+
   """,
   'substitutions': [
      ('VIEW_BLR_BLOB_ID.*','')
