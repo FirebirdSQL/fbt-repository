@@ -7,22 +7,12 @@
  """ 
     It tests many problems Adriano found when fixing CORE-501, CORE-1343 and CORE-2041.
     
-    ::: NB :::
-    Some strange message about diff. can appear (only on Classic architecture)
-    when script performs last statement:
-    ===
-        SET SQLDA_DISPLAY ON;
-        select coalesce(1 + cast(? as integer), 2 + cast(? as integer))
-        from rdb$database
-        where coalesce(3 + cast(? as bigint), null) = 0;
-    ===
-    Instead of:
-         "-Wrong number of parameters (expected 3, got 0)" 
-    ISQL fails with:
-         "-No SQLDA for input values provided".
-
     25.04.2020. Fixed lot of bugs related to wrong count of updatable columns (they were not specified in DML).
     Replaced test_type to 'ISQL' because all can be done wo Python calls. Checked on 3.0.6.33289, 4.0.0.1935.
+
+    18.11.2020. Changed expected_stderr for parametrized statement "select coalesce(1 + cast(? ...), 2 + cast(? ...)) ...":
+    now it must be "-No SQLDA for input values provided" (was: "-Wrong number of parameters (expected 3, got 0)").
+    Output became proper since CORE-6447 was fixed.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -1493,7 +1483,7 @@ Dynamic SQL Error
     Statement failed, SQLSTATE = 07002
     Dynamic SQL Error
     -SQLDA error
-    -Wrong number of parameters (expected 3, got 0)
+    -No SQLDA for input values provided
   """,
   'substitutions':[ ('[ \t]+',' ') ]
 }
