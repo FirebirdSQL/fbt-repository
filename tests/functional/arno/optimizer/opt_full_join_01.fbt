@@ -79,7 +79,7 @@ sql_cmd='''
     commit;
 
     set plan on;
-    set list on;
+    -- set list on;
     -- FULL JOIN should return ...
     select
         r.relationname,
@@ -90,7 +90,11 @@ sql_cmd='''
         full join relationcategories rc on (rc.relationid = r.relationid)
         full join categories c on (c.categoryid = rc.categoryid)
     order by
-        rc.relationid desc;
+        rc.relationid desc
+        ,r.relationname
+        ,rc.categoryid
+        ,c.description
+    ;
 '''   
 f_sql=open( os.path.join(context['temp_directory'],'tmp_opt_full_join_01.tmp'), 'w')
 f_sql.write(sql_cmd)
@@ -133,47 +137,18 @@ if os.path.isfile(f_sql.name):
  'expected_stdout': 
   """
     Actual plan plan coincides with the expected.
-    
-    RELATIONNAME                    racing turtle
-    RELATIONID                      3
-    CATEGORYID                      1
-    DESCRIPTION                     relation
-    
-    RELATIONNAME                    bakery garbage
-    RELATIONID                      2
-    CATEGORYID                      2
-    DESCRIPTION                     debtor
-    
-    RELATIONNAME                    bakery garbage
-    RELATIONID                      2
-    CATEGORYID                      1
-    DESCRIPTION                     relation
-    
-    RELATIONNAME                    diving snorkel shop
-    RELATIONID                      1
-    CATEGORYID                      2
-    DESCRIPTION                     debtor
-    
-    RELATIONNAME                    diving snorkel shop
-    RELATIONID                      1
-    CATEGORYID                      1
-    DESCRIPTION                     relation
-    
-    RELATIONNAME                    diving snorkel shop
-    RELATIONID                      1
-    CATEGORYID                      3
-    DESCRIPTION                     creditor
-    
-    RELATIONNAME                    folding air-hook shop
-    RELATIONID                      <null>
-    CATEGORYID                      <null>
-    DESCRIPTION                     <null>
-    
-    RELATIONNAME                    <null>
-    RELATIONID                      <null>
-    CATEGORYID                      <null>
-    DESCRIPTION                     newsletter
-  """
+    RELATIONNAME                          RELATIONID   CATEGORYID DESCRIPTION
+    =================================== ============ ============ =============
+    racing turtle                                  3            1 relation
+    bakery garbage                                 2            1 relation
+    bakery garbage                                 2            2 debtor
+    diving snorkel shop                            1            1 relation
+    diving snorkel shop                            1            2 debtor
+    diving snorkel shop                            1            3 creditor
+    <null>                                    <null>       <null> newsletter
+    folding air-hook shop                     <null>       <null> <null>
+  """,
+  'substitutions':[('=',''), ('[ \t]+',' ')]
 }
 ]
 }
