@@ -29,12 +29,12 @@
     set term ;^
     commit;
        
-    select rdb$parameter_name, rdb$parameter_type, rdb$field_source
+    select 'point-1' as msg, rdb$parameter_name, rdb$parameter_type, rdb$field_source
     from rdb$procedure_parameters 
     where rdb$procedure_name = upper('sp_test')
-    order by rdb$parameter_number;
+    order by rdb$parameter_name, rdb$parameter_type;
 
-    select rdb$procedure_source 
+    select 'point-2' as msg, rdb$procedure_source 
     from rdb$procedures 
     where rdb$procedure_name = upper('sp_test');
     commit;
@@ -49,12 +49,12 @@
     set term ;^
     commit;
 
-    select rdb$parameter_name, rdb$parameter_type, rdb$field_source 
+    select 'point-3' as msg, rdb$parameter_name, rdb$parameter_type, rdb$field_source 
     from rdb$procedure_parameters 
     where rdb$procedure_name = upper('sp_test')
-    order by rdb$parameter_number;
+    order by rdb$parameter_name, rdb$parameter_type;
 
-    select rdb$procedure_source 
+    select 'point-4' as msg, rdb$procedure_source 
     from rdb$procedures 
     where rdb$procedure_name = upper('sp_test');
     commit;
@@ -62,12 +62,13 @@
     drop procedure sp_test;
     commit;
 
-    select rdb$parameter_name, rdb$parameter_type, rdb$field_source 
+    -- no rows must be issued:
+    select 'point-5' as msg, rdb$parameter_name, rdb$parameter_type, rdb$field_source 
     from rdb$procedure_parameters 
-    where rdb$procedure_name = upper('sp_test')
-    order by rdb$parameter_number;
+    where rdb$procedure_name = upper('sp_test');
 
-    select rdb$procedure_source 
+    -- no rows must be issued:
+    select 'point-6' as msg, rdb$procedure_source 
     from rdb$procedures 
     where rdb$procedure_name = upper('sp_test');
     commit;
@@ -75,30 +76,44 @@
   """,
  'expected_stdout': 
   """
+    MSG                             point-1
     RDB$PARAMETER_NAME              INFO
     RDB$PARAMETER_TYPE              1
     RDB$FIELD_SOURCE                RDB$SOURCE
     Records affected: 1
+
+
+    MSG                             point-2
     RDB$PROCEDURE_SOURCE            1a:1e0
     begin
     info = 'foo';
     suspend;
     end
     Records affected: 1
+
+
+    MSG                             point-3
     RDB$PARAMETER_NAME              MEMO_INFO
     RDB$PARAMETER_TYPE              1
     RDB$FIELD_SOURCE                RDB$DESCRIPTION
+
+    MSG                             point-3
     RDB$PARAMETER_NAME              WHOAMI
     RDB$PARAMETER_TYPE              0
     RDB$FIELD_SOURCE                RDB$USER
     Records affected: 2
+    
+
+    MSG                             point-4
     RDB$PROCEDURE_SOURCE            1a:1e3
     begin
     memo_info = 'bar';
     suspend;
     end
     Records affected: 1
+
     Records affected: 0
+
     Records affected: 0
   """
 }
