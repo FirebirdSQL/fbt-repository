@@ -21,6 +21,9 @@
    this DDL will be moved to separate .fbk for sharing between them.
 
    Checked on WI-T4.0.0.356
+   21.12.2020: added 'EMPNO' (primary key column) to ORDER BY list inside OVER() clauses.
+   Otherwise records in 'sample2-a' can appear in unpredictable order.
+   Checked on: 4.0.0.2300, 4.0.0.2296
  """,
 'min_versions': '4.0',
 'versions': [
@@ -159,7 +162,7 @@
  'test_type': 'ISQL',
  'test_script': 
   """
-    set list on;
+    -- set list on;
 
     -- https://community.oracle.com/thread/1020352
     select
@@ -185,16 +188,16 @@
         ,hire_year
         ,count(*) over (
             partition by hire_year
-            order by hiredate rows between 3 preceding and 1 following) from_p3_to_f1
+            order by hiredate, empno rows between 3 preceding and 1 following) from_p3_to_f1
         ,count(*) over (
             partition by hire_year
-            order by hiredate rows between unbounded preceding and current row) from_pu_to_c
+            order by hiredate, empno rows between unbounded preceding and current row) from_pu_to_c
         ,count(*) over (
             partition by hire_year
-            order by hiredate rows between 3 preceding and 1 preceding) from_p2_to_p1
+            order by hiredate, empno rows between 3 preceding and 1 preceding) from_p2_to_p1
         ,count(*) over (
             partition by hire_year
-            order by hiredate rows between 1 following and 3 following) from_f1_to_f3
+            order by hiredate, empno rows between 1 following and 3 following) from_f1_to_f3
     from (select e.*, extract(year from e.hiredate) hire_year from emp e )
     order by empno
     ;
@@ -222,322 +225,61 @@
   """,
   'expected_stdout':
   """
+    INFO      EMPNO ENAME               SAL     LAST_SAL
+    ======= ======= ========== ============ ============
+    sample1    7369 smith            800.00       <null>
+    sample1    7499 allen           1600.00       <null>
+    sample1    7521 ward            1250.00      1600.00
+    sample1    7566 jones           2975.00       800.00
+    sample1    7654 martin          1250.00      1250.00
+    sample1    7698 blake           2850.00      1250.00
+    sample1    7782 clark           2450.00       <null>
+    sample1    7788 scott           3000.00      2975.00
+    sample1    7839 king            5000.00      2450.00
+    sample1    7844 turner          1500.00      2850.00
+    sample1    7876 adams           1100.00      3000.00
+    sample1    7900 james            950.00      1500.00
+    sample1    7902 ford            3000.00      1100.00
+    sample1    7934 miller          1300.00      5000.00
 
-    INFO                            sample1
-    EMPNO                           7369
-    ENAME                           smith
-    SAL                             800.00
-    LAST_SAL                        <null>
+    INFO        EMPNO  DEPTNO HIRE_YEAR         FROM_P3_TO_F1          FROM_PU_TO_C         FROM_P2_TO_P1         FROM_F1_TO_F3
+    ========= ======= ======= ========= ===================== ===================== ===================== =====================
+    sample2-a    7369      20      1980                     1                     1                     0                     0
+    sample2-a    7499      30      1981                     2                     1                     0                     3
+    sample2-a    7521      30      1981                     3                     2                     1                     3
+    sample2-a    7566      20      1981                     4                     3                     2                     3
+    sample2-a    7654      30      1981                     5                     7                     3                     3
+    sample2-a    7698      30      1981                     5                     4                     3                     3
+    sample2-a    7782      10      1981                     5                     5                     3                     3
+    sample2-a    7788      20      1982                     2                     2                     1                     0
+    sample2-a    7839      10      1981                     5                     8                     3                     2
+    sample2-a    7844      30      1981                     5                     6                     3                     3
+    sample2-a    7876      20      1983                     1                     1                     0                     0
+    sample2-a    7900      30      1981                     5                     9                     3                     1
+    sample2-a    7902      20      1981                     4                    10                     3                     0
+    sample2-a    7934      10      1982                     2                     1                     0                     1
 
-    INFO                            sample1
-    EMPNO                           7499
-    ENAME                           allen
-    SAL                             1600.00
-    LAST_SAL                        <null>
-
-    INFO                            sample1
-    EMPNO                           7521
-    ENAME                           ward
-    SAL                             1250.00
-    LAST_SAL                        1600.00
-
-    INFO                            sample1
-    EMPNO                           7566
-    ENAME                           jones
-    SAL                             2975.00
-    LAST_SAL                        800.00
-
-    INFO                            sample1
-    EMPNO                           7654
-    ENAME                           martin
-    SAL                             1250.00
-    LAST_SAL                        1250.00
-
-    INFO                            sample1
-    EMPNO                           7698
-    ENAME                           blake
-    SAL                             2850.00
-    LAST_SAL                        1250.00
-
-    INFO                            sample1
-    EMPNO                           7782
-    ENAME                           clark
-    SAL                             2450.00
-    LAST_SAL                        <null>
-
-    INFO                            sample1
-    EMPNO                           7788
-    ENAME                           scott
-    SAL                             3000.00
-    LAST_SAL                        2975.00
-
-    INFO                            sample1
-    EMPNO                           7839
-    ENAME                           king
-    SAL                             5000.00
-    LAST_SAL                        2450.00
-
-    INFO                            sample1
-    EMPNO                           7844
-    ENAME                           turner
-    SAL                             1500.00
-    LAST_SAL                        2850.00
-
-    INFO                            sample1
-    EMPNO                           7876
-    ENAME                           adams
-    SAL                             1100.00
-    LAST_SAL                        3000.00
-
-    INFO                            sample1
-    EMPNO                           7900
-    ENAME                           james
-    SAL                             950.00
-    LAST_SAL                        1500.00
-
-    INFO                            sample1
-    EMPNO                           7902
-    ENAME                           ford
-    SAL                             3000.00
-    LAST_SAL                        1100.00
-
-    INFO                            sample1
-    EMPNO                           7934
-    ENAME                           miller
-    SAL                             1300.00
-    LAST_SAL                        5000.00
-
-
-
-    INFO                            sample2-a
-    EMPNO                           7369
-    DEPTNO                          20
-    HIRE_YEAR                       1980
-    FROM_P3_TO_F1                   1
-    FROM_PU_TO_C                    1
-    FROM_P2_TO_P1                   0
-    FROM_F1_TO_F3                   0
-
-    INFO                            sample2-a
-    EMPNO                           7499
-    DEPTNO                          30
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   2
-    FROM_PU_TO_C                    1
-    FROM_P2_TO_P1                   0
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7521
-    DEPTNO                          30
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   3
-    FROM_PU_TO_C                    2
-    FROM_P2_TO_P1                   1
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7566
-    DEPTNO                          20
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   4
-    FROM_PU_TO_C                    3
-    FROM_P2_TO_P1                   2
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7654
-    DEPTNO                          30
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   5
-    FROM_PU_TO_C                    7
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7698
-    DEPTNO                          30
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   5
-    FROM_PU_TO_C                    4
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7782
-    DEPTNO                          10
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   5
-    FROM_PU_TO_C                    5
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7788
-    DEPTNO                          20
-    HIRE_YEAR                       1982
-    FROM_P3_TO_F1                   2
-    FROM_PU_TO_C                    2
-    FROM_P2_TO_P1                   1
-    FROM_F1_TO_F3                   0
-
-    INFO                            sample2-a
-    EMPNO                           7839
-    DEPTNO                          10
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   5
-    FROM_PU_TO_C                    8
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   2
-
-    INFO                            sample2-a
-    EMPNO                           7844
-    DEPTNO                          30
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   5
-    FROM_PU_TO_C                    6
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   3
-
-    INFO                            sample2-a
-    EMPNO                           7876
-    DEPTNO                          20
-    HIRE_YEAR                       1983
-    FROM_P3_TO_F1                   1
-    FROM_PU_TO_C                    1
-    FROM_P2_TO_P1                   0
-    FROM_F1_TO_F3                   0
-
-    INFO                            sample2-a
-    EMPNO                           7900
-    DEPTNO                          30
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   4
-    FROM_PU_TO_C                    9
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   1
-
-    INFO                            sample2-a
-    EMPNO                           7902
-    DEPTNO                          20
-    HIRE_YEAR                       1981
-    FROM_P3_TO_F1                   5
-    FROM_PU_TO_C                    10
-    FROM_P2_TO_P1                   3
-    FROM_F1_TO_F3                   0
-
-    INFO                            sample2-a
-    EMPNO                           7934
-    DEPTNO                          10
-    HIRE_YEAR                       1982
-    FROM_P3_TO_F1                   2
-    FROM_PU_TO_C                    1
-    FROM_P2_TO_P1                   0
-    FROM_F1_TO_F3                   1
-
-
-
-    INFO                            sample2-b
-    DEPTNO                          20
-    EMPNO                           7369
-    SAL                             800.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     3
-
-    INFO                            sample2-b
-    DEPTNO                          30
-    EMPNO                           7499
-    SAL                             1600.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     1
-
-    INFO                            sample2-b
-    DEPTNO                          30
-    EMPNO                           7521
-    SAL                             1250.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     1
-
-    INFO                            sample2-b
-    DEPTNO                          20
-    EMPNO                           7566
-    SAL                             2975.00
-    CNT_LT_HALF                     2
-    CNT_MT_HALF                     0
-
-    INFO                            sample2-b
-    DEPTNO                          30
-    EMPNO                           7654
-    SAL                             1250.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     1
-
-    INFO                            sample2-b
-    DEPTNO                          30
-    EMPNO                           7698
-    SAL                             2850.00
-    CNT_LT_HALF                     3
-    CNT_MT_HALF                     0
-
-    INFO                            sample2-b
-    DEPTNO                          10
-    EMPNO                           7782
-    SAL                             2450.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     1
-
-    INFO                            sample2-b
-    DEPTNO                          20
-    EMPNO                           7788
-    SAL                             3000.00
-    CNT_LT_HALF                     2
-    CNT_MT_HALF                     0
-
-    INFO                            sample2-b
-    DEPTNO                          10
-    EMPNO                           7839
-    SAL                             5000.00
-    CNT_LT_HALF                     2
-    CNT_MT_HALF                     0
-
-    INFO                            sample2-b
-    DEPTNO                          30
-    EMPNO                           7844
-    SAL                             1500.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     1
-
-    INFO                            sample2-b
-    DEPTNO                          20
-    EMPNO                           7876
-    SAL                             1100.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     3
-
-    INFO                            sample2-b
-    DEPTNO                          30
-    EMPNO                           7900
-    SAL                             950.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     3
-
-    INFO                            sample2-b
-    DEPTNO                          20
-    EMPNO                           7902
-    SAL                             3000.00
-    CNT_LT_HALF                     2
-    CNT_MT_HALF                     0
-
-    INFO                            sample2-b
-    DEPTNO                          10
-    EMPNO                           7934
-    SAL                             1300.00
-    CNT_LT_HALF                     0
-    CNT_MT_HALF                     2
+    INFO       DEPTNO   EMPNO          SAL           CNT_LT_HALF           CNT_MT_HALF
+    ========= ======= ======= ============ ===================== =====================
+    sample2-b      20    7369       800.00                     0                     3
+    sample2-b      30    7499      1600.00                     0                     1
+    sample2-b      30    7521      1250.00                     0                     1
+    sample2-b      20    7566      2975.00                     2                     0
+    sample2-b      30    7654      1250.00                     0                     1
+    sample2-b      30    7698      2850.00                     3                     0
+    sample2-b      10    7782      2450.00                     0                     1
+    sample2-b      20    7788      3000.00                     2                     0
+    sample2-b      10    7839      5000.00                     2                     0
+    sample2-b      30    7844      1500.00                     0                     1
+    sample2-b      20    7876      1100.00                     0                     3
+    sample2-b      30    7900       950.00                     0                     3
+    sample2-b      20    7902      3000.00                     2                     0
+    sample2-b      10    7934      1300.00                     0                     2
   """,
   'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[('=', ''),('[ \t]+', ' ')]
 }
 ]
 }
