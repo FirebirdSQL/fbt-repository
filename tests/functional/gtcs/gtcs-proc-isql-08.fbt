@@ -137,7 +137,7 @@
  'expected_stderr':
   """
   """,
-  #'substitutions':[('=', ''),('[ \t]+', ' ')]
+  'substitutions':[('=', ''),('[ \t]+', ' ')]
 }
 ]
 }
