@@ -34,6 +34,12 @@
         2.5.9.27119 SS: 3.391s.
         2.5.9.27149 SC: 0.701s.
 
+
+    24.12.2020
+    Waiting for completion of child ISQL async process is done by call <isql_PID>.wait() instead of old (and "fragile")
+    assumption about maximal time that it could last before forcedly terminate it.
+    Checked on 4.0.0.2303 SS/CS
+
  """,
 'min_versions': '2.5.1',
 'versions': [
@@ -49,6 +55,33 @@ import os
 import subprocess
 from subprocess import Popen
 import time
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -131,41 +164,30 @@ lock_sql='''
     rollback;
 '''
 
-hang_sql=open( os.path.join(context['temp_directory'],'tmp_3323_hang.sql'), 'w')
-hang_sql.write(lock_sql)
-hang_sql.close()
+f_hanged_sql=open( os.path.join(context['temp_directory'],'tmp_3323_hang.sql'), 'w')
+f_hanged_sql.write(lock_sql)
+f_hanged_sql.close()
 
-hang_log=open( os.path.join(context['temp_directory'],'tmp_3323_hang.log'), "w", buffering = 0)
+f_hanged_log=open( os.path.join(context['temp_directory'],'tmp_3323_hang.log'), "w", buffering = 0)
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql", dsn, "-c", '96', "-i" , hang_sql.name],stdout=hang_log, stderr=subprocess.STDOUT)
-
-#time.sleep(3) # do NOT reduce this delay because this async invocation may be too slow and next ISQL call will NOT see attachment to be killed!
+p_hanged_isql = Popen(["isql", dsn, "-ch", 'utf8', "-i" , f_hanged_sql.name],stdout=f_hanged_log, stderr=subprocess.STDOUT)
 
 usr=user_name
 pwd=user_password
-script='''
+
+# Limit: how long "killer" must wait until "victim" will establish its connect, milliseconds.
+# It was encountered on Classic that this time can be valueable if heavy concurrent workload
+# presents on host where tests run:
+###############################################
+MAX_WAIT_FOR_VICTIM_ESTABLISH_ITS_CONNECT=15000
+###############################################
+
+killer_script='''
     set list on;
 
     select 'Intro script that must kill other attachment' as "point_C:" ------------------  p o i n t   [ C ]
     from test; 
-
-    /****************
-        -- Does not help, at least with 'lock timeout 1' !!
-        -- "Killer" attachment can still NOT see other attach (which must be killed) - this occurs on 4.0 Cs only. 10.01.2020
-        commit;
-        set transaction lock timeout 1;
-        set term ^;
-        execute block as
-        begin
-            update test set id = - (2000 + id);
-            when any do begin end
-        end
-        ^
-        set term ;^
-        rollback;
-    *****************/
-
 
     set term ^;
     execute block returns( found_other_attach_for_attempts int, found_other_attach_for_ms int ) as
@@ -187,10 +209,12 @@ script='''
                 )
                 into c;
             found_other_attach_for_ms = datediff(millisecond from t to cast('now' as timestamp));
-            if (found_other_attach_for_ms > 5000) then
+            if (found_other_attach_for_ms > %(MAX_WAIT_FOR_VICTIM_ESTABLISH_ITS_CONNECT)s ) then
             begin
-                suspend;
+                suspend; -- output found_other_attach_for_attempts and found_other_attach_for_ms
+                --######
                 leave;
+                --######
             end
         end
     end
@@ -214,7 +238,6 @@ script='''
     set count on;
     delete from mon$attachments
     where mon$user = upper('TMP$C3323' ) 
-    -- returning iif( mon$attachment_id is not null, '<EXPECTED: NOT NULL>', '### UNEXPECTED NULL ###' ) as killed_attachment_id
     ;
     set count off;
     commit;
@@ -234,7 +257,6 @@ script='''
 
     set blob all;
 
-    --select a.mon$attachment_id, s.*
     select a.*, s.*
     from mon$attachments a left join mon$statements s using(mon$attachment_id)
     where a.mon$user = upper('TMP$C3323')
@@ -250,35 +272,36 @@ script='''
 ''' % locals()
 
 
-kill_sql=open( os.path.join(context['temp_directory'],'tmp_3323_kill.sql'), 'w')
-kill_sql.write(script)
-kill_sql.close()
-
-kill_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), "w", buffering = 0)
-
-subprocess.call( ["isql", dsn, "-c", '96', "-ch", "utf8", "-i" , kill_sql.name],stdout=kill_log, stderr=subprocess.STDOUT )
-
-## Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-#p_kill = Popen(["isql", dsn, "-ch", "utf8", "-i" , kill_sql.name],stdout=kill_log, stderr=subprocess.STDOUT)
-## Make delay at least on 6 seconds after that point.
-## Otherwise temp database will not be removed and we get:
-## Exception AttributeError: "'Connection' object has no attribute '_Connection__ic'"
-## in <bound method Connection.__del__ of <fdb.fbcore.Connection object at 0x023E4850>> ignored
-## Test cleanup: Exception raised while dropping database.
-#time.sleep(3)
-#p_kill.terminate()
-
-kill_log.close()
-
-p_hang.terminate()
-hang_log.close()
+f_killer_sql=open( os.path.join(context['temp_directory'],'tmp_3323_kill.sql'), 'w')
+f_killer_sql.write(killer_script)
+flush_and_close(f_killer_sql)
 
 
-with open( hang_log.name,'r') as f:
+# starting ISQL-KILLER:
+#######################
+
+f_killer_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), "w", buffering = 0)
+subprocess.call( ["isql", dsn, "-ch", "utf8", "-i" , f_killer_sql.name],stdout=f_killer_log, stderr=subprocess.STDOUT )
+flush_and_close(f_killer_log)
+
+# :::::::::::::::::::::::::::::::::::::::::::::
+# :::             A.C.H.T.U.N.G             :::
+# ::: DO NOT call p_hanged_isql.terminate() :::
+# :::::::::::::::::::::::::::::::::::::::::::::
+# Here we must W.A.I.T until ISQL-victim (which just has been killed) finished
+# with raising exception ("SQLSTATE = 42000 / connection shutdown") and fully
+# flushes its log on disk.
+
+# Wait until ISQL complete its mission:
+p_hanged_isql.wait()
+
+flush_and_close(f_hanged_log)
+
+with open( f_hanged_log.name,'r') as f:
     print(f.read())
 f.close()
 
-with open( kill_log.name,'r') as f:
+with open( f_killer_log.name,'r') as f:
     print(f.read())
 f.close()
 
@@ -290,13 +313,8 @@ runProgram('gfix',[dsn,'-online'])
 
 # CLEANUP
 #########
-f_list=(hang_sql,kill_sql,kill_log,hang_log)
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-       #pass
-
+f_list=(f_hanged_sql,f_killer_sql,f_killer_log,f_hanged_log)
+cleanup( [f.name for f in f_list] )
 
   """,
  'expected_stdout':
