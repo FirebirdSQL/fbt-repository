@@ -10,6 +10,10 @@
    The two tables R and C contain both 1 value that isn't inside RC.
    =====
    Refactored 01-mar-2016. Checked on: WI-V2.5.6.26970, WI-V3.0.0.32366
+   
+   27.12.2020: added 'rc.categoryid' to 'order by' list in order to have always stable sort result.
+   Mismatch with expected result due to different position of records with the same 'rc.relationid'
+   occured on 4.0.0.2298. CHecked on 4.0.0.2303.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -79,7 +83,7 @@ sql_cmd='''
     commit;
 
     set plan on;
-    set list on;
+    --set list on;
 
     --full join should return ...
     select
@@ -94,7 +98,9 @@ sql_cmd='''
     where
         r.relationid >= 2
     order by
-        rc.relationid desc;
+         rc.relationid desc
+        ,rc.categoryid
+    ;
 '''
 
 f_sql=open( os.path.join(context['temp_directory'],'tmp_opt_full_join_02.tmp'), 'w')
@@ -141,27 +147,18 @@ if os.path.isfile(f_sql.name):
  'expected_stdout': 
   """
     Actual plan plan coincides with the expected.
-    
-    RELATIONNAME                    racing turtle
-    RELATIONID                      3
-    CATEGORYID                      1
-    DESCRIPTION                     relation
-    
-    RELATIONNAME                    bakery garbage
-    RELATIONID                      2
-    CATEGORYID                      2
-    DESCRIPTION                     debtor
-    
-    RELATIONNAME                    bakery garbage
-    RELATIONID                      2
-    CATEGORYID                      1
-    DESCRIPTION                     relation
-    
-    RELATIONNAME                    folding air-hook shop
-    RELATIONID                      <null>
-    CATEGORYID                      <null>
-    DESCRIPTION                     <null>
-  """
+
+    RELATIONNAME                          RELATIONID   CATEGORYID DESCRIPTION
+    =================================== ============ ============ ============
+    racing turtle                                  3            1 relation
+    bakery garbage                                 2            1 relation
+    bakery garbage                                 2            2 debtor
+    folding air-hook shop                     <null>       <null> <null>   
+  """,
+  'substitutions': [
+       ('=', '')
+      ,('[ \t]+', ' ')
+  ]
 }
 ]
 }
