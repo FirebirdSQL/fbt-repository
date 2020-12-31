@@ -6,6 +6,7 @@
 'description':
  """
      Confirmed normal work (evaluation for less than 5 ms) on WI-T4.0.0.1598
+     31.12.2020: increased max duration threshold from 100 to 150 ms.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -25,7 +26,7 @@
     execute block as
     begin
         rdb$set_context( 'USER_SESSION','DTS_START', cast('now' as timestamp) );
-        rdb$set_context( 'USER_SESSION','MAX_THRESHOLD_MS',  100 );
+        rdb$set_context( 'USER_SESSION','MAX_THRESHOLD_MS',  150 );
         --                                                    ^
         --                                                    |
         --                                      #############################
