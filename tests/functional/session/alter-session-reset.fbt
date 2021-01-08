@@ -1,5 +1,5 @@
 {
-'id': 'functional.datatypes.alter-session-reset',
+'id': 'functional.session.alter-session-reset',
 'qmid': None,
 'tracker_id': '',
 'title': 
