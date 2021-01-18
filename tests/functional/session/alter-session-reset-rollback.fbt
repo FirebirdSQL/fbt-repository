@@ -1,5 +1,5 @@
 {
-'id': 'functional.session.alter-session-reset-decfloat',
+'id': 'functional.session.alter-session-reset-rollback',
 'qmid': None,
 'tracker_id': '',
 'title': 
