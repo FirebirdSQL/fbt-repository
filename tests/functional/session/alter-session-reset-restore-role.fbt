@@ -89,7 +89,8 @@
   """,
   'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
