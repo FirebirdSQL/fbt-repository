@@ -7,7 +7,7 @@
  """ 
    We create level-0 copy of test DB (so called "stand-by DB") and obtain DB backup GUID for just performed action.
    Then we create incremental copy using this GUID ("nbk_level_1") and obtain new DB backup GUID again.
-   After this we repeat - create next incrementa copy using this (new) GUID ("nbk_level_2")
+   After this we repeat - create next incrementa copy using this (new) GUID ("nbk_level_2").
 
    (note: cursor for 'select h.rdb$guid from rdb$backup_history h order by h.rdb$backup_id desc rows 1' can be used
    to get last database backup GUID instead of running 'gstat -h').
