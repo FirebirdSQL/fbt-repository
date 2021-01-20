@@ -34,6 +34,29 @@
        bug has nothing with '-inplace' option that present only in FB 4.x - it was also in FB 3.x.
        Fix for 3.x was 11.06.2020 12:36, include in "aedc22: Fixed assert in Statement::freeClientData()", 
        see: https://github.com/FirebirdSQL/firebird/commit/fdf758099c6872579ad6b825027fe81fea3ae1b5
+
+   20.01.2021. CRITICAL NOTE (detected when run tests against HQbird 33288, ServerMode = Classic).
+   #########################
+   Method "codecs.open()" must be used to process logs, instead of 'plain' open() !
+   Any FB utility which have access problems with file can/will report *part* of error message in localized form.
+   This text is not in utf-8 (at least in case of Windows) and thus can not be converted and correctly displayed:
+       PROBLEM ON "ATTACH DATABASE".
+       I/O ERROR DURING "CREATEFILE (OPEN)" OPERATION FOR FILE "C:/HQBWORK/1IMPORTANT/QA-RUNDAILY/FBT-REPO/TMP/BUGS.CORE_6319.FDB"
+       -ERROR WHILE TRYING TO OPEN FILE
+       <The process cannot access the file because the file is being occupied by another process.> // <<< CAN BE IN LOCALIZED FORM!
+       SQLCODE:-902
+
+   Because of this, fbt_db utility will fail on attempt to store in ANNOTATIONS table such message with "335544849 : Malformed string".
+   The worst part is that no any other tests will be saved, i.e. we will have DB with EMPTY result, despite the fact that a problem
+   occured only on one test (the reason is that fbt_db does all actions within the single transaction).
+
+   Because of this all messages that are iussued by nbackup/fbsvcmgr or all other utilities must be handled using codecs.open()
+   method with request to IGNORE all non-ascii character (do NOT try to show it) and take next one.
+   Example: "with codecs.open( e.name, 'r', encoding = 'utf-8', errors = 'ignore' ) as f: ..."
+
+   Checked (after replace "open(): with "codecs.open(... errors = 'ignore')" call) on:
+       4.0.0.2307 SS: 2.639s; 4.0.0.2324 CS: 3.610s; 3.0.8.33401 SS: 2.210s; 3.0.8.33401 CS: 3.400s.
+
  """,
 'min_versions': '3.0.6',
 'versions': [
@@ -50,6 +73,7 @@ import os
 import subprocess
 import time
 import shutil
+import codecs
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -215,7 +239,8 @@ f_svc_good_err.close()
 ###################################
 f_list=(f_nbk0_err, f_nbk1_err, f_nbk2_err, f_nbk_poor_log, f_svc_poor_log, f_svc_good_log, f_svc_good_err)
 for i in range(len(f_list)):
-    with open( f_list[i].name,'r') as f:
+    # WRONG >>> with open( f_list[i].name,'r') as f:: <<< LOCALIZED MESSAGE CAN PRESENT IN CASE OF FILE-ACCESS PROBLEMS!
+    with codecs.open( f_list[i].name, 'r', encoding = 'utf-8', errors = 'ignore' ) as f:
         for line in f:
             if line.split():
                 print( 'UNEXPECTED output in file '+f_list[i].name+': '+line.upper() )
@@ -224,7 +249,8 @@ for i in range(len(f_list)):
 # "Wrong order of backup files or invalid incremental backup file detected, file ..."
 for e in (f_nbk_poor_err, f_svc_poor_err):
     i=0
-    with open( e.name,'r') as f:
+    # WRONG >>> with open( e.name,'r') as f: <<< LOCALIZED MESSAGE CAN PRESENT IN CASE OF FILE-ACCESS PROBLEMS!
+    with codecs.open( e.name, 'r', encoding = 'utf-8', errors = 'ignore' ) as f:
         for line in f:
             if line:
                 i += 1
