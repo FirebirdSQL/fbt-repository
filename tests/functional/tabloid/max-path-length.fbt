@@ -67,6 +67,9 @@
         3.0.6.33246 SS: 10.656s.
         3.0.5.33084 SC: 14.563s.
         3.0.6.33246 CS: 14.595s.
+
+   21.01.2021: added check for trace STDERR because of crash FB 4.0.0.2335 SS/CS. Refactored code for saving logs.
+ 
  """,
 'min_versions': '3.0.0',
 'versions': [
@@ -91,6 +94,21 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
@@ -142,39 +160,34 @@ txt = '''\
 trc_cfg=open( os.path.join(context['temp_directory'],'trc_maxpath.cfg'), 'w')
 trc_cfg.write(txt)
 trc_cfg.close()
-trc_log=open( os.path.join(context['temp_directory'],'trc_maxpath.log'), 'w')
-trc_log.close()
-trc_lst=open( os.path.join(context['temp_directory'],'trc_maxpath.lst'), 'w')
-trc_lst.close()
 
 #####################################################################
 # Async. launch of trace session using FBSVCMGR action_trace_start:
 
-#trc_log=open(trc_log.name, "w", buffering = 0)
-
-trc_log = open( os.path.join(context['temp_directory'],'trc_maxpath.log'), "w", buffering = 0)
+trc_log = open( os.path.join(context['temp_directory'],'trc_maxpath.log'), "w")
+trc_err = open( os.path.join(context['temp_directory'],'trc_maxpath.err'), "w")
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 p_svcmgr = subprocess.Popen( [ "fbsvcmgr", "localhost:service_mgr",
                     "action_trace_start",
                     "trc_cfg", trc_cfg.name
                   ],
                   stdout=trc_log, 
-                  stderr=subprocess.STDOUT
+                  stderr=trc_err 
                 )
 
 # 08.01.2020. This delay is mandatory, otherwise file with trace session info can remain (sometimes)
 # empty when we will read it at the next step:
-time.sleep(1)
+time.sleep(2)
 
 
 # Determine active trace session ID (for further stop):
 ########################
-trc_lst=open(trc_lst.name, "w", buffering = 0)
+trc_lst=open( os.path.join(context['temp_directory'],'trc_maxpath.lst'), 'w')
 subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  "action_trace_list"],
                  stdout=trc_lst, stderr=subprocess.STDOUT
                )
-trc_lst.close()
+flush_and_close( trc_lst )
 
 # Session ID: 5 
 #   user:   
@@ -253,7 +266,7 @@ sql_ddl=\
 
 f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_maxpath_test.sql'), 'w', buffering = 0)
 f_isql_cmd.write(sql_ddl)
-f_isql_cmd.close()
+flush_and_close( f_isql_cmd )
 
 # ---------------------- generating .bat for execute actions with DB via Firebird utilities -------------------------
 
@@ -460,7 +473,7 @@ tmp_bat_text=\
 
 f_tmp_bat=open( os.path.join(context['temp_directory'],'tmp_maxpath_test.bat'), 'w', buffering = 0)
 f_tmp_bat.write( tmp_bat_text )
-f_tmp_bat.close()
+flush_and_close( f_tmp_bat )
 
 subprocess.call( [ f_tmp_bat.name ] )
 
@@ -473,7 +486,7 @@ time.sleep(2)
 # Stop trace session:
 #####################
 
-trc_lst=open(trc_lst.name, "a", buffering = 0)
+trc_lst=open(trc_lst.name, "a")
 trc_lst.seek(0,2)
 
 subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
@@ -483,10 +496,11 @@ subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
                  stdout=trc_lst, 
                  stderr=subprocess.STDOUT
                )
-trc_lst.close()
+flush_and_close( trc_lst )
 
 p_svcmgr.terminate()
-trc_log.close()
+flush_and_close( trc_log )
+flush_and_close( trc_err )
 
 f_bat_log = '.'.join( ( os.path.splitext( f_tmp_bat.name )[0], 'log') )
 f_bat_err = '.'.join( ( os.path.splitext( f_tmp_bat.name )[0], 'err') )
@@ -509,7 +523,13 @@ services_patterns = {
 }
 
 found_patterns={}
-with open( trc_log.name,'r', buffering = 0) as f:
+
+with open( trc_err.name,'r') as f:
+    for line in f:
+        if line.rstrip():
+            print( 'UNEXPECTED error in the trace: ' + line )
+
+with open( trc_log.name,'r') as f:
     for line in f:
         if line.rstrip().split():
             if 'FAILED START_SERVICE' in line:
@@ -527,7 +547,7 @@ with open( trc_log.name,'r', buffering = 0) as f:
                     # This is actutal at least for Firebird 3.0.6, so we have to IGNORE this line.
                     pass
                 else:
-                    print( 'Error in the trace: ' + line )
+                    print( 'Expected error in the trace: ' + line )
 
             for k,v in services_patterns.items():
                 if v.search(line):
@@ -544,7 +564,7 @@ for k,v in sorted( found_patterns.items() ):
 time.sleep(2)
 
 #cleanup:
-f_list = [ i.name for i in (trc_cfg, trc_log, trc_lst, f_isql_cmd, f_tmp_bat) ]
+f_list = [ i.name for i in (trc_cfg, trc_log, trc_err, trc_lst, f_isql_cmd, f_tmp_bat) ]
 f_list += [ db_longest_name,bk_longest_name,db_longest_repl,nb_longest_name, f_bat_log, f_bat_err ]
 
 cleanup( f_list )
@@ -552,10 +572,10 @@ cleanup( f_list )
   """,
  'expected_stdout': 
   """
-    Error in the trace: 335544665 : violation of PRIMARY or UNIQUE KEY constraint "TEST_UNQ" on table "TEST"
-    Error in the trace: 335545072 : Problematic key value is ("S" = '000000000000000000000000000000000000')
-    Error in the trace: 335544665 : violation of PRIMARY or UNIQUE KEY constraint "TEST_UNQ" on table "TEST"
-    Error in the trace: 335545072 : Problematic key value is ("S" = '000000000000000000000000000000000000')
+    Expected error in the trace: 335544665 : violation of PRIMARY or UNIQUE KEY constraint "TEST_UNQ" on table "TEST"
+    Expected error in the trace: 335545072 : Problematic key value is ("S" = '000000000000000000000000000000000000')
+    Expected error in the trace: 335544665 : violation of PRIMARY or UNIQUE KEY constraint "TEST_UNQ" on table "TEST"
+    Expected error in the trace: 335545072 : Problematic key value is ("S" = '000000000000000000000000000000000000')
     Pattern 1. DB_REPAIR : FOUND in the trace log
     Pattern 2. DB_VALIDATE : FOUND in the trace log
     Pattern 3. DB_PROPS : FOUND in the trace log
