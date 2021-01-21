@@ -24,21 +24,19 @@
     Time in 4.0 CS can be about 1-2 seconds and number of iterations will be greater than 100.
     No such problem in all 3.0 and in 4.0 for other modes.
 
-    Checked on:
-        4.0.0.1715 SS: 5.292s.
-        4.0.0.1714 SC: 9.977s.
-        4.0.0.1714 CS: 14.487s.
-        3.0.5.33221 SS: 2.126s.
-        3.0.5.33221 SC: 4.541s.
-        3.0.5.33221 CS: 8.263s.
-        2.5.9.27119 SS: 3.391s.
-        2.5.9.27149 SC: 0.701s.
-
-
     24.12.2020
     Waiting for completion of child ISQL async process is done by call <isql_PID>.wait() instead of old (and "fragile")
     assumption about maximal time that it could last before forcedly terminate it.
-    Checked on 4.0.0.2303 SS/CS
+    Checked on:
+        4.0.0.2307 SS: 4.348s.
+        4.0.0.2324 SS: 4.301s.
+        4.0.0.2324 CS: 4.959s.
+        3.0.8.33401 SS: 3.225s.
+        3.0.8.33401 SC: 2.236s.
+        3.0.8.33401 CS: 4.543s.
+        2.5.9.27152 SC: 1.006s.
+        2.5.9.27152 CS: 1.333s.
+
 
  """,
 'min_versions': '2.5.1',
@@ -305,9 +303,9 @@ with open( f_killer_log.name,'r') as f:
     print(f.read())
 f.close()
 
-# We have to change DB state to full shutdown and bring it back online
-# in order to prevent "Object in use" while fbtest will try to drop this DB
-#####################################
+# We have to change DB state to full shutdown in order to prevent "Object in use"
+# while fbtest will try to drop these databases (set linger = 0 does not help!)
+###############################################################################
 runProgram('gfix',[dsn,'-shut','full','-force','0'])
 runProgram('gfix',[dsn,'-online'])
 
