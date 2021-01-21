@@ -20344,7 +20344,7 @@ RDB$IDENTITY_TYPE               <null>
 
 RDB$FIELD_NAME                  RDB$CONFIG_DEFAULT                                                                                                                                                                                                                                          
 RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
-RDB$FIELD_SOURCE                RDB$CONFIG_DEFAULT                                                                                                                                                                                                                                          
+RDB$FIELD_SOURCE                RDB$CONFIG_VALUE                                                                                                                                                                                                                                            
 RDB$QUERY_NAME                  <null>
 RDB$BASE_FIELD                  <null>
 RDB$EDIT_STRING                 <null>
