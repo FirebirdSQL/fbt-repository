@@ -56,6 +56,32 @@ fb_home = services.connect(host='localhost', user= user_name, password= user_pas
 fbv=db_conn.firebird_version # 'WI-...' ==> Windows; 'LI-' ==> Linux
 db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
+
 # 2017-03-08T17:36:33.6870 (3720:00D22BD0) ATTACH_DATABASE | START_TRANSACTION | EXECUTE_STATEMENT_FINISH | ...
 trace_dts_pattern=re.compile('.*(ATTACH_DATABASE|START_TRANSACTION|EXECUTE_STATEMENT_FINISH|ROLLBACK_TRANSACTION|DETACH_DATABASE)')
 
@@ -81,7 +107,7 @@ sql='''
 
 f_sql_cmd=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.sql'), 'w')
 f_sql_cmd.write(sql)
-f_sql_cmd.close()
+flush_and_close( f_sql_cmd )
 
 txt = '''# Generated auto, do not edit!
       database=%[\\\\\\\\/]security?.fdb
@@ -103,7 +129,7 @@ txt = '''# Generated auto, do not edit!
 
 f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.cfg'), 'w', buffering = 0)
 f_trc_cfg.write(txt)
-f_trc_cfg.close()
+flush_and_close( f_trc_cfg )
 
 # ##############################################################
 # S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
@@ -129,8 +155,8 @@ subprocess.call( [fb_home+'isql', dsn, '-q', '-n', '-i', f_sql_cmd.name],
                  stdout=f_isql_log,
                  stderr=f_isql_err
                )
-f_isql_log.close()
-f_isql_err.close()
+flush_and_close( f_isql_log )
+flush_and_close( f_isql_err )
 
 
 # ####################################################
@@ -140,7 +166,7 @@ f_isql_err.close()
 
 f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.lst'), 'w', buffering = 0)
 subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
-f_trc_lst.close()
+flush_and_close( f_trc_lst )
 
 # !!! DO NOT REMOVE THIS LINE !!!
 time.sleep(2)
@@ -155,7 +181,7 @@ with open( f_trc_lst.name,'r') as f:
                     trcssn=word
                 i=i+1
             break
-f.close()
+
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
 
 
@@ -171,8 +197,8 @@ if trcssn>0:
     time.sleep(2)
 
 p_trace.terminate()
-f_trc_log.close()
-f_trc_err.close()
+flush_and_close( f_trc_log )
+flush_and_close( f_trc_err )
 
 
 # Output of TRACE results:
@@ -181,6 +207,10 @@ with open(f_trc_log.name, 'r') as f:
     for line in f:
         if trace_dts_pattern.match(line):
             print( ''.join( ( 'TRCLOG: ', line.strip().split()[-1] ) ) )
+        if 'set session idle' in line:
+            # Since fixed CORE-6469 ("Provide ability to see in the trace log actions related to session management"), 20.01.2021:
+            # https://github.com/FirebirdSQL/firebird/commit/a65f19f8b36384d59a55fbb6e0a43a6b84cf4978
+            print( ''.join( ( 'TRCLOG: ', line ) ) )
 
 # Following file should be EMPTY:
 ################
@@ -210,10 +240,7 @@ with open(f_isql_err.name, 'r') as f:
 #########
 f_list=(f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_sql_cmd, f_isql_log, f_isql_err )
 
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
+cleanup( [ i.name for i in f_list ] )
 
   """,
  'expected_stdout': 
@@ -221,12 +248,16 @@ for i in range(len(f_list)):
     TRCLOG: ATTACH_DATABASE
     TRCLOG: START_TRANSACTION
     TRCLOG: EXECUTE_STATEMENT_FINISH
+    TRCLOG: set session idle timeout second
+    TRCLOG: EXECUTE_STATEMENT_FINISH
     TRCLOG: ROLLBACK_TRANSACTION
     TRCLOG: DETACH_DATABASE
+
     SQLLOG: set session idle timeout second;
     SQLLOG: select 1 as point_1 from rdb$database;
     SQLLOG: POINT_1                         1
     SQLLOG: select 2 as point_2 from rdb$database;
+
     SQLERR: Statement failed, SQLSTATE = 08003
     SQLERR: connection shutdown
     SQLERR: -Idle timeout expired.
