@@ -8897,37 +8897,6 @@ RDB$FIELD_PRECISION             <null>
 RDB$SECURITY_CLASS              SQL$84                                                                                                                                                                                                                                                      
 RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
-RDB$FIELD_NAME                  RDB$CONFIG_DEFAULT                                                                                                                                                                                                                                          
-RDB$QUERY_NAME                  <null>
-RDB$VALIDATION_BLR              <null>
-RDB$VALIDATION_SOURCE           <null>
-RDB$COMPUTED_BLR                <null>
-RDB$COMPUTED_SOURCE             <null>
-RDB$DEFAULT_VALUE               <null>
-RDB$DEFAULT_SOURCE              <null>
-RDB$FIELD_LENGTH                1020
-RDB$FIELD_SCALE                 0
-RDB$FIELD_TYPE                  37
-RDB$FIELD_SUB_TYPE              3
-RDB$MISSING_VALUE               <null>
-RDB$MISSING_SOURCE              <null>
-RDB$DESCRIPTION                 <null>
-RDB$SYSTEM_FLAG                 1
-RDB$QUERY_HEADER                <null>
-RDB$SEGMENT_LENGTH              <null>
-RDB$EDIT_STRING                 <null>
-RDB$EXTERNAL_LENGTH             <null>
-RDB$EXTERNAL_SCALE              <null>
-RDB$EXTERNAL_TYPE               <null>
-RDB$DIMENSIONS                  <null>
-RDB$NULL_FLAG                   0
-RDB$CHARACTER_LENGTH            255
-RDB$COLLATION_ID                0
-RDB$CHARACTER_SET_ID            4
-RDB$FIELD_PRECISION             <null>
-RDB$SECURITY_CLASS              SQL$169                                                                                                                                                                                                                                                     
-RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
-
 RDB$FIELD_NAME                  RDB$CONFIG_ID                                                                                                                                                                                                                                               
 RDB$QUERY_NAME                  <null>
 RDB$VALIDATION_BLR              <null>
@@ -8987,7 +8956,7 @@ RDB$CHARACTER_LENGTH            <null>
 RDB$COLLATION_ID                <null>
 RDB$CHARACTER_SET_ID            <null>
 RDB$FIELD_PRECISION             <null>
-RDB$SECURITY_CLASS              SQL$170                                                                                                                                                                                                                                                     
+RDB$SECURITY_CLASS              SQL$169                                                                                                                                                                                                                                                     
 RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
 RDB$FIELD_NAME                  RDB$CONFIG_NAME                                                                                                                                                                                                                                             
@@ -8998,10 +8967,10 @@ RDB$COMPUTED_BLR                <null>
 RDB$COMPUTED_SOURCE             <null>
 RDB$DEFAULT_VALUE               <null>
 RDB$DEFAULT_SOURCE              <null>
-RDB$FIELD_LENGTH                252
+RDB$FIELD_LENGTH                63
 RDB$FIELD_SCALE                 0
 RDB$FIELD_TYPE                  37
-RDB$FIELD_SUB_TYPE              3
+RDB$FIELD_SUB_TYPE              2
 RDB$MISSING_VALUE               <null>
 RDB$MISSING_SOURCE              <null>
 RDB$DESCRIPTION                 <null>
@@ -9014,9 +8983,9 @@ RDB$EXTERNAL_SCALE              <null>
 RDB$EXTERNAL_TYPE               <null>
 RDB$DIMENSIONS                  <null>
 RDB$NULL_FLAG                   1
-RDB$CHARACTER_LENGTH            63
+RDB$CHARACTER_LENGTH            <null>
 RDB$COLLATION_ID                0
-RDB$CHARACTER_SET_ID            4
+RDB$CHARACTER_SET_ID            2
 RDB$FIELD_PRECISION             <null>
 RDB$SECURITY_CLASS              SQL$167                                                                                                                                                                                                                                                     
 RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
@@ -13502,7 +13471,7 @@ RDB$SECURITY_CLASS              SQL$133
 RDB$OWNER_NAME                  SYSDBA                                                                                                                                                                                                                                                      
 
 
-Records affected: 170
+Records affected: 169
   """,
   'substitutions': [
     ('RDB\$DEFAULT_VALUE.*',''),
