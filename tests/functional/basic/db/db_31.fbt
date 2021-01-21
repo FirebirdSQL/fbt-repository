@@ -6182,6 +6182,7 @@
   """,
  'expected_stdout': 
   """
+
 RDB$USER                        22                                                                                                                                                                                                                                                          
 RDB$GRANTOR                     <null>
 RDB$PRIVILEGE                   D     
@@ -9196,15 +9197,6 @@ RDB$RELATION_NAME               RDB$CONFIG
 RDB$FIELD_NAME                  <null>
 RDB$USER_TYPE                   8
 RDB$OBJECT_TYPE                 0
-
-RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
-RDB$GRANTOR                     <null>
-RDB$PRIVILEGE                   G     
-RDB$GRANT_OPTION                1
-RDB$RELATION_NAME               RDB$CONFIG_DEFAULT                                                                                                                                                                                                                                          
-RDB$FIELD_NAME                  <null>
-RDB$USER_TYPE                   8
-RDB$OBJECT_TYPE                 9
 
 RDB$USER                        SYSDBA                                                                                                                                                                                                                                                      
 RDB$GRANTOR                     <null>
@@ -12690,7 +12682,7 @@ RDB$USER_TYPE                   8
 RDB$OBJECT_TYPE                 17
 
 
-Records affected: 723
+Records affected: 722
   """
 }
 ]
