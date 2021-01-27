@@ -29,7 +29,9 @@
  'test_script': 
   """
     set list on;
-    select * from RDB$ROLES;
+    set count on;
+    -- NB: rdb$role_name is UNIQUE column.
+    select * from rdb$roles order by rdb$role_name;
   """,
  'expected_stdout': 
   """
@@ -38,6 +40,8 @@
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
     RDB$SECURITY_CLASS              <null>
+
+    Records affected: 1
   """
 },
 {
@@ -47,7 +51,9 @@
  'test_script': 
   """
     set list on;
-    select * from RDB$ROLES;
+    set count on;
+    -- NB: rdb$role_name is UNIQUE column.
+    select * from rdb$roles order by rdb$role_name;
   """,
  'expected_stdout': 
   """
@@ -57,6 +63,8 @@
     RDB$SYSTEM_FLAG                 1
     RDB$SECURITY_CLASS              <null>
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
+
+    Records affected: 1
   """
 }
 ]
