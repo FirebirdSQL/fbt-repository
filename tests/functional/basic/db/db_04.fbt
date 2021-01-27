@@ -6,10 +6,20 @@
 'description': 'Check for correct content of RDB$EXCEPTIONS in empty database.',
 'versions': [
 {
- 'firebird_version': '1.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$EXCEPTIONS;'
+ 'test_script':
+  """
+    set list on;
+    set count on;
+    -- NB: rdb$exception_name is UNIQUE column.
+    select * from rdb$exceptions order by rdb$exception_name;
+  """,
+ 'expected_stdout': 
+  """
+    Records affected: 0
+  """
 }
 ]
 }
