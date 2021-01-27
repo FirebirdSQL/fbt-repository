@@ -6,10 +6,19 @@
 'description': 'Check for correct content of RDB$TRANSACTIONS in empty database.',
 'versions': [
 {
- 'firebird_version': '1.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$TRANSACTIONS;'
+ 'test_script':
+  """
+    set list on;
+    set count on;
+    select * from rdb$transactions order by rdb$transaction_id;
+  """,
+  'expected_stdout':
+  """
+    Records affected: 0
+  """
 }
 ]
 }
