@@ -6,10 +6,20 @@
 'description': 'Check for correct content of RDB$REF_CONSTRAINTS in empty database.',
 'versions': [
 {
- 'firebird_version': '1.0',
+ 'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': 'select * from RDB$REF_CONSTRAINTS;'
+ 'test_script':
+  """
+    set list on;
+    set count on;
+    select * from rdb$ref_constraints order by rdb$constraint_name;
+  """,
+  'expected_stdout':
+  """
+    Records affected: 0
+  """
+
 }
 ]
 }
