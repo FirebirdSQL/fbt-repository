@@ -1,0 +1,36 @@
+{
+'id': 'bugs.core_6474',
+'qmid': None,
+'tracker_id': 'CORE-6474',
+'title': 'Report replica mode through isc_database_info, MON$DATABASE and SYSTEM context',
+'description':
+"""
+  Text verifies only ability to query replication-related info from mon$database and system context namespace.
+  Query to isc_database_info does not perform.
+
+  Checked on 4.0.0.2342
+""",
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    select mon$replica_mode as mon_replica_mode from mon$database;
+    select '>' || rdb$get_context('SYSTEM','REPLICA_MODE') || '<' as ctx_replica_mode from rdb$database;
+  """,
+ 'expected_stdout': 
+  """
+    MON_REPLICA_MODE                0
+    CTX_REPLICA_MODE                ><
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
+}
+]
+}
