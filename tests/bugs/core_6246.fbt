@@ -6,20 +6,25 @@
 'description':
  """
     We create .sql with 32767 columns and run it with requirement to display SQLDA.
-    All lines in produced output with 'charset: ' substring must contain only one value: 3.
-    We extract charset value from each line and add it to a unique list (set), with checking 
-    after each processed line that this unique list has length 1.
+    All lines in produced output with 'charset: ' substring must contain only one value:
+    * '3' for FB 3.x; '4' for FB 4.x.
+    If some charset ID differs from expected, we raise error and terminate check furter lines.
 
     Confirmed bug on 3.0.6.33272: first 32108 fields are shown in SQLDA with 'charset: 0 NONE'.
     String 'charset: 3 UNICODE_FSS' appeared only since 32109-th column and up to the end.
 
     Checked on 3.0.6.33273 - works fine.
-    ::: NOTE :::
-    Currently attempt to run query with 32767 columns on 4.0 will raise:
+    Checked on 4.0.0.2353 -  works fine // 30.01.2021
+
+    Comment before 30-jan-2021:
+    ---------------------------
+    Attempt to run query with 32767 columns on 4.0 will raise:
         Statement failed, SQLSTATE = HY000
         request size limit exceeded
     Section for 4.0 intentionally contains temp message about missed implementation.
     Will be removed after fix CORE-6216 (see commet by Adriano in CORE-6246, date: 22/Mar/20 01:40 AM).
+    ---------------------------
+    30.01.2021: CORE-6212 was fixed. Section for 4.0 deleted; common code is used for 3.x and 4.x.
  """,
 'min_versions': '3.0.6',
 'versions': [
@@ -50,7 +55,7 @@ def cleanup( f_names_list ):
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+fb_major=db_conn.engine_version # type: double!
 db_conn.close()
 
 MAX_FOR_PASS=32767
@@ -78,7 +83,7 @@ f_pass_err = open( '.'.join( (os.path.splitext( f_pass_sql.name )[0], 'err') ), 
 
 # This can take about 25-30 seconds:
 ####################################
-subprocess.call( [ fb_home + 'isql', dsn, '-q', '-i', f_pass_sql.name ], stdout = f_pass_log, stderr = f_pass_err)
+subprocess.call( [ context['isql_path'], dsn, '-q', '-i', f_pass_sql.name ], stdout = f_pass_log, stderr = f_pass_err)
 
 f_pass_log.close()
 f_pass_err.close()
@@ -91,59 +96,48 @@ with open(f_pass_err.name,'r') as f:
         if line.split():
             print('UNEXPECTED STDERR: '+line)
 
-# 2. All fields must have charset=3, i.e. only "charset: 3" must present in these strings:
+# 1. For FB 3.x: only "charset: 3" must present in any string that describes column:
+#     NN: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 93 charset:   3 UNICODE_FSS 
+#                                                                           ^
+#      0     1      2    3     4       5    6    7     8   9  10    11     12      13
+# 2. For FB 4.x: only "charset: 4" must present in any string that describes column:
+#     NN: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 252 charset:  4     UTF8
+#                                                                           ^
+#      0     1      2    3     4       5    6    7     8   9   10   11     12      13
+#                                                                           ^
+#                                                    we must check this token
+#
+# where 'NN:' is '01:', '02:', '03:', ... '32767:'
 
-# NN: sqltype: 452 TEXT Nullable scale: 0 subtype: 0 len: 93 charset: 3 UNICODE_FSS 
-#  0     1      2    3     4       5    6    7     8  9   10    11   12      13
+############## :::  N O T E  ::: #################
+expected_charset_id = '3' if fb_major < 4 else '4'
+##################################################
 
-# where NN = '01:', '02:', '03:', ... '32767:'
-charset_unique_list=set()
+charset_id_position = -1
 i=0
 with open(f_pass_log.name,'r') as f:
-    #lines = f.readlines()
-    #charset_unique_list.add( tuple( [ x.split()[-2] for x in lines if 'sqltype: 452 TEXT' in x] ) )
     for line in f:
         i += 1
-        if 'sqltype: 452 TEXT' in line:
-            charset_id = line.split()[-2]
-            charset_unique_list.add( charset_id )
-            if charset_id != '3':
-                print('UNEXPECTED charset in SQLDA at line #' + str(i)+': ' + charset_id )
+        if 'sqltype:' in line:
+            if charset_id_position < 0:
+               charset_id_position = [ (n,w) for n,w in enumerate( line.split() ) if w.lower() == 'charset:'.lower() ][0][0] + 1
+
+            # charset_id = line.split()[-2]
+            charset_id = line.split()[ charset_id_position ]
+            if charset_id != expected_charset_id:
+                print('At least one UNEXPECTED charset in SQLDA at position: %d. Line No: %d, charset_id: %s' % (charset_id_position, i, charset_id) )
+                print(line)
                 break
-    
-print( 'Unique list of charsets:', ' '.join( charset_unique_list ) )
+
+if charset_id_position < 0:
+    # ISQL log is empty or not contains 'sqltype:' in any line.
+    print('UNEXPECTED RESULT: no lines with expected pattern found.')
 
 cleanup( [ i.name for i in ( f_pass_sql, f_pass_log, f_pass_err) ] )
 
   """,
  'expected_stdout': 
   """
-    Unique list of charsets: 3
-  """,
- 'expected_stderr': 
-  """
-  """
-},
-{
- 'firebird_version': '4.0',
- 'platform': 'All',
- 'test_type': 'Python',
- 'init_script':
-  """
-  """,
- 'test_script':
-  """
-temp_msg=\
-'''
-Currently implemented only for FB 3.0.x. Waiting for fix CORE-6216.
-Watch for https://github.com/FirebirdSQL/firebird
-Branch: refs/heads/master
-'''
-print(temp_msg)
-  """,
- 'expected_stdout': 
-  """
-    Unique list of charsets: 3
   """,
  'expected_stderr': 
   """
