@@ -22,8 +22,8 @@
     execute block returns(rdb_get_context_value varchar(32765), RDB_GET_CONTEXT_LENGTH smallint) as
     begin
       rdb$set_context('USER_SESSION','LONG_TEXT', lpad('', 32765, '6729699E-CCD1-425A-8892-277E6CFEECD3') );
-      rdb_get_context_value=rdb$get_context('USER_SESSION','LONG_TEXT');
-      rdb_get_context_length=char_length( rdb_get_context_value );
+      rdb_get_context_value = rdb$get_context('USER_SESSION','LONG_TEXT');
+      rdb_get_context_length = char_length( rdb_get_context_value );
       suspend;
     end
     ^
