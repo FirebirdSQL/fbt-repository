@@ -22,6 +22,10 @@
     - but currently this is not checked here.
 
     Checked on 4.0.0.1796.
+    Checked on 4.0.0.2353: rdb$get_context('SYSTEM','DB_NAME') do not cut off full path and name to database
+    and can return string with length = 32K, i.e. exceeding length of mon$database_name.
+    See commit of 29-01-2021:
+        https://github.com/FirebirdSQL/firebird/commit/d4835cab7f48288490ed83541132555c5cd0376d
  """,
 'min_versions': '4.0',
 'versions': [
@@ -92,19 +96,32 @@ def check_long_dbname(required_name_len, chars2fil):
         create database 'localhost:%(dbname)s';
         set list on;
 
-        create exception exc_dbname_diff 'Value in mon$database.mon$database_name differs from rdb$get_context(''SYSTEM'', ''DB_NAME'')';
+        create exception exc_dbname_diff q'{Value in mon$database.mon$database_name differs from rdb$get_context('SYSTEM', 'DB_NAME'):@1@2@3=== vs ===@4@5}';
         set term ^;
-        execute block returns( mon_database_column type of column mon$database.mon$database_name ) as
+        execute block returns(
+             mon_database_column varchar(260)
+            ,sys_context_db_name varchar(260)
+        ) as
+            declare lf char(1) = x'0A';
         begin
             select
                 mon$database_name as mon_database_column
             from mon$database
             into mon_database_column;
   
-            if ( rdb$get_context('SYSTEM', 'DB_NAME') is distinct from mon_database_column ) then
+            sys_context_db_name = rdb$get_context('SYSTEM', 'DB_NAME');
+
+            if ( substring( sys_context_db_name from 1 for 255 ) is distinct from mon_database_column ) then
             begin
-                exception exc_dbname_diff;
+                exception exc_dbname_diff using(
+                    lf
+                    ,mon_database_column
+                    ,lf
+                    ,lf
+                    ,sys_context_db_name
+                );
             end
+
             suspend;
         end
         ^
@@ -237,19 +254,12 @@ def check_long_dbname(required_name_len, chars2fil):
 
     ########################################################################
     
-    cleanup( (f_sql_chk.name,  bkname, dbname) )
-
     chk_list = (f_ddl_err, f_backup_err, f_restore_err, f_gstat_err, f_sweep_err, f_valid_err)
     for c in chk_list:
         with open(c.name,'r') as f:
             for line in f:
                 if line.split():
                     print('UNEXPECTED ERROR, file:' + c.name +': ', line )
-    cleanup( [ c.name for c in chk_list ] )
-
-
-    # STDOUT results: we have to check that AT LEAST 255 characters of database name present in log.
-    chk_list = (f_ddl_log, f_backup_log, f_restore_log, f_gstat_log, f_diff_sweep, f_diff_validate)
 
     dbname_present_map = {}
 
@@ -259,6 +269,8 @@ def check_long_dbname(required_name_len, chars2fil):
     # +[tab]Database "C:\FBTESTING\QA\FBT-REPO\TMP\ABC.FDB
     dbptrn = re.compile('\+\s+Database[:]{0,1}\s+\"{0,1}', re.IGNORECASE)
 
+    # STDOUT results: we have to check that AT LEAST 255 characters of database name present in log.
+    chk_list = (f_ddl_log, f_backup_log, f_restore_log, f_gstat_log, f_diff_sweep, f_diff_validate)
     for c in chk_list:
 
         # Name of STDOUT-log will serve as KEY for dbname_present_map{}, e.g.:
@@ -284,7 +296,8 @@ def check_long_dbname(required_name_len, chars2fil):
     # See notes of: 06/Mar/20 06:38 AM; 06/Mar/20 06:45 AM; 09/Mar/20 07:53 AM.
     # Currently we do nothing and just remove them:
     
-    chk_list = (f_ddl_log, f_backup_log, f_restore_log, f_gstat_log, f_sweep_log, f_valid_log, f_fblog_sweep_before, f_fblog_sweep_after, f_diff_sweep, f_fblog_validate_before, f_fblog_validate_after, f_diff_validate)
+    cleanup( (f_sql_chk.name,  bkname, dbname) )
+    chk_list = (f_ddl_err, f_backup_err, f_restore_err, f_gstat_err, f_sweep_err, f_valid_err, f_ddl_log, f_backup_log, f_restore_log, f_gstat_log, f_sweep_log, f_valid_log, f_fblog_sweep_before, f_fblog_sweep_after, f_diff_sweep, f_fblog_validate_before, f_fblog_validate_after, f_diff_validate)
     cleanup( [ c.name for c in chk_list ] )
 
 
