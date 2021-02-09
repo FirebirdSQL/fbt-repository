@@ -8,7 +8,7 @@
   Text verifies only ability to query replication-related info from mon$database and system context namespace.
   Query to isc_database_info does not perform.
 
-  Checked on 4.0.0.2342
+  Checked on 4.0.0.2342.
 """,
 'min_versions': '4.0',
 'versions': [
