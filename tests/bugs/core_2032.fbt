@@ -4,7 +4,7 @@
 'title': "Stored procedure recursively called by calculated field fails after reconnect",
 'description':
  """
-   Confirmed bug on 4.0.0.2353; 3.0.8.33401
+   Confirmed bug on 4.0.0.2353; 3.0.8.33401.
    Checked on 4.0.0.2365, 3.0.8.33415 -- all fine.
  """,
 'min_versions': '3.0.8',
