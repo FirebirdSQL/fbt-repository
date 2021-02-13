@@ -33,12 +33,19 @@
     One may need to configure Firewall so that process <FB_HOME>\firebird.exe is enable to operate on any port.
 
     Perhaps, following command will be useful: netsh advfirewall set privateprofile state off
+
+    ::: CAUTION-3 :::
+    13.02.2021 Currently this test must be executed only on Windows!
+    On Linux it terminates with runtime ERROR ('E') and firebird.conf + databases.conf remains in $FB_HOME
+    with changed parameters.
+    For Classic this prevents all subsequent tests to be executed normally: all of them will also finish with 'E'.
+    This problem will be solved later.
  """,
 'min_versions': '4.0',
 'versions': [
 {
  'firebird_version': '4.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'test_type': 'Python',
  'test_script': 
   """
