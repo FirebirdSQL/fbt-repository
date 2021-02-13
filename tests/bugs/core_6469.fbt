@@ -24,7 +24,7 @@
     We have to remove OS-veriable 'ISC_USER' before any check of trusted role.
     This variable could be set by other .fbts which was performed before current within batch mode (i.e. when fbt_run is called from <rundaily>)
 
-    Checked on 4.0.0.2235 SS/CS -- works OK.
+    Checked on 4.0.0.2235 SS/CS -- works fine.
  """,
 'min_versions': '4.0',
 'versions': [
