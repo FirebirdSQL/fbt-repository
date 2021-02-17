@@ -36,6 +36,21 @@ import subprocess
 
 #--------------------------------------------
 
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
@@ -76,11 +91,11 @@ sql=\
 
 f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_0337_ddl.sql'), 'w', buffering = 0)
 f_sql_chk.write(sql)
-f_sql_chk.close()
+flush_and_close( f_sql_chk )
 
 f_sql_log = open( ''.join( (os.path.splitext(f_sql_chk.name)[0], '.log' ) ), 'w', buffering = 0)
-subprocess.call( [ 'isql', '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
-f_sql_log.close()
+subprocess.call( [ context['isql_path'], '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
+flush_and_close( f_sql_log )
 
 with open(f_sql_log.name,'r') as f:
     for line in f:
