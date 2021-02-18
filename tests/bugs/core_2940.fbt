@@ -53,25 +53,38 @@ from subprocess import Popen
 import time
 import re
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+engine=str(db_conn.engine_version)
 db_conn.close()
 
-#####################################################
-# Obtain engine version, 2.5 or 3.0, for make trace config in appropriate format:
 
-sqltxt='''set list on;select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database;'''
-sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_2940.log'), 'w')
-sqllog.close()
-runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-q','-o',sqllog.name],sqltxt)
-with open( sqllog.name,'r') as f:
-    for line in f:
-        i=1
-        if 'ENGINE_VERSION' in line:
-            for word in line.split():
-                if i==2:
-                    engine=word
-                i=i+1
-            break
-f.close()
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
 
 txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
 <database %[\\\\\\\\/]bugs.core_2940.fdb>
@@ -123,9 +136,9 @@ trclst.close()
 
 f_trclog=open(trclog.name,'w')
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_trace=Popen(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-               "action_trace_start",\
-                "trc_cfg", trccfg.name],\
+p_trace=Popen([context['fbsvcmgr_path'], "localhost:service_mgr",
+               "action_trace_start",
+                "trc_cfg", trccfg.name],
                 stdout=f_trclog, stderr=subprocess.STDOUT)
 
 # Wait! Trace session is initialized not instantly!
@@ -136,28 +149,28 @@ time.sleep(1)
 
 sqltxt=\
 '''
-set list on;
--- statistics for this statement SHOULD appear in trace log:
-select 1 k1 from rdb$database; 
-commit;
+    set list on;
+    -- statistics for this statement SHOULD appear in trace log:
+    select 1 k1 from rdb$database; 
+    commit;
 
--- statistics for this statement should NOT appear in trace log:
-select 2 k2 from rdb$types rows 2 /* no_trace*/; 
+    -- statistics for this statement should NOT appear in trace log:
+    select 2 k2 from rdb$types rows 2 /* no_trace*/; 
 
--- statistics for this statement should NOT appear in trace log:
-select 3 no_trace from rdb$types rows 3; 
+    -- statistics for this statement should NOT appear in trace log:
+    select 3 no_trace from rdb$types rows 3; 
 
--- statistics for this statement should NOT appear in trace log:
-set term ^;
-execute block returns(k4 int) as
-begin
-   for select 4 from rdb$types rows 4 into k4 do suspend;
-end -- no_trace
-^
-set term ;^
+    -- statistics for this statement should NOT appear in trace log:
+    set term ^;
+    execute block returns(k4 int) as
+    begin
+       for select 4 from rdb$types rows 4 into k4 do suspend;
+    end -- no_trace
+    ^
+    set term ;^
 '''
 
-runProgram('isql',[dsn,'-user',user_name,'-pas',user_password,'-n'],sqltxt)
+runProgram('isql',[dsn,'-n'],sqltxt)
 
 # do NOT remove this otherwise trace log can contain only message about its start before being closed!
 time.sleep(3)
@@ -167,11 +180,11 @@ time.sleep(3)
 
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 f_trclst=open(trclst.name,'w')
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_trace_list"],\
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
+                 "action_trace_list"],
                  stdout=f_trclst, stderr=subprocess.STDOUT
                )
-f_trclst.close()
+flush_and_close( f_trclst )
 
 trcssn=0
 with open( trclst.name,'r') as f:
@@ -183,28 +196,23 @@ with open( trclst.name,'r') as f:
                     trcssn=word
                 i=i+1
             break
-f.close()
 
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
 f_trclst=open(trclst.name,'a')
 f_trclst.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr", "user", "SYSDBA", "password", "masterkey",\
-                 "action_trace_stop",\
-                 "trc_id",trcssn],\
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
+                 "action_trace_stop",
+                 "trc_id",trcssn],
                  stdout=f_trclst, stderr=subprocess.STDOUT
                )
-f_trclst.close()
+flush_and_close( f_trclst )
 
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
-f_trclog.close()
+flush_and_close( f_trclog )
 
 #####################################################
 # Output log of trace session, with filtering only info about statistics ('fetches'):
-
-# Output log of trace for comparing it with expected: it must contain only TWO events: TRACE_INIT and TRACE_FINI
-#with open( trclog.name,'r') as f:
-#    print(f.read())
 
 first_sttm_pattern=re.compile("select 1 k1")
 trace_stat_pattern=re.compile("1 records fetched")
@@ -216,19 +224,12 @@ with open( trclog.name,'r') as f:
         if flag==1 and trace_stat_pattern.match(line):
             print(line)
 
-f.close()
-
 # Cleanup:
 ##########
 time.sleep(1)
-if os.path.isfile(sqllog.name):
-    os.remove(sqllog.name)
-if os.path.isfile(trccfg.name):
-    os.remove(trccfg.name)
-if os.path.isfile(trclst.name):
-    os.remove(trclst.name)
-if os.path.isfile(trclog.name):
-    os.remove(trclog.name)
+
+cleanup([i.name for i in (trccfg,trclst,trclog)])
+
   """,
  'expected_stdout': 
   """
