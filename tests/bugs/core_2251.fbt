@@ -86,56 +86,56 @@ correct_log=os.path.join(context['temp_directory'],'tmp_2251.log')
 ##########################################################################################
 
 f_null_log = open(os.devnull,"w")
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', correct_fdb, correct_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', correct_fdb, correct_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'backup  source_fdb=accessible          target_fbk=accessible          log_file=inaccessible:'.ljust(100), gbak_retcode )
 
 cleanup( (correct_log,) )
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', correct_fdb, invalid_fbk, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', correct_fdb, invalid_fbk, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print('backup  source_fdb=accessible          target_fbk=inaccessible        log_file=accessible:'.ljust(100), gbak_retcode)
 
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', correct_fdb, invalid_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', correct_fdb, invalid_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print('backup  source_fdb=accessible          target_fbk=inaccessible        log_file=inaccessible:'.ljust(100), gbak_retcode)
 
 cleanup( (correct_log,) )
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', invalid_fdb, correct_fbk, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', invalid_fdb, correct_fbk, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print('backup  source_fdb=inaccessible        target_fbk=accessible          log_file=accessible:'.ljust(100), gbak_retcode)
 
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', invalid_fdb, correct_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', invalid_fdb, correct_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print('backup  source_fdb=inaccessible        target_fbk=accessible          log_file=inaccessible:'.ljust(100), gbak_retcode)
 
 cleanup( (correct_log,) )
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', invalid_fdb, invalid_fbk, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', invalid_fdb, invalid_fbk, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print('backup  source_fdb=inaccessible        target_fbk=inaccessible        log_file=accessible:'.ljust(100), gbak_retcode)
 
-gbak_retcode = subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', invalid_fdb, invalid_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', invalid_fdb, invalid_fbk, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print('backup  source_fdb=inaccessible        target_fbk=inaccessible        log_file=inaccessible:'.ljust(100), gbak_retcode)
 
 ######################################################################################
 runProgram('gbak', [ '-b', '-se', 'localhost:service_mgr', correct_fdb, correct_fbk] )
 ######################################################################################
 
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', correct_fbk, correct_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', correct_fbk, correct_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=accessible          target_fdb=accessible          log_file=inaccessible:'.ljust(100), gbak_retcode )
 
 cleanup( (correct_log,) )
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', correct_fbk, invalid_fdb, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', correct_fbk, invalid_fdb, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=accessible          target_fdb=inaccessible        log_file=accessible:'.ljust(100), gbak_retcode )
 
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', correct_fbk, invalid_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', correct_fbk, invalid_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=accessible          target_fdb=inaccessible        log_file=inaccessible:'.ljust(100), gbak_retcode )
 
 cleanup( (correct_log,) )
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', invalid_fbk, correct_fdb, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', invalid_fbk, correct_fdb, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=inaccessible        target_fdb=accessible          log_file=accessible:'.ljust(100), gbak_retcode )
 
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', invalid_fbk, correct_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', invalid_fbk, correct_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=inaccessible        target_fdb=accessible          log_file=inaccessible:'.ljust(100), gbak_retcode )
 
 cleanup( (correct_log,) )
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', invalid_fbk, invalid_fdb, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', invalid_fbk, invalid_fdb, '-y', correct_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=inaccessible        target_fdb=inaccessible        log_file=accessible:'.ljust(100), gbak_retcode )
 
-gbak_retcode = subprocess.call( ["gbak", '-rep', '-se', 'localhost:service_mgr', invalid_fbk, invalid_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
+gbak_retcode = subprocess.call( [context['gbak_path'], '-rep', '-se', 'localhost:service_mgr', invalid_fbk, invalid_fdb, '-y', invalid_log ], stdout=f_null_log, stderr=subprocess.STDOUT)
 print( 'restore source_fbk=inaccessible        target_fdb=inaccessible        log_file=inaccessible:'.ljust(100), gbak_retcode )
 
 f_null_log.close()
