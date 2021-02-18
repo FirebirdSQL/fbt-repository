@@ -73,9 +73,32 @@ import subprocess
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-db_file="$(DATABASE_LOCATION)bugs.core_1746.fdb"
 
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
 
 #########################################################
 
@@ -201,9 +224,9 @@ for i in range(len(tx_param)):
     f_bulk_insert_log = open( os.path.join(context['temp_directory'],'tmp_1746_ins_%s.log' % str(i) ), 'w')
 
     # This will insert rows and then stay in pause 10 seconds:
-    p_bulk_insert=subprocess.Popen( ["isql", dsn, "-q", "-i", f_bulk_insert_sql.name ],
-                                   stdout = f_bulk_insert_log,
-                                   stderr = subprocess.STDOUT
+    p_bulk_insert=subprocess.Popen( [ context['isql_path'], dsn, "-q", "-i", f_bulk_insert_sql.name ],
+                                      stdout = f_bulk_insert_log,
+                                      stderr = subprocess.STDOUT
                                  )
 
     # 3.0 Classic: seems that it requires at least 2 seconds for ISQL be loaded into memory.
@@ -212,34 +235,29 @@ for i in range(len(tx_param)):
     f_create_indx_log = open( os.path.join(context['temp_directory'],'tmp_1746_idx_%s.log' % str(i) ), 'w')
 
     # This will wait until first ISQL finished:
-    subprocess.call( ["isql", dsn, "-n", "-q", "-i", f_create_indx_sql.name ],
-                                   stdout = f_create_indx_log,
-                                   stderr = subprocess.STDOUT
-                                 )
+    subprocess.call( [ context['isql_path'], dsn, "-n", "-q", "-i", f_create_indx_sql.name ],
+                       stdout = f_create_indx_log,
+                       stderr = subprocess.STDOUT
+                    )
+
     time.sleep(7) # NB: this delay plus previous (3+5=8) must be GREATER than lock timeout in <sql_bulk_insert>
 
     p_bulk_insert.terminate()
-    f_bulk_insert_log.close()
-    f_create_indx_log.close()
+    flush_and_close( f_bulk_insert_log )
+    flush_and_close( f_create_indx_log )
 
     
     with open( f_bulk_insert_log.name,'r') as f:
         for line in f:
             if line.split():
                 print( str(i)+': BULK INSERTS LOG: '+line.strip().upper() )
-    f.close()
 
     with open( f_create_indx_log.name,'r') as f:
         for line in f:
             if line.split():
                 print( str(i)+': CREATE INDEX LOG: '+line.strip().upper() )
-    f.close()
 
-    f_list=[f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log]
-    
-    for i in range(len(f_list)):
-       if os.path.isfile(f_list[i].name):
-           os.remove(f_list[i].name)
+    cleanup( [i.name for i in (f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log)] )
 """,
  'expected_stdout': 
   """
