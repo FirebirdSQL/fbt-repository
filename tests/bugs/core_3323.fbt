@@ -169,7 +169,7 @@ f_hanged_sql.close()
 f_hanged_log=open( os.path.join(context['temp_directory'],'tmp_3323_hang.log'), "w", buffering = 0)
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hanged_isql = Popen(["isql", dsn, "-ch", 'utf8', "-i" , f_hanged_sql.name],stdout=f_hanged_log, stderr=subprocess.STDOUT)
+p_hanged_isql = Popen([context['isql_path'], dsn, "-ch", 'utf8', "-i" , f_hanged_sql.name],stdout=f_hanged_log, stderr=subprocess.STDOUT)
 
 usr=user_name
 pwd=user_password
@@ -279,7 +279,7 @@ flush_and_close(f_killer_sql)
 #######################
 
 f_killer_log=open( os.path.join(context['temp_directory'],'tmp_3323_kill.log'), "w", buffering = 0)
-subprocess.call( ["isql", dsn, "-ch", "utf8", "-i" , f_killer_sql.name],stdout=f_killer_log, stderr=subprocess.STDOUT )
+subprocess.call( [context['isql_path'], dsn, "-ch", "utf8", "-i" , f_killer_sql.name],stdout=f_killer_log, stderr=subprocess.STDOUT )
 flush_and_close(f_killer_log)
 
 # :::::::::::::::::::::::::::::::::::::::::::::
@@ -297,11 +297,10 @@ flush_and_close(f_hanged_log)
 
 with open( f_hanged_log.name,'r') as f:
     print(f.read())
-f.close()
 
 with open( f_killer_log.name,'r') as f:
     print(f.read())
-f.close()
+
 
 # We have to change DB state to full shutdown in order to prevent "Object in use"
 # while fbtest will try to drop these databases (set linger = 0 does not help!)
