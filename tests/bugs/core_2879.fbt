@@ -32,16 +32,49 @@ import time
 import datetime
 from datetime import datetime
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+engine = str(db_conn.engine_version)
+db_file = db_conn.database_name # "$(DATABASE_LOCATION)bugs.core_2879.fdb"
+
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
 def svc_get_fb_log( engine, f_fb_log ):
 
-  import subprocess
+  global subprocess
 
   if engine.startswith('2.5'):
       get_firebird_log_key='action_get_ib_log'
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     get_firebird_log_key
                   ],
@@ -51,14 +84,7 @@ def svc_get_fb_log( engine, f_fb_log ):
 
   return
 
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-
-engine = str(db_conn.engine_version)
-db_file = db_conn.database_name # "$(DATABASE_LOCATION)bugs.core_2879.fdb"
-
-db_conn.close()
+#-----------------------------------------------------
 
 sql_ddl='''\
     set list on;
@@ -96,16 +122,13 @@ f_isql_cmd.close()
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_2879_fblog_before.txt'), 'w', buffering = 0)
 svc_get_fb_log( engine, f_fblog_before )
-f_fblog_before.close()
-
-# 07.08.2016
-#time.sleep(1)
+flush_and_close( f_fblog_before )
 
 # LAUNCH ISQL ASYNCHRONOUSLY
 ############################
 
 f_isql_log=open( os.path.join(context['temp_directory'],'tmp_make_lot_GTT_2879.log'), 'w', buffering = 0)
-p_isql=subprocess.Popen( ["isql", dsn, "-i", f_isql_cmd.name],
+p_isql=subprocess.Popen( [context['isql_path'], dsn, "-i", f_isql_cmd.name],
                          stdout=f_isql_log, 
                          stderr=subprocess.STDOUT
                        )
@@ -116,9 +139,8 @@ time.sleep(2)
 # LAUNCH SWEEP while ISQL is working:
 # ############
 fbsvc_log=open( os.path.join(context['temp_directory'],'tmp_svc_2879.log'), 'w', buffering = 0)
-#p_sweep=subprocess.Popen([ "fbsvcmgr","localhost:service_mgr",
-subprocess.call( [ "fbsvcmgr","localhost:service_mgr", "action_repair", "dbname", db_file, "rpr_sweep_db"], stdout=fbsvc_log, stderr=subprocess.STDOUT )
-fbsvc_log.close()
+subprocess.call( [ context['fbsvcmgr_path'],"localhost:service_mgr", "action_repair", "dbname", db_file, "rpr_sweep_db"], stdout=fbsvc_log, stderr=subprocess.STDOUT )
+flush_and_close( fbsvc_log )
 
 p_isql.terminate()
 f_isql_log.close()
@@ -129,7 +151,7 @@ f_isql_log.close()
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_2879_fblog_after.txt'), 'w', buffering = 0)
 svc_get_fb_log( engine, f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 # 07.08.2016
 # DIFFERENCE in the content of firebird.log should be EMPTY:
@@ -147,7 +169,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2879_diff.txt'), 'w', buffering = 0)
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # NB: difflib.unified_diff() can show line(s) that present in both files, without marking that line(s) with "+". 
 # Usually these are 1-2 lines that placed just BEFORE difference starts.
@@ -157,7 +179,6 @@ with open( f_diff_txt.name,'r') as f:
     for line in f:
         if line.startswith('+') and line.split('+'):
             print(line.replace('+',' '))
-f.close()
 
 # 01.02.2020. We have to change DB state to full shutdown and bring it back online
 # in order to prevent "Object in use" while fbtest will try to drop this DB
@@ -165,13 +186,12 @@ f.close()
 runProgram('gfix',[dsn,'-shut','full','-force','0'])
 runProgram('gfix',[dsn,'-online'])
 
-#####################################################################
-# Cleanup:
 
-f_list=[f_isql_cmd, f_isql_log, fbsvc_log, f_fblog_before,f_fblog_after, f_diff_txt]
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+
+# Cleanup:
+##########
+time.sleep(1)
+cleanup( [i.name for i in (f_isql_cmd, f_isql_log, fbsvc_log, f_fblog_before,f_fblog_after, f_diff_txt)] )
 
   """,
  'expected_stdout': 
