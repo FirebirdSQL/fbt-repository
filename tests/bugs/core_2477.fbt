@@ -100,7 +100,9 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-db_file="$(DATABASE_LOCATION)bugs.core_2477.fdb"
+db_file=db_conn.database_name
+
+db_conn.close()
 
 ISQL_USER=user_name
 ISQL_PSWD=user_password
@@ -132,29 +134,30 @@ SQL_GATHER_SORT_INFO='''
     where v.att_id is distinct from current_connection
 '''
 
+#--------------------------------------------------------------
 
 def result_msg(a_diff_value, a_min_threshold):
     return ( ('OK, expected: increased significantly.') if a_diff_value > a_min_threshold else ('BAD! Did not increased as expected. Difference: ' + "{:d}".format(a_diff_value)+'.') )
 
-def debug_store_mon_view(fb_home, dsn, SQL_GATHER_SORT_INFO, file_name_suffix):
+def debug_store_mon_view(dsn, SQL_GATHER_SORT_INFO, file_name_suffix):
     global os
     global subprocess
     f_sql_dbg=open( os.path.join( context['temp_directory'], 'tmp_c2477_dbg' + file_name_suffix + '.sql' ), 'w')
     f_sql_dbg.write( 'set width att_process 20; set width sql_text 50; ' + SQL_GATHER_SORT_INFO+';')
     f_sql_dbg.close()
     f_log_dbg=open( os.path.join( context['temp_directory'], 'tmp_c2477_dbg' + file_name_suffix + '.log' ), 'w')
-    subprocess.call( [ fb_home+'isql', dsn, '-q', '-n', '-i', f_sql_dbg.name ], stdout=f_log_dbg, stderr = subprocess.STDOUT)
+    subprocess.call( [ context['isql_path'], dsn, '-q', '-n', '-i', f_sql_dbg.name ], stdout=f_log_dbg, stderr = subprocess.STDOUT)
     f_log_dbg.close()
     os.remove(f_sql_dbg.name)
 
-def forcely_clean_attachments_by_shutdown_online( fb_home, db_file ):
+def forcely_clean_attachments_by_shutdown_online( db_file ):
 
     global RUN_DBG
     global os
 
     f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_and_online_2477.log'), 'w')
 
-    subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr",
+    subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                       "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
                       "dbname", db_file,
                      ],
@@ -162,7 +165,7 @@ def forcely_clean_attachments_by_shutdown_online( fb_home, db_file ):
                      stderr = subprocess.STDOUT
                    )
 
-    subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
+    subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                       "action_db_stats",
                       "dbname", db_file, "sts_hdr_pages"
                      ],
@@ -170,14 +173,14 @@ def forcely_clean_attachments_by_shutdown_online( fb_home, db_file ):
                      stderr=subprocess.STDOUT
                    )
 
-    subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr",
+    subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                       "action_properties", "prp_db_online",
                       "dbname", db_file,
                      ],
                      stdout = f_shutdown_log,
                      stderr = subprocess.STDOUT
                    )
-    subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
+    subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                       "action_db_stats",
                       "dbname", db_file, "sts_hdr_pages"
                      ],
@@ -192,15 +195,6 @@ def forcely_clean_attachments_by_shutdown_online( fb_home, db_file ):
 
 
 #--------------------------------------------------------
-
-# Obtain engine version:
-engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
-
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
-
-db_conn.close()
 
 
 sql_text='''
@@ -239,7 +233,7 @@ f_isql_cmd.write(sql_text)
 f_isql_cmd.close()
 
 if RUN_DBG:
-    debug_store_mon_view(fb_home, dsn, SQL_GATHER_SORT_INFO, '0')
+    debug_store_mon_view(dsn, SQL_GATHER_SORT_INFO, '0')
 
 
 # Launch async-ly ISQL which must establish connect and:
@@ -247,7 +241,7 @@ if RUN_DBG:
 # 2) start "big sorting" job (for at least 20-30 seconds):
 
 f_log_sort=open( os.path.join(context['temp_directory'], 'tmp_2477_sort.log'), 'w')
-p_sql = subprocess.Popen( [fb_home+'isql', dsn, '-q', '-n', '-i', f_isql_cmd.name ], stdout=f_log_sort, stderr = subprocess.STDOUT)
+p_sql = subprocess.Popen( [ context['isql_path'], dsn, '-q', '-n', '-i', f_isql_cmd.name ], stdout=f_log_sort, stderr = subprocess.STDOUT)
 
 # do NOT remove this delay: we have to wait while ISQL for sure will establish connection.
 ##########################
@@ -258,7 +252,7 @@ if RUN_DBG:
     # NOTE: assign RUN_DBG to True and look in debug snapshot file tmp_c2477_dbg1.log
     # with results of 1st gathering of mon$ info. If it will contain only one record (of DB level)
     # than it means that we have to increase DELAY_FOR_ISQL_ESTABLISH_ITS_CONNECT value):
-    debug_store_mon_view(fb_home, dsn, SQL_GATHER_SORT_INFO, '1')
+    debug_store_mon_view(dsn, SQL_GATHER_SORT_INFO, '1')
 
 
 # Start separate connect for  gather monio
@@ -314,14 +308,14 @@ cur_mon.close()
 if RUN_DBG:
     # NOTE: assign RUN_DBG to True and look in debug snapshot file tmp_c2477_dbg1.log
     # with results of 1st gathering of mon$ info.
-    debug_store_mon_view(fb_home, dsn, SQL_GATHER_SORT_INFO, '2')
+    debug_store_mon_view(dsn, SQL_GATHER_SORT_INFO, '2')
 
 con_mon.close()
 
 # We have to be sure that NO ANY activity remains in the database before finish this test.
 # Unfortunately, it seems that just killing process of ISQL (that was launched async-ly) not enough,
 # so we turn database offline and bring back online:
-forcely_clean_attachments_by_shutdown_online( fb_home, db_file )
+forcely_clean_attachments_by_shutdown_online( db_file )
 
 #             ::: !! :::
 ########################################
