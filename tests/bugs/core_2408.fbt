@@ -127,20 +127,47 @@
   """\
 import os
 import subprocess
+import time
 import difflib
 
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#-------------------------------------------
+
+db_file=db_conn.database_name
 db_conn.close()
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-db_file="$(DATABASE_LOCATION)bugs.core_2408.fdb"
 
 f_extract_initial_meta_sql = open( os.path.join(context['temp_directory'],'tmp_meta_2408_init.sql'), 'w')
-subprocess.call( ["isql", dsn, "-x", "-ch", "utf8"], \
-                 stdout = f_extract_initial_meta_sql, \
-                 stderr = subprocess.STDOUT \
+subprocess.call( [ context['isql_path'], dsn, "-x", "-ch", "utf8" ],
+                 stdout = f_extract_initial_meta_sql,
+                 stderr = subprocess.STDOUT
                )
-f_extract_initial_meta_sql.close()
+flush_and_close( f_extract_initial_meta_sql )
 
 ddl_clear_all='''
     drop package pg_test;
@@ -155,29 +182,29 @@ ddl_clear_all='''
 
 f_meta_drop_all_sql = open( os.path.join(context['temp_directory'],'tmp_meta_2408_drop_all.sql'), 'w')
 f_meta_drop_all_sql.write(ddl_clear_all)
-f_meta_drop_all_sql.close()
+flush_and_close( f_meta_drop_all_sql )
 
 f_meta_drop_all_log = open( os.path.join(context['temp_directory'],'tmp_meta_2408_drop_all.log'), 'w')
-subprocess.call( ["isql", dsn, "-i", f_meta_drop_all_sql.name, "-ch", "utf8" ], \
-                 stdout = f_meta_drop_all_log, \
-                 stderr = subprocess.STDOUT \
+subprocess.call( [ context['isql_path'], dsn, "-i", f_meta_drop_all_sql.name, "-ch", "utf8" ],
+                 stdout = f_meta_drop_all_log,
+                 stderr = subprocess.STDOUT
                )
-f_meta_drop_all_log.close()
+flush_and_close( f_meta_drop_all_log )
 
 
 f_apply_extracted_meta_log = open( os.path.join(context['temp_directory'],'tmp_meta_2408_apply.log'), 'w')
-subprocess.call( ["isql", dsn, "-i", f_extract_initial_meta_sql.name, "-ch", "utf8" ], \
-                 stdout = f_apply_extracted_meta_log, \
-                 stderr = subprocess.STDOUT \
+subprocess.call( [ context['isql_path'], dsn, "-i", f_extract_initial_meta_sql.name, "-ch", "utf8" ],
+                 stdout = f_apply_extracted_meta_log,
+                 stderr = subprocess.STDOUT
                )
-f_apply_extracted_meta_log.close()
+flush_and_close( f_apply_extracted_meta_log )
 
 f_extract_current_meta_sql = open( os.path.join(context['temp_directory'],'tmp_meta_2408_last.sql'), 'w')
-subprocess.call( ["isql", dsn, "-x", "-ch", "utf8"], \
-                 stdout = f_extract_current_meta_sql, \
-                 stderr = subprocess.STDOUT \
+subprocess.call( [ context['isql_path'], dsn, "-x", "-ch", "utf8"],
+                 stdout = f_extract_current_meta_sql,
+                 stderr = subprocess.STDOUT
                )
-f_extract_current_meta_sql.close()
+flush_and_close( f_extract_current_meta_sql )
 
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2408_meta_diff.txt'), 'w')
@@ -197,7 +224,7 @@ for i in range(len(f_old)):
     old_file.close()
     new_file.close()
 
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 
 # Should be EMPTY:
@@ -205,37 +232,23 @@ f_diff_txt.close()
 with open( f_meta_drop_all_log.name, 'r') as f:
     for line in f:
         print( 'Error log of dropping existing objects: ' + f.line() )
-f.close()
 
 # Should be EMPTY:
 ##################
 with open( f_apply_extracted_meta_log.name, 'r') as f:
     for line in f:
         print( 'Error log of applying extracted metadata: ' + f.line() )
-f.close()
 
 # Should be EMPTY:
 ##################
 with open( f_diff_txt.name,'r') as f:
     for line in f:
             print( ' '.join(line.split()).upper() )
-f.close()
-
 
 ###############################
 # Cleanup.
-
-f_list=[]
-f_list.append(f_extract_initial_meta_sql)
-f_list.append(f_extract_current_meta_sql)
-f_list.append(f_meta_drop_all_sql)
-f_list.append(f_meta_drop_all_log)
-f_list.append(f_apply_extracted_meta_log)
-f_list.append(f_diff_txt)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+time.sleep(1)
+cleanup( [ i.name for i in (f_extract_initial_meta_sql,f_extract_current_meta_sql,f_meta_drop_all_sql,f_meta_drop_all_log,f_apply_extracted_meta_log,f_diff_txt) ] )
 
   """,
  'expected_stdout':
