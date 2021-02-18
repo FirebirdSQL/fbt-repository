@@ -33,7 +33,7 @@
         2.5.9.27146 SC: 3.280s.
 
  """,
-'min_versions': '2.5.5',
+'min_versions': '2.5.2',
 'versions': [
 {
  'firebird_version': '2.5',
@@ -51,16 +51,41 @@ import difflib
 import subprocess
 from fdb import services
 
-fb_host = '127.0.0.1'
-fb_port='3050'
-
 os.environ["ISC_USER"] = 'none'
 os.environ["ISC_PASSWORD"] = 'QwaSeDTy'
-db_file="$(DATABASE_LOCATION)bugs.core_4058.fdb"
+db_file = db_conn.database_name
+engine = str(db_conn.engine_version)
 
-#--------------------------------------------------------------------------------
+db_conn.close()
 
-def svc_get_fb_log( engine, fb_home, fb_port, f_fb_log ):
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
+def svc_get_fb_log( engine, f_fb_log ):
 
     import subprocess
 
@@ -69,25 +94,17 @@ def svc_get_fb_log( engine, fb_home, fb_port, f_fb_log ):
     else:
         get_firebird_log_key='action_get_fb_log'
 
-    # C:\MIX\firebird\oldfb251\bin\fbsvcmgr localhost:service_mgr -user sysdba -password masterkey action_get_ib_log
-
-    subprocess.call([ fb_home+"fbsvcmgr",
-                      "localhost/"+fb_port+":service_mgr",
-                      "-user", 'SYSDBA',
-                      "-password", 'masterkey',
+    subprocess.call([ context['fbsvcmgr_path'],
+                      "localhost:service_mgr",
+                      "-user", user_name,
+                      "-password", user_password,
                       get_firebird_log_key
                     ],
                      stdout=f_fb_log, stderr=subprocess.STDOUT
                    )
-
     return
 
-#--------------------------------------------------------------------------------
-
-# Obtain engine version:
-engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
-
-db_conn.close()
+#--------------------------------------------
 
 # Get HOME dir of FB instance that is now checked.
 # We will concatenate this string with 'fbsvcmgr' command in order to choose 
@@ -100,9 +117,8 @@ db_conn.close()
 # ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
 
 fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-#fb_home = services.connect(host='localhost').get_home_directory()
 
-fb_conf = fb_home + os.sep + 'firebird.conf'
+fb_conf = os.path.join( fb_home, 'firebird.conf')
 
 #################################################
 # Parsing firebird.conf for getting port  number:
@@ -112,13 +128,10 @@ with open( fb_conf,'r') as f:
         if 'remoteserviceport' in line.lower():
             fb_port = line.split('=')[1].strip()
             
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
-
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4058_fblog_before.txt'), 'w')
-svc_get_fb_log( engine, fb_home, fb_port, f_fblog_before )
-f_fblog_before.close()
+svc_get_fb_log( engine, f_fblog_before )
+flush_and_close( f_fblog_before )
 
 #########################################################
 data_1 =  ""
@@ -137,17 +150,15 @@ data_1 += "000000010000000200000005"
 data_1 += "0000000800" 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect( (fb_host, int(fb_port) ) )
+s.connect( ('localhost', int(fb_port) ) )
 s.send(data_1.decode('hex'))
 s.close()
     
 # ------------------------------------------------------------------------------------------    
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4058_fblog_after.txt'), 'w')
-svc_get_fb_log( engine, fb_home, fb_port, f_fblog_after )
-f_fblog_after.close()
-
-time.sleep(2)
+svc_get_fb_log( engine, f_fblog_after )
+flush_and_close( f_fblog_after )
 
 # Now we can compare two versions of firebird.log and check their difference.
 #################################
@@ -164,7 +175,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4058_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # NB: difflib.unified_diff() can show line(s) that present in both files, without marking that line(s) with "+". 
 # Usually these are 1-2 lines that placed just BEFORE difference starts.
@@ -176,14 +187,12 @@ with open( f_diff_txt.name,'r') as f:
     for line in f:
         if line.startswith('+'):
             print('UNEXPECTED NEW LINE IN FIREBIRD.LOG: '+line.upper())
-f.close()
+
+# CLEANUP
+#########
 time.sleep(1)
 
-f_list=[f_fblog_before, f_fblog_after, f_diff_txt]
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
+cleanup( [i.name for i in (f_fblog_before, f_fblog_after, f_diff_txt) ] )
 
 """,
  'expected_stdout': 
