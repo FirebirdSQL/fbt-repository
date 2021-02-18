@@ -57,7 +57,7 @@ def svc_get_fb_log( engine, f_fb_log ):
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     get_firebird_log_key
                   ],
@@ -102,7 +102,7 @@ def cleanup( f_names_list ):
 
 f_init_log = open( os.path.join(context['temp_directory'],'tmp_init_2668.log'), 'w')
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_sweep_interval", "100",
                   "dbname", db_file,
                  ],
@@ -110,7 +110,7 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
                  stderr = subprocess.STDOUT
                )
 
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_write_mode", "prp_wm_async",
                   "dbname", db_file ],
                   stdout = f_init_log,
@@ -162,10 +162,10 @@ flush_and_close( f_work_sql )
 
 f_work_log=open( os.path.join(context['temp_directory'],'tmp_work_2668.log'), 'w')
 
-p_work_sql=Popen( ["isql", dsn, "-i", f_work_sql.name], stdout = f_work_log, stderr = subprocess.STDOUT )
+p_work_sql=Popen( [context['isql_path'], dsn, "-i", f_work_sql.name], stdout = f_work_log, stderr = subprocess.STDOUT )
 time.sleep(3)
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
                   "dbname", db_file,
                  ],
@@ -177,7 +177,7 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
 p_work_sql.terminate()
 flush_and_close( f_work_log )
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_db_online",
                   "dbname", db_file,
                  ],
@@ -213,7 +213,6 @@ f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_2668_fblog_after
 svc_get_fb_log( engine, f_fblog_after )
 flush_and_close( f_fblog_after )
 
-
 oldfb=open(f_fblog_before.name, 'r')
 newfb=open(f_fblog_after.name, 'r')
 
@@ -223,8 +222,6 @@ difftext = ''.join(difflib.unified_diff(
   ))
 oldfb.close()
 newfb.close()
-#flush_and_close( oldfb )
-#flush_and_close( newfb )
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2668_diff.txt'), 'w')
 f_diff_txt.write(difftext)
@@ -244,7 +241,6 @@ with open( f_diff_txt.name,'r') as f:
 ###############################
 # Cleanup.
 time.sleep(1)
-f_list = [f_init_log,f_work_sql,f_work_log,f_fblog_before,f_fblog_after,f_diff_txt]
 cleanup( [x.name for x in (f_init_log,f_work_sql,f_work_log,f_fblog_before,f_fblog_after,f_diff_txt) ] )
   """,
  'expected_stdout':
