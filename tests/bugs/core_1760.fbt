@@ -185,6 +185,22 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 #--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
@@ -192,12 +208,6 @@ def cleanup( f_names_list ):
             os.remove( f_names_list[i] )
 #--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-
-if db_conn.engine_version < 3:
-    fb_home = os.path.join( fb_home, r'bin')
-
-this_db = db_conn.database_name
 db_conn.close()
 
 sql_chk = os.path.join(context['files_location'],'core_1760.sql')
@@ -205,10 +215,10 @@ sql_chk = os.path.join(context['files_location'],'core_1760.sql')
 f_sql_log = open( os.path.join(context['temp_directory'],'tmp_core_1760.log'), 'w', buffering = 0)
 f_sql_err = open( os.path.join(context['temp_directory'],'tmp_core_1760.err'), 'w', buffering = 0)
 
-subprocess.call( [ os.path.join(fb_home, 'isql'), dsn, '-q', '-i', sql_chk ], stdout = f_sql_log, stderr = f_sql_err)
+subprocess.call( [ context['isql_path'], dsn, '-q', '-i', sql_chk ], stdout = f_sql_log, stderr = f_sql_err)
 
-f_sql_log.close()
-f_sql_err.close()
+flush_and_close( f_sql_log )
+flush_and_close( f_sql_err )
 
 for f in (f_sql_log, f_sql_err):
     with open( f.name,'r') as g:
