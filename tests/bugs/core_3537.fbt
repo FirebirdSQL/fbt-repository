@@ -139,26 +139,42 @@ os.environ["ISC_PASSWORD"] = user_password
 
 # Obtain engine version:
 engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+db_file = db_conn.database_name
 db_conn.close()
 
-# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
-# via to FB services API by services.connect() - see FB tracker, PYFB-69
-# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+#---------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-# fb_home = services.connect(host='localhost').get_home_directory()
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
+#--------------------------------------------
 
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
 
 # Change FW to OFF in order to speed up initial data filling:
 ##################
-db_file="$(DATABASE_LOCATION)bugs.core_3537.fdb"
 
 fn_nul = open(os.devnull, 'w')
 
-subprocess.call([ fb_home+"fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_write_mode", "prp_wm_async",
                   "dbname", db_file ],
                   stdout = fn_nul,
@@ -212,7 +228,7 @@ else:
 
 f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_3537.cfg'), 'w')
 f_trc_cfg.write(txt)
-f_trc_cfg.close()
+flush_and_close( f_trc_cfg )
 
 ############################
 NUM_ROWS_TO_BE_ADDED = 45000
@@ -234,7 +250,7 @@ con1.close()
 f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_3537.log'), "w")
 f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_3537.err'), "w")
 
-p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
+p_trace = Popen( [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
 
 time.sleep(1)
 
@@ -257,8 +273,8 @@ con1.close()
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
 f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_3537.lst'), 'w')
-subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
-f_trc_lst.close()
+subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
+flush_and_close( f_trc_lst )
 
 # !!! DO NOT REMOVE THIS LINE !!!
 time.sleep(1)
@@ -281,15 +297,15 @@ f.close()
 # ####################################################
 if trcssn>0:
     fn_nul = open(os.devnull, 'w')
-    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
     time.sleep(2)
 
 
 p_trace.terminate()
-f_trc_log.close()
-f_trc_err.close()
+flush_and_close( f_trc_log )
+flush_and_close( f_trc_err )
 
 ###################
 # Obtain statistics for table T_FIX_TAB in order to estimate numberof data pages
@@ -298,12 +314,12 @@ f_trc_err.close()
 f_stat_log = open( os.path.join(context['temp_directory'],'tmp_stat_3537.log'), 'w')
 f_stat_err = open( os.path.join(context['temp_directory'],'tmp_stat_3537.err'), 'w')
 
-subprocess.call( [ fb_home+"gstat", dsn, "-t",  't_fix_tab'.upper() ],
+subprocess.call( [ context['gstat_path'], dsn, "-t",  't_fix_tab'.upper() ],
                  stdout = f_stat_log,
                  stderr = f_stat_err
                )
-f_stat_log.close()
-f_stat_err.close()
+flush_and_close( f_stat_log )
+flush_and_close( f_stat_err )
 
 # Following files should be EMPTY:
 #################
@@ -315,18 +331,15 @@ for i in range(len(f_list)):
        with open( f_name,'r') as f:
            for line in f:
                print("Unexpected STDERR, file "+f_name+": "+line)
-       f.close()
 
 
-dp_cnt=-1
+dp_cnt = -1
 with open( f_stat_log.name,'r') as f:
   for line in f:
     if 'data pages' in line.lower():
        # Data pages: 1098, data page slots: 1098, average fill: 74% ==> 1098
        dp_cnt = int(line.replace(',',' ').split()[2])
        
-f.close()
-
 gtt_sav_fetches=-1
 gtt_sav_marks = -1
 gtt_del_fetches=-1
@@ -410,13 +423,7 @@ if failed_flag:
 
 # CLEANUP
 #########
-
-f_list=(f_trc_cfg, f_trc_log, f_trc_err, f_stat_log, f_stat_err, f_trc_lst)
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
+cleanup( [i.name for i in (f_trc_cfg, f_trc_log, f_trc_err, f_stat_log, f_stat_err, f_trc_lst) ] )
 
   """,
  'expected_stdout': 
