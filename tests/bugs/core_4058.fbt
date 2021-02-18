@@ -2,7 +2,7 @@
 'id': 'bugs.core_4058',
 'qmid': None,
 'tracker_id': 'CORE-4058',
-'title': 'Remote Stack Buffer Overflow in Firebird SQL Server',
+'title': 'Remote Stack Buffer Overflow in Firebird SQL Server (when specially crafted packet is sent via socket API)',
 'description':
  """
    Bug was fixed on 2.5.5.26952.
