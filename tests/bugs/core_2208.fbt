@@ -68,7 +68,6 @@
 import os
 import subprocess
 import time
-from fdb import services
 from subprocess import Popen
 
 os.environ["ISC_USER"] = user_name
@@ -76,16 +75,6 @@ os.environ["ISC_PASSWORD"] = user_password
 
 # Obtain engine version:
 engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
-
-# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
-# via to FB services API by services.connect() - see FB tracker, PYFB-69
-# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
-
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-# fb_home = services.connect(host='localhost').get_home_directory()
-
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
 
 db_conn.close()
 
@@ -102,13 +91,13 @@ f_svc_err=open( os.path.join(context['temp_directory'],'tmp_svc_2208.err'), 'w')
 
 # Run-1: try to skip BACKUP of data for tables 'test_0a' and 'test_0b'.
 ###########################
-subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_backup', 
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_backup', 
                    'dbname', thisdb, 'bkp_file', tmpbkp,
                    'bkp_skip_data', 'test_0[[:alpha:]]'
                  ], 
                  stdout=f_svc_log,stderr=f_svc_err
                )
-subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_restore', 
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_restore', 
                    'bkp_file', tmpbkp, 'dbname', tmpres, 
                    'res_replace'
                  ], 
@@ -117,20 +106,19 @@ subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_restore',
 
 
 f_run1_log=open( os.path.join(context['temp_directory'],'tmp_run1_2208.log'), 'w')
-subprocess.call( [fb_home+'isql', 'localhost:'+tmpres,'-q','-ch','utf8', '-i', f_run_sql.name],stdout=f_run1_log,stderr=subprocess.STDOUT )
+subprocess.call( [ context['isql_path'], 'localhost:'+tmpres,'-q','-ch','utf8', '-i', f_run_sql.name],stdout=f_run1_log,stderr=subprocess.STDOUT )
 f_run1_log.close()
 
-########################################
 
 # Run-2: try to skip RESTORE of data for tables 'test_01' and 'test_02'.
 ###########################
-subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_backup', 
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_backup', 
                    'dbname', thisdb, 'bkp_file', tmpbkp,
                    'bkp_skip_data', 'test_0[[:digit:]]'
                  ], 
                  stdout=f_svc_log,stderr=f_svc_err
                )
-subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_restore', 
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_restore', 
                    'bkp_file', tmpbkp, 'dbname', tmpres, 
                    'res_replace'
                  ], 
@@ -138,58 +126,58 @@ subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_restore',
                )
 
 f_run2_log=open( os.path.join(context['temp_directory'],'tmp_run2_2208.log'), 'w')
-subprocess.call( [fb_home+'isql', 'localhost:'+tmpres,'-q','-ch','utf8', '-i', f_run_sql.name],stdout=f_run2_log,stderr=subprocess.STDOUT )
+subprocess.call( [ context['isql_path'], 'localhost:'+tmpres,'-q','-ch','utf8', '-i', f_run_sql.name],stdout=f_run2_log,stderr=subprocess.STDOUT )
 f_run2_log.close()
 
 ########################################
 
 '''
-DEFERRED! IT SEEMS THAT WRONG PATTERN IS PASSED FROM FBTEST TO FBSVCMGR WHEN USE NON-ASCII TABLE NAME!
+    DEFERRED! IT SEEMS THAT WRONG PATTERN IS PASSED FROM FBTEST TO FBSVCMGR WHEN USE NON-ASCII TABLE NAME!
 
-CAN NOT BE REPRODUCED IN CMD.EXE (chcp 65001):
-==============================================
+    CAN NOT BE REPRODUCED IN CMD.EXE (chcp 65001):
+    ==============================================
 
-Script for isql (do not forget to make chcp 65001 before run it):
-===
-set names utf8;
-shell del C:\MIX\firebird\QA\fbt-repo\tmp\c2208w.fdb 2>nul;
-create database 'localhost:C:\MIX\firebird\QA\fbt-repo\tmp\c2208w.fdb' default character set utf8;
-recreate table "опечатка"(id char(1));
-insert into "опечатка"(id) values('ы');
-commit;
-===
+    Script for isql (do not forget to make chcp 65001 before run it):
+    ===
+    set names utf8;
+    shell del C:\MIX\firebird\QA\fbt-repo\tmp\c2208w.fdb 2>nul;
+    create database 'localhost:C:\MIX\firebird\QA\fbt-repo\tmp\c2208w.fdb' default character set utf8;
+    recreate table "опечатка"(id char(1));
+    insert into "опечатка"(id) values('ы');
+    commit;
+    ===
 
-fbsvcmgr localhost:service_mgr action_backup 
-    dbname C:\MIX\firebird\QA\fbt-repo\tmp\C2208W.FDB 
-    bkp_file C:\MIX\firebird\QA\fbt-repo\tmp\C2208W.fbk 
-    -bkp_skip_data "(о|а)(п|ч)(е|и)(п|ч)(а|я)(т|д)(к|г)(о|а)"
+    fbsvcmgr localhost:service_mgr action_backup 
+        dbname C:\MIX\firebird\QA\fbt-repo\tmp\C2208W.FDB 
+        bkp_file C:\MIX\firebird\QA\fbt-repo\tmp\C2208W.fbk 
+        -bkp_skip_data "(о|а)(п|ч)(е|и)(п|ч)(а|я)(т|д)(к|г)(о|а)"
 
-gbak -rep C:\MIX\firebird\QA\fbt-repo\tmp\C2208W.fbk localhost:C:\MIX\firebird\QA\fbt-repo\tmp\C2208W2.FDB
+    gbak -rep C:\MIX\firebird\QA\fbt-repo\tmp\C2208W.fbk localhost:C:\MIX\firebird\QA\fbt-repo\tmp\C2208W2.FDB
 
-echo show table; set list on; set count on; select * from "опечатка";|isql /:C:\MIX\firebird\QA\fbt-repo\tmp\C2208W2.FDB -ch utf8
+    echo show table; set list on; set count on; select * from "опечатка";|isql /:C:\MIX\firebird\QA\fbt-repo\tmp\C2208W2.FDB -ch utf8
 
-опечатка
-Records affected: 0
+    опечатка
+    Records affected: 0
 
-# Run-3: try to skip BACKUP of data for table "опечатка".
-###########################
-# 'bkp_skip_data', '"(о|а)(п|ч)(е|и)(п|ч)(а|я)(т|д)(к|г)(а|о)"'
-subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_backup', 
-                   'dbname', thisdb, 'bkp_file', tmpbkp,
-                   'bkp_skip_data', '%о%'
-                 ], 
-                 stdout=f_svc_log,stderr=f_svc_err
-               )
-subprocess.call( [ fb_home+'fbsvcmgr', 'localhost:service_mgr','action_restore', 
-                   'bkp_file', tmpbkp, 'dbname', tmpres, 
-                   'res_replace'
-                 ], 
-                 stdout=f_svc_log,stderr=f_svc_err
-               )
+    # Run-3: try to skip BACKUP of data for table "опечатка".
+    ###########################
+    # 'bkp_skip_data', '"(о|а)(п|ч)(е|и)(п|ч)(а|я)(т|д)(к|г)(а|о)"'
+    subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_backup', 
+                       'dbname', thisdb, 'bkp_file', tmpbkp,
+                       'bkp_skip_data', '%о%'
+                     ], 
+                     stdout=f_svc_log,stderr=f_svc_err
+                   )
+    subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_restore', 
+                       'bkp_file', tmpbkp, 'dbname', tmpres, 
+                       'res_replace'
+                     ], 
+                     stdout=f_svc_log,stderr=f_svc_err
+                   )
 
-f_run3_log=open( os.path.join(context['temp_directory'],'tmp_run3_2208.log'), 'w')
-subprocess.call( [fb_home+'isql', 'localhost:'+tmpres,'-q','-ch','utf8', '-i', f_run_sql.name],stdout=f_run3_log,stderr=subprocess.STDOUT )
-f_run3_log.close()
+    f_run3_log=open( os.path.join(context['temp_directory'],'tmp_run3_2208.log'), 'w')
+    subprocess.call( [ context['isql_path'], 'localhost:'+tmpres,'-q','-ch','utf8', '-i', f_run_sql.name],stdout=f_run3_log,stderr=subprocess.STDOUT )
+    f_run3_log.close()
 '''
 
 f_svc_log.close()
