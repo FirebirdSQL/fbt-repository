@@ -41,18 +41,18 @@ import os
 import subprocess
 import fdb
 
+db_file=db_conn.database_name
 db_conn.close()
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-db_file="$(DATABASE_LOCATION)bugs.core_2307.fdb"
 
 # Change FW to OFF in order to speed up initial data filling:
 ##################
 
 fn_nul = open(os.devnull, 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_write_mode", "prp_wm_async",
                   "dbname", db_file ],
                   stdout = fn_nul,
@@ -100,9 +100,9 @@ f_work_sql.close()
 
 f_work_log=open( os.path.join(context['temp_directory'],'tmp_work_2307.log'), 'w')
 f_work_err=open( os.path.join(context['temp_directory'],'tmp_work_2307.err'), 'w')
-subprocess.call( ["isql", dsn, "-i", f_work_sql.name],
-                  stdout = f_work_log,
-                  stderr = f_work_err
+subprocess.call( [ context['isql_path'], dsn, "-i", f_work_sql.name],
+                   stdout = f_work_log,
+                   stderr = f_work_err
                 )
 
 f_work_log.close()
