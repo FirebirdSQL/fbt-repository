@@ -34,24 +34,19 @@ import subprocess
 import time
 
 # Obtain engine version:
-
-cur1 = db_conn.cursor()
-
-cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in cur1:
-    engine = row[0]
+engine = str(db_conn.engine_version)
 
 db_conn.execute_immediate("create user tmp$c1148 password 'QweRtyUi'")
 db_conn.commit()
 
 if engine.startswith('2.5'):
-  get_firebird_log_key='action_get_ib_log'
+    get_firebird_log_key='action_get_ib_log'
 else:
-  get_firebird_log_key='action_get_fb_log'
+    get_firebird_log_key='action_get_fb_log'
 
 fn_nul = open(os.devnull, 'w')
 fn_err=open( os.path.join(context['temp_directory'],'tmp_1148_get_fb_log.err'), 'w')
-subprocess.call([ "fbsvcmgr",
+subprocess.call([ context['fbsvcmgr_path'],
                   "localhost:service_mgr",
                   "user","TMP$C1148","password","QweRtyUi", 
                   get_firebird_log_key
@@ -74,7 +69,6 @@ db_conn.commit()
 with open( fn_err.name,'r') as f:
     for line in f:
         print("STDERR: "+line.upper())
-f.close()
 
 # Do not remove this pause: on Windows closing of handles can take some (small) time. 
 # Otherwise Windows(32) access error can raise here.
