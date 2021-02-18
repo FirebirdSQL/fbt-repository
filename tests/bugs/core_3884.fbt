@@ -30,12 +30,35 @@ os.environ["ISC_PASSWORD"] = user_password
 
 # Obtain engine version:
 engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+db_file = db_conn.database_name
+# do NOT: db_conn.close()
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+#---------------------------------------------
 
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
 
 txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
 <database %[\\\\\\\\/]bugs.core_3884.fdb>
@@ -76,7 +99,7 @@ f_trc_cfg.close()
 f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_3884.log'), "w")
 f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_3884.err'), "w")
 
-p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'user', user_name, 'password', user_password, 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
+p_trace = Popen( [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
 
 # this delay need for trace start and finish its output about invalid section in its config file:
 time.sleep(2)
@@ -87,8 +110,8 @@ time.sleep(2)
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
 f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_3884.lst'), 'w')
-subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'user', user_name, 'password', user_password, 'action_trace_list'], stdout=f_trc_lst)
-f_trc_lst.close()
+subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
+flush_and_close( f_trc_lst )
 
 # !!! DO NOT REMOVE THIS LINE !!!
 time.sleep(1)
@@ -103,7 +126,7 @@ with open( f_trc_lst.name,'r') as f:
                     trcssn=word
                 i=i+1
             break
-f.close()
+
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
 
 
@@ -141,30 +164,21 @@ db_conn.commit()
 # ####################################################
 if trcssn>0:
     fn_nul = open(os.devnull, 'w')
-    #f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_3884.log'), "w")
-    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'user', user_name, 'password', user_password, 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
     time.sleep(2)
 
 
 p_trace.terminate()
-f_trc_log.close()
-f_trc_err.close()
+flush_and_close( f_trc_log )
+flush_and_close( f_trc_err )
 
 
 # CLEANUP
 #########
-f_list=(f_trc_cfg, f_trc_log, f_trc_err, f_trc_lst)
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
-
-#      ('line\s+[0-9]+,','line: x'), ('column\s+[0-9]+','col: y') 
-#    error text: - Dynamic SQL Error
-#    error text: - SQL error code = -104
-
+time.sleep(1)
+cleanup( [i.name for i in (f_trc_cfg, f_trc_log, f_trc_err, f_trc_lst) ] )
 
   """,
  'expected_stdout': 
