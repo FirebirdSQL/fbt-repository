@@ -53,7 +53,21 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 DB_PATH = os.sep.join( db_conn.database_name.split(os.sep)[:-1] )
 db_conn.close()
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
@@ -65,10 +79,10 @@ def cleanup( f_names_list ):
 
 #--------------------------------------------
 
-def svc_get_fb_log( fb_home, f_fb_log ):
+def svc_get_fb_log( f_fb_log ):
 
   global subprocess
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
@@ -252,25 +266,25 @@ f_init_sql.close()
 
 f_init_log=open( os.path.join(context['temp_directory'],'tmp_1725_init.log'), 'w', buffering = 0)
 f_init_err=open( os.path.join(context['temp_directory'],'tmp_1725_init.err'), 'w', buffering = 0)
-subprocess.call( [fb_home+'isql', '-q', '-i', f_init_sql.name], stdout=f_init_log, stderr=f_init_err )
-f_init_log.close()
-f_init_err.close()
+subprocess.call( [ context['isql_path'], '-q', '-i', f_init_sql.name], stdout=f_init_log, stderr=f_init_err )
+flush_and_close( f_init_log )
+flush_and_close( f_init_err )
 
 #----------------------------------------------------------------------
 
 # Extract metadata from initial DB:
 ##################
 f_meta_init=open( os.path.join(context['temp_directory'],'tmp_1725_meta.init.sql'), 'w', buffering = 0)
-subprocess.call( [fb_home+'isql', '-nod', '-x', 'localhost:'+tmp_initdb ], stdout=f_meta_init, stderr=subprocess.STDOUT )
-f_meta_init.close()
+subprocess.call( [ context['isql_path'], '-nod', '-x', 'localhost:'+tmp_initdb ], stdout=f_meta_init, stderr=subprocess.STDOUT )
+flush_and_close( f_meta_init )
 
 #----------------------------------------------------------------------
 
 # backup  + restore _WITHOUT_ building indices:
 ###################
 # https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
-p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', 'localhost:'+tmp_initdb, 'stdout' ], stdout=PIPE)
-p_getter = subprocess.Popen( [ fb_home+'gbak', '-c', '-i', 'stdin',  tmp_restdb ], stdin = p_sender.stdout, stdout = PIPE )
+p_sender = subprocess.Popen( [ context['gbak_path'], '-b', 'localhost:'+tmp_initdb, 'stdout' ], stdout=PIPE)
+p_getter = subprocess.Popen( [ context['gbak_path'], '-c', '-i', 'stdin',  tmp_restdb ], stdin = p_sender.stdout, stdout = PIPE )
 p_sender.stdout.close()
 p_getter_stdout, p_getter_stderr = p_getter.communicate()
 
@@ -279,18 +293,18 @@ p_getter_stdout, p_getter_stderr = p_getter.communicate()
 # Get FB log before validation, run validation and get FB log after it:
 ############
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_1725_fblog_before_validation.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_before )
-f_fblog_before.close()
+svc_get_fb_log( f_fblog_before )
+flush_and_close( f_fblog_before )
 
 f_validate_log=open( os.path.join(context['temp_directory'],'tmp_1725_validate.log'), 'w', buffering = 0)
 f_validate_err=open( os.path.join(context['temp_directory'],'tmp_1725_validate.err'), 'w', buffering = 0)
-subprocess.call( [fb_home+'gfix', '-v', '-full', 'localhost:'+tmp_restdb ], stdout=f_validate_log, stderr=f_validate_err )
-f_validate_log.close()
-f_validate_err.close()
+subprocess.call( [ context['gfix_path'], '-v', '-full', 'localhost:'+tmp_restdb ], stdout=f_validate_log, stderr=f_validate_err )
+flush_and_close( f_validate_log )
+flush_and_close( f_validate_err )
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_1725_fblog__after_validation.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_after )
-f_fblog_after.close()
+svc_get_fb_log( f_fblog_after )
+flush_and_close( f_fblog_after )
 
 #----------------------------------------------------------------------
 shutil.move(tmp_restdb, tmp_initdb)
@@ -299,8 +313,8 @@ shutil.move(tmp_restdb, tmp_initdb)
 # Extract metadata from restored DB:
 ##################
 f_meta_rest=open( os.path.join(context['temp_directory'],'tmp_1725_meta.rest.sql'), 'w', buffering = 0)
-subprocess.call( [fb_home+'isql', '-nod', '-x', 'localhost:'+tmp_initdb ], stdout=f_meta_rest, stderr=subprocess.STDOUT )
-f_meta_rest.close()
+subprocess.call( [ context['isql_path'], '-nod', '-x', 'localhost:'+tmp_initdb ], stdout=f_meta_rest, stderr=subprocess.STDOUT )
+flush_and_close( f_meta_rest )
 
 #----------------------------------------------------------------------
 
@@ -316,7 +330,7 @@ newmeta.close()
 
 f_meta_diff=open( os.path.join(context['temp_directory'],'tmp_1725_meta_diff.txt'), 'w', buffering = 0)
 f_meta_diff.write(diffmeta)
-f_meta_diff.close()
+flush_and_close( f_meta_diff )
 
 #----------------------------------------------------------------------
 
@@ -335,7 +349,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5719_valid_diff.txt'), 'w', buffering = 0)
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 #-----------------------------------------------------------------------
 
