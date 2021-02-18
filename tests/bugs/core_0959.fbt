@@ -108,19 +108,33 @@ watched_ptn_list=(
     ,gstat_init_ptn
     ,gstat_fini_ptn
 )
-
+db_name=db_conn.database_name
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
 
 f_dbstat_log = open( os.path.join(context['temp_directory'],'tmp_local_host_0959.log'), 'w')
 f_dbstat_err = open( os.path.join(context['temp_directory'],'tmp_local_host_0959.err'), 'w')
-
-#runProgram('gstat',['-a','-user',user_name,'-pa',user_password,dsn])
-subprocess.check_call(["fbsvcmgr"
+context['isql_path']
+subprocess.check_call([context['fbsvcmgr_path']
                        ,"localhost:service_mgr"
-                       ,"user",user_name
-                       ,"password",user_password
                        ,"action_db_stats"
-                       ,"dbname", "$(DATABASE_LOCATION)bugs.core_0959.fdb"
+                       ,"dbname", db_name
                        ,"sts_record_versions"
                        ,"sts_data_pages"
                        ,"sts_idx_pages"
@@ -129,8 +143,8 @@ subprocess.check_call(["fbsvcmgr"
                       stderr=f_dbstat_err
                      )
 
-f_dbstat_log.close()
-f_dbstat_err.close()
+flush_and_close( f_dbstat_log )
+flush_and_close( f_dbstat_err )
 
 with open( f_dbstat_log.name,'r') as f:
   for line in f:
