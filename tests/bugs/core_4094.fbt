@@ -67,8 +67,38 @@ import subprocess
 from subprocess import Popen
 import re
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 engine = str(db_conn.engine_version)
 db_conn.close()
+
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
 
 # Minimal delay after we issue command fbsvcmgr action_trace_start
 # and before we launch execution of checked code
@@ -85,10 +115,7 @@ min_delay_before_trace_stop = 1
 ###############################
 min_delay_after_trace_stop = 1
 
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-
-def make_trace_config( engine, trccfg_name ):
+def make_trace_config( engine, f_trccfg ):
 
     txt25 = '''\
     <database %[\\\\\\\\/]bugs.core_4094.fdb>
@@ -113,27 +140,25 @@ def make_trace_config( engine, trccfg_name ):
     }
     '''
 
-    trccfg=open( trccfg_name, 'w')
     if engine.startswith('2.5'):
-        trccfg.write(txt25)
+        f_trccfg.write(txt25)
     else:
-        trccfg.write(txt30)
-    trccfg.close()
+        f_trccfg.write(txt30)
 
     return
 
 def stop_trace_session():
 
     # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
-    import os
-    import subprocess
+    global os, subprocess
+    global flush_and_close
 
     f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_4094.lst'), 'w')
-    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_list"],
+    subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr", "action_trace_list"],
                      stdout=f_trclst,
                      stderr=subprocess.STDOUT
                    )
-    f_trclst.close()
+    flush_and_close( f_trclst )
     
     trcssn=0
     with open( f_trclst.name,'r') as f:
@@ -141,15 +166,14 @@ def stop_trace_session():
             if 'Session ID' in line:
                 trcssn=line.split()[2]
                 break
-    f.close()
     
     # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
     f_trclst=open(f_trclst.name,'a')
     f_trclst.seek(0,2)
-    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_stop", "trc_id",trcssn], \
+    subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr", "action_trace_stop", "trc_id",trcssn],
                      stdout=f_trclst, stderr=subprocess.STDOUT
                    )
-    f_trclst.close()
+    flush_and_close( f_trclst )
 
     os.remove(f_trclst.name)
 
@@ -159,21 +183,21 @@ def stop_trace_session():
 
 # Make trace config:
 
-trc_cfg=os.path.join(context['temp_directory'],'tmp_trace_4094.cfg')
+f_trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_4094.cfg'), 'w')
+make_trace_config( engine, f_trccfg )
+flush_and_close( f_trccfg )
 
-make_trace_config( engine, trc_cfg )
-
-trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_4094.log'), 'w')
+f_trclog=open( os.path.join(context['temp_directory'],'tmp_trace_4094.log'), 'w')
 
 #####################################################
 # Starting trace session in new child process (async.):
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_trace=Popen( [ "fbsvcmgr", "localhost:service_mgr",
+p_trace=Popen( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_start",
-                 "trc_cfg", trc_cfg
+                 "trc_cfg", f_trccfg.name
                ],
-               stdout=trc_log,
+               stdout=f_trclog,
                stderr=subprocess.STDOUT
              )
 
@@ -198,7 +222,7 @@ time.sleep(min_delay_after_trace_stop)
 
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
-trc_log.close()
+flush_and_close( f_trclog )
 
 
 #############
@@ -207,24 +231,16 @@ trc_log.close()
 spcall_pattern=re.compile("execute procedure ")
 params_pattern = re.compile("param[0-9]{1} = ")
 flag=0
-with open( trc_log.name,'r') as f:
+with open( f_trclog.name,'r') as f:
     for line in f:
         if spcall_pattern.match(line):
             flag=1
         if flag==1 and params_pattern.match(line):
             print(line)
-f.close()
 
-###############################
 # Cleanup.
-
-f_list=[]
-
-f_list.append(trc_log)
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-os.remove(trc_cfg)
+##########
+cleanup( [i.name for i in (f_trclog,f_trccfg) ] )
 
   """,
  'expected_stdout':
