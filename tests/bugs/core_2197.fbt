@@ -80,7 +80,7 @@ runProgram('isql',[dsn], isql_txt)
 f_svc_log=open( os.path.join(context['temp_directory'],'tmp_svc_2197.log'), 'w')
 f_svc_err=open( os.path.join(context['temp_directory'],'tmp_svc_2197.err'), 'w')
 
-subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr','action_backup', 
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_backup', 
                    'dbname', thisdb, 'bkp_file', tmpbkp,
                    'bkp_no_triggers'
                  ], 
@@ -89,7 +89,7 @@ subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr','action_backup',
 
 runProgram('isql',[dsn, '-nod'], 'set list on; set count on; select 1, g.* from log g;')
 
-subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr','action_restore', 
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr','action_restore', 
                    'bkp_file', tmpbkp, 'dbname', tmpres, 
                    'res_replace'
                  ], 
