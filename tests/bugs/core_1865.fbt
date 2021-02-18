@@ -51,7 +51,7 @@ tmpfdb='$(DATABASE_LOCATION)'+'tmp_check_1865.fdb'
 runProgram( 'gbak', [ '-b', dsn, tmpfbk ] )
 
 f_restore_log=open( os.path.join(context['temp_directory'],'tmp_check_1865.log'), 'w')
-subprocess.call( ['gbak',  '-rep', '-o', '-v',  tmpfbk, 'localhost:' + tmpfdb],  stdout = f_restore_log, stderr=subprocess.STDOUT)
+subprocess.call( [ context['gbak_path'],  '-rep', '-o', '-v',  tmpfbk, 'localhost:' + tmpfdb],  stdout = f_restore_log, stderr=subprocess.STDOUT)
 f_restore_log.close()
 time.sleep(1)
 
