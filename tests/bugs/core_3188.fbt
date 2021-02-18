@@ -34,6 +34,40 @@
 import os
 import difflib
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+engine = str(db_conn.engine_version)
+db_conn.close()
+
+
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
 def svc_get_fb_log( engine, f_fb_log ):
 
   import subprocess
@@ -45,37 +79,28 @@ def svc_get_fb_log( engine, f_fb_log ):
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
-                    "user", user_name, "password", user_password,
                     get_firebird_log_key
                   ],
                   stdout=f_fb_log, stderr=subprocess.STDOUT
                  )
   return
 
+#--------------------------------------------
 
-db_conn.close()
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
 
 # Start two attachments:
-
 con1 = kdb.connect(dsn=dsn)
 con2 = kdb.connect(dsn=dsn)
 
 # Session-1:
-
 c1 = con1.cursor()
-
-c1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in c1:
-    engine = row[0]
 
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_3188_fblog_before.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 c1.execute("create table test(id int primary key)")
 con1.commit()
@@ -92,7 +117,7 @@ con2.close()
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_3188_fblog_after.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 # Now we can compare two versions of firebird.log and check their difference.
 
@@ -108,7 +133,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_3188_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # Difference of firebird.log should be EMPTY:
 
@@ -118,14 +143,8 @@ f.close()
 
 ###############################
 # Cleanup.
-f_list=[]
-f_list.append(f_fblog_before)
-f_list.append(f_fblog_after)
-f_list.append(f_diff_txt)
+cleanup( [i.name for i in (f_fblog_before, f_fblog_after, f_diff_txt)] )
 
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
   """,
  'expected_stdout': 
   """
