@@ -58,14 +58,11 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-PLANNED_DML_ATTACHMENTS = 20
-WAIT_FOR_ALL_CONNECTIONS_START_JOB = 20
-
-#db_file='$(DATABASE_LOCATION)bugs.core_4236.fdb'
 db_file=db_conn.database_name
 db_conn.close()
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+PLANNED_DML_ATTACHMENTS = 20
+WAIT_FOR_ALL_CONNECTIONS_START_JOB = 20
 
 #-----------------------------------
 
@@ -93,13 +90,11 @@ def cleanup( f_names_list ):
 
 #--------------------------------------------
 
-def svc_get_fb_log( fb_home, f_fb_log ):
+def svc_get_fb_log( f_fb_log ):
 
   global subprocess
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
-                     "user", user_name,
-                     "password", user_password,
                      "action_get_fb_log"
                    ],
                    stdout=f_fb_log, stderr=subprocess.STDOUT
@@ -147,7 +142,7 @@ for i in range(0, PLANNED_DML_ATTACHMENTS):
     isql_logs_list.append(sqllog)
 
 for i in range(len(isql_logs_list)):
-    p_isql=Popen( [ "isql" , "localhost:"+db_file, "-i", f_sql_cmd.name ],
+    p_isql=Popen( [ context['isql_path'] , "localhost:"+db_file, "-i", f_sql_cmd.name ],
                   stdout=isql_logs_list[i], stderr=subprocess.STDOUT
                 )
     isql_pids_list.append(p_isql)
@@ -162,7 +157,7 @@ time.sleep( WAIT_FOR_ALL_CONNECTIONS_START_JOB )
 # S H U T D O W N    D A T A B A S E   W I T H   T A R G E T   A C C E S S  = 'S I N G L E'
 ###########################################################################################
 f_shutdown_log=open( os.path.join(context['temp_directory'],'tmp_shutdown_4236.log'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_properties", "dbname", db_file,
                  "prp_shutdown_mode", "prp_sm_single",
                  "prp_force_shutdown", "0"],
@@ -179,7 +174,7 @@ flush_and_close( f_shutdown_log )
 
 # ........................ get firebird.log _before_ validation ..............................
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4236_fblog_before.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_before )
+svc_get_fb_log( f_fblog_before )
 flush_and_close( f_fblog_before )
 
 
@@ -192,7 +187,7 @@ flush_and_close( f_fblog_before )
 #  V A L I D A T I O N    W I T H     E X C L U S I V E    A C C E S S
 ######################################################################
 f_validate_log=open( os.path.join(context['temp_directory'],'tmp_validate_4236.log'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_repair", "dbname", db_file,
                  "rpr_validate_db", "rpr_full"],
                 stdout=f_validate_log, stderr=subprocess.STDOUT)
@@ -200,7 +195,7 @@ flush_and_close( f_validate_log )
 
 # ........................ get firebird.log _before_ validation ..............................
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4236_fblog_after.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_after )
+svc_get_fb_log( f_fblog_after )
 flush_and_close( f_fblog_after )
 
 
