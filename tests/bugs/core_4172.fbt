@@ -33,10 +33,39 @@
  'test_script': 
   """\
 import os
+import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
+
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
 
 tmpfdb_1=os.path.join(context['temp_directory'],'tmp_4172_1.fdb')
 tmpfdb_2=os.path.join(context['temp_directory'],'tmp_4172_2.fdb')
@@ -78,19 +107,14 @@ f_list=[tmpfdb_1, tmpfdb_2]
 
 # Cleanup BEFORE running script:
 ################
+cleanup( f_list )
 
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i]):
-        os.remove(f_list[i])
-
-runProgram('isql',['-q'], sql_chk)
+runProgram( context['isql_path'],['-q'], sql_chk)
 
 # Final cleanup:
 ################
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i]):
-        os.remove(f_list[i])
+time.sleep(1)
+cleanup( f_list )
 
   """,
  'expected_stdout': 
@@ -116,14 +140,41 @@ for i in range(len(f_list)):
  'test_script': 
   """
 import os
-#import re
+import time
 import subprocess
 from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
 
 # STDERR: Statement failed, SQLSTATE = HY000
 # STDERR: UDR module not loaded
@@ -180,28 +231,24 @@ sql_text=\
 
 f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_4172.sql') , 'w')
 f_sql_chk.write(sql_text)
-f_sql_chk.close()
+flush_and_close( f_sql_chk )
 
 f_sql_log=open( os.path.join(context['temp_directory'],'tmp_4172.log'), 'w')
 fn_nul = open(os.devnull, 'w')
-subprocess.call( [ fb_home+'isql', dsn, '-i', f_sql_chk.name], stdout = f_sql_log, stderr = fn_nul)
+subprocess.call( [ context['isql_path'], dsn, '-i', f_sql_chk.name], stdout = f_sql_log, stderr = fn_nul)
 
-f_sql_log.close()
+flush_and_close( f_sql_log )
 fn_nul.close()
 
 with open( f_sql_log.name,'r') as f:
     for line in f:
         if line.split():
             print( ' '.join( line.split() ) )
-f.close()
 
 # CLEANUP
 #########
-f_list=(f_sql_chk, f_sql_log)
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
+time.sleep(1)
+cleanup( [i.name for i in (f_sql_chk, f_sql_log) ] )
 
   """,
  'expected_stdout': 
