@@ -244,11 +244,10 @@ zf.close()
 sql_long_plans_qry=os.path.join(context['temp_directory'],'tmp_core_2115_queries_with_long_plans.sql')
 sql_long_plans_chk=os.path.join(context['temp_directory'],'tmp_core_2115_check_txt_of_long_plans.log')
 
-sql_long_plans_res=open( os.path.join(context['temp_directory'],'tmp_core_2115_current_txt_of_long_plans.log'), 'w', buffering=0)
+sql_long_plans_res=open( os.path.join(context['temp_directory'],'tmp_core_2115_current_txt_of_long_plans.log'), 'w')
 
-subprocess.call(["isql", dsn, "-i", sql_long_plans_qry], stdout=sql_long_plans_res, stderr=subprocess.STDOUT)
+subprocess.call( [context["isql_path"], dsn, "-i", sql_long_plans_qry], stdout=sql_long_plans_res, stderr=subprocess.STDOUT )
 flush_and_close( sql_long_plans_res )
-
 
 if filecmp.cmp( sql_long_plans_chk, sql_long_plans_res.name):
     print("Current plans match to original ones.")
@@ -261,7 +260,6 @@ else:
 
 f_list = [ sql_long_plans_qry, sql_long_plans_chk, sql_long_plans_res.name ]
 cleanup( f_list )
-
 
   """,
  'expected_stdout': 
