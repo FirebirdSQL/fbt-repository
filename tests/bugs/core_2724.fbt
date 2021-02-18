@@ -100,10 +100,43 @@
   """,
  'test_type': 'Python',
  'test_script':"""\
+
 import os
+import time
 import subprocess
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
+
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
 
 sql_check='''\
     delete from ddl_log;
@@ -129,52 +162,48 @@ sql_check='''\
 
 f_check_sql = open( os.path.join(context['temp_directory'],'tmp_check_2724.sql'), 'w')
 f_check_sql.write(sql_check)
-f_check_sql.close()
+flush_and_close( f_check_sql )
 
 ##########################################################################################
 
 f_ch_none_log = open( os.path.join(context['temp_directory'],'tmp_ch_none_2724.log'), 'w')
 f_ch_none_err = open( os.path.join(context['temp_directory'],'tmp_ch_none_2724.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-user", user_name, "-password", user_password, "-i", f_check_sql.name, \
-                 "-ch", "none"], \
-                 stdout = f_ch_none_log, \
-                 stderr = f_ch_none_err \
+subprocess.call( [context['isql_path'], dsn, "-i", f_check_sql.name,
+                 "-ch", "none"],
+                 stdout = f_ch_none_log,
+                 stderr = f_ch_none_err
                )
 
-f_ch_none_log.close()
-f_ch_none_err.close()
+flush_and_close( f_ch_none_log )
+flush_and_close( f_ch_none_err )
 
 ##########################################################################################
 
 f_ch_utf8_log = open( os.path.join(context['temp_directory'],'tmp_ch_utf8_2724.log'), 'w')
 f_ch_utf8_err = open( os.path.join(context['temp_directory'],'tmp_ch_utf8_2724.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-user", user_name, "-password", user_password, "-i", f_check_sql.name, \
-                  "-ch", "utf8"], \
-                 stdout = f_ch_utf8_log, \
-                 stderr = f_ch_utf8_err \
+subprocess.call( [context['isql_path'], dsn, "-user", user_name, "-password", user_password, "-i", f_check_sql.name,
+                  "-ch", "utf8"],
+                 stdout = f_ch_utf8_log,
+                 stderr = f_ch_utf8_err
                )
-f_ch_utf8_log.close()
-f_ch_utf8_err.close()
+flush_and_close( f_ch_utf8_log )
+flush_and_close( f_ch_utf8_err )
 
-f_list=[]
-f_list.append(f_ch_none_log)
-f_list.append(f_ch_none_err)
-f_list.append(f_ch_utf8_log)
-f_list.append(f_ch_utf8_err)
-        
-for i in range(len(f_list)):
-    with open( f_list[i].name,'r') as f:
+
+f_list = [f_ch_none_log, f_ch_none_err, f_ch_utf8_log, f_ch_utf8_err]
+for f in f_list:
+    with open( f.name,'r') as f:
        print(f.read())
-    f.close()
 
-################################################
+
 # Cleanup
+#########
+time.sleep(1)
+
 f_list.append(f_check_sql)
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+cleanup( [i.name for i in f_list] )
 
   """,
  'expected_stdout':
