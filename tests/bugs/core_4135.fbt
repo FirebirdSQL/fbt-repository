@@ -66,6 +66,40 @@ import re
 import shutil
 from fdb import services
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_file = db_conn.database_name
+
+db_conn.close()
+
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
+
 ########################
 ### s e t t i n g s  ###
 ########################
@@ -93,18 +127,7 @@ WAIT_BEFORE_RUN_1ST_ATT = 5
 
 #####################
 
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-db_conn.close()
-
-# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
-# via to FB services API by services.connect() - see FB tracker, PYFB-69
-# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
-
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-
-db_file="$(DATABASE_LOCATION)bugs.core_4135.fdb"
+fb_home = services.connect(host='localhost').get_home_directory()
 
 sql_ddl='''\
     recreate table mon_attach_data (
@@ -131,14 +154,14 @@ sql_ddl='''\
 
 sql_ddl_cmd=open( os.path.join(context['temp_directory'],'tmp_ddl_4135.sql'), 'w')
 sql_ddl_cmd.write(sql_ddl)
-sql_ddl_cmd.close()
+flush_and_close( sql_ddl_cmd )
 
 sql_ddl_log=open( os.path.join(context['temp_directory'],'tmp_ddl_4135.log'), 'w')
-subprocess.call( [fb_home+"isql", dsn, "-i", sql_ddl_cmd.name],
+subprocess.call( [context['isql_path'], dsn, "-i", sql_ddl_cmd.name],
                  stdout=sql_ddl_log, 
                  stderr=subprocess.STDOUT
                )
-sql_ddl_log.close()
+flush_and_close( sql_ddl_log )
 
 #--------------------------------------------------
 
@@ -173,7 +196,7 @@ sql_data='''\
 # Temporay change FW to OFF in order to make DML faster:
 fn_nul = open(os.devnull, 'w')
 
-subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_properties", "dbname", db_file, 
                  "prp_write_mode", "prp_wm_async"],
                 stdout=fn_nul, stderr=subprocess.STDOUT)
@@ -181,16 +204,16 @@ subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
 
 sql_data_cmd=open( os.path.join(context['temp_directory'],'tmp_data_4135.sql'), 'w')
 sql_data_cmd.write(sql_data)
-sql_data_cmd.close()
+flush_and_close( sql_data_cmd )
 
 sql_data_log=open( os.path.join(context['temp_directory'],'tmp_data_4135.log'), 'w')
-subprocess.call( [fb_home+"isql", dsn, "-nod", "-i", sql_data_cmd.name],
+subprocess.call( [context['isql_path'], dsn, "-nod", "-i", sql_data_cmd.name],
                  stdout=sql_data_log, 
                  stderr=subprocess.STDOUT)
-sql_data_log.close()
+flush_and_close( sql_data_log )
 
 # Restore FW to ON (make sweep to do its work "harder"):
-subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_properties", "dbname", db_file, 
                  "prp_write_mode", "prp_wm_sync"],
                 stdout=fn_nul, stderr=subprocess.STDOUT)
@@ -214,19 +237,19 @@ txt = '''
     }
 '''
 
-f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_4135.cfg'), 'w', buffering = 0)
+f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_4135.cfg'), 'w')
 f_trc_cfg.write(txt)
-f_trc_cfg.close()
+flush_and_close( f_trc_cfg )
 
 # ##############################################################
 # S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
 # ##############################################################
 
-f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_4135.log'), "w", buffering = 0)
-f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_4135.err'), "w", buffering = 0)
+f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_4135.log'), "w")
+f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_4135.err'), "w")
 
 # ::: NB ::: DO NOT USE 'localhost:service_mgr' here! Use only local protocol:
-p_trace = Popen( [ fb_home+'fbsvcmgr', 'service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
+p_trace = Popen( [ context['fbsvcmgr_path'], 'service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
  
 
 time.sleep(1)
@@ -236,9 +259,9 @@ time.sleep(1)
 # ####################################################
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
-f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_4135.lst'), 'w', buffering = 0)
-subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
-f_trc_lst.close()
+f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_4135.lst'), 'w')
+subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
+flush_and_close( f_trc_lst )
 
 # !!! DO NOT REMOVE THIS LINE !!!
 time.sleep(1)
@@ -303,7 +326,7 @@ for i in range(0, PLANNED_ATTACH_CNT):
     f_list.append(sqllog)
 
 for i in range(len(f_list)):
-    p_isql=Popen( [ fb_home+"isql" , dsn, "-n", "-i", sqlatt.name ],
+    p_isql=Popen( [ context['isql_path'] , dsn, "-n", "-i", sqlatt.name ],
                   stdout=f_list[i], 
                   stderr=subprocess.STDOUT
                 )
@@ -327,21 +350,21 @@ dbshut_log=open( os.path.join(context['temp_directory'],'tmp_sht_4135.log'), 'w'
 dbshut_log.write("Call DB shutdown")
 dbshut_log.write("")
 dbshut_log.seek(0,2)
-subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_properties", "dbname", db_file, 
                  "prp_shutdown_mode", "prp_sm_full", "prp_force_shutdown", "0"],
                 stdout=dbshut_log, stderr=subprocess.STDOUT)
 
 dbshut_log.seek(0,2)
 
-subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_db_stats", "dbname", db_file, "sts_hdr_pages"],
                 stdout=dbshut_log, stderr=subprocess.STDOUT)
 
 # Kill all child ISQL processes:
 for i in range(len(f_list)):
   p_list[i].terminate()
-  f_list[i].close()
+  flush_and_close( f_list[i] )
 
 p_sweep.terminate()
 
@@ -352,14 +375,14 @@ p_sweep.terminate()
 # ####################################################
 if trcssn>0:
     fn_nul = open(os.devnull, 'w')
-    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
     time.sleep(1)
 
 p_trace.terminate()
-f_trc_log.close()
-f_trc_err.close()
+flush_and_close( f_trc_log )
+flush_and_close( f_trc_err )
 
 #---------------------------------------------------------
 
@@ -368,17 +391,17 @@ f_trc_err.close()
 dbshut_log.seek(0,2)
 dbshut_log.write("Return DB to online")
 dbshut_log.seek(0,2)
-subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_properties", "dbname", db_file, "prp_db_online"],
                 stdout=dbshut_log, stderr=subprocess.STDOUT)
 
 dbshut_log.seek(0,2)
-subprocess.call([fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_db_stats", "dbname", db_file, "sts_hdr_pages"],
                 stdout=dbshut_log, stderr=subprocess.STDOUT)
 
-dbshut_log.close()
-fbsvc_log.close()
+flush_and_close( dbshut_log )
+flush_and_close( fbsvc_log )
 
 
 # 4debug only, remove later:
@@ -419,17 +442,16 @@ sql_data='''\
 
 sqlchk=open( os.path.join(context['temp_directory'],'tmp_chk_4135.sql'), 'w')
 sqlchk.write( sql_data )
-sqlchk.close()
+flush_and_close( sqlchk )
 
 sqllog=open( os.path.join(context['temp_directory'],'tmp_chk_4135.log'), 'w')
-subprocess.call( [ fb_home+"isql" , dsn, "-pag", "99999", "-nod", "-i", sqlchk.name ],
+subprocess.call( [ context['isql_path'] , dsn, "-pag", "99999", "-nod", "-i", sqlchk.name ],
                   stdout=sqllog, stderr=subprocess.STDOUT
                )
-sqllog.close()
+flush_and_close( sqllog )
 
 with open(sqllog.name) as f:
     print( f.read() )
-f.close()
 
 allowed_patterns = [ 
     re.compile('EXECUTE_TRIGGER_FINISH', re.IGNORECASE)
@@ -467,10 +489,12 @@ print('Trace log parsing. Found triggers before sweep finish:', 'EXPECTED (equal
 
 #---------------------------------------------------------
 
-f_list += (dbshut_log, fbsvc_log, sqllog, sql_data_log, sql_data_cmd, sql_ddl_log, sql_ddl_cmd, sqlchk, sqlatt, f_trc_log, f_trc_err, f_trc_cfg, f_trc_lst)
-for i in range(len(f_list)):
-  os.remove(f_list[i].name)
+#CLEANUP
+#########
+time.sleep(1)
 
+cleanup( [i.name for i in f_list] )
+cleanup( [i.name for i in (dbshut_log, fbsvc_log, sqllog, sql_data_log, sql_data_cmd, sql_ddl_log, sql_ddl_cmd, sqlchk, sqlatt, f_trc_log, f_trc_err, f_trc_cfg, f_trc_lst) ] )
 
   """,
  'expected_stdout': 
