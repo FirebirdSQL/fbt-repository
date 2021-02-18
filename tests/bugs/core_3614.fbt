@@ -40,6 +40,33 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
 sql='''
     set planonly;
     with recursive
@@ -60,13 +87,13 @@ sql='''
 '''
 f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_3614.sql'), 'w')
 f_isql_cmd.write(sql)
-f_isql_cmd.close()
+flush_and_close( f_isql_cmd )
 
 f_isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_3614.log'), 'w')
 
-subprocess.call( ['isql', dsn, '-i', f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
+subprocess.call( [ context['isql_path'], dsn, '-i', f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
 
-f_isql_log.close()
+flush_and_close( f_isql_log	)
 
 # Let buffer be flushed on disk before we open log and parse it:
 time.sleep(1)
@@ -77,11 +104,8 @@ with open( f_isql_log.name,'r') as f:
     for line in f:
         if 'PLAN' in line and line.count( '(' ) - line.count( ')' ) != 0:
             print(  'Difference in opening vs close parenthesis: ' + str( line.count( '(' ) - line.count( ')' ) )  )
-f.close()
 
-os.remove(f_isql_cmd.name)
-os.remove(f_isql_log.name)
-
+cleanup( [i.name for i in (f_isql_cmd, f_isql_log)] )
   """,
  'expected_stdout': 
   """
