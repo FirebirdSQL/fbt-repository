@@ -47,7 +47,15 @@ import time
 import difflib
 from fdb import services
 
-def svc_get_fb_log( engine, fb_home, f_fb_log ):
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+db_file=db_conn.database_name
+engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+db_conn.close()
+
+#---------------------------------------------------
+def svc_get_fb_log( engine, f_fb_log ):
 
   import subprocess
 
@@ -56,7 +64,7 @@ def svc_get_fb_log( engine, fb_home, f_fb_log ):
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      get_firebird_log_key
                    ],
@@ -65,11 +73,34 @@ def svc_get_fb_log( engine, fb_home, f_fb_log ):
                  )
   return
 
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
 
-engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
-db_conn.close()
+#---------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
 
 # Get HOME dir of FB instance that is now checked.
 # We will concatenate this string with 'fbsvcmgr' command in order to choose 
@@ -81,15 +112,9 @@ db_conn.close()
 # via to FB services API by services.connect() - see FB tracker, PYFB-69
 # ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-#fb_home = services.connect(host='localhost').get_home_directory()
-
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
-
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_3328_fblog_before.txt'), 'w')
-svc_get_fb_log( engine, fb_home, f_fblog_before )
-f_fblog_before.close()
+svc_get_fb_log( engine, f_fblog_before )
+flush_and_close( f_fblog_before )
 
 sql_dml='''
   show version;
@@ -109,17 +134,15 @@ sql_dml='''
 
 f_client_sql = open( os.path.join(context['temp_directory'],'tmp_client_3328.sql'), 'w')
 f_client_sql.write(sql_dml)
-f_client_sql.close()
+flush_and_close( f_client_sql )
 
 f_client_log = open( os.path.join(context['temp_directory'],'tmp_client_3328.log'), 'w')
 p_client_dml=\
-subprocess.Popen( [fb_home+"isql", dsn, "-n", "-i", f_client_sql.name ],
+subprocess.Popen( [context['isql_path'], dsn, "-n", "-i", f_client_sql.name ],
                  stdout = f_client_log,
                  stderr = subprocess.STDOUT
                )
 time.sleep(2)
-
-db_file="$(DATABASE_LOCATION)bugs.core_3328.fdb"
 
 f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_and_online_3328.log'), 'w')
 
@@ -127,14 +150,14 @@ f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_and_
 #   Number of attachments: 1
 #   Number of databases: 1
 #   Database in use: C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3328.FDB
-subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "info_svr_db_info",
                  ],
                  stdout = f_shutdown_log,
                  stderr=subprocess.STDOUT
                )
 
-subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
                   "dbname", db_file,
                  ],
@@ -145,14 +168,14 @@ subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr",
 # Databases:
 #   Number of attachments: 0
 #   Number of databases: 0
-subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "info_svr_db_info",
                  ],
                  stdout = f_shutdown_log,
                  stderr=subprocess.STDOUT
                )
 
-subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "action_db_stats",
                   "dbname", db_file, "sts_hdr_pages"
                  ],
@@ -160,7 +183,7 @@ subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
                  stderr=subprocess.STDOUT
                )
 
-subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_db_online",
                   "dbname", db_file,
                  ],
@@ -168,7 +191,7 @@ subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr",
                  stderr = subprocess.STDOUT
                )
 
-subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "action_db_stats",
                   "dbname", db_file, "sts_hdr_pages"
                  ],
@@ -176,15 +199,15 @@ subprocess.call( [fb_home+"fbsvcmgr","localhost:service_mgr",
                  stderr=subprocess.STDOUT
                )
 
-f_shutdown_log.close()
+flush_and_close( f_shutdown_log )
 
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_3328_fblog_after.txt'), 'w')
-svc_get_fb_log( engine, fb_home, f_fblog_after )
-f_fblog_after.close()
+svc_get_fb_log( engine, f_fblog_after )
+flush_and_close( f_fblog_after )
 
 p_client_dml.terminate()
-f_client_log.close()
+flush_and_close( f_client_log )
 
 # Now we can compare two versions of firebird.log and check their difference.
 
@@ -200,7 +223,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_3328_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # New lines in firebird.log must |NOT| contain these:
 # ===
@@ -219,22 +242,15 @@ with open( f_shutdown_log.name,'r') as f:
       if ( 'unknown' in line.lower() or 'attributes' in line.lower() ):
         print(line)
         #or 'attachments' in line.lower() 
-f.close()
 
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         if line.startswith('+') and ('gds__detach' in line or 'lost' in line):
             print(line.upper())
-f.close()
 
 ###############################
 # Cleanup.
-
-f_list=[f_shutdown_log,f_client_sql,f_client_log,f_fblog_before,f_fblog_after,f_diff_txt]
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+cleanup( [i.name for i in (f_shutdown_log,f_client_sql,f_client_log,f_fblog_before,f_fblog_after,f_diff_txt) ] )
 
 # NB: temply removed following lines from expected_stdout,
 # see core-5413, "fbsvcmgr info_svr_db_info does not see active attachments and databases in use (CLASSIC only)"
