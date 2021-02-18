@@ -29,6 +29,37 @@ import subprocess
 import difflib
 from subprocess import Popen
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+engine = str(db_conn.engine_version)
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
 def svc_get_fb_log( engine, f_fb_log ):
 
   import subprocess
@@ -48,25 +79,7 @@ def svc_get_fb_log( engine, f_fb_log ):
 
   return
 
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-
-db_conn.close()
-
-# Obtain engine version:
-
-att1 = kdb.connect(dsn=dsn)
-cur1 = att1.cursor()
-
-cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in cur1:
-    engine = row[0]
-
-att1.close()
-
-
-fbb='' # 'C:/MIX/firebird/fb40sc/' # '/opt/fb40ss/bin/'
+#--------------------------------------------
 
 
 txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
@@ -151,14 +164,14 @@ if engine.startswith('2.5'):
     f_trccfg.write(txt25)
 else:
     f_trccfg.write(txt30)
-f_trccfg.close()
+flush_and_close( f_trccfg )
 
 # Get content of firebird.log BEFORE test:
 ##########################################
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_2981_fblog_before.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 # Starting trace session in new child process (async.):
 #######################################################
@@ -167,7 +180,7 @@ f_trclog=open( os.path.join(context['temp_directory'],'tmp_trace_2981.log'), 'w'
 f_trcerr=open( os.path.join(context['temp_directory'],'tmp_trace_2981.err'), 'w')
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_trace=Popen([fbb+"fbsvcmgr", "localhost:service_mgr",
+p_trace=Popen([context['fbsvcmgr_path'], "localhost:service_mgr",
                "action_trace_start",
                 "trc_cfg", f_trccfg.name],
                 stdout=f_trclog, 
@@ -266,35 +279,32 @@ select '*Лев Николаевич Толстой *
 '''
 f_utf8 = open( os.path.join(context['temp_directory'],'tmp_2981_run.sql'), 'w')
 f_utf8.write(localized_query)
-f_utf8.close()
+flush_and_close( f_utf8 )
 
 # RUN QUERY WITH NON-ASCII CHARACTERS
 #####################################
 
 f_run_log = open( os.path.join(context['temp_directory'],'tmp_2981_run.log'), 'w')
 f_run_err = open( os.path.join(context['temp_directory'],'tmp_2981_run.err'), 'w')
-subprocess.call( [fbb+"isql", dsn, "-q", "-i", f_utf8.name, '-ch', 'utf8' ],
+subprocess.call( [context['isql_path'], dsn, "-q", "-i", f_utf8.name, '-ch', 'utf8' ],
                  stdout = f_run_log,
                  stderr = f_run_err
                )
 
-f_run_log.close()
-f_run_err.close()
-
-# do NOT remove this otherwise trace log can contain only message about its start before being closed!
-time.sleep(1)
+flush_and_close( f_run_log )
+flush_and_close( f_run_err )
 
 #####################################################
 # Getting ID of launched trace session and STOP it:
 
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_2981.lst'), 'w')
-subprocess.call([fbb+"fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_list"],
                  stdout=f_trclst, 
                  stderr=subprocess.STDOUT
                )
-f_trclst.close()
+flush_and_close( f_trclst )
 
 trcssn=0
 with open( f_trclst.name,'r') as f:
@@ -306,25 +316,24 @@ with open( f_trclst.name,'r') as f:
                     trcssn=word
                 i=i+1
             break
-f.close()
 
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
 f_trclst=open(f_trclst.name,'a')
 f_trclst.seek(0,2)
-subprocess.call([fbb+"fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_stop",
                  "trc_id",trcssn],
                  stdout=f_trclst, stderr=subprocess.STDOUT
                )
-f_trclst.close()
+flush_and_close( f_trclst )
 
 # do NOT remove this delay: trase session can not be stopped immediatelly:
 time.sleep(2)
 
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
-f_trclog.close()
-f_trcerr.close()
+flush_and_close( f_trclog )
+flush_and_close( f_trcerr )
 
 
 # Get content of firebird.log AFTER test:
@@ -332,7 +341,7 @@ f_trcerr.close()
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_2981_fblog_after.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 # STDERR for ISQL (that created DB) and trace session - they both must be EMPTY:
 #################
@@ -343,7 +352,6 @@ for i in range(len(f_list)):
        with open( f_name,'r') as f:
            for line in f:
                print("Unexpected STDERR, file "+f_name+": "+line)
-       f.close()
 
 # DIFFERENCE in the content of firebird.log should be EMPTY:
 ####################
@@ -360,21 +368,18 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2981_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         print("Unexpected DIFF in firebird.log: "+line)
-f.close()
 
-#####################################################################
+
+
 # Cleanup:
+###########
 time.sleep(1)
-
-f_list=[f_run_log, f_run_err, f_trccfg, f_trclst, f_trcerr, f_fblog_before,f_fblog_after, f_diff_txt, f_trclog, f_utf8]
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+cleanup( [i.name for i in (f_run_log, f_run_err, f_trccfg, f_trclst, f_trcerr, f_fblog_before,f_fblog_after, f_diff_txt, f_trclog, f_utf8)] )
         
   """,
  'expected_stdout': 
