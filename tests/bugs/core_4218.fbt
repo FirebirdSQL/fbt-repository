@@ -19,6 +19,7 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+#db_check=db_conn.database_name
 db_conn.close()
 
 create_user_ddl=\
@@ -29,8 +30,7 @@ create_user_ddl=\
 
 runProgram('isql',[dsn,'-q'],create_user_ddl)
 
-db_check='$(DATABASE_LOCATION)tmp.core_4218.fdb'
-
+db_check = os.path.join(context['temp_directory'],'tmp_check_4218.fdb')
 if os.path.isfile(db_check):
     os.remove(db_check)
 
@@ -56,12 +56,11 @@ sqlddl.write(create_db_sql)
 sqlddl.close()
 
 sqllog=open( os.path.join(context['temp_directory'],'tmp_create_db_4218.log'), 'w')
-subprocess.call(["isql", "-q", "-i", sqlddl.name],stdout=sqllog, stderr=subprocess.STDOUT)
+subprocess.call([ context['isql_path'], "-q", "-i", sqlddl.name],stdout=sqllog, stderr=subprocess.STDOUT)
 sqllog.close()
 
 with open(sqllog.name) as f:
   print( f.read() )
-f.close()
 
 time.sleep(1)
 
