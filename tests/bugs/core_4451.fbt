@@ -31,10 +31,37 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-
-fdb_file='$(DATABASE_LOCATION)bugs.core_4451.fdb'
-
+fdb_file=db_conn.database_name
 db_conn.close()
+
+
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
+
 
 #####################################################################
 # Prepare config for trace session that will be launched by call of FBSVCMGR:
@@ -51,24 +78,21 @@ txt = '''\
         include_filter=%(from|join)[[:whitespace:]]test%
     }
 '''
-trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_4451.cfg'), 'w')
-trc_cfg.write(txt)
-trc_cfg.close()
-trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_4451.log'), 'w')
-trc_log.close()
-trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_4451.lst'), 'w')
-trc_lst.close()
+f_trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_4451.cfg'), 'w')
+f_trccfg.write(txt)
+flush_and_close( f_trccfg )
 
 #####################################################################
 # Async. launch of trace session using FBSVCMGR action_trace_start:
 
-trc_log=open(trc_log.name, "w")
+f_trclog=open( os.path.join(context['temp_directory'],'tmp_trace_4451.log'), 'w')
+
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
+p_svcmgr = Popen( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                     "action_trace_start",
-                    "trc_cfg", trc_cfg.name
+                    "trc_cfg", f_trccfg.name
                   ],
-                  stdout=trc_log, 
+                  stdout=f_trclog, 
                   stderr=subprocess.STDOUT
                 )
 
@@ -79,12 +103,12 @@ time.sleep(2)
 
 # Determine active trace session ID (for further stop):
 
-trc_lst=open(trc_lst.name, "w")
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_4451.lst'), 'w')
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_list"],
-                 stdout=trc_lst, stderr=subprocess.STDOUT
+                 stdout=f_trclst, stderr=subprocess.STDOUT
                )
-trc_lst.close()
+flush_and_close( f_trclst )
 
 # Session ID: 5 
 #   user:   
@@ -92,7 +116,7 @@ trc_lst.close()
 #   flags: active, trace 
 
 trcssn=0
-with open( trc_lst.name,'r') as f:
+with open( f_trclst.name,'r') as f:
     for line in f:
         i=1
         if 'Session ID' in line:
@@ -106,7 +130,7 @@ with open( trc_lst.name,'r') as f:
 # We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
 if trcssn==0:
     print("Error parsing trace session ID.")
-    trc_log.close()
+    flush_and_close( f_trclog )
 else:
     #####################################################################
 
@@ -132,37 +156,34 @@ else:
 
     # Stop trace session:
 
-    trc_lst=open(trc_lst.name, "a")
-    trc_lst.seek(0,2)
-    subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+    f_trclst=open(f_trclst.name, "a")
+    f_trclst.seek(0,2)
+    subprocess.call( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                        "action_trace_stop",
                        "trc_id",trcssn
                      ],
-                     stdout=trc_lst, 
+                     stdout=f_trclst, 
                      stderr=subprocess.STDOUT
                    )
-    trc_lst.close()
+    flush_and_close( f_trclst )
 
     p_svcmgr.terminate()
-    trc_log.close()
+    flush_and_close( f_trclog )
 
     # do NOT remove this delay:
     time.sleep(1)
 
     show_line = 0
-    with open(trc_log.name) as f:
+    with open(f_trclog.name) as f:
         for line in f:
             show_line = ( show_line + 1 if ('^' * 79) in line or show_line>0 else show_line )
             if show_line > 1:
                 print(line)
 
-# do NOT remove this delay:
-time.sleep(1)
-
 # cleanup:
-f_list = (trc_lst, trc_cfg, trc_log)
-for f in f_list:
-     os.remove(f.name)
+##########
+time.sleep(1)
+cleanup( [i.name for i in (f_trclst, f_trccfg, f_trclog) ] )
 
   """,
  'expected_stdout':
