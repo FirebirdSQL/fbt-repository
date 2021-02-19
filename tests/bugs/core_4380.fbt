@@ -49,7 +49,7 @@ f_blob_sql.close()
 
 f_blob_log = open( os.path.join(context['temp_directory'],'tmp_blob_4380.log'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_blob_sql.name],
+subprocess.call( [ context['isql_path'], dsn, "-i", f_blob_sql.name],
                  stdout = f_blob_log,
                  stderr = subprocess.STDOUT
                )
