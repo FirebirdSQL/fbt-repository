@@ -27,6 +27,31 @@ import time
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+
+#--------------------------------------------
+
 
 TAGS_COUNT=100000
 #^^^^^^^^^^^^^^^^--- TAGS COUNT: THRESHOLD
@@ -64,21 +89,20 @@ commit;
 f_chk_sql.write(sql_check)
 f_chk_sql.write('commit;\\n')
 
-
-f_chk_sql.close()
+flush_and_close( f_chk_sql )
 
 
 f_tags_log = open( os.path.join(context['temp_directory'],'tmp_tags_4768.log'), 'w')
 f_tags_err = open( os.path.join(context['temp_directory'],'tmp_tags_4768.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-q", "-i", f_chk_sql.name],
+subprocess.call( [ context['isql_path'], dsn, "-q", "-i", f_chk_sql.name],
                  stdout = f_tags_log,
                  stderr = f_tags_err
                )
 
-f_tags_log.close()
-f_tags_err.close()
-time.sleep(1)
+flush_and_close( f_tags_log )
+flush_and_close( f_tags_err )
+
 with open(f_tags_log.name) as f:
     for line in f:
         print(line)
@@ -90,12 +114,7 @@ with open(f_tags_err.name) as f:
 # CLEANUP:
 ##########
 time.sleep(1)
-
-f_list=( f_chk_sql, f_tags_log, f_tags_err )
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
+cleanup( [i.name for i in ( f_chk_sql, f_tags_log, f_tags_err ) ] )
   """,
  'expected_stdout': 
   """
