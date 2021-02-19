@@ -5,7 +5,7 @@
 'title': "Server ignores asynchronous (monitoring or cancellation) requests while preparing a query with lot of windowed functions",
 'description':
  """
-    Preparing stage of query from aux. file ("core_4292.sql") will last lot of time even on power host.
+    Preparing stage of test query will last lot of time even on power host.
     We launch separate (child) process with ISQL and allow him to start preparing this query during several
     seconds. Then we launch second child process with ISQL and try to kill first one.
     Before this ticket was fixed it was NOT possible neither to cancel it by using MON$ATTACHMENTS nor even
@@ -35,25 +35,191 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
-hang_sql=open(os.path.join(context['files_location'],'core_4292.sql'),'r')
-hang_sql.close()
+#-----------------------------------
 
-hang_log=open( os.path.join(context['temp_directory'],'tmp_core_4292.log'), 'w')
-hang_log.write('')
-hang_log.close()
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
 
-hang_log=open(hang_log.name, "w")
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
+heavy_sql = \
+'''
+    set bail on;
+    set list on;
+    set count on;
+    with a as (
+        select rf.rdb$field_id fid, rr.rdb$relation_id rid, rr.rdb$relation_name rnm
+        from rdb$relation_fields rf join rdb$relations rr on rf.rdb$relation_name=rr.rdb$relation_name
+    )
+    ,b as (
+        select fid, rnm, rid, iif(rid is null, 1, r) r
+        from (--f
+            select fid, rnm, rid,
+                    iif(lag(fid) over(partition by rid order by fid) is not null
+                        and lag(r) over(partition by rid order by fid) >= r
+                        , r + 1, r) r
+            from (--e
+                select fid, rnm, rid,
+                        iif(lag(fid) over(partition by rid order by fid) is not null
+                            and lag(r) over(partition by rid order by fid) >= r
+                            , r + 1, r) r
+                from (--d
+                    select fid, rnm, rid,
+                            iif(lag(fid) over(partition by rid order by fid) is not null
+                                and lag(r) over(partition by rid order by fid) >= r
+                                , r + 1, r) r
+                    from (--c
+                        select fid, rnm, rid,
+                                iif(lag(fid) over(partition by rid order by fid) is not null
+                                    and lag(r) over(partition by rid order by fid) >= r
+                               ,r + 1, r) r
+                        from (--b
+                            select fid, rnm, rid,
+                                    iif( lag(fid) over(partition by rid order by fid) is not null
+                                          and lag(r) over(partition by rid order by fid) >= r
+                                         ,r + 1, r) r
+                            from (
+                                    select a.*, 1 r
+                                    from a
+                                  ) a
+                            ) b
+                      ) c
+                  ) d
+              ) e
+          ) f
+    )
+    -- select max(r) r from b group by fid having max(r) < 6; -- ok
+
+    ,c
+    as (
+        select fid, rnm, rid, iif(rid is null, 1, r) r
+        from (--f
+            select fid, rnm, rid,
+                    iif(lag(fid) over(partition by rid order by fid) is not null
+                         and lag(r) over(partition by rid order by fid) >= r
+                        , r + 1, r) r
+            from (--e
+                select fid, rnm, rid,
+                        iif(lag(fid) over(partition by rid order by fid) is not null
+                             and lag(r) over(partition by rid order by fid) >= r
+                            , r + 1, r) r
+                from (--d
+                    select fid, rnm, rid,
+                            iif(lag(fid) over(partition by rid order by fid) is not null
+                                 and lag(r) over(partition by rid order by fid) >= r
+                                , r + 1, r) r
+                    from (--c
+                        select fid, rnm, rid,
+                                iif(lag(fid) over(partition by rid order by fid) is not null
+                                     and lag(r) over(partition by rid order by fid) >= r
+                               ,r + 1, r) r
+                        from (--b
+                            select fid, rnm, rid,
+                                    iif( lag(fid) over(partition by rid order by fid) is not null
+                                          and lag(r) over(partition by rid order by fid) >= r
+                                         ,r + 1, r) r
+                            from (
+                                    select fid, rnm, rid, max(r) over(partition by fid) r from b
+                                  ) a
+                            ) b
+                      ) c
+                  ) d
+              ) e
+          ) f
+    )
+    -- select * from c -- ok
+
+    ,d
+    as (
+        select fid, rnm, rid, iif(rid is null, 1, r) r
+        from (--f
+            select fid, rnm, rid,
+                    iif( lag(fid) over(partition by rid order by fid) is not null
+                         and lag(r) over(partition by rid order by fid) >= r
+                        , r + 1, r) r
+            from (--e
+                select fid, rnm, rid,
+                        iif( lag(fid) over(partition by rid order by fid) is not null
+                             and lag(r) over(partition by rid order by fid) >= r
+                            , r + 1, r) r
+                from (--d
+                    select fid, rnm, rid,
+                            iif( lag(fid) over(partition by rid order by fid) is not null
+                                 and lag(r) over(partition by rid order by fid) >= r
+                                , r + 1, r) r
+                    from (--c
+                        select fid, rnm, rid,
+                                iif( lag(fid) over(partition by rid order by fid) is not null
+                                     and lag(r) over(partition by rid order by fid) >= r
+                               ,r + 1, r) r
+                        from (--b
+                            select fid, rnm, rid,
+                                    iif( lag(fid) over(partition by rid order by fid) is not null
+                                          and lag(r) over(partition by rid order by fid) >= r
+                                         ,r + 1, r) r
+                            from (
+                                    select fid, rnm, rid, max(r) over(partition by fid) r from c
+                                  ) a
+                            ) b
+                      ) c
+                  ) d
+              ) e
+          ) f
+    )
+    select * from d rows 0;
+    set count off;
+    select 'WORKER FINISHED TOO FAST! DELAY IN TEST MUST BE REDUCED!' msg from rdb$database;
+
+'''
+f_worker_sql=open(os.path.join(context['temp_directory'],'tmp_worker_4292.sql'),'w')
+f_worker_sql.write(heavy_sql)
+flush_and_close( f_worker_sql )
+
+f_worker_log=open( os.path.join(context['temp_directory'],'tmp_worker_4292.log'), 'w')
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql", dsn, "-i", hang_sql.name], stdout=hang_log, stderr=subprocess.STDOUT )
+p_worker = Popen([ context['isql_path'], dsn, "-i", f_worker_sql.name], stdout=f_worker_log, stderr=subprocess.STDOUT )
 
 time.sleep(4)
 
-script=\
+killer_sql=\
 '''
    set list on;
    set count on;
-   commit;
+   /*
+   select a.*, s.*
+   from mon$attachments a
+   left join mon$statements s on a.mon$attachment_id = s.mon$attachment_id
+   where
+       a.mon$attachment_id <> current_connection
+       and a.mon$system_flag is distinct from 1
+   ;
+   */
+   select count(*) as "Found worker ?"
+   from mon$attachments a
+   where
+       a.mon$attachment_id <> current_connection
+       and a.mon$system_flag is distinct from 1
+   ;
 
    delete from mon$attachments
    where
@@ -77,20 +243,14 @@ script=\
 #   isc_att_shut_engine: Engine is shutdown
 
 
-kill_sql=open( os.path.join(context['temp_directory'],'tmp_kill_4292.sql'), 'w')
-kill_sql.write(script)
-kill_sql.close()
-
-
-kill_log=open( os.path.join(context['temp_directory'],'tmp_kill_4292.log'), 'w')
-kill_log.write('')
-kill_log.close()
-
-kill_log=open(kill_log.name, "w")
+f_killer_sql=open( os.path.join(context['temp_directory'],'tmp_killer_4292.sql'), 'w')
+f_killer_sql.write(killer_sql)
+flush_and_close( f_killer_sql )
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 
-p_kill = Popen(["isql" , dsn, "-i" , kill_sql.name], stdout=kill_log, stderr=subprocess.STDOUT )
+f_killer_log=open( os.path.join(context['temp_directory'],'tmp_killer_4292.log'), 'w')
+p_killer = Popen([context['isql_path'] , dsn, "-i" , f_killer_sql.name], stdout=f_killer_log, stderr=subprocess.STDOUT )
 
 # Make delay at least on 6 seconds after that point.
 # Otherwise temp database will not be removed and we get:
@@ -100,37 +260,40 @@ p_kill = Popen(["isql" , dsn, "-i" , kill_sql.name], stdout=kill_log, stderr=sub
 
 time.sleep(6)
 
-p_hang.terminate()
-hang_log.close()
+p_worker.terminate()
+flush_and_close( f_worker_log )
 
-p_kill.terminate()
-kill_log.close()
+p_killer.terminate()
+flush_and_close( f_killer_log )
 
-with open( hang_log.name,'r') as f:
-    print( f.read())
-f.close()
+with open( f_killer_log.name,'r') as f:
+    for line in f:
+        if line.split():
+            print('KILLER LOG: ' + line)
 
-with open( kill_log.name,'r') as f:
-    print( f.read() )
-f.close()
+with open( f_worker_log.name,'r') as f:
+    for line in f:
+        if line.split():
+            print('WORKER LOG: ' + line)
 
-# Wait again! Otherwise get Windows Error 32 (access denied) because log files are still opened.
+
+# CLEANUP
+#########
 time.sleep(1)
+cleanup( [i.name for i in (f_worker_sql,f_worker_log,f_killer_sql,f_killer_log)] )
 
-# do NOT! >>> os.remove(hang_sql.name)
-os.remove(kill_sql.name)
-os.remove(kill_log.name)
-os.remove(hang_log.name)
   """,
  'expected_stdout': 
   """
-    Statement failed, SQLSTATE = 08003
-    connection shutdown
-    DELETED_MON_ATT_ID              1
-    DELETED_MON_USER                SYSDBA
-    DELETED_MON_PROTOCOL            tcp
-    DELETED_MON_PROCESS             isql
-    DELETED_MON_SYS_FLAG            0
+    KILLER LOG: Found worker ?                  1
+    KILLER LOG: Records affected: 1
+    KILLER LOG: DELETED_MON_ATT_ID              1
+    KILLER LOG: DELETED_MON_USER                SYSDBA
+    KILLER LOG: DELETED_MON_PROTOCOL            tcp
+    KILLER LOG: DELETED_MON_PROCESS             isql
+    KILLER LOG: DELETED_MON_SYS_FLAG            0
+    WORKER LOG: Statement failed, SQLSTATE = 08003
+    WORKER LOG: connection shutdown
   """,
  'expected_stderr': 
   """
@@ -138,6 +301,7 @@ os.remove(hang_log.name)
   'substitutions': [
       ('.*line.*',''),
       ('.*Killed by database administrator.*', ''),
+      ('[\t ]+',' ')
    ]
 }
 ]
