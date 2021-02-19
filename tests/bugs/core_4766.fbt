@@ -48,7 +48,26 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_db = db_conn.database_name
+db_conn.close()
+
 #--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
@@ -56,22 +75,18 @@ def cleanup( f_names_list ):
             os.remove( f_names_list[i] )
 #--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-db_conn.close()
-
 f_sql=open(os.path.join(context['files_location'],'core_4766.sql'),'r')
 sql_text = f_sql.read()
 f_sql.close()
 
 for current_auth_plugin in ('Srp', 'Legacy_UserManager'):
-    f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_core_4766.' + current_auth_plugin[:3] + '.sql'), 'w', buffering = 0)
+    f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_core_4766.' + current_auth_plugin[:3] + '.sql'), 'w')
     f_sql_chk.write( sql_text % dict(globals(), **locals()) )
-    f_sql_chk.close()
+    flush_and_close( f_sql_chk )
 
-    f_sql_log = open( '.'.join( (os.path.splitext( f_sql_chk.name )[0], 'log') ), 'w', buffering = 0)
-    subprocess.call( [ fb_home + 'isql', '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
-    f_sql_log.close()
+    f_sql_log = open( '.'.join( (os.path.splitext( f_sql_chk.name )[0], 'log') ), 'w')
+    subprocess.call( [ context['isql_path'], '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
+    flush_and_close( f_sql_log )
 
     with open( f_sql_log.name,'r') as f:
         for line in f:
@@ -138,17 +153,33 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_db = db_conn.database_name
+db_conn.close()
+
 #--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
        if os.path.isfile( f_names_list[i]):
             os.remove( f_names_list[i] )
-#--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-db_conn.close()
+#--------------------------------------------
 
 f_sql=open(os.path.join(context['files_location'],'core_4766.sql'),'r')
 sql_text = f_sql.read()
@@ -159,13 +190,13 @@ f_sql.close()
 # Sent letter to dimitr and alex, 05.01.2020 22:00.
 
 for current_auth_plugin in ('Legacy_UserManager',):
-    f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_core_4766.' + current_auth_plugin[:3] + '.sql'), 'w', buffering = 0)
+    f_sql_chk = open( os.path.join(context['temp_directory'],'tmp_core_4766.' + current_auth_plugin[:3] + '.sql'), 'w')
     f_sql_chk.write( sql_text % dict(globals(), **locals()) )
-    f_sql_chk.close()
+    flush_and_close( f_sql_chk )
 
-    f_sql_log = open( '.'.join( (os.path.splitext( f_sql_chk.name )[0], 'log') ), 'w', buffering = 0)
-    subprocess.call( [ fb_home + 'isql', '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
-    f_sql_log.close()
+    f_sql_log = open( '.'.join( (os.path.splitext( f_sql_chk.name )[0], 'log') ), 'w')
+    subprocess.call( [ context['isql_path'], '-q', '-i', f_sql_chk.name ], stdout = f_sql_log, stderr = subprocess.STDOUT)
+    flush_and_close( f_sql_log )
 
     with open( f_sql_log.name,'r') as f:
         for line in f:
