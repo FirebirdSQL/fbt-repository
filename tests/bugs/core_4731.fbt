@@ -72,37 +72,55 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_db = db_conn.database_name
+db_conn.close()
+
 dba_privileged_name = 'tmp_c4731_cooldba'
 non_privileged_name = 'tmp_c4731_manager'
 
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
 #--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
        if os.path.isfile( f_names_list[i]):
             os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
 #--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-db_conn.close()
 
 f_sql=open(os.path.join(context['files_location'],'core_4731.sql'),'r')
 sql_for_prepare = f_sql.read()
 f_sql.close()
 
-f_pre_sql = open( os.path.join(context['temp_directory'],'tmp_core_4731_pre.sql'), 'w', buffering = 0)
+f_pre_sql = open( os.path.join(context['temp_directory'],'tmp_core_4731_pre.sql'), 'w')
 f_pre_sql.write( sql_for_prepare % dict(globals(), **locals()) )
-f_pre_sql.close()
+flush_and_close( f_pre_sql )
 
-f_pre_log = open( '.'.join( (os.path.splitext( f_pre_sql.name )[0], 'log') ), 'w', buffering = 0)
-f_pre_err = open( '.'.join( (os.path.splitext( f_pre_sql.name )[0], 'err') ), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', dsn, '-q', '-i', f_pre_sql.name ], stdout = f_pre_log, stderr = f_pre_err)
-f_pre_log.close()
-f_pre_err.close()
+f_pre_log = open( '.'.join( (os.path.splitext( f_pre_sql.name )[0], 'log') ), 'w')
+f_pre_err = open( '.'.join( (os.path.splitext( f_pre_sql.name )[0], 'err') ), 'w')
+subprocess.call( [ context['isql_path'], dsn, '-q', '-i', f_pre_sql.name ], stdout = f_pre_log, stderr = f_pre_err)
+flush_and_close( f_pre_log )
+flush_and_close( f_pre_err )
 
-runProgram( 'gfix',[dsn, '-shut','full','-force','0'] )
-runProgram( 'gfix',[dsn, '-online'] )
+runProgram( context['gfix_path'],[dsn, '-shut','full','-force','0'] )
+runProgram( context['gfix_path'],[dsn, '-online'] )
 
 sql_run=\
 '''
@@ -189,15 +207,15 @@ sql_run=\
 	commit;
 ''' % dict(globals(), **locals())
 
-f_sql_run = open( os.path.join(context['temp_directory'],'tmp_core_4731_run.sql'), 'w', buffering = 0)
+f_sql_run = open( os.path.join(context['temp_directory'],'tmp_core_4731_run.sql'), 'w')
 f_sql_run.write( sql_run % dict(globals(), **locals()) )
-f_sql_run.close()
+flush_and_close( f_sql_run )
 
-f_run_log = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'log') ), 'w', buffering = 0)
-f_run_err = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'err') ), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', dsn, '-q', '-i', f_sql_run.name ], stdout = f_run_log, stderr = f_run_err)
-f_run_log.close()
-f_run_err.close()
+f_run_log = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'log') ), 'w')
+f_run_err = open( '.'.join( (os.path.splitext( f_sql_run.name )[0], 'err') ), 'w')
+subprocess.call( [ context['isql_path'], dsn, '-q', '-i', f_sql_run.name ], stdout = f_run_log, stderr = f_run_err)
+flush_and_close( f_run_log )
+flush_and_close( f_run_err )
 
 # Check results:
 # ==============
