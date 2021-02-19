@@ -52,16 +52,48 @@ from subprocess import Popen
 import difflib
 import re
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_file=db_conn.database_name
+engine=str(db_conn.engine_version)
+db_conn.close()
+
+#-----------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    os.fsync(file_handle.fileno())
+
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if os.path.isfile( f_names_list[i]):
+            os.remove( f_names_list[i] )
+            if os.path.isfile( f_names_list[i]):
+                print('ERROR: can not remove file ' + f_names_list[i])
+
+#--------------------------------------------
+
 def svc_get_fb_log( engine, f_fb_log ):
 
-  import subprocess
+  global subprocess
 
   if engine.startswith('2.5'):
       get_firebird_log_key='action_get_ib_log'
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     get_firebird_log_key
                   ],
@@ -69,24 +101,13 @@ def svc_get_fb_log( engine, f_fb_log ):
                  )
   return
 
-cur1 = db_conn.cursor()
-cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in cur1:
-    engine = row[0]
-
-db_conn.close()
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-
-
-db_file="$(DATABASE_LOCATION)bugs.core_4337.fdb"
+#--------------------------------------------
 
 # Change FW to OFF in order to speed up initial data filling:
 ##################
 
 fn_nul = open(os.devnull, 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_write_mode", "prp_wm_async",
                   "dbname", db_file ],
                   stdout = fn_nul,
@@ -133,7 +154,7 @@ sql_dml=\
 '''
 
 f_work_sql.write(sql_dml)
-f_work_sql.close()
+flush_and_close( f_work_sql )
 
 f_work_log=open( os.path.join(context['temp_directory'],'tmp_work_4337.log'), 'w')
 f_work_err=open( os.path.join(context['temp_directory'],'tmp_work_4337.err'), 'w')
@@ -142,8 +163,8 @@ subprocess.call( ["isql", dsn, "-i", f_work_sql.name],
                   stderr = f_work_err
                 )
 
-f_work_log.close()
-f_work_err.close()
+flush_and_close( f_work_log )
+flush_and_close( f_work_err )
 
 # REDUCE number of cache buffers in DB header in order to sweep make its work as long as possible
 ################################
@@ -154,7 +175,7 @@ temply disabled, see CORE-5385:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 fn_nul = open(os.devnull, 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_page_buffers", "100",
                   "dbname", db_file ],
                   stdout = fn_nul,
@@ -168,7 +189,7 @@ fn_nul.close()
 ##################
 
 fn_nul = open(os.devnull, 'w')
-subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_write_mode", "prp_wm_sync",
                   "dbname", db_file ],
                   stdout = fn_nul,
@@ -176,11 +197,9 @@ subprocess.call([ "fbsvcmgr", "localhost:service_mgr",
                )
 fn_nul.close()
 
-
-
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4337_fblog_before.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 
 trc30_cfg = '''# Trace config, format for 3.0. Generated auto, do not edit!
@@ -200,7 +219,7 @@ services {
 
 f_trccfg=open( os.path.join(context['temp_directory'],'tmp_trace_4337.cfg'), 'w')
 f_trccfg.write(trc30_cfg)
-f_trccfg.close()
+flush_and_close( f_trccfg )
 
 # Starting trace session in new child process (async.):
 #######################################################
@@ -208,7 +227,7 @@ f_trccfg.close()
 f_trclog=open( os.path.join(context['temp_directory'],'tmp_trace_4337.log'), 'w')
 f_trcerr=open( os.path.join(context['temp_directory'],'tmp_trace_4337.err'), 'w')
 
-p_trace=Popen(["fbsvcmgr", "localhost:service_mgr",
+p_trace=Popen([context['fbsvcmgr_path'], "localhost:service_mgr",
                "action_trace_start",
                 "trc_cfg", f_trccfg.name],
                 stdout=f_trclog, 
@@ -261,11 +280,11 @@ sql_mon='''
 
 f_wait_sql=open( os.path.join(context['temp_directory'],'tmp_wait_4337.sql'), 'w')
 f_wait_sql.write(sql_mon)
-f_wait_sql.close()
+flush_and_close( f_wait_sql )
 
 f_wait_log=open( os.path.join(context['temp_directory'],'tmp_wait_4337.log'), 'w')
 f_wait_err=open( os.path.join(context['temp_directory'],'tmp_wait_4337.err'), 'w')
-p_isql = subprocess.Popen( ["isql", dsn, "-i", f_wait_sql.name],
+p_isql = subprocess.Popen( [ context['isql_path'], dsn, "-i", f_wait_sql.name],
                   stdout = f_wait_log,
                   stderr = f_wait_err
                 )
@@ -278,7 +297,7 @@ p_isql = subprocess.Popen( ["isql", dsn, "-i", f_wait_sql.name],
 f_gfix_log=open( os.path.join(context['temp_directory'],'tmp_gfix_4337.log'), 'w')
 f_gfix_log.write('Point before GFIX -SWEEP.'+os.linesep)
 f_gfix_log.seek(0,2)
-subprocess.call( ["gfix", dsn, "-sweep"],
+subprocess.call( [ context['gfix_path'], dsn, "-sweep"],
                   stdout = f_gfix_log,
                   stderr = subprocess.STDOUT
                 )
@@ -293,9 +312,10 @@ f_gfix_log.write('Point after GFIX -SWEEP.')
 time.sleep(2)
 
 p_isql.terminate()
-f_wait_log.close()
-f_wait_err.close()
-f_gfix_log.close()
+
+flush_and_close( f_wait_log )
+flush_and_close( f_wait_err )
+flush_and_close( f_gfix_log )
 
 
 #####################################################
@@ -304,7 +324,7 @@ f_gfix_log.close()
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_4337.lst'), 'w')
 
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_list"],
                  stdout=f_trclst, stderr=subprocess.STDOUT
                )
@@ -320,23 +340,20 @@ with open( f_trclst.name,'r') as f:
                     trcssn=word
                 i=i+1
             break
-f.close()
 
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
 f_trclst=open(f_trclst.name,'a')
 f_trclst.seek(0,2)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_stop",
                  "trc_id",trcssn],
                  stdout=f_trclst, stderr=subprocess.STDOUT
                )
-f_trclst.close()
-
-time.sleep(2)
+flush_and_close( f_trclst )
 
 p_trace.terminate()
-f_trclog.close()
-f_trcerr.close()
+flush_and_close( f_trclog )
+flush_and_close( f_trcerr )
 
 # Make DB shutdown and bring online because some internal server process still can be active!
 # If we skip this step than runtime error related to dropping test DB can occur!
@@ -346,7 +363,7 @@ f_db_reset_log=open( os.path.join(context['temp_directory'],'tmp_reset_4337.log'
 
 f_db_reset_log.write('Point before DB shutdown.'+os.linesep)
 f_db_reset_log.seek(0,2)
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
                   "dbname", db_file,
                  ],
@@ -355,7 +372,7 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
                )
 f_db_reset_log.write(os.linesep+'Point after DB shutdown.'+os.linesep)
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_db_online",
                   "dbname", db_file,
                  ],
@@ -364,7 +381,7 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
                )
 
 f_db_reset_log.write(os.linesep+'Point after DB online.'+os.linesep)
-f_db_reset_log.close()
+flush_and_close( f_db_reset_log )
 
 
 # Get content of firebird.log AFTER test finish.
@@ -372,11 +389,11 @@ f_db_reset_log.close()
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4337_fblog_after.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 # _!_!_!_!_!_!_!_!_!_! do NOT reduce this delay: firebird.log get new messages NOT instantly !_!_!_!_!_!_!_!_
 # Currently firebird.log can stay with OLD content if heavy concurrent workload exists on the same host!
-time.sleep(5)
+# ??? DISABLED 18.02.2021, BUT STILL IN DOUBT...  time.sleep(5)
 
 # Compare firebird.log versions BEFORE and AFTER this test:
 ######################
@@ -393,7 +410,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4337_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # Check logs:
 #############
@@ -417,7 +434,6 @@ with open( f_gfix_log.name,'r') as f:
     for line in f:
         if line.strip():
             print( line.upper() )
-f.close()
 
 
 # 2. Log of ISQL that was launched to kill 'GFIX -SWEEP' attachment should contain:
@@ -431,7 +447,6 @@ with open( f_wait_log.name,'r') as f:
     for line in f:
         if line.strip():
             print( 'ISQL LOG: ' + line.upper() )
-f.close()
 
 
 # 3. Log of TRACE should contain 'SWEEP_FAILED' only 'DETACH_DATABASE' event after this line:
@@ -462,9 +477,8 @@ with open( f_trclog.name,'r') as f:
             print( 'TRACE: ATTACH DETECTED AFTER SWEEP FAILED! ' )
             print( 'TRACE_LOG:' + (' '.join(line.split()).upper()) )
 
-f.close()
-# Output should contain only ONE message with 'SWEEP_FAILED', and NO any rows related to ATTACH_DATABASE.
 
+# Output should contain only ONE message with 'SWEEP_FAILED', and NO any rows related to ATTACH_DATABASE.
 
 # 4. Difference between old and current firebird.log should be like this:
 '''
@@ -493,32 +507,22 @@ with open( f_diff_txt.name,'r') as f:
         if line.startswith('+'):
             if  'sweep'.upper() in line.upper() or 'connection'.upper() in line.upper() or pattern.match(line.upper()):
                 print( 'FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
-f.close()
-
 
 # 6. ERROR logs of ISQL for initial data filling should be EMPTY:
 with open( f_work_err.name,'r') as f:
     for line in f:
         print('UNEXPECTED ERROR IN ISQL WHEN DID INITIAL DATA FILLING: ' + line)
-f.close()
 
 # 7. ERROR logs of ISQL for initial data filling should be EMPTY:
 with open( f_wait_err.name,'r') as f:
     for line in f:
         print('UNEXPECTED ERROR IN ISQL WHEN MADE DELAY AND WAITING: ' + line)
-f.close()
 
-time.sleep(1)
 
 # Cleanup.
 ###############################
-
-f_list=(f_work_sql,f_work_log,f_work_err,f_fblog_before,f_trccfg,f_trclog,f_trcerr,f_wait_sql,f_wait_log,f_wait_err,f_gfix_log,f_trclst,f_db_reset_log,f_fblog_after,f_diff_txt)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+time.sleep(1)
+cleanup( [i.name for i in (f_work_sql,f_work_log,f_work_err,f_fblog_before,f_trccfg,f_trclog,f_trcerr,f_wait_sql,f_wait_log,f_wait_err,f_gfix_log,f_trclst,f_db_reset_log,f_fblog_after,f_diff_txt) ] )
   """,
  'expected_stdout':
   """
