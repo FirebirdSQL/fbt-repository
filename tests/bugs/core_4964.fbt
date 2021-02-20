@@ -73,18 +73,43 @@ os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
 
 #--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
 #--------------------------------------------
 
 def svc_get_fb_log( f_fb_log ):
 
   global subprocess
 
-  subprocess.call( [ "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
@@ -92,39 +117,26 @@ def svc_get_fb_log( f_fb_log ):
                  )
   return
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+#--------------------------------------------
 
-#f_svc_log=open( os.path.join(context['temp_directory'],'tmp_svc_4964.log'), 'w', buffering = 0)
-#subprocess.call([ "fbsvcmgr", "localhost:service_mgr", "info_get_env"], stdout=f_svc_log, stderr=subprocess.STDOUT)
-#f_svc_log.close()
-#
-## Result: f_svc_log contains line like this:
-## Server root: C:\1INSTALL\FIREBIRD\fb30sS\
-## NB: though it is unlikely, but path can contain spaces!
-#
-#fb_home=''
-#with open( f_svc_log.name,'r') as f:
-#    for line in f:
-#        i=1
-#        for word in line.split():
-#            if i > 2:
-#                fb_home = fb_home + word + ' '
-#            i=i+1
-#        break
-#fb_home = fb_home.strip()
-
-# Resut: fb_home is full path to FB instance home (with trailing slash).
+svc = services.connect(host='localhost')
+fb_home=svc.get_home_directory()
+svc.close()
 
 dts = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-dbconf_bak = fb_home+'databases_'+dts+'.bak'
-fbconf_bak = fb_home+'firebird_'+dts+'.bak'
 
-shutil.copy2( fb_home+'databases.conf', dbconf_bak )
-shutil.copy2( fb_home+'firebird.conf', fbconf_bak )
+dbconf = os.path.join(fb_home, 'databases.conf')
+fbconf = os.path.join(fb_home, 'firebird.conf')
+
+dbcbak = os.path.join(fb_home, 'databases_'+dts+'.bak')
+fbcbak = os.path.join(fb_home, 'firebird_'+dts+'.bak')
+
+shutil.copy2( dbconf, dbcbak )
+shutil.copy2( fbconf, fbcbak )
 
 tmp_fdb=os.path.join(context['temp_directory'],'tmp_4964.fdb')
 
-f_dbconf=open(fb_home+'databases.conf','a')
+f_dbconf=open(dbconf,'a')
 f_dbconf.seek(0, 2)
 f_dbconf.write("\\n\\n# Temporarily added by fbtest, CORE-4964. Should be removed auto:")
 f_dbconf.write("\\n#" + '='*60 )
@@ -133,8 +145,7 @@ f_dbconf.write("\\n{\\n  SecurityDatabase = $(dir_conf)/firebird.msg\\n}")
 f_dbconf.write("\\n#" + '='*60 )
 f_dbconf.close()
 
-
-f_fbconf=open(fb_home+'firebird.conf','r')
+f_fbconf=open(fbconf,'r')
 fbconf_content=f_fbconf.readlines()
 f_fbconf.close()
 for i,s in enumerate( fbconf_content ):
@@ -146,20 +157,19 @@ fbconf_content.append("\\n#" + '='*30 )
 fbconf_content.append('\\nWireCrypt = Disabled')
 fbconf_content.append("\\n#" + '='*30 )
 
-f_fbconf=open(fb_home+'firebird.conf','w')
+f_fbconf=open(fbconf,'w')
 f_fbconf.writelines( fbconf_content )
-f_fbconf.close()
+flush_and_close( f_fbconf )
 
-#shutil.copy2( fb_home+'firebird.conf', fb_home+'firebird_conf_changed.txt')
-
-f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_before.txt'), 'w', buffering = 0)
+f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
-
-f_connect_log=open( os.path.join(context['temp_directory'],'tmp_connect_4964.log'), 'w', buffering = 0)
+f_connect_log=open( os.path.join(context['temp_directory'],'tmp_connect_4964.log'), 'w')
 
 try:
+   # Try to connect to 'firebird.msg' which is obviously not a database file:
+   ###################################
    con1=fdb.connect( dsn = 'localhost:tmp_alias_4964_'+dts )
    f_connect_log.write( con1.firebird_version )
    con1.close()
@@ -167,18 +177,17 @@ except Exception,e:
     for x in e:
         f_connect_log.write( repr(x)+'\\n' )
 
-f_connect_log.close()
+flush_and_close( f_connect_log )
 
-f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_after.txt'), 'w', buffering = 0)
+f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4964_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 
 # RESTORE original config:
 ##########################
-shutil.copy2( dbconf_bak, fb_home+'databases.conf' )
-shutil.copy2( fbconf_bak , fb_home+'firebird.conf')
-
+shutil.move( dbcbak, dbconf )
+shutil.move( fbcbak, fbconf )
 
 # Compare firebird.log versions BEFORE and AFTER this test:
 ######################
@@ -193,9 +202,9 @@ difftext = ''.join(difflib.unified_diff(
 oldfb.close()
 newfb.close()
 
-f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4964_diff.txt'), 'w', buffering = 0)
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4964_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 
 allowed_patterns = (
@@ -222,23 +231,12 @@ with open( f_diff_txt.name,'r') as f:
 
 
 
-#####################################################################
 # Cleanup:
-
+##########
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
-
-f_list=( 
-     f_connect_log
-    ,f_diff_txt
-    ,f_fblog_before
-    ,f_fblog_after
-)
-cleanup( [ i.name for i in f_list ] )
-
-os.remove(dbconf_bak)
-os.remove(fbconf_bak)
+cleanup( (f_connect_log, f_diff_txt, f_fblog_before, f_fblog_after) )
 
   """,
  'expected_stdout':
