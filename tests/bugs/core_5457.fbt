@@ -46,16 +46,44 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
 
+#--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-# Resut: fb_home is full path to FB instance home (with trailing slash).
-#################################################################################################
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
-def svc_get_fb_log( fb_home, f_fb_log ):
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+def svc_get_fb_log( f_fb_log ):
 
   global subprocess
 
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
@@ -66,23 +94,27 @@ def svc_get_fb_log( fb_home, f_fb_log ):
 ###########################################################################################
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5457_fblog_before.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_before )
-f_fblog_before.close()
-
+svc_get_fb_log( f_fblog_before )
+flush_and_close( f_fblog_before )
 
 con1=fdb.connect(dsn = dsn)
 
-sp_test_ddl='''create procedure sp_calc_val(a_id int) returns(val int) as
-begin
-   val = a_id * 10;
-   suspend;
-end
+sp_test_ddl=\
 '''
-test_table_ddl='''create table test(
-    id int primary key, 
-    txt varchar(80), 
-    calc_val computed by ( (select val from sp_calc_val(test.id) ) )
-)
+    create procedure sp_calc_val(a_id int) returns(val int) as
+    begin
+       val = a_id * 10;
+       suspend;
+    end
+'''
+
+test_table_ddl=\
+'''
+    create table test(
+        id int primary key, 
+        txt varchar(80), 
+        calc_val computed by ( (select val from sp_calc_val(test.id) ) )
+    )
 '''
 con1.execute_immediate(sp_test_ddl)
 con1.commit()
@@ -92,7 +124,6 @@ con1.commit()
 cur1=con1.cursor()
 cur1.execute('insert into test select row_number()over(), ascii_char( 96+row_number()over() ) from rdb$types rows 7')
 con1.commit()
-
 
 cur1.execute('select count(*), sum(calc_val) from test')
 for r in cur1:
@@ -121,8 +152,8 @@ for r in cur1:
 time.sleep(1)
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5457_fblog_after.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_after )
-f_fblog_after.close()
+svc_get_fb_log( f_fblog_after )
+flush_and_close( f_fblog_after )
 
 
 # Compare firebird.log versions BEFORE and AFTER this test:
@@ -140,7 +171,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5457_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 unexpected_patterns =(
     re.compile('\s+internal\s+Firebird\s+consistency\s+check', re.IGNORECASE),
@@ -149,28 +180,14 @@ unexpected_patterns =(
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         if line.startswith('+'):
-            #print( 'UNEXPECTED TEXT IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
             match2some = filter( None, [ p.search(line) for p in unexpected_patterns ] )
             if match2some:
                 print( 'UNEXPECTED TEXT IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
 
 # Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
+##########
 time.sleep(1)
-
-f_list=( 
-     f_diff_txt
-    ,f_fblog_before
-    ,f_fblog_after
-)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
-
+cleanup( (f_diff_txt,f_fblog_before,f_fblog_after) )
   """,
   'expected_stdout':
   """
