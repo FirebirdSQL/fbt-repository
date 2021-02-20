@@ -132,7 +132,7 @@ def stop_trace_session():
 
 
     f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_3934.lst'), 'w')
-    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_list"],
+    subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr", "action_trace_list"],
                      stdout=f_trclst,
                      stderr=subprocess.STDOUT
                    )
@@ -148,7 +148,7 @@ def stop_trace_session():
     # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
     f_trclst=open(f_trclst.name,'a')
     f_trclst.seek(0,2)
-    subprocess.call(["fbsvcmgr", "localhost:service_mgr", "action_trace_stop", "trc_id",trcssn],
+    subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr", "action_trace_stop", "trc_id",trcssn],
                      stdout=f_trclst, stderr=subprocess.STDOUT
                    )
     f_trclst.close()
@@ -171,7 +171,7 @@ make_trace_config( engine, 'true', trccfg_swp_enable )
 #####################################################
 # Starting trace session in new child process (async.):
 f_trclog_swp_enable=open( os.path.join(context['temp_directory'],'tmp_trace_3934_swp_enable.log'), 'w')
-p_trace=Popen( [ "fbsvcmgr", "localhost:service_mgr",
+p_trace=Popen( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_start",
                  "trc_cfg", trccfg_swp_enable
                ],
@@ -217,7 +217,7 @@ make_trace_config( engine, 'false', trccfg_swp_disable )
 #####################################################
 # Starting trace session in new child process (async.):
 f_trclog_swp_disable=open( os.path.join(context['temp_directory'],'tmp_trace_3934_swp_disable.log'), 'w')
-p_trace=Popen( ["fbsvcmgr", "localhost:service_mgr",
+p_trace=Popen( [context['fbsvcmgr_path'], "localhost:service_mgr",
                 "action_trace_start",
                  "trc_cfg", trccfg_swp_disable
                ],
