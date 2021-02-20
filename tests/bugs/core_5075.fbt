@@ -35,25 +35,61 @@ from subprocess import Popen, PIPE, STDOUT
 import time
 import difflib
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+
 def svc_get_fb_log( f_fb_log ):
 
   import subprocess
 
-  subprocess.call([ "fbsvcmgr", \
-                    "localhost:service_mgr",\
-                    "user",user_name,"password",user_password,\
-                    "action_get_fb_log" \
-                  ], \
+  subprocess.call([ context['fbsvcmgr_path'],
+                    "localhost:service_mgr",
+                    "action_get_fb_log"
+                  ],
                    stdout=f_fb_log, stderr=subprocess.STDOUT
                  )
   return
 
-
-db_conn.close()
+#--------------------------------------------
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5075_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 sqltxt='''\
 set term ^;
@@ -77,9 +113,7 @@ recreate table log(
 );
 commit;
 
-
 set term ^;
-
 execute block as
 begin
     rdb$set_context('USER_SESSION','INITIAL_DDL','1');
@@ -106,9 +140,9 @@ commit;
 
 f_sql_init=open( os.path.join(context['temp_directory'],'tmp_5075_init.sql'), 'w')
 f_sql_init.write(sqltxt)
-f_sql_init.close()
+flush_and_close( f_sql_init )
 
-sqlres=subprocess.check_output(["isql", dsn, "-user", user_name, "-password", user_password, "-nod", "-i", f_sql_init.name], stderr=subprocess.STDOUT)
+sqlres=subprocess.check_output([context['isql_path'], dsn, "-nod", "-i", f_sql_init.name], stderr=subprocess.STDOUT)
 print(sqlres) # Must be empty (no errors)
 
 sqltxt='''set list on;\
@@ -118,29 +152,30 @@ set count on; select event_id, event_name from log;
 # http://stackoverflow.com/questions/8475290/how-do-i-write-to-a-python-subprocess-stdin
 
 sqlres=''
-p = Popen(["isql", dsn, "-user", user_name, "-password", user_password], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
+
+p = Popen([context['isql_path'], dsn], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
 sqlres += p.communicate(input=sqltxt)[0]
 
 
-p = Popen(["isql", dsn, "-user", user_name, "-password", user_password], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
+p = Popen([context['isql_path'], dsn], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
 sqlres += p.communicate(input=sqltxt)[0]
 
-p = Popen(["isql", dsn, "-user", user_name, "-password", user_password], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
+p = Popen([context['isql_path'], dsn], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
 sqlres += p.communicate(input=sqltxt)[0]
 
 print(sqlres)
 
-sqlres=subprocess.check_output(["isql", dsn, "-user", user_name, "-password", user_password, "-nod", "-i", f_sql_init.name], stderr=subprocess.STDOUT)
+sqlres=subprocess.check_output([context['isql_path'], dsn, "-nod", "-i", f_sql_init.name], stderr=subprocess.STDOUT)
 print(sqlres) # Must be empty (no errors)
 
-p = Popen(["isql", dsn, "-user", user_name, "-password", user_password], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
+p = Popen([context['isql_path'], dsn], stdout=PIPE, stdin=PIPE, stderr=subprocess.STDOUT )
 sqlres = p.communicate(input=sqltxt)[0]
 print(sqlres)
 
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5075_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 time.sleep(1)
 
@@ -156,30 +191,18 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5075_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         print('new messages in firebird.log: '+line)
-f.close()
 
-
-#############################################
 # Cleanup.
-
+##########
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
-
-if os.path.isfile(f_sql_init.name):
-    os.remove(f_sql_init.name)
-if os.path.isfile(f_fblog_before.name):
-    os.remove(f_fblog_before.name)
-if os.path.isfile(f_fblog_after.name):
-    os.remove(f_fblog_after.name)
-if os.path.isfile(f_diff_txt.name):
-    os.remove(f_diff_txt.name)
-
+cleanup((f_sql_init,f_fblog_before,f_fblog_after,f_diff_txt))
   """,
  'expected_stdout': 
   """
