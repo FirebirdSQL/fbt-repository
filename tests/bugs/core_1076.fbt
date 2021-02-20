@@ -82,16 +82,6 @@ svc = services.connect(host='localhost')
 security_db_name = svc.get_security_database_path()  # path+name of security DB
 svc.close()
 
-#security_db_info = \
-#    subprocess.check_output(
-#        [ context['fbsvcmgr_path']
-#          ,"localhost:service_mgr"
-#          ,"info_user_dbpath"
-#        ]
-#    )
-# Path and name of file for security database:
-#security_db_name=security_db_info.split()[2]
-
 check_login="Nebuchadnezzar2_King_of_Babylon"
 
 f_svc_log=open( os.path.join(context['temp_directory'],'tmp_1076_fbsvc.log'), 'w')
