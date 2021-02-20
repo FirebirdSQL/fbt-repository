@@ -288,7 +288,7 @@ fbsvc_log=open( os.path.join(context['temp_directory'],'tmp_svc_4135.log'), 'w')
 fbsvc_log.write("Starting sweep")
 fbsvc_log.write("")
 fbsvc_log.seek(0,2)
-p_sweep=subprocess.Popen([ "fbsvcmgr","localhost:service_mgr",
+p_sweep=subprocess.Popen([ context['fbsvcmgr_path'],"localhost:service_mgr",
                            "action_repair", "dbname", db_file, "rpr_sweep_db"],
                            stdout=fbsvc_log, stderr=subprocess.STDOUT
                         )
