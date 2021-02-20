@@ -124,7 +124,7 @@ flush_and_close( f_hang_sql )
 # #############################################################################################
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 f_hang_log=open( os.path.join(context['temp_directory'],'tmp_4707_hang.log'), 'w')
-p_hang = Popen(["isql", dsn, "-i", f_hang_sql.name],stdout=f_hang_log, stderr=subprocess.STDOUT)
+p_hang = Popen([context['isql_path'], dsn, "-i", f_hang_sql.name],stdout=f_hang_log, stderr=subprocess.STDOUT)
 
 # Here we should wait while ISQL will establish its connect (in separate child window, call asynchronous) and 
 # stay in pause:
