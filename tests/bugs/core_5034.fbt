@@ -245,6 +245,10 @@ import fdb
 import time
 import subprocess
 from multiprocessing import Process
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
 # Get FB architecture:
 xcur=db_conn.cursor()
@@ -252,10 +256,56 @@ xcur.execute("select fb_arch from sys_get_fb_arch;")
 
 for r in xcur:
     fb_arch = r[0].split()[0]
+
+dbfile=db_conn.database_name
 db_conn.close()
 
-dbfile='$(DATABASE_LOCATION)bugs.core_5034.fdb' # 'e30'
-db_dsn='localhost:'+dbfile
+svc = services.connect(host='localhost')
+FB_HOME = os.path.normpath( svc.get_home_directory() ) # 'c:\firebird\30\' --> 'c:\firebird\30' (i.e. remove trailing backslash if needed)
+svc.close()
+
+if os.name == 'nt':
+    # For Windows we assume that client library is always in FB_HOME dir:
+    FB_CLNT=os.path.join(FB_HOME, 'fbclient.dll')
+else:
+    # For Linux client library will be searched in 'lib' subdirectory of FB_HOME:
+    # con=fdb.connect( dsn='localhost:employee', user='SYSDBA', password='masterkey', fb_library_name='/var/tmp/fb40tmp/lib/libfbclient.so')
+    FB_CLNT=os.path.join(FB_HOME, 'lib', 'libfbclient.so' )
+
+FBT_TEMP_DIR = os.path.normpath(context['temp_directory'])
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 if fb_arch=='Classic':
     #  {20,20}=72"; {32,10}=52" - but can hang!; {30,8)=46"; {30,15}=93"; {33,10}=91"; {35,5}=no-return-from-python!
@@ -271,11 +321,13 @@ else:
     reconnect_count=10
 
 
-db_conn.close()
-subprocess.check_output([ "fbsvcmgr", "localhost:service_mgr", "user" , "SYSDBA" , "password" , "masterkey", \
-                  "action_properties",\
-                  "prp_write_mode", "prp_wm_async",\
+subprocess.check_output([ context['fbsvcmgr_path'], "localhost:service_mgr",
+                  "action_properties",
+                  "prp_write_mode", "prp_wm_async",
                   "dbname", dbfile ], stderr=subprocess.STDOUT)
+
+# GENERATE CODE FOR EXECUTING IN SEPARATE EXECUTABLE PYTHON CONTEXT
+###################################################################
 
 f_parallel_txt='''\
 import os
@@ -287,26 +339,20 @@ import subprocess
 from subprocess import Popen
 from multiprocessing import Process
 
-v_temp_dir='%s'
-
-def attach_detach(dsn, reconnect_count, process_seq):
-    f_detach_info_sql=open( v_temp_dir + 'tmp_5034_after_detach_' + str(process_seq).zfill(3) + '.log', 'w')
+def attach_detach(a_dsn, a_fb_client, v_temp_dir, reconnect_count, process_seq):
+    f_detach_info_sql = open( os.path.join(v_temp_dir, 'tmp_5034_after_detach_' + str(process_seq).zfill(3) + '.log'), 'w')
     v_role = 'R_'+str(process_seq).zfill(3)
-    v_sqllst=[]
+    v_sqllst = []
 
     for i in range(0,reconnect_count):
         v_seq = 100000  + (1+process_seq) * 1000 + 2*i
         
-        # Here we do ATTACH. Trigger on DISCONNECT will add row to LOG4DETACH table
-        # and log4detach.rno = 'R_nnn' - i.e. it will be NOT null for the timestamp
-        # where we are CONNECTED to database:
+        att = fdb.connect( dsn = a_dsn, fb_library_name = a_fb_client, user='TMP$C5034', password='123',role = v_role )
 
-        att = fdb.connect( dsn, user='TMP$C5034',password='123',role= v_role )
-
-        # And immediatelly after - DETACH.         
+        # Trigger 'trg_disc' will add row to LOG4DETACH table.
+        # Column RNO will have value = 'R_nnnn' (for worker #0 --> 'R_000', #1 --> 'R_001' etc),
+        # i.e. it will be NOT null for the timestamp when we are DISCONNECTED to database:
         att.close()
-
-        #f_detach_info_sql.write( '\\\\n' ) 
 
         v_seq = v_seq + 1
 
@@ -319,30 +365,35 @@ def attach_detach(dsn, reconnect_count, process_seq):
     f_detach_info_sql.write("\\\\n".join(v_sqllst))
     f_detach_info_sql.write( '\\\\n' )
 
-
     merge_sql="merge into log4detach t\
         using (\
             select id, %%s + 2 * (row_number()over(order by id)-1) seq\
             from log4detach d \
-            where rno='%%s' \
-                  and seq is null \
+            where rno='%%s'\
+                  and seq is null\
         ) s\
         on (s.id = t.id)\
-        when matched then \
+        when matched then\
             update set t.seq = s.seq;" %% ( 100000 + (1+process_seq) * 1000, v_role )
 
-    #f_detach_info_sql.write( merge_sql )
     f_detach_info_sql.write( ' '.join(merge_sql.split()).lstrip() )
     f_detach_info_sql.write( '\\\\n' )
     f_detach_info_sql.write( 'commit;' )
     f_detach_info_sql.close()
     
-planned_attachments=%s
+planned_attachments = %(planned_attachments)s
 
 if __name__ == '__main__':
     p_list=[]
+    v_fb_home = r'%(FB_HOME)s'
+    v_temp_dir = r'%(FBT_TEMP_DIR)s'
+    v_dsn = r'%(dsn)s'
+    v_fb_client = r'%(FB_CLNT)s'
+
     for i in range(0, planned_attachments):
-        p_i = Process(target=attach_detach, args=( '%s', %s, i, ))
+        # Python multi-processing feature:
+        ##################################
+        p_i = Process(target=attach_detach, args=( v_dsn, v_fb_client, v_temp_dir, %(reconnect_count)s, i, ))
         p_i.start()
         p_list.append(p_i)
 
@@ -351,57 +402,50 @@ if __name__ == '__main__':
 
     # All completed
 
-    f_detach_info_all = v_temp_dir + 'tmp_5034_after_detach_all.sql'
-    with open(f_detach_info_all, 'w') as o:
-        for i in range(len(p_list)):
-            f_detach_info_sql = v_temp_dir + 'tmp_5034_after_detach_' + str(i).zfill(3) + '.log'
-            with open(f_detach_info_sql) as s:
-                o.write(s.read()+'\\\\n\\\\n\\\\n')
-            s.close()
-            os.remove(f_detach_info_sql)
+    f_detach_info_sql = open( os.path.join(v_temp_dir, 'tmp_5034_after_detach_all.sql'), 'w')
+    for i in range(len(p_list)):
+        f_detach_log_i = os.path.join(v_temp_dir, 'tmp_5034_after_detach_' + str(i).zfill(3) + '.log')
+        with open(f_detach_log_i, 'r') as s:
+            f_detach_info_sql.write(s.read()+'\\\\n\\\\n\\\\n')
+        os.remove(f_detach_log_i)
     
-    subprocess.call( ["isql", '%s', "-user", "SYSDBA", "-password", "masterkey", "-nod", "-n", "-i", f_detach_info_all] )
-    os.remove(f_detach_info_all)
-''' % (context['temp_directory'].replace('\\\\','\\\\\\\\'), planned_attachments, db_dsn, reconnect_count, db_dsn)
+    f_detach_info_sql.flush()
+    os.fsync(f_detach_info_sql.fileno())
+    f_detach_info_sql.close()
+
+    subprocess.call( [ os.path.join( v_fb_home, 'isql'), v_dsn, '-user', '%(user_name)s', '-password', '%(user_password)s', '-nod', '-n', '-i', f_detach_info_sql.name] )
+    os.remove(f_detach_info_sql.name)
+''' % dict(globals(), **locals())
+# (context['temp_directory'].replace('\\\\','\\\\\\\\'), planned_attachments, dsn, reconnect_count, dsn)
 
 f_parallel_py=open( os.path.join(context['temp_directory'],'tmp_5034_after_detach.py'), 'w')
 f_parallel_py.write(f_parallel_txt)
-f_parallel_py.close()
+flush_and_close( f_parallel_py )
 
-runProgram('python',[f_parallel_py.name])
+########################################################################################################
+###    l a u n c h     P y t h o n    i n    a n o t h e r    e x e c u t i o n     c o n t e x t    ###
+########################################################################################################
+runProgram( sys.executable, [f_parallel_py.name] )
 
 time.sleep(2)
 
 f_top_slow_sql=open( os.path.join(context['temp_directory'], 'tmp_5034_slowest_detaches.sql'), 'w')
 f_top_slow_sql.write('drop user tmp$c5034; commit; set count on; set heading off; select * from v_top10_slow; commit;')
-f_top_slow_sql.close()
+flush_and_close( f_top_slow_sql )
 
 f_top_slow_log=open( os.path.join(context['temp_directory'], 'tmp_5034_slowest_detaches.log'), 'w')
-subprocess.call( ["isql", db_dsn, "-user", "SYSDBA", "-password", "masterkey", "-nod", "-n", "-i", f_top_slow_sql.name], stdout=f_top_slow_log, stderr=subprocess.STDOUT)
-f_top_slow_log.close()
+subprocess.call( [ context['isql_path'], dsn, "-nod", "-n", "-i", f_top_slow_sql.name], stdout=f_top_slow_log, stderr=subprocess.STDOUT)
+flush_and_close( f_top_slow_log )
 
 time.sleep(1)
 
 with open(f_top_slow_log.name) as f:
     print(f.read())
-f.close()
 
 # Cleanup.
-f_list=[]
-f_list.append(f_top_slow_sql)
-f_list.append(f_top_slow_log)
-f_list.append(f_parallel_py)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-            os.remove(f_list[i].name)
-'''
-os.remove(f_top_slow_sql.name)
-os.remove(f_top_slow_log.name)
-os.remove(f_parallel_py.name)
-'''
-if os.path.isfile(f_parallel_py.name+'c'):
-    os.remove(f_parallel_py.name+'c')
+#########
+time.sleep(1)
+cleanup( (f_top_slow_sql,f_top_slow_log,f_parallel_py,f_parallel_py.name+'c') )
 
   """,
  'expected_stdout': 
