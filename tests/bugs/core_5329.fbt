@@ -31,11 +31,46 @@ import re
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 def svc_get_fb_log( f_fb_log ):
 
   import subprocess
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     'action_get_fb_log'
                   ],
@@ -43,29 +78,26 @@ def svc_get_fb_log( f_fb_log ):
                  )
   return
 
-db_conn.close()
 
 # Get firebird.log content BEFORE running validation:
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5329_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 # Only 'gfix -v' did show errors. 
 #################################
 # Online validation ('fbsvcmgr action_validate ...') worked WITHOUT any error/warningin its output.
 
 f_gfix_log=open( os.path.join(context['temp_directory'],'tmp_5329_gfix.txt'), 'w')
-subprocess.call( ['gfix', '-v', '-full', dsn], stdout=f_gfix_log, stderr=subprocess.STDOUT)
-f_gfix_log.close()
+subprocess.call( [ context['gfix_path'], '-v', '-full', dsn], stdout=f_gfix_log, stderr=subprocess.STDOUT)
+flush_and_close( f_gfix_log )
 
 # Get firebird.log content AFTER running validation:
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5329_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
-f_fblog_after.close()
-
-time.sleep(2)
+flush_and_close( f_fblog_after )
 
 # Check-1. Log of 'gfix -v -full'should be EMPTY:
 #################################################
@@ -88,7 +120,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_2668_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 pattern  = re.compile('.*VALIDATION.*|.*ERROR:.*')
 
@@ -105,18 +137,12 @@ with open( f_diff_txt.name,'r') as f:
         if line.startswith('+'):
             if pattern.match(line.upper()):
                 print( ' '.join(line.split()).upper() )
-f.close()
 
-time.sleep(1)
 
 # Cleanup
 #########
-
-f_list=[f_gfix_log, f_fblog_before, f_fblog_after, f_diff_txt]
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+time.sleep(1)
+cleanup( (f_gfix_log, f_fblog_before, f_fblog_after, f_diff_txt) )
   """,
  'expected_stdout': 
   """
