@@ -29,16 +29,45 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+fbk_file='$(DATABASE_LOCATION)tmp.core_5295.fbk'
+fdb_tmp1='$(DATABASE_LOCATION)tmp.core_5295.1.tmp'
+fdb_tmp2='$(DATABASE_LOCATION)tmp.core_5295.2.tmp'
 db_conn.close()
 
-fbk_file='$(DATABASE_LOCATION)tmp.core_5295.fbk'
-fdb_tmp1='$(DATABASE_LOCATION)tmp.core_5295.fd1'
-fdb_tmp2='$(DATABASE_LOCATION)tmp.core_5295.fd2'
+#--------------------------------------------
 
-f_list=[fbk_file, fdb_tmp1, fdb_tmp2]
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i]):
-        os.remove(f_list[i])
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+cleanup( (fbk_file, fdb_tmp1, fdb_tmp2) )
 
 runProgram('gbak',['-b', dsn, fbk_file])
 runProgram('gbak',['-rep',fbk_file, 'localhost:'+fdb_tmp1, '100000', fdb_tmp2 ])
@@ -47,20 +76,13 @@ f_val_log=open( os.path.join(context['temp_directory'],'tmp_gfix_v_5295.log'), '
 
 # Only 'gfix -v' raised error. Online validation works fine:
 ################
-subprocess.call(["gfix","-v",'localhost:'+fdb_tmp1],stdout=f_val_log, stderr=subprocess.STDOUT)
+subprocess.call([context['gfix_path'], "-v", 'localhost:'+fdb_tmp1], stdout=f_val_log, stderr=subprocess.STDOUT)
 
-#subprocess.call(["fbsvcmgr", "localhost:service_mgr",
-#                 "action_validate",
-#                 "dbname",fdb_tmp1],
-#                 stdout=f_val_log, stderr=subprocess.STDOUT)
-
-f_val_log.close()
+flush_and_close( f_val_log )
 
 #I/O error during "ReadFile" operation for file "<path>\tmp.core_5295.fd1"
 #-Error while trying to read from file
 #-<localized message: EOF encountered>
-
-time.sleep(2)
 
 # NB: because of localized text inside f_val_log we have to SKIP scanning this file line-by-line
 # and only check that its size is ZERO. 
@@ -72,12 +94,10 @@ with open( f_val_log.name,'r') as f:
         print('VALIDATION LOG: '+line)
 
 
-f_list=[f_val_log.name, fbk_file, fdb_tmp1, fdb_tmp2]
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i]):
-        os.remove(f_list[i])
-
+# cleanup:
+##########
+time.sleep(1)
+cleanup( (f_val_log.name, fbk_file, fdb_tmp1, fdb_tmp2) )
   """,
  'expected_stdout': 
   """
