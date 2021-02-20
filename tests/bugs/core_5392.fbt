@@ -41,6 +41,40 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 def get_fb_arch(a_dsn):
    try:
       con1 = fdb.connect(dsn = a_dsn)
@@ -80,39 +114,26 @@ def get_fb_arch(a_dsn):
 
           fba = 'SC' if f1 ==f2 else 'SS'
 
-      #print(fba, con1.engine_version, con1.version)
       return fba
 
    finally:
       con1.close()
       con2.close()
 
+#--------------------------------------------
+
 fb_arch= get_fb_arch(dsn)
 rows_cnt=100000
 
 if fb_arch == 'SS':
 
-    # Get engine version and FB binaries folder:
-    ############################################
-    engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
-
-    # NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
-    # via to FB services API by services.connect() - see FB tracker, PYFB-69
-    # ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
-
-    fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-    # fb_home = services.connect(host='localhost').get_home_directory()
-    if engine.startswith('2.5'):
-      fb_home = fb_home + 'bin'+os.sep
-
+    dbname=db_conn.database_name
     db_conn.close()
-
-    dbname='$(DATABASE_LOCATION)bugs.core_5392.fdb'
 
     # NB: do _not_ remove changing of FW to OFF in 2.5.7 (Ivan said that FW on 2.5.6 was ON, see 15/Dec/16 01:07 PM).
     # Bucgcheck is reproduced on 2.5.7.27030 only when FW = OFF.
     fn_nul = open(os.devnull, 'w')
-    subprocess.call( [fb_home+"fbsvcmgr", "localhost:service_mgr", 
+    subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr", 
                       "action_properties", "dbname", dbname, 
                       "prp_write_mode", "prp_wm_async" ],
                      stdout = fn_nul,
@@ -155,49 +176,35 @@ if fb_arch == 'SS':
         commit;
     ''' % locals()
 
-    sql_cmd=open(os.path.join(context['temp_directory'],'tmp_core_5392.sql'), 'w')
+    f_sql_cmd=open(os.path.join(context['temp_directory'],'tmp_core_5392.sql'), 'w')
+    f_sql_cmd.write(sql_chk)
+    flush_and_close( f_sql_cmd )
 
-    sql_cmd.write(sql_chk)
-    sql_cmd.close()
+    f_sql_log=open(os.path.join(context['temp_directory'],'tmp_core_5392.log'),'w')
+    f_sql_err=open(os.path.join(context['temp_directory'],'tmp_core_5392.err'),'w')
 
-    sql_log=open(os.path.join(context['temp_directory'],'tmp_core_5392.log'),'w')
-    sql_err=open(os.path.join(context['temp_directory'],'tmp_core_5392.err'),'w')
+    subprocess.call([context['isql_path'], dsn, "-i", f_sql_cmd.name],stdout=f_sql_log, stderr=f_sql_err)
 
-    subprocess.call([fb_home+"isql", dsn, "-i", sql_cmd.name],stdout=sql_log, stderr=sql_err)
-
-    # Not helps: process can not be killed if internal FB consistensy check occurs:
-    #p_isql = Popen(["isql", dsn, "-i", sql_cmd.name],stdout=sql_log, stderr=sql_err)
-    #time.sleep(25)
-    #p_isql.terminate()
-
-    sql_log.close()
-    sql_err.close()
+    flush_and_close( f_sql_log )
+    flush_and_close( f_sql_err )
 
     # This should contain message about affected <rows_cnt> rows:
     #####################
-    with open( sql_log.name,'r') as f:
+    with open( f_sql_log.name,'r') as f:
         for line in f:
             if 'affected: '+str(rows_cnt) in line:
                 print('OK')
-    f.close()
-
 
     # This should be empty:
     #######################
-    with open( sql_err.name,'r') as f:
+    with open( f_sql_err.name,'r') as f:
         for line in f:
             if line.strip():
                 print('UNEXPECTED ERROR: '+line.upper())
-    f.close()
-    time.sleep(1)
-
     # Cleanup
     #########
-    f_list=(sql_cmd, sql_log, sql_err)
-    
-    for i in range(len(f_list)):
-       if os.path.isfile(f_list[i].name):
-           os.remove(f_list[i].name)
+    time.sleep(1)
+    cleanup( (f_sql_cmd, f_sql_log, f_sql_err) )
     
 else:
     # FB arch is NOT SuperServer: test should not run at all because its subject relates only to SS.
