@@ -57,7 +57,43 @@ import subprocess
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-db_file="$(DATABASE_LOCATION)bugs.core_5275.fdb"
+db_file=db_conn.database_name
+engine =str(db_conn.engine_version)
+
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 def svc_get_fb_log( engine, f_fb_log ):
 
@@ -69,24 +105,14 @@ def svc_get_fb_log( engine, f_fb_log ):
         get_firebird_log_key='action_get_fb_log'
 
     # C:\MIX\firebird\oldfb251\bin\fbsvcmgr localhost:service_mgr -user sysdba -password masterkey action_get_ib_log
-    subprocess.call([ "fbsvcmgr",
+    subprocess.call([ context['fbsvcmgr_path'],
                       "localhost:service_mgr",
-                      "-user", user_name,
-                      "-password", user_password,
                       get_firebird_log_key
                     ],
                      stdout=f_fb_log, stderr=subprocess.STDOUT
                    )
 
     return
-
-# Obtain engine version:
-cur1 = db_conn.cursor()
-cur1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in cur1:
-    engine = row[0]
-
-db_conn.close()
 
 sql_ddl='''
     create or alter procedure sp_ins(n int) as begin end;
@@ -122,7 +148,7 @@ runProgram('isql',[dsn],sql_ddl)
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5275_fblog_before.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 #########################################################
 
@@ -223,7 +249,7 @@ sql_kill_att='''\
 
 f_kill_att_sql = open( os.path.join(context['temp_directory'],'tmp_5275_kill_att.sql' ), 'w')
 f_kill_att_sql.write( sql_kill_att )
-f_kill_att_sql.close()
+flush_and_close( f_kill_att_sql )
 
 tx_param=['WAIT','WAIT']
 
@@ -231,7 +257,7 @@ for i in range(len(tx_param)):
 
     f_bulk_insert_sql = open( os.path.join(context['temp_directory'],'tmp_5275_ins.sql'), 'w')
     f_bulk_insert_sql.write(sql_bulk_insert % locals() )
-    f_bulk_insert_sql.close()
+    flush_and_close( f_bulk_insert_sql )
 
     tx_decl=tx_param[i]
     idx_name=tx_decl.replace(' ','_')
@@ -239,12 +265,12 @@ for i in range(len(tx_param)):
  
     f_create_indx_sql = open( os.path.join(context['temp_directory'],'tmp_5275_idx_%s.sql' % str(i) ), 'w')
     f_create_indx_sql.write( sql_create_indx % locals() )
-    f_create_indx_sql.close()
+    flush_and_close( f_create_indx_sql )
 
     f_bulk_insert_log = open( os.path.join(context['temp_directory'],'tmp_5275_ins_%s.log' % str(i) ), 'w')
     f_create_indx_log = open( os.path.join(context['temp_directory'],'tmp_5275_idx_%s.log' % str(i) ), 'w')
 
-    p_bulk_insert=subprocess.Popen( ["isql", dsn, "-q", "-i", f_bulk_insert_sql.name ],
+    p_bulk_insert=subprocess.Popen( [context['isql_path'], dsn, "-q", "-i", f_bulk_insert_sql.name ],
                                    stdout = f_bulk_insert_log,
                                    stderr = subprocess.STDOUT
                                  )
@@ -252,21 +278,19 @@ for i in range(len(tx_param)):
     # 3.0 Classic: seems that it requires at least 2 seconds for ISQL be loaded into memory.
     time.sleep(2)
     
-    p_create_indx=subprocess.Popen( ["isql", dsn, "-q", "-i", f_create_indx_sql.name ],
+    p_create_indx=subprocess.Popen( [context['isql_path'], dsn, "-q", "-i", f_create_indx_sql.name ],
                                    stdout = f_create_indx_log,
                                    stderr = subprocess.STDOUT
                                  )
-
     time.sleep(2)
     
-
     f_kill_att_log = open( os.path.join(context['temp_directory'],'tmp_5275_kill_att.log' ), 'w')
 
-    subprocess.call( ["isql", dsn, "-q", "-i", f_kill_att_sql.name ],
+    subprocess.call( [context['isql_path'], dsn, "-q", "-i", f_kill_att_sql.name ],
                                    stdout = f_kill_att_log,
                                    stderr = subprocess.STDOUT
                                  )
-    f_kill_att_log.close()
+    flush_and_close( f_kill_att_log )
 
     # 11.05.2017, FB 4.0 only!
     # Following messages can appear after 'connection shutdown'
@@ -283,43 +307,34 @@ for i in range(len(tx_param)):
     p_create_indx.terminate()
     p_bulk_insert.terminate()
 
-    f_bulk_insert_log.close()
-    f_create_indx_log.close()
+    flush_and_close( f_bulk_insert_log )
+    flush_and_close( f_create_indx_log )
 
-    time.sleep(1)
-
-    
     with open( f_bulk_insert_log.name,'r') as f:
         for line in f:
             if line.split():
                 print( str(i)+': BULK INSERTS LOG: '+line.strip().upper() )
-    f.close()
 
     with open( f_create_indx_log.name,'r') as f:
         for line in f:
             if line.split():
                 print( str(i)+': CREATE INDEX LOG: '+line.strip().upper() )
-    f.close()
-
    
     with open( f_kill_att_log.name,'r') as f:
         for line in f:
             if line.split():
                 print( str(i)+': KILL ATTACH LOG: '+line.upper() )
-    f.close()
 
-
-    f_list=[f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log, f_kill_att_log]
-    
-    for i in range(len(f_list)):
-       if os.path.isfile(f_list[i].name):
-           os.remove(f_list[i].name)
+    # cleanup (nitermediate):
+    #########
+    time.sleep(1)
+    cleanup( (f_bulk_insert_sql, f_create_indx_sql, f_bulk_insert_log, f_create_indx_log, f_kill_att_log) )
     
 # ------------------------------------------------------------------------------------------    
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5275_fblog_after.txt'), 'w')
 svc_get_fb_log( engine, f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 # Now we can compare two versions of firebird.log and check their difference.
 #################################
@@ -336,7 +351,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5275_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # This should be empty:
 #######################
@@ -345,41 +360,36 @@ with open( f_diff_txt.name,'r') as f:
         # internal Firebird consistency check (invalid SEND request (167), file: JrdStatement.cpp line: 325)
         if 'consistency check' in line:
             print('NEW IN FIREBIRD.LOG: '+line.upper())
-f.close()
+
 
 #--------------------------------------------------------------------------------------------
 
 f_validate_log=open( os.path.join(context['temp_directory'],'tmp_5275_validate.log'), "w")
 f_validate_err=open( os.path.join(context['temp_directory'],'tmp_5275_validate.err'), "w")
 
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_validate",
                  "dbname", "$(DATABASE_LOCATION)bugs.core_5275.fdb"
                 ],
                 stdout=f_validate_log,
                 stderr=f_validate_err)
-f_validate_log.close()
-f_validate_err.close()
+flush_and_close( f_validate_log )
+flush_and_close( f_validate_err )
 
 with open( f_validate_log.name,'r') as f:
     for line in f:
         if line.split():
             print( 'VALIDATION STDOUT: '+line.upper() )
-f.close()
 
 with open( f_validate_err.name,'r') as f:
     for line in f:
         if line.split():
             print( 'VALIDATION STDERR: '+line.upper() )
-f.close()
+
+# cleanup
+#########
 time.sleep(1)
-
-f_list=(f_validate_log, f_validate_err, f_kill_att_sql, f_fblog_before, f_fblog_after, f_diff_txt)
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
+cleanup( (f_validate_log, f_validate_err, f_kill_att_sql, f_fblog_before, f_fblog_after, f_diff_txt) )
 
 """,
  'expected_stdout': 
