@@ -158,7 +158,7 @@ flush_and_close( f_work_sql )
 
 f_work_log=open( os.path.join(context['temp_directory'],'tmp_work_4337.log'), 'w')
 f_work_err=open( os.path.join(context['temp_directory'],'tmp_work_4337.err'), 'w')
-subprocess.call( ["isql", dsn, "-i", f_work_sql.name],
+subprocess.call( [context['isql_path'], dsn, "-i", f_work_sql.name],
                   stdout = f_work_log,
                   stderr = f_work_err
                 )
