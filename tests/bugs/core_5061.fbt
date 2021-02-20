@@ -97,9 +97,9 @@ sqltxt.write(sql_text)
 sqltxt.close()
 
 sqllog=open( os.path.join(context['temp_directory'],'tmp_sql_5061.log'), 'w')
-subprocess.call( ['isql', dsn,'-user',user_name,'-pas',user_password,'-q', '-i', sqltxt.name], \
-                 stdout=sqllog, \
-                 stderr=subprocess.STDOUT \
+subprocess.call( [ context['isql_path'], dsn,'-user',user_name,'-pas',user_password,'-q', '-i', sqltxt.name],
+                 stdout=sqllog,
+                 stderr=subprocess.STDOUT
                )
 sqllog.close()
 
@@ -112,7 +112,6 @@ with open( sqllog.name,'r') as f:
     if '...' in line or 'truncated' in line or 'error' in line:
       print("Plan is truncated or empty. Found at line "+str(i))
       break
-f.close()
 
 # Do not remove this pause: on Windows closing of handles can take some (small) time. 
 # Otherwise Windows(32) access error can raise here.
