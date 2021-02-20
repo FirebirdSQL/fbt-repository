@@ -48,29 +48,61 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+thisdb = db_conn.database_name
+tmpbkp = os.path.splitext(thisdb)[0] + '.fbk'
+tmpres = os.path.splitext(thisdb)[0] + '.tmp'
+
 db_conn.close()
 
-thisdb='$(DATABASE_LOCATION)bugs.core_5201.fdb'
-tmpbkp='$(DATABASE_LOCATION)tmp_core_5201.fbk'
-tmpres='$(DATABASE_LOCATION)tmp_core_5201.fdb'
+#--------------------------------------------
 
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 f_backup=open( os.path.join(context['temp_directory'],'tmp_backup_5201.log'), 'w')
-subprocess.check_call(["fbsvcmgr",
+subprocess.check_call([context['fbsvcmgr_path'],
                        "localhost:service_mgr",
                        "action_backup",
                        "dbname", thisdb,
                        "bkp_file", tmpbkp
                       ],
                       stdout=f_backup, stderr=subprocess.STDOUT)
-f_backup.close()
+flush_and_close( f_backup )
 
 f_restore=open( os.path.join(context['temp_directory'],'tmp_restore_5201.log'), 'w')
 try:
     # This is key point: before 4.0.0.145 restoring with '-v' key did assign retcode to zero
     # even in case when index could not be created because of errors.
     # Since 4.0.0.145 this call should assign retcode = 2:
-    restore_out=subprocess.check_call(["gbak",
+    restore_out=subprocess.check_call([ context['gbak_path'],
                        "-rep",
                        "-v",
                        tmpbkp,
@@ -82,40 +114,25 @@ except subprocess.CalledProcessError as cpexc:
     # Final output of this test MUST have following line (confirmed on 3.0.0.32484: did not has this).
     print ('Restore finished with error code: '+str(cpexc.returncode))
 
-f_restore.close()
+flush_and_close( f_restore )
 
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
-time.sleep(1)
 
 # Output STDOUT+STDERR of backup: they both should be EMPTY because we did not specify '-v' key:
 with open( f_backup.name,'r') as f:
     for line in f:
         print( "BACKUP LOG: "+line )
-f.close()
 
 # Output STDOUT+STDERR of restoring with filtering text related to ERRORs:
 with open( f_restore.name,'r') as f:
     for line in f:
         if ' ERROR:' in line:
             print( "RESTORE LOG: "+line )
-f.close()
 
-#####################################################################
+
 # Cleanup:
-
-f_list=[]
-f_list.append(f_backup)
-f_list.append(f_restore)
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
-if os.path.isfile(tmpbkp):
-    os.remove(tmpbkp)
-if os.path.isfile(tmpres):
-    os.remove(tmpres)
+##########
+time.sleep(1)
+cleanup( (f_backup, f_restore, tmpbkp, tmpres) )
   """,
  'expected_stdout': 
   """
