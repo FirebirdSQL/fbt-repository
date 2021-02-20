@@ -19,25 +19,49 @@
  'test_script': 
   """
 import os
+import time
 import subprocess
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+
+db_source = db_conn.database_name
+db_delta = db_source +'.delta'
+nbk_level_0 = os.path.splitext(db_source)[0] + '.nbk00'
+#'$(DATABASE_LOCATION)tmp_core_5085.nbk_00'
+
 db_conn.close()
 
-db_source='$(DATABASE_LOCATION)bugs.core_5085.fdb'
-db_delta = db_source +'.delta'
-nbk_level_0='$(DATABASE_LOCATION)tmp_core_5085.nbk_00'
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
@@ -47,10 +71,12 @@ cleanup( ( db_delta, nbk_level_0, ) )
 ########################
 f_nbk0_log=open( os.path.join(context['temp_directory'],'tmp_nbk0_5085.log'), 'w')
 f_nbk0_err=open( os.path.join(context['temp_directory'],'tmp_nbk0_5085.err'), 'w')
-subprocess.call( ['nbackup', '-L', db_source], stdout=f_nbk0_log, stderr=f_nbk0_err )
-subprocess.call( ['fbsvcmgr', 'service_mgr', 'action_nfix', 'dbname', db_source], stdout=f_nbk0_log, stderr=f_nbk0_err )
-f_nbk0_log.close()
-f_nbk0_err.close()
+
+subprocess.call( [context['nbackup_path'], '-L', db_source], stdout=f_nbk0_log, stderr=f_nbk0_err )
+subprocess.call( [context['fbsvcmgr_path'], 'service_mgr', 'action_nfix', 'dbname', db_source], stdout=f_nbk0_log, stderr=f_nbk0_err )
+
+flush_and_close( f_nbk0_log )
+flush_and_close( f_nbk0_err )
 
 # test connect to ensure that all OK after fixup:
 ##############
@@ -73,8 +99,8 @@ for i in range(len(f_list)):
 
 # Cleanup.
 ##########
-f_list = [ i.name for i in (f_nbk0_log,f_nbk0_err) ] + [db_delta, nbk_level_0]
-cleanup( f_list )
+time.sleep(1)
+cleanup( (f_nbk0_log,f_nbk0_err,db_delta, nbk_level_0) )
 
   """,
  'expected_stdout':
