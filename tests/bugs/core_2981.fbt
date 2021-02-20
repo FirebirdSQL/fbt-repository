@@ -62,14 +62,14 @@ def cleanup( f_names_list ):
 
 def svc_get_fb_log( engine, f_fb_log ):
 
-  import subprocess
+  global subprocess
 
   if engine.startswith('2.5'):
       get_firebird_log_key='action_get_ib_log'
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     get_firebird_log_key
                   ],
