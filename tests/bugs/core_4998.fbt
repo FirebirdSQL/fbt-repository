@@ -15,15 +15,15 @@
     ::: NB-2 ::: 
     We have to prepare auxiliary Python script to be executed in SEPARATE (NEW!) execution context,
     otherwise firebird.log is filled with messages "errno = 10054" only after this test completely finished.
-    See variable 'other_exec_context_python_file' - it points to this temp .py file.
+    See variable 'f_python_separate_exec_context' - it points to this temp .py file.
     This aux Python script is called like this:
-        os.system( other_exec_context_python_file )
+        os.system( f_python_separate_exec_context )
 
     It contains three attempts to make connection with invalid passwords. 
     Exceptions ('Your user/password not defined...') are suppressed, we need only make these attempts to check
     that no new records withh be added to firebird.log (as it is confirmed to be in 3.0.0.32136 RC1).
     
-    File firebird.log is compared BEFORE and AFTER os.system( other_exec_context_python_file ).
+    File firebird.log is compared BEFORE and AFTER os.system( f_python_separate_exec_context ).
     No new messages related to 10054 error should occur during this test in firebird.log.
 
     3.0.0.32366 RC2 - works OK.
@@ -59,22 +59,50 @@ os.environ["ISC_PASSWORD"] = user_password
 
 THIS_DSN = dsn
 DBAUSR = user_name
-
 db_conn.close()
 
-# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
-# via to FB services API by services.connect() - see FB tracker, PYFB-69
-# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+svc = services.connect(host='localhost')
+fb_home=svc.get_home_directory()
+svc.close()
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-# Resut: fb_home is full path to FB instance home (with trailing slash).
-#################################################################################################
+#--------------------------------------------
 
-def svc_get_fb_log( fb_home, f_fb_log ):
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+def svc_get_fb_log( f_fb_log ):
 
   global subprocess
 
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
@@ -85,13 +113,16 @@ def svc_get_fb_log( fb_home, f_fb_log ):
 ###########################################################################################
 
 dts = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-fbconf_bak = fb_home+'firebird_'+dts+'.bak'
 
-shutil.copy2( fb_home+'firebird.conf', fbconf_bak )
+fbconf = os.path.join( fb_home, 'firebird.conf')
+fbcbak = os.path.join( fb_home, 'firebird_'+dts+'.bak')
 
-f_fbconf=open(fb_home+'firebird.conf','r')
+shutil.copy2( fbconf, fbcbak )
+
+f_fbconf = open(fbconf,'r')
 fbconf_content=f_fbconf.readlines()
 f_fbconf.close()
+
 for i,s in enumerate( fbconf_content ):
     if s.lower().lstrip().startswith( 'wirecrypt'.lower() ):
         fbconf_content[i] = '# <temply commented> ' + s
@@ -103,18 +134,15 @@ fbconf_content.append("\\n#" + '='*30 )
 fbconf_content.append('\\nAuthClient = Srp,Legacy_Auth')
 fbconf_content.append("\\n#" + '='*30 )
 
-f_fbconf=open(fb_home+'firebird.conf','w')
+f_fbconf=open(fbconf,'w')
 f_fbconf.writelines( fbconf_content )
-f_fbconf.close()
-
-#shutil.copy2( fb_home+'firebird.conf', fb_home+'firebird.conf.tmp.tmp' )
-
+flush_and_close( f_fbconf )
 
 ###########################################################################################
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4998_fblog_before.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_before )
-f_fblog_before.close()
+svc_get_fb_log( f_fblog_before )
+flush_and_close( f_fblog_before )
 
 other_exec_context_python_text = '''\
 import fdb
@@ -131,11 +159,11 @@ for i in range(0,3):
 exit(0)
 ''' % locals()
 
-other_exec_context_python_file = os.path.join(context['temp_directory'], 'tmp_core_4998_try_connect_with_invalid_passwords.py')
+f_python_separate_exec_context = os.path.join(context['temp_directory'], 'tmp_core_4998_try_connect_with_invalid_passwords.py')
 
-f = open( other_exec_context_python_file, 'w')
+f = open( f_python_separate_exec_context, 'w')
 f.write( other_exec_context_python_text )
-f.close()
+flush_and_close( f )
 
 ########################################################################################################
 ###    l a u n c h     P y t h o n    i n    a n o t h e r    e x e c u t i o n     c o n t e x t    ###
@@ -145,19 +173,17 @@ f.close()
 # because it can appear that OS will not be able to recognize how to handle .py files!
 # sys.executable - returns full path to Python exe, 
 
-os.system( sys.executable + ' ' + other_exec_context_python_file )
+os.system( sys.executable + ' ' + f_python_separate_exec_context )
 
 time.sleep(1)
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4998_fblog_after.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_after )
-f_fblog_after.close()
-
+svc_get_fb_log( f_fblog_after )
+flush_and_close( f_fblog_after )
 
 # RESTORE original config:
 ##########################
-shutil.copy2( fbconf_bak , fb_home+'firebird.conf')
-
+shutil.move( fbcbak, fbconf)
 
 # Compare firebird.log versions BEFORE and AFTER this test:
 ######################
@@ -174,7 +200,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4998_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # INET/inet_error: read errno = 10054
 
@@ -189,26 +215,10 @@ with open( f_diff_txt.name,'r') as f:
             if match2some:
                 print( 'UNEXPECTED TEXT IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
 
-
-
 #####################################################################
 # Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
-
-f_list=( 
-     f_diff_txt
-    ,f_fblog_before
-    ,f_fblog_after
-)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-os.remove( other_exec_context_python_file )
-os.remove( fbconf_bak )
+cleanup( (f_diff_txt,f_fblog_before,f_fblog_after, f_python_separate_exec_context) )
 
   """,
  'expected_stdout':
