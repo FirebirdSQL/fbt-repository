@@ -62,12 +62,12 @@ db_conn.close()
 
 f_svc_log=open( os.path.join(context['temp_directory'],'tmp_4879_fbsvc.log'), "w", buffering = 0)
 # C:\FB\old.3b1\fbsvcmgr.exe localhost:service_mgr user sysdba password masterkey action_add_user dbname employee sec_username foo sec_password 123
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr", "user", user_name, "password", user_password, "action_add_user", "dbname",  this_fdb, "sec_username", "TMP$C4879", "sec_password", "123" ],
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr", "action_add_user", "dbname",  this_fdb, "sec_username", "TMP$C4879", "sec_password", "123" ],
                  stdout=f_svc_log,
                  stderr=subprocess.STDOUT
                )
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr", "user", user_name, "password", user_password, "action_delete_user", "dbname",  this_fdb, "sec_username", "TMP$C4879" ],
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr", "action_delete_user", "dbname",  this_fdb, "sec_username", "TMP$C4879" ],
                  stdout=f_svc_log,
                  stderr=subprocess.STDOUT
                )
