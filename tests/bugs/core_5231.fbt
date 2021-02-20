@@ -30,10 +30,46 @@
  'test_script': 
   """\
 import os
+import time
 import subprocess
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+
+db_conn.close()
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 
 #######################  N U M B E R    O F    O U T P U T    A R G S.  ###########
 sp_args_count=5000
@@ -84,16 +120,16 @@ set list on;
 select * from sp_test;
 '''
 f_ddl_sql.write(sql_suff)
-f_ddl_sql.close()
+flush_and_close( f_ddl_sql )
 
 f_run_log=open( os.path.join(context['temp_directory'],'tmp_5231_run.log'), 'w')
 f_run_err=open( os.path.join(context['temp_directory'],'tmp_5231_run.err'), 'w')
 
-subprocess.call(["isql", dsn, "-i", f_ddl_sql.name],
+subprocess.call([context['isql_path'], dsn, "-i", f_ddl_sql.name],
                 stdout=f_run_log, 
                 stderr=f_run_err)
-f_run_log.close()
-f_run_err.close()
+flush_and_close( f_run_log )
+flush_and_close( f_run_err )
 
 with open( f_run_err.name,'r') as f:
     for line in f:
@@ -105,10 +141,10 @@ with open( f_run_log.name,'r') as f:
         if line.split() and not line.startswith('O'):
             print('UNEXPECTED STDLOG: '+line)
 
-f_list=[f_ddl_sql, f_run_log, f_run_err]
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+# CLEANUP
+#########
+time.sleep(1)
+cleanup( (f_ddl_sql, f_run_log, f_run_err) )
 
   """,
  'expected_stdout': 
