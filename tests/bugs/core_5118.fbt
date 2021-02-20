@@ -44,11 +44,45 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+tmpsrc = db_conn.database_name
+tmpbkp = os.path.splitext(tmpsrc)[0] + '.fbk'
+tmpres = os.path.splitext(tmpsrc)[0] + '.tmp'
+
 db_conn.close()
 
-tmpsrc='$(DATABASE_LOCATION)bugs.core_5118.fdb'
-tmpbkp='$(DATABASE_LOCATION)tmp_core_5118.fbk'
-tmpres='$(DATABASE_LOCATION)tmp_core_5118.tmp'
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 
 # NB: we have ALWAYS to drop file that is to be target for restoring process,
 # otherwise one can get:
@@ -56,14 +90,12 @@ tmpres='$(DATABASE_LOCATION)tmp_core_5118.tmp'
 # unsupported on-disk structure for file ...; found 12.0, support 13.0
 # (it will occur if THIS test was already run for older FB major version)
 
-if os.path.isfile(tmpres):
-    os.remove(tmpres)
-
+cleanup( (tmpres,) )
 
 f_backup_log=open(os.devnull, 'w')
 f_backup_err=open( os.path.join(context['temp_directory'],'tmp_backup_5118.err'), 'w')
 
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                   "action_backup",
                   "dbname",   tmpsrc,
                   "bkp_file", tmpbkp,
@@ -72,13 +104,13 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                 stdout=f_backup_log, 
                 stderr=f_backup_err
                )
-f_backup_log.close()
-f_backup_err.close()
+flush_and_close( f_backup_log )
+flush_and_close( f_backup_err )
 
 f_restore_log = open( os.path.join(context['temp_directory'],'tmp_restore_5118.log'), 'w')
 f_restore_err = open( os.path.join(context['temp_directory'],'tmp_restore_5118.err'), 'w')
 
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                   "action_restore",
                   "bkp_file", tmpbkp,
                   "dbname",   tmpres,
@@ -89,41 +121,28 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                 stderr=f_restore_err
                )
 
-f_restore_log.close()
-f_restore_err.close()
+flush_and_close( f_restore_log )
+flush_and_close( f_restore_err )
 
 with open(f_backup_err.name, 'r') as f:
     for line in f:
         print( "BACKUP STDERR: "+line )
-f.close()
+
 
 # Result of this filtering should be EMPTY:
 with open( f_restore_err.name,'r') as f:
     for line in f:
         print( "RESTORE STDERR: "+line )
-f.close()
 
 
 runProgram( 'isql', [ 'localhost:' + tmpres, '-q' ], 'set list on; set plan on; set count on; select * from test order by concat_text;' )
 
 #####################################################################
 # Cleanup:
-
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
-
-
 time.sleep(1)
-
-f_list = (f_backup_log, f_backup_err, f_restore_log, f_restore_err )
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-            os.remove(f_list[i].name)
-os.remove(tmpbkp)
-os.remove(tmpres)
-
-
+cleanup( (f_backup_log, f_backup_err, f_restore_log, f_restore_err, tmpbkp, tmpres) )
   """,
  'expected_stdout':
   """
