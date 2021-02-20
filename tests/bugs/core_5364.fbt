@@ -32,41 +32,60 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-DB_PATH = os.sep.join( db_conn.database_name.split(os.sep)[:-1] )
+db_conn.close()
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
 
-#-------------------------------------------
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
-dbx = os.path.join( DB_PATH, 'tmp_5364.fdb')
-if os.path.isfile(dbx):
-    os.remove(dbx)
+#--------------------------------------------
 
-con1=fdb.create_database(dsn = 'localhost:' + dbx)
+tmpfdb = os.path.join( context['temp_directory'], 'tmp_5364.fdb')
+cleanup( tmpfdb, )
+
+con1=fdb.create_database(dsn = 'localhost:' + tmpfdb)
 con1.close()
-subprocess.call( ['gfix', 'localhost:' + dbx, '-shut', 'single', '-force', '0'] )
+subprocess.call( [ context['gfix_path'], 'localhost:' + tmpfdb, '-shut', 'single', '-force', '0'] )
 
-con1=fdb.connect(dsn = 'localhost:' + dbx)
+con1=fdb.connect(dsn = 'localhost:' + tmpfdb)
 
 f_gfix_online_log=open( os.path.join(context['temp_directory'],'tmp_5364_online.log'), 'w', buffering = 0)
 f_gfix_online_err=open( os.path.join(context['temp_directory'],'tmp_5364_online.err'), 'w', buffering = 0)
 
-subprocess.call( ['gfix', 'localhost:' + dbx, '-online', 'normal'], stdout=f_gfix_online_log, stderr=f_gfix_online_err )
+subprocess.call( [ context['gfix_path'], 'localhost:' + tmpfdb, '-online', 'normal'], stdout=f_gfix_online_log, stderr=f_gfix_online_err )
 
-f_gfix_online_log.close()
-f_gfix_online_err.close()
+flush_and_close( f_gfix_online_log )
+flush_and_close( f_gfix_online_err )
 
 con1.close()
 
-con1=fdb.connect(dsn = 'localhost:' + dbx)
+con1=fdb.connect(dsn = 'localhost:' + tmpfdb)
 cur1=con1.cursor()
 cur1.execute('select d.mon$shutdown_mode from mon$database d')
 for r in cur1:
@@ -81,10 +100,8 @@ with open(f_gfix_online_err.name, 'r') as f:
 
 # cleanup
 ##########
-
-f_list = [ i.name for i in ( f_gfix_online_log, f_gfix_online_err ) ] + [ dbx, ]
-cleanup( f_list )
-
+time.sleep(1)
+cleanup( (f_gfix_online_log, f_gfix_online_err, tmpfdb) )
   """,
  'expected_stdout':
   """
