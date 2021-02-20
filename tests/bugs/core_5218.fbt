@@ -39,17 +39,48 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 f_extract_meta_sql = open( os.path.join(context['temp_directory'],'tmp_5218_meta.log'), 'w')
 f_extract_meta_err = open( os.path.join(context['temp_directory'],'tmp_5218_meta.err'), 'w')
-subprocess.call( ["isql", dsn, "-x"],
+subprocess.call( [context['isql_path'], dsn, "-x"],
                  stdout = f_extract_meta_sql,
                  stderr = f_extract_meta_err
                )
-f_extract_meta_sql.close()
-f_extract_meta_err.close()
+flush_and_close( f_extract_meta_sql )
+flush_and_close( f_extract_meta_err )
 
-time.sleep(1)
-          
 ###############
 # CHECK RESULTS
 ###############
@@ -59,7 +90,6 @@ with open( f_extract_meta_err.name, 'r') as f:
     for line in f:
         if line.strip():
             print('EXTRACTED METADATA ERR: '+line)
-f.close()
 
 # 2. STDLOG for extracted metadata: we must ouput all
 # lines with phrase 'CONSTRAINT' in order to check that this 
@@ -69,18 +99,13 @@ with open( f_extract_meta_sql.name, 'r') as f:
     for line in f:
         if 'CONSTRAINT' in line:
             print( 'EXTRACTED METADATA LOG: '+line )
-f.close()
 
-#####################################################################
+
 # Cleanup:
+##########
+time.sleep(1)
+cleanup( (f_extract_meta_sql, f_extract_meta_err) )
 
-f_list=[]
-f_list.append(f_extract_meta_sql)
-f_list.append(f_extract_meta_err)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
   """,
  'expected_stdout': 
   """
