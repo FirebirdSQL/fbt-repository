@@ -41,8 +41,41 @@ import re
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close(file_handle):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 
 sqltxt='''
     set term ^;
@@ -69,16 +102,11 @@ sqltxt='''
 
 f_checksql=open( os.path.join(context['temp_directory'],'tmp_5183.sql'), 'w')
 f_checksql.write(sqltxt)
-f_checksql.close()
+flush_and_close( f_checksql )
 
 f_isqllog=open( os.path.join(context['temp_directory'],'tmp_5183.log'), 'w')
-subprocess.call(["isql", dsn, "-i", f_checksql.name],  stdout=f_isqllog, stderr=subprocess.STDOUT)
-f_isqllog.close()
-
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
-time.sleep(1)
+subprocess.call([context['isql_path'], dsn, "-i", f_checksql.name],  stdout=f_isqllog, stderr=subprocess.STDOUT)
+flush_and_close( f_isqllog )
 
 # Output 
 # -At line 6, column 35
@@ -94,7 +122,6 @@ with open( f_isqllog.name,'r') as f:
         if pattern.match(line):
             tokens=re.split('\W+', line)
             pairs[ tokens[3] ] = tokens[5]
-f.close()
 
 print( 'Number of distinct pairs {line,column}:  %d ' % len(pairs) )
 
@@ -102,15 +129,11 @@ print( 'Number of distinct pairs {line,column}:  %d ' % len(pairs) )
 # {'9': '5', '6': '35'}
 # Number of distinct pairs {line,column}:  2
 
-#####################################################################
-# Cleanup:
 
-f_list=[]
-f_list.append(f_isqllog)
-f_list.append(f_checksql)
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
+# Cleanup:
+##########
+time.sleep(1)
+cleanup( (f_isqllog,f_checksql) )
 
   """,
  'expected_stdout': 
