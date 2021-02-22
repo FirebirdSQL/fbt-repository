@@ -44,13 +44,47 @@ import subprocess
 import fdb
 from fdb import services
 
-DB_PATH = os.sep.join( db_conn.database_name.split(os.sep)[:-1] )
+DB_PATH = context['temp_directory']
+# os.sep.join( db_conn.database_name.split(os.sep)[:-1] )
 
-DB_USER='SYSDBA'
-DB_PSWD='masterkey'
+DB_USER=user_name
+DB_PSWD=user_password
 
 EDS_USER='tmp$c6182_leg'
 EDS_PSWD='123'
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
+#--------------------------------------------
 
 TDELAY=3
 DB_CNT=4
@@ -88,7 +122,7 @@ ddl_main=\
 
 f_isql1=open( os.path.join(context['temp_directory'],'tmp-c6182-ddl1.sql'), 'w')
 f_isql1.write( ddl_main )
-f_isql1.close()
+flush_and_close( f_isql1 )
 
 
 ddl_eds=\
@@ -122,27 +156,25 @@ ddl_eds=\
 
 f_isql2=open( os.path.join(context['temp_directory'],'tmp-c6182-ddl2.sql'), 'w')
 f_isql2.write( ddl_eds )
-f_isql2.close()
+flush_and_close( f_isql2 )
 
 
 for i in range(0, DB_CNT+1):
-    dbx = DB_PATH + os.sep + ( ('c6182_tmp4eds.%d.fdb' % i) if i > 0 else  'c6182_tmpmain.fdb' )
-    if os.path.isfile(dbx):
-        os.remove(dbx)
+    dbx = os.path.join( DB_PATH, ( ('c6182_tmp4eds.%d.fdb' % i) if i > 0 else  'c6182_tmpmain.fdb' ) )
+    cleanup( (dbx,) )
 
     con=fdb.create_database(dsn = 'localhost:' + dbx, user = user_name, password = user_password)
     con.close()
-    subprocess.call( ['isql', '-user', DB_USER, '-pas', DB_PSWD, 'localhost:' + dbx, '-i', (f_isql1.name if i==0 else f_isql2.name) ])
+    subprocess.call( [context['isql_path'], '-user', DB_USER, '-pas', DB_PSWD, 'localhost:' + dbx, '-i', (f_isql1.name if i==0 else f_isql2.name) ])
 
 
 #-----------------------------------------
 
-con = fdb.connect( dsn = 'localhost:'+DB_PATH+os.sep + 'c6182_tmpmain.fdb', user = EDS_USER, password = EDS_PSWD)
-#print(con.firebird_version)
+con = fdb.connect( dsn = 'localhost:' + os.path.join(DB_PATH, 'c6182_tmpmain.fdb'), user = EDS_USER, password = EDS_PSWD)
 
 cur = con.cursor()
 for i in range(1, DB_CNT+1):
-    dbx = DB_PATH + os.sep + ('c6182_tmp4eds.%d.fdb' % i)
+    dbx = os.path.join( DB_PATH, ('c6182_tmp4eds.%d.fdb' % i) )
     cur.execute( 'select * from sp_do_eds(?)', (dbx,) )
     for r in cur:
         pass
@@ -159,11 +191,10 @@ con.close()
 #--------------------------------------------
 
 for i in range(1, DB_CNT+1):
-    dbx = DB_PATH + os.sep + ('c6182_tmp4eds.%d.fdb' % i)
-    #print(dbx)
+    dbx = os.path.join( DB_PATH, ('c6182_tmp4eds.%d.fdb' % i) )
+
     con = fdb.connect( 'localhost:' + dbx, user = user_name, password = user_password)
     cur = con.cursor()
-    #cur.execute('select num_of_killed from sp_del_att()')
     cur.callproc( 'sp_del_att' )
     for r in cur:
         if i == 1:
@@ -175,10 +206,8 @@ for i in range(1, DB_CNT+1):
     cur.close()
     con.commit()
 
-    #print('Before DROP ' + con.database_name)
     try:
         con.drop_database()
-        #print('SUCCESS.')
     except Exception as e:
         ls=repr(e).split('\\n') 
         print( ls[-2] )
@@ -189,7 +218,7 @@ for i in range(1, DB_CNT+1):
 
 svc = services.connect( host='localhost', user = user_name, password = user_password)
 for i in range(1, DB_CNT+1):
-    dbx = DB_PATH + os.sep + ('c6182_tmp4eds.%d.fdb' % i)
+    dbx = os.path.join( DB_PATH, ('c6182_tmp4eds.%d.fdb' % i) )
     if os.path.isfile(dbx):
         print('UNEXPECTED presence of DB '+dbx)
         svc.shutdown(database = dbx, shutdown_mode =  fdb.services.SHUT_FULL, shutdown_method = fdb.services.SHUT_FORCE, timeout  = 0 )
@@ -209,10 +238,10 @@ svc.close()
 
 # Use ISQL instead of FDB Services instance to drop user which was created with Legacy_UserManager plugin
 # and this plugin now is NOT in the head of UserManager config parameter:
-runProgram('isql',[ dsn, '-user', DB_USER, '-pas', DB_PSWD ], 'drop user %(EDS_USER)s using plugin Legacy_UserManager;' % locals() )
+runProgram(context['isql_path'],[ dsn, '-user', DB_USER, '-pas', DB_PSWD ], 'drop user %(EDS_USER)s using plugin Legacy_UserManager;' % locals() )
 
-os.remove(f_isql1.name)
-os.remove(f_isql2.name)
+cleanup( (f_isql1, f_isql2) )
+
   """,
  'expected_stdout': 
   """
