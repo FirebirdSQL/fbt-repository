@@ -43,19 +43,49 @@ import time
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+fdb_file=db_conn.database_name
+db_conn.close()
 
 # Threshold: minimal records that is to be inserted in order to reproduce runtime exception
 # 'unable to allocate memory from OS':
 MIN_RECS_TO_ADD = 17000
 
-fdb_file='$(DATABASE_LOCATION)bugs.core_5598.fdb'
-
 fbs = fdb.services.connect( host = 'localhost:service_mgr' )
-fb_home=fbs.get_home_directory()
 fbs.set_write_mode( database = fdb_file, mode = fdb.services.WRITE_BUFFERED )
 fbs.close()
 
-db_conn.close()
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 db_conn=fdb.connect(dsn = dsn, charset = 'utf8')
 db_conn.execute_immediate( 'create table test(id int, s varchar(8191))' )
@@ -88,13 +118,13 @@ isql_run.write( isql_cmd )
 isql_run.close()
 
 #-----------------------------------
-isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_5596.log'), 'w') # open( 'c5598-tmp.log', 'w' )
-isql_err=open( os.path.join(context['temp_directory'],'tmp_isql_5596.err'), 'w') # open( 'c5598-tmp.err', 'w' )
+isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_5596.log'), 'w')
+isql_err=open( os.path.join(context['temp_directory'],'tmp_isql_5596.err'), 'w')
 
-p_isql = subprocess.call( [fb_home+'isql', dsn, '-i', isql_run.name ], stdout=isql_log, stderr=isql_err )
+p_isql = subprocess.call( [context['isql_path'], dsn, '-i', isql_run.name ], stdout=isql_log, stderr=isql_err )
 
-isql_log.close()
-isql_err.close()
+flush_and_close( isql_log )
+flush_and_close( isql_err )
 
 
 # do NOT remove this delay:
@@ -121,14 +151,11 @@ with open(isql_err.name,'r') as f:
         if line.rstrip():
             print('UNEXPECTED STDERR:' + line.upper() )
 
-time.sleep(1)
 
 # cleanup:
 ##########
-f_list = ( isql_run, isql_log, isql_err )
-for f in f_list:
-     os.remove(f.name)
-
+time.sleep(1)
+cleanup( ( isql_run, isql_log, isql_err ) )
   """,
  'expected_stdout':
   """
