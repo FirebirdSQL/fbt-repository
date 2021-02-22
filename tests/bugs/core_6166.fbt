@@ -32,16 +32,43 @@ import os
 import subprocess
 import time
 
-#--------------------------------------------
-def cleanup( f_names_list ):
-    global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i] ):
-            os.remove( f_names_list[i] )
-#--------------------------------------------
-
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
+#--------------------------------------------
+
   
 sql_ddl='''  
 	set term ^;
@@ -91,18 +118,17 @@ sql_chk='''
 	rollback;
 '''
 
-db_conn.close()
 
 f_chk_query_sql=open( os.path.join(context['temp_directory'],'tmp_6166_chk_query.sql'), 'w')
 f_chk_query_sql.write( sql_ddl + sql_chk )
-f_chk_query_sql.close()
+flush_and_close( f_chk_query_sql )
 
 f_chk_query_log = open( os.path.join(context['temp_directory'],'tmp_isql_6166_chk_query.log'), 'w' )
 f_chk_query_err = open( os.path.join(context['temp_directory'],'tmp_isql_6166_chk_query.err'), 'w')
-subprocess.call( ["isql", dsn, "-ch", "utf8", "-i", f_chk_query_sql.name], stdout=f_chk_query_log, stderr=f_chk_query_err )
-f_chk_query_log.close()
-f_chk_query_err.close()
-time.sleep(1)
+subprocess.call( [context['isql_path'], dsn, "-ch", "utf8", "-i", f_chk_query_sql.name], stdout=f_chk_query_log, stderr=f_chk_query_err )
+flush_and_close( f_chk_query_log )
+flush_and_close( f_chk_query_err )
+
 
 if os.path.getsize( f_chk_query_err.name ) == 0:
 	with open( f_chk_query_log.name,'r') as f:
@@ -111,9 +137,9 @@ if os.path.getsize( f_chk_query_err.name ) == 0:
 				print('CHECK STATEMENTS, INITIAL: '+line)
 			
 	f_chk_metadata_sql=open( os.path.join(context['temp_directory'],'tmp_6166_metadata.sql'), 'w')
-	subprocess.call( ["isql", dsn, "-ch", "utf8", "-x" ], stdout=f_chk_metadata_sql, stderr=subprocess.STDOUT )
+	subprocess.call( [context['isql_path'], dsn, "-ch", "utf8", "-x" ], stdout=f_chk_metadata_sql, stderr=subprocess.STDOUT )
 	f_chk_metadata_sql.write( sql_chk )
-	f_chk_metadata_sql.close()
+	flush_and_close( f_chk_metadata_sql )
 	
 	f_chk_metadata_fdb = os.path.join(context['temp_directory'],'tmp_6166_metadata.fdb')
 	if os.path.isfile( f_chk_metadata_fdb ):
@@ -123,11 +149,10 @@ if os.path.getsize( f_chk_query_err.name ) == 0:
 
 	f_chk_metadata_log = open( os.path.join(context['temp_directory'],'tmp_6166_metadata.log'), 'w' )
 	f_chk_metadata_err = open( os.path.join(context['temp_directory'],'tmp_6166_metadata.err'), 'w' )
-	subprocess.call( ["isql", 'localhost:'+f_chk_metadata_fdb, "-ch", "utf8", "-i", f_chk_metadata_sql.name ], stdout=f_chk_metadata_log, stderr=f_chk_metadata_err )
-	f_chk_metadata_log.close()
-	f_chk_metadata_err.close()
+	subprocess.call( [context['isql_path'], 'localhost:'+f_chk_metadata_fdb, "-ch", "utf8", "-i", f_chk_metadata_sql.name ], stdout=f_chk_metadata_log, stderr=f_chk_metadata_err )
+	flush_and_close( f_chk_metadata_log )
+	flush_and_close( f_chk_metadata_err )
 	
-	time.sleep(1)
 	with open( f_chk_metadata_err.name,'r') as f:
 		for line in f:
 			if line.split():
@@ -144,12 +169,11 @@ else:
 			if line.split():
 				print('UNEXPECTED ERROR IN INITIAL CHECK STATEMENTS: '+line)
 
-  
+# cleanup:
+##########  
+time.sleep(1)
+cleanup( ( f_chk_query_sql, f_chk_query_log, f_chk_query_err, f_chk_metadata_sql, f_chk_metadata_log, f_chk_metadata_err,f_chk_metadata_fdb ) )
 
-f_list = [ i.name for i in ( f_chk_query_sql, f_chk_query_log, f_chk_query_err, f_chk_metadata_sql, f_chk_metadata_log, f_chk_metadata_err ) ]
-f_list += [ f_chk_metadata_fdb ]
-
-cleanup( f_list )
 """,  
  'expected_stdout': 
   """
