@@ -33,11 +33,9 @@ os.unsetenv("ISC_USER")
 os.unsetenv("ISC_PASSWORD")
 db_conn.close()
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+#--------------------------------------------
 
-#-----------------------------------
-
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -45,26 +43,33 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    os.fsync(file_handle.fileno())
-
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
     file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
-def svc_get_fb_log( fb_home, f_fb_log ):
+def svc_get_fb_log( f_fb_log ):
 
   global subprocess
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "user", user_name,
                      "password", user_password,
@@ -80,7 +85,7 @@ def svc_get_fb_log( fb_home, f_fb_log ):
 #####################
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_6362_fblog_before.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_before )
+svc_get_fb_log( f_fblog_before )
 flush_and_close( f_fblog_before )
 
 f_log=open( os.path.join(context['temp_directory'],'tmp_6362_info_server.log'), 'w')
@@ -88,14 +93,14 @@ f_err=open( os.path.join(context['temp_directory'],'tmp_6362_info_server.err'), 
 
 # This must FAIL because we do not specify user/password pair and there absent in OS env.:
 ################
-subprocess.call( ['fbsvcmgr', 'localhost:service_mgr', 'info_server_version'], stdout=f_log, stderr=f_err )
+subprocess.call( [context['fbsvcmgr_path'], 'localhost:service_mgr', 'info_server_version'], stdout=f_log, stderr=f_err )
 flush_and_close( f_log )
 flush_and_close( f_err )
 
 # Get FB log *after* unsuccessful attempt to obtain server version:
 ####################
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_6362_fblog_after.txt'), 'w')
-svc_get_fb_log( fb_home, f_fblog_after )
+svc_get_fb_log( f_fblog_after )
 flush_and_close( f_fblog_after )
 
 old_fb_log=open(f_fblog_before.name, 'r')
@@ -107,7 +112,6 @@ fb_log_diff = ''.join(difflib.unified_diff(
   ))
 old_fb_log.close()
 new_fb_log.close()
-
 
 f_diff=open( os.path.join(context['temp_directory'],'tmp_6362_fblog_diff.txt'), 'w')
 f_diff.write(fb_log_diff)
@@ -129,8 +133,8 @@ with open( f_diff.name,'r') as f:
                 print( line.upper() )
 # Cleanup.
 ##########
-f_list = [ i.name for i in (f_log, f_err, f_fblog_before, f_fblog_after, f_log, f_err, f_diff) ]
-cleanup( f_list )
+time.sleep(1)
+cleanup( (f_log, f_err, f_fblog_before, f_fblog_after, f_log, f_err, f_diff) )
 
 
   """,
