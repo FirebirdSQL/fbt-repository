@@ -42,6 +42,41 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+
+
 zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_5965.zip') )
 tmpfbk = 'core_5965.fbk'
 zf.extract( tmpfbk, '$(DATABASE_LOCATION)')
@@ -51,7 +86,7 @@ tmpfbk='$(DATABASE_LOCATION)'+tmpfbk
 tmpfdb='$(DATABASE_LOCATION)'+'tmp_core_5965.fdb'
 
 f_restore_log=open( os.path.join(context['temp_directory'],'tmp_core_5965_restore.log'), 'w')
-subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+subprocess.check_call([context['fbsvcmgr_path'],"localhost:service_mgr",
                        "action_restore",
                        "bkp_file", tmpfbk,
                        "dbname", tmpfdb,
@@ -60,9 +95,7 @@ subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
                       ],
                       stdout=f_restore_log, 
                       stderr=subprocess.STDOUT)
-f_restore_log.close()
-
-time.sleep(1)
+flush_and_close( f_restore_log )
 
 con=fdb.connect(dsn = 'localhost:'+tmpfdb)
 
@@ -113,18 +146,10 @@ cur_1.close()
 cur_2.close()
 con.close()
 
-#####################################################################
 # Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
+##########
 time.sleep(1)
-
-os.remove( tmpfbk )
-os.remove( tmpfdb )
-os.remove( f_restore_log.name )
-
-
+cleanup( (tmpfbk, tmpfdb, f_restore_log) )
   """,
  'expected_stdout':
   """
