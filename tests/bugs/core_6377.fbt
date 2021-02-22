@@ -37,11 +37,10 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
-fb_home = services.connect(host='localhost').get_home_directory()
 
-#-----------------------------------
+#--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -49,20 +48,27 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    os.fsync(file_handle.fileno())
-
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
     file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
 # https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
@@ -71,8 +77,8 @@ tmp_restdb = os.path.join(context['temp_directory'],'tmp_6377_rest.fdb')
 cleanup( (tmp_restdb,) )
 
 f_br_err=open( os.path.join(context['temp_directory'],'tmp_6377_br.err'), 'w')
-p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', dsn, 'stdout' ], stdout=PIPE)
-p_getter = subprocess.Popen( [ fb_home+'gbak', '-rep', 'stdin',  'localhost:' + tmp_restdb ], stdin = p_sender.stdout, stdout = PIPE, stderr = f_br_err)
+p_sender = subprocess.Popen( [ context['gbak_path'], '-b', dsn, 'stdout' ], stdout=PIPE)
+p_getter = subprocess.Popen( [ context['gbak_path'], '-rep', 'stdin',  'localhost:' + tmp_restdb ], stdin = p_sender.stdout, stdout = PIPE, stderr = f_br_err)
 p_sender.stdout.close()
 p_getter_stdout, p_getter_stderr = p_getter.communicate()
 
@@ -88,12 +94,10 @@ with open(f_br_err.name,'r') as g:
         if line:
             print( 'UNEXPECTED STDERR IN ' + g.name + ':' +  line)
 
-time.sleep(1)
-
 # Cleanup.
 ##########
-f_list = [ i.name for i in (f_br_err,) ] + [ tmp_restdb, ]
-cleanup( f_list )
+time.sleep(1)
+cleanup( (f_br_err,tmp_restdb ) )
 
   """,
  'expected_stdout':
