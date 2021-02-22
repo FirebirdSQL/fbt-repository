@@ -70,16 +70,46 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+dbnm = db_conn.database_name
 
 so=sys.stdout
 se=sys.stderr
 
-
 map_dbo={}
-dbnm='$(DATABASE_LOCATION)bugs.core_5501.fdb'
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
 
-#----------------------------------------------------
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 def fill_dbo(con, map_dbo):
     cur=con.cursor()
     sql='''
@@ -115,9 +145,8 @@ def fill_dbo(con, map_dbo):
     for r in cur:
         map_dbo[ r[0], r[2] ] = ( r[1].strip(), r[3].strip() )
 
-#----------------------------------------------------
+#--------------------------------------------
 
-#----------------------------------------------------
 def parse_page_header(con, page_number, map_dbo):
 
     from struct import unpack_from
@@ -261,7 +290,6 @@ def parse_page_header(con, page_number, map_dbo):
 fill_dbo(db_conn, map_dbo)
 # ('map_dbo:', {(128, -1): ('TEST', ''), (128, 0): ('TEST', 'TEST_S')})
 
-
 sql='''
     select p.rdb$relation_id, p.rdb$page_number
     from rdb$pages p 
@@ -338,8 +366,8 @@ with open(dbnm, 'r+b') as w:
 # Validate DB - ensure that there are errors in pages:
 ######################
 f_onval_log=open( os.path.join(context['temp_directory'],'tmp_onval_c5501.log'), 'w')
-subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr','action_validate','dbname','$(DATABASE_LOCATION)bugs.core_5501.fdb','val_lock_timeout','1'],stdout=f_onval_log, stderr=subprocess.STDOUT)
-f_onval_log.close()
+subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_validate', 'dbname', dbnm, 'val_lock_timeout','1'],stdout=f_onval_log, stderr=subprocess.STDOUT)
+flush_and_close( f_onval_log )
 
 # RESULT: validation log should contain lines with problems about three diff. page types:
 # expected data encountered unknown
@@ -414,9 +442,7 @@ print( 'Detect all THREE page types with problem ? => %s' % ('YES' if (data_page
 
 # Cleanup:
 ##########
-os.remove(f_gstat_log)
-os.remove(f_gstat_err)
-os.remove(f_onval_log.name)
+cleanup( (f_gstat_log, f_gstat_err, f_onval_log) )
   
   """,
  'expected_stdout': 
