@@ -35,12 +35,41 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-
-fdb_file='$(DATABASE_LOCATION)bugs.core_5995.fdb'
-
+fdb_file=db_conn.database_name
 db_conn.close()
 
-#fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 #####################################################################
 # Prepare config for trace session that will be launched by call of FBSVCMGR:
@@ -56,18 +85,14 @@ txt = '''\
 '''
 trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_5995.cfg'), 'w')
 trc_cfg.write(txt)
-trc_cfg.close()
-trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_5995.log'), 'w')
-trc_log.close()
-trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_5995.lst'), 'w')
-trc_lst.close()
+flush_and_close( trc_cfg )
 
 #####################################################################
 # Async. launch of trace session using FBSVCMGR action_trace_start:
 
-trc_log=open(trc_log.name, "w")
+trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_5995.log'), 'w')
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
+p_svcmgr = Popen( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                     "action_trace_start",
                     "trc_cfg", trc_cfg.name
                   ],
@@ -76,18 +101,17 @@ p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
                 )
 
 # Wait! Trace session is initialized not instantly!
-time.sleep(2)
+time.sleep(1)
 
 #####################################################################
 
 # Determine active trace session ID (for further stop):
-
-trc_lst=open(trc_lst.name, "w")
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_5995.lst'), 'w')
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_list"],
                  stdout=trc_lst, stderr=subprocess.STDOUT
                )
-trc_lst.close()
+flush_and_close( trc_lst )
 
 # Session ID: 5 
 #   user:   
@@ -114,7 +138,6 @@ with open( trc_lst.name,'r') as f:
 # We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
 if trcssn==0:
     print("Error parsing trace session ID.")
-
 else:
 
     #####################################################################
@@ -123,31 +146,24 @@ else:
 
     trc_lst=open(trc_lst.name, "a")
     trc_lst.seek(0,2)
-
     print( 'Trace was started by: ' + trcusr )
 
-    subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+    subprocess.call( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                        "action_trace_stop",
                        "trc_id",trcssn
                      ],
                      stdout=trc_lst, 
                      stderr=subprocess.STDOUT
                    )
-    trc_lst.close()
+    flush_and_close( trc_lst )
     p_svcmgr.terminate()
 
-
-trc_log.close()
-# do NOT remove this delay:
-time.sleep(1)
+flush_and_close( trc_log )
 
 # cleanup:
 ##########
-f_list = (trc_lst, trc_cfg, trc_log)
-
-for f in f_list:
-     os.remove(f.name)
-
+time.sleep(1)
+cleanup( (trc_lst, trc_cfg, trc_log) )
   """,
  'expected_stdout':
   """
