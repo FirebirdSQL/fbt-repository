@@ -56,9 +56,10 @@ fb_home = services.connect(host='localhost', user= user_name, password= user_pas
 fbv=db_conn.firebird_version # 'WI-...' ==> Windows; 'LI-' ==> Linux
 db_conn.close()
 
+
 #--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -66,7 +67,7 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    if file_handle.mode not in ('r', 'rb'):
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
         # otherwise: "OSError: [Errno 9] Bad file descriptor"!
         os.fsync(file_handle.fileno())
     file_handle.close()
@@ -76,8 +77,16 @@ def flush_and_close(file_handle):
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
@@ -87,10 +96,10 @@ trace_dts_pattern=re.compile('.*(ATTACH_DATABASE|START_TRANSACTION|EXECUTE_STATE
 
 session_idle_timeout=1
 shell_sleep_sec=session_idle_timeout + 2
-if fbv.startswith('WI-'):
-    shell_sleep_cmd='shell ping -n %(shell_sleep_sec)s 127.0.0.1 > nul' % locals()
+if os.name == 'nt':
+    shell_sleep_cmd = 'shell ping -n %d 127.0.0.1 > %s' % (shell_sleep_sec, os.devnull)
 else:
-    shell_sleep_cmd='shell sleep %(shell_sleep_sec)s > /dev/null' % locals()
+    shell_sleep_cmd = 'shell sleep %d > %s' %  (shell_sleep_sec, os.devnull)
 
 sql='''
     set list on;
@@ -138,12 +147,12 @@ flush_and_close( f_trc_cfg )
 f_trc_log=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.log'), "w", buffering = 0)
 f_trc_err=open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.err'), "w", buffering = 0)
 
-p_trace = Popen( [ fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],
+p_trace = Popen( [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],
                  stdout=f_trc_log,
                  stderr=f_trc_err
                )
 
-time.sleep(2)
+time.sleep(1)
 
 f_isql_log=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.log'), 'w', buffering = 0)
 f_isql_err=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_idle.err'), 'w', buffering = 0)
@@ -151,7 +160,7 @@ f_isql_err=open( os.path.join(context['temp_directory'],'tmp_c5488_run_session_i
 ######################
 # S T A R T    I S Q L
 ######################
-subprocess.call( [fb_home+'isql', dsn, '-q', '-n', '-i', f_sql_cmd.name],
+subprocess.call( [context['isql_path'], dsn, '-q', '-n', '-i', f_sql_cmd.name],
                  stdout=f_isql_log,
                  stderr=f_isql_err
                )
@@ -165,11 +174,8 @@ flush_and_close( f_isql_err )
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
 f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_c5488_trc_session_idle.lst'), 'w', buffering = 0)
-subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
+subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
 flush_and_close( f_trc_lst )
-
-# !!! DO NOT REMOVE THIS LINE !!!
-time.sleep(2)
 
 trcssn=0
 with open( f_trc_lst.name,'r') as f:
@@ -191,15 +197,14 @@ with open( f_trc_lst.name,'r') as f:
 # ####################################################
 if trcssn>0:
     fn_nul = open(os.devnull, 'w')
-    subprocess.call([fb_home+'fbsvcmgr', 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
-    time.sleep(2)
+    time.sleep(1)
 
 p_trace.terminate()
 flush_and_close( f_trc_log )
 flush_and_close( f_trc_err )
-
 
 # Output of TRACE results:
 ##########################
@@ -238,10 +243,8 @@ with open(f_isql_err.name, 'r') as f:
 
 # CLEANUP
 #########
-f_list=(f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_sql_cmd, f_isql_log, f_isql_err )
-
-cleanup( [ i.name for i in f_list ] )
-
+time.sleep(1)
+cleanup( (f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_sql_cmd, f_isql_log, f_isql_err ) )
   """,
  'expected_stdout': 
   """
