@@ -35,8 +35,40 @@ import fdb
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 allowed_patterns = ( re.compile('COL2_BLOB_ID\s+\S+', re.IGNORECASE), )
 
@@ -68,15 +100,12 @@ sql_txt='''
 
 f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_6089.sql'), 'w')
 f_isql_cmd.write( sql_txt )
-f_isql_cmd.close()
+flush_and_close( f_isql_cmd )
 
 f_isql_log=open( os.path.join(context['temp_directory'],'tmp_6089.log'), 'w')
 
-subprocess.call(["isql", dsn, "-q", "-i", f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
-f_isql_log.close()
-
-# Let redirected output of isql be flushed on disk:
-time.sleep(1)
+subprocess.call([context['isql_path'], dsn, "-q", "-i", f_isql_cmd.name], stdout=f_isql_log, stderr=subprocess.STDOUT)
+flush_and_close( f_isql_log )
 
 blob_id_set=set()
 with open( f_isql_log.name,'r') as f:
@@ -89,11 +118,7 @@ print( 'Number of unique blob IDs: ' + str(len(blob_id_set)) )
 
 # Cleanup.
 ##########
-f_list = (f_isql_cmd, f_isql_log)
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
+cleanup( (f_isql_cmd, f_isql_log) )
   """,
  'expected_stdout': 
   """
