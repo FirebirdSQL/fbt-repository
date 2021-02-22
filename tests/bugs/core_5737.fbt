@@ -39,7 +39,39 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-fb_home = services.connect(host='localhost', user = user_name, password = user_password).get_home_directory()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 cur = db_conn.cursor()
 db_conn.execute_immediate('recreate table test1(id int primary key using descending index test1_id_pk_desc)')
@@ -53,14 +85,14 @@ show_query='''
 
 f_show_command_sql = open( os.path.join(context['temp_directory'],'tmp_local_host_5737.sql'), 'w')
 f_show_command_sql.write( show_query )
-f_show_command_sql.close()
+flush_and_close( f_show_command_sql )
 
 f_show_command_log = open( os.path.join(context['temp_directory'],'tmp_local_host_5737.log'), 'w')
 f_show_command_err = open( os.path.join(context['temp_directory'],'tmp_local_host_5737.err'), 'w')
 
 # WARNING: we launch ISQL here in async mode in order to have ability to kill its process if it will hang!
 ############################################
-p_isql_to_local_host=subprocess.Popen( [fb_home+"isql", dsn, "-i", f_show_command_sql.name ],
+p_isql_to_local_host = subprocess.Popen( [ context['isql_path'], dsn, "-i", f_show_command_sql.name ],
                  stdout = f_show_command_log,
                  stderr = f_show_command_err
                )
@@ -68,38 +100,27 @@ p_isql_to_local_host=subprocess.Popen( [fb_home+"isql", dsn, "-i", f_show_comman
 time.sleep(2)
 
 p_isql_to_local_host.terminate()
-f_show_command_log.close()
-f_show_command_err.close()
-
+flush_and_close( f_show_command_log )
+flush_and_close( f_show_command_err )
 
 with open( f_show_command_log.name,'r') as f:
   for line in f:
       if line.split():
         print('STDOUT: ', ' '.join(line.split()) )
-f.close()
+
 
 with open( f_show_command_err.name,'r') as f:
   for line in f:
       if line.split():
         print('STDERR: ', ' '.join(line.split()) )
-f.close()            
+
 cur.close()
 
-###############################
+
 # Cleanup.
+##########
 time.sleep(1)
-
-f_list=( 
-     f_show_command_sql 
-    ,f_show_command_log 
-    ,f_show_command_err 
-)
-
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+cleanup( (f_show_command_sql, f_show_command_log, f_show_command_err) )
   """,
  'expected_stdout':
   """
