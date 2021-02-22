@@ -97,6 +97,40 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
 
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 f_hang_sql = open( os.path.join(context['temp_directory'],'tmp_hang_5685.sql'), 'w')
 f_hang_sql.write( 'set list on; set count on; select * from sp_get_data;' )
 f_hang_sql.close()
@@ -132,7 +166,7 @@ sql_kill='''
 
 f_kill_sql = open( os.path.join(context['temp_directory'],'tmp_kill_5685.sql'), 'w')
 f_kill_sql.write( sql_kill )
-f_kill_sql.close()
+flush_and_close( f_kill_sql )
 
 f_hang_log = open( os.path.join(context['temp_directory'],'tmp_hang_5685.log'), 'w')
 f_hang_err = open( os.path.join(context['temp_directory'],'tmp_hang_5685.err'), 'w')
@@ -140,60 +174,56 @@ f_hang_err = open( os.path.join(context['temp_directory'],'tmp_hang_5685.err'), 
 
 # WARNING: we launch ISQL here in async mode in order to have ability to kill its process if it will hang!
 ############################################
-p_hang_pid=subprocess.Popen( [ "isql", dsn, "-i", f_hang_sql.name ],
+p_hang_pid=subprocess.Popen( [ context['isql_path'], dsn, "-i", f_hang_sql.name ],
                  stdout = f_hang_log,
                  stderr = f_hang_err
                )
 
-time.sleep(2)
+time.sleep(1)
 
 
 f_kill_log = open( os.path.join(context['temp_directory'],'tmp_kill_5685.log'), 'w')
 f_kill_err = open( os.path.join(context['temp_directory'],'tmp_kill_5685.err'), 'w')
 
 for i in (1,2):
-    subprocess.call( [ "isql", dsn, "-i", f_kill_sql.name ],
+    subprocess.call( [ context['isql_path'], dsn, "-i", f_kill_sql.name ],
                      stdout = f_kill_log,
                      stderr = f_kill_err
                    )
 
-f_kill_log.close()
-f_kill_err.close()
+flush_and_close( f_kill_log )
+flush_and_close( f_kill_err )
 
 ##############################################
 p_hang_pid.terminate()
-f_hang_log.close()
-f_hang_err.close()
-
-time.sleep(1)
+flush_and_close( f_hang_log )
+flush_and_close( f_hang_err )
 
 f_shut_log = open( os.path.join(context['temp_directory'],'tmp_shut_5685.log'), 'w')
 f_shut_err = open( os.path.join(context['temp_directory'],'tmp_shut_5685.err'), 'w')
 
-subprocess.call( [ "gfix", dsn, "-shut", "full", "-force", "0" ],
+subprocess.call( [ context['gfix_path'], dsn, "-shut", "full", "-force", "0" ],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-subprocess.call( [ "gstat", dsn, "-h"],
+subprocess.call( [ context['gstat_path'], dsn, "-h"],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-subprocess.call( [ "gfix", dsn, "-online" ],
+subprocess.call( [ context['gfix_path'], dsn, "-online" ],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-subprocess.call( [ "gstat", dsn, "-h"],
+subprocess.call( [ context['gstat_path'], dsn, "-h"],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-f_shut_log.close()
-f_shut_err.close()
-
-
+flush_and_close( f_shut_log )
+flush_and_close( f_shut_err )
 
 with open( f_hang_log.name,'r') as f:
   for line in f:
@@ -236,12 +266,7 @@ f_list=(
     ,f_shut_log
     ,f_shut_err
 )
-
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+cleanup( flist )
 
   """,
  'expected_stdout':
@@ -367,7 +392,7 @@ f_hang_err = open( os.path.join(context['temp_directory'],'tmp_hang_5685.err'), 
 
 # WARNING: we launch ISQL here in async mode in order to have ability to kill its process if it will hang!
 ############################################
-p_hang_pid=subprocess.Popen( [ "isql", dsn, "-i", f_hang_sql.name ],
+p_hang_pid=subprocess.Popen( [ context['isql_path'], dsn, "-i", f_hang_sql.name ],
                  stdout = f_hang_log,
                  stderr = f_hang_err
                )
@@ -379,7 +404,7 @@ f_kill_log = open( os.path.join(context['temp_directory'],'tmp_kill_5685.log'), 
 f_kill_err = open( os.path.join(context['temp_directory'],'tmp_kill_5685.err'), 'w')
 
 for i in (1,2):
-    subprocess.call( [ "isql", dsn, "-i", f_kill_sql.name ],
+    subprocess.call( [ context['isql_path'], dsn, "-i", f_kill_sql.name ],
                      stdout = f_kill_log,
                      stderr = f_kill_err
                    )
@@ -397,22 +422,22 @@ time.sleep(2)
 f_shut_log = open( os.path.join(context['temp_directory'],'tmp_shut_5685.log'), 'w')
 f_shut_err = open( os.path.join(context['temp_directory'],'tmp_shut_5685.err'), 'w')
 
-subprocess.call( [ "gfix", dsn, "-shut", "full", "-force", "0" ],
+subprocess.call( [ context['gfix_path'], dsn, "-shut", "full", "-force", "0" ],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-subprocess.call( [ "gstat", dsn, "-h"],
+subprocess.call( [ context['gstat_path'], dsn, "-h"],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-subprocess.call( [ "gfix", dsn, "-online" ],
+subprocess.call( [ context['gfix_path'], dsn, "-online" ],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
 
-subprocess.call( [ "gstat", dsn, "-h"],
+subprocess.call( [ context['gstat_path'], dsn, "-h"],
                  stdout = f_shut_log,
                  stderr = f_shut_err
                )
