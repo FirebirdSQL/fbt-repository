@@ -65,6 +65,39 @@ os.environ["ISC_PASSWORD"] = user_password
 fdb_name = os.path.split(db_conn.database_name)[1]
 db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 # Prepare config for trace session that will be launched:
 #########################################################
 txt = \
@@ -80,14 +113,13 @@ txt = \
 
 trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_6095.cfg'), 'w')
 trc_cfg.write(txt)
-trc_cfg.close()
-
+flush_and_close( trc_cfg )
 
 # Async. launch of trace session using FBSVCMGR action_trace_start:
 ###################################################################
 trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_6095.log'), 'w', buffering = 0)
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
+p_svcmgr = Popen( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                     "action_trace_start",
                     "trc_cfg", trc_cfg.name
                   ],
@@ -99,15 +131,14 @@ p_svcmgr = Popen( [ "fbsvcmgr", "localhost:service_mgr",
 # empty when we will read it at the next step:
 time.sleep(1)
 
-
 # Determine active trace session ID (for further stop):
 #######################################################
 trc_lst=open( os.path.join(context['temp_directory'],'tmp_trace_6095.lst'), 'w', buffering = 0)
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_list"],
                  stdout=trc_lst, stderr=subprocess.STDOUT
                )
-trc_lst.close()
+flush_and_close( trc_lst )
 
 # Session ID: 5 
 #   user:   
@@ -164,17 +195,16 @@ else:
     trc_lst=open(trc_lst.name, "a")
     trc_lst.seek(0,2)
 
-    subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+    subprocess.call( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                        "action_trace_stop",
                        "trc_id",trc_ssn
                      ],
                      stdout=trc_lst, 
                      stderr=subprocess.STDOUT
                    )
-    trc_lst.close()
+    flush_and_close( trc_lst )
 
     p_svcmgr.terminate()
-    trc_log.close()
 
 
     allowed_patterns = [ 
@@ -207,17 +237,13 @@ else:
 
 
 #< cond "if trc_ssn>0"
+flush_and_close( trc_log )
+
 
 # cleanup:
 ##########
-f_list = (trc_lst, trc_cfg, trc_log)
-
-# The next small delay is mandatory, otherwise we will get:
-# exception: WindowsError: 32 The process cannot access the file because it is being used by another process
 time.sleep(1)
-for f in f_list:
-     os.remove(f.name)
-
+cleanup( (trc_lst, trc_cfg, trc_log) )
   """,
  'expected_stdout':
   """
