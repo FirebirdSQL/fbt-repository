@@ -30,6 +30,7 @@
  'test_script':
   """\
 import os
+import time
 import subprocess
 import re
 
@@ -38,9 +39,44 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
-f_metadata_sql=open( os.path.join(context['temp_directory'],'tmp_meta_6116.sql'), 'w', buffering=0)
-subprocess.call([ 'isql', '-x', dsn ], stdout=f_metadata_sql, stderr=subprocess.STDOUT)
-f_metadata_sql.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
+#--------------------------------------------
+
+
+f_metadata_sql=open( os.path.join(context['temp_directory'],'tmp_meta_6116.sql'), 'w')
+subprocess.call([ context['isql_path'], '-x', dsn ], stdout=f_metadata_sql, stderr=subprocess.STDOUT)
+flush_and_close( f_metadata_sql )
 
 # FULL_NAME VARCHAR(0) CHARACTER SET WIN1252 COMPUTED BY
 comp_field_initial_ptn = re.compile( 'FULL_NAME\s+VARCHAR\(\d+\).*COMPUTED BY', re.IGNORECASE )
@@ -63,7 +99,10 @@ with open( f_metadata_sql.name,'r') as f:
             words = line.replace('(',' ').replace(')',' ').split() # ['ALTER', 'FULL_NAME', 'TYPE', 'VARCHAR', '0', ... , 'COMPUTED', 'BY']
             print( 'Length in "ALTER COLUMN" statement: ' + words[4] )
 
-os.remove( f_metadata_sql.name )
+# cleanup:
+##########
+time.sleep(1)
+cleanup( (f_metadata_sql,) )
 
   """,
  'expected_stdout': 
