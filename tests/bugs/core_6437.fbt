@@ -25,10 +25,13 @@ import os
 import subprocess
 from fdb import services
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
 
 #--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -36,7 +39,7 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    if file_handle.mode not in ('r', 'rb'):
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
         # otherwise: "OSError: [Errno 9] Bad file descriptor"!
         os.fsync(file_handle.fileno())
     file_handle.close()
@@ -45,28 +48,28 @@ def flush_and_close(file_handle):
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-db_conn.close()
-
-fb_home = services.connect(host='localhost', user=user_name, password=user_password).get_home_directory()
 
 db_name = os.path.join(context['temp_directory'],'tmp_gfix_6437.fdb')
 
 cleanup( (db_name,) )
 
-runProgram(fb_home + 'isql',[ '-q' ], "create database '%(db_name)s';" % locals())
+runProgram('isql',[ '-q' ], "create database '%(db_name)s';" % locals())
 
 f_run_log=open( os.path.join(context['temp_directory'],'tmp_gfix_6437.log'), 'w')
-subprocess.call( [ fb_home + "gfix", db_name, "-buffers", "1000000" ], stdout=f_run_log, stderr=subprocess.STDOUT )
+subprocess.call( [ context['gfix_path'], db_name, "-buffers", "1000000" ], stdout=f_run_log, stderr=subprocess.STDOUT )
 flush_and_close(f_run_log)
 
 with open(f_run_log.name,'r') as f:
@@ -74,9 +77,10 @@ with open(f_run_log.name,'r') as f:
         if 'file' in line:
             print('UNEXPECTED GFIX OUTPUT: ' + line)
 
-runProgram(fb_home + 'isql',[ db_name ], 'set heading off;select mon$page_buffers from mon$database;')
+runProgram('isql',[ db_name ], 'set heading off;select mon$page_buffers from mon$database;')
 
-cleanup( (db_name, f_run_log.name) )
+#cleanup( (db_name, f_run_log,) )
+
   """,
  'expected_stdout': 
   """
