@@ -81,10 +81,11 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
 
-#-----------------------------------
+#--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -92,21 +93,30 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    os.fsync(file_handle.fileno())
-
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
     file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
-db_conn.close()
-runProgram('gfix',[dsn,'-user',user_name,'-pas',user_password,'-w','async'])
+runProgram('gfix',[dsn,'-w','async'])
 
 sql_text='''
     set list on;
@@ -2304,7 +2314,7 @@ flush_and_close( f_sql_cmd )
 
 f_sql_log=open( os.path.join(context['temp_directory'],'tmp_6336.log'), 'w')
 f_sql_err=open( os.path.join(context['temp_directory'],'tmp_6336.err'), 'w')
-subprocess.call( [ fb_home+"isql" , "-q", "-i", f_sql_cmd.name ], stdout=f_sql_log, stderr=f_sql_err )
+subprocess.call( [ context['isql_path'] , "-q", "-i", f_sql_cmd.name ], stdout=f_sql_log, stderr=f_sql_err )
 flush_and_close( f_sql_log )
 flush_and_close( f_sql_err )
 
@@ -2316,8 +2326,8 @@ with open(f_sql_log.name, 'r') as f:
     for line in f:
         print(line)
 
-f_list=( f_sql_cmd, f_sql_log, f_sql_err )
-cleanup( [ i.name for i in f_list ] )
+
+cleanup( ( f_sql_cmd, f_sql_log, f_sql_err ) )
 
   """,
  'expected_stdout':
