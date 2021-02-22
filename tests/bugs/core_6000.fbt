@@ -33,47 +33,67 @@ import subprocess
 from subprocess import Popen
 import time
 
-def cleanup( f_names_list ):
-    global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-
-#--------------------------------------------
-
-cur=db_conn.cursor()
-cur.execute('select mon$database_name from mon$database')
-for r in cur:
-    this_fdb = r[0]
-cur.close()
-db_conn.close()
-#print( this_fdb )
-
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_fdb =  db_conn.database_name
 this_fbk=os.path.join(context['temp_directory'],'tmp_core_6000.fbk')
-cleanup( [this_fbk,] )
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+cleanup( this_fbk, )
 
 f_psw_correct=open( os.path.join(context['temp_directory'],'tmp_psw_6000__OK.dat'), 'w')
 f_psw_correct.write( user_password )
-f_psw_correct.close()
+flush_and_close( f_psw_correct )
 
 f_psw_invalid=open( os.path.join(context['temp_directory'],'tmp_psw_6000_BAD.dat'), 'w')
 f_psw_invalid.write( 'T0t@1lywr0ng' )
-f_psw_invalid.close()
+flush_and_close( f_psw_invalid )
 
 #---------------------- backup with '-fe <invalid_password_file>' --------------------------
 
 f_log_invalid = open( os.path.join(context['temp_directory'],'tmp_isql_6000_BAD.log'), 'w')
 f_err_invalid = open( os.path.join(context['temp_directory'],'tmp_isql_6000_BAD.err'), 'w')
 
-subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', '-user', user_name ,'-fe', f_psw_invalid.name, this_fdb, this_fbk ],
+subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', '-user', user_name ,'-fe', f_psw_invalid.name, this_fdb, this_fbk ],
                  stdout=f_log_invalid,
                  stderr=f_err_invalid
                )
-f_err_invalid.close()
-f_log_invalid.close()
+flush_and_close( f_err_invalid )
+flush_and_close( f_log_invalid )
 
 #---------------------- backup with '-fe <correct_password_file>' --------------------------
 
@@ -82,15 +102,12 @@ del os.environ["ISC_PASSWORD"]
 f_log_correct = open( os.path.join(context['temp_directory'],'tmp_isql_6000__OK.log'), 'w')
 f_err_correct = open( os.path.join(context['temp_directory'],'tmp_isql_6000__OK.err'), 'w')
 
-subprocess.call( ["gbak", '-b', '-se', 'localhost:service_mgr', '-user', user_name ,'-fe', f_psw_correct.name, this_fdb, this_fbk ],
+subprocess.call( [context['gbak_path'], '-b', '-se', 'localhost:service_mgr', '-user', user_name ,'-fe', f_psw_correct.name, this_fdb, this_fbk ],
                  stdout=f_log_correct,
                  stderr=f_err_correct
                )
-f_err_correct.close()
-f_log_correct.close()
-
-
-time.sleep(1)
+flush_and_close( f_err_correct )
+flush_and_close( f_log_correct )
 
 # This file should be EMPTY:
 ###########################
@@ -111,15 +128,10 @@ with open(f_err_correct.name) as f:
         print('UNEXPECTED STDERR FOR CORRECT PASSWORD: '+line)
 
 
-time.sleep(1)
-
 # CLEANUP
 #########
-
-f_list = [ i.name for i in ( f_psw_correct, f_psw_invalid, f_log_correct, f_err_correct, f_log_invalid, f_err_invalid ) ]
-f_list += [ this_fbk ]
-cleanup( f_list )
-
+time.sleep(1)
+cleanup( ( f_psw_correct, f_psw_invalid, f_log_correct, f_err_correct, f_log_invalid, f_err_invalid, this_fbk ) )
   """,
  'expected_stdout': 
   """
