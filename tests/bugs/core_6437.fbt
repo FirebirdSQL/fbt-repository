@@ -79,7 +79,7 @@ with open(f_run_log.name,'r') as f:
 
 runProgram('isql',[ db_name ], 'set heading off;select mon$page_buffers from mon$database;')
 
-#cleanup( (db_name, f_run_log,) )
+cleanup( (db_name, f_run_log,) )
 
   """,
  'expected_stdout': 
