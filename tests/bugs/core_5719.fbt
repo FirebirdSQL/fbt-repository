@@ -36,11 +36,44 @@ os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 def svc_get_fb_log( f_fb_log ):
 
-  import subprocess
+  global subprocess
 
-  subprocess.call( [ "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
@@ -59,11 +92,11 @@ tmpfdb='$(DATABASE_LOCATION)'+'tmp_5719_check_restored.fdb'
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_5719_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 
 f_restore_log=open( os.path.join(context['temp_directory'],'tmp_5719_check_restored.log'), 'w')
-subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+subprocess.check_call([context['fbsvcmgr_path'],"localhost:service_mgr",
                        "action_restore",
                        "bkp_file", tmpfbk,
                        "dbname", tmpfdb,
@@ -72,23 +105,21 @@ subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
                       ],
                       stdout=f_restore_log, 
                       stderr=subprocess.STDOUT)
-f_restore_log.close()
-
-time.sleep(1)
+flush_and_close( f_restore_log )
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5719_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 
 f_validation_log=open( os.path.join(context['temp_directory'],'tmp_5719_validation.log'), 'w')
-subprocess.check_call(["fbsvcmgr","localhost:service_mgr",
+subprocess.check_call([context['fbsvcmgr_path'],"localhost:service_mgr",
                        "action_validate",
                        "dbname", tmpfdb,
                       ],
                       stdout=f_validation_log, 
                       stderr=subprocess.STDOUT)
-f_validation_log.close()
+flush_and_close( f_validation_log )
 
 # Compare firebird.log versions BEFORE and AFTER this test:
 ######################
@@ -105,7 +136,7 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5719_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 # Check logs:
 #############
@@ -126,15 +157,10 @@ with open( f_diff_txt.name,'r') as f:
             print( 'UNEXPECTED DIFF IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
 
 
-#####################################################################
+##########
 # Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
+##########
 time.sleep(1)
-
-os.remove( tmpfbk )
-os.remove( tmpfdb )
 
 f_list=( 
      f_restore_log
@@ -142,13 +168,10 @@ f_list=(
     ,f_fblog_before
     ,f_fblog_after
     ,f_diff_txt
+    ,tmpfbk
+    ,tmpfdb
 )
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
-
+cleanup( f_list )
   """,
  'expected_stdout':
   """
