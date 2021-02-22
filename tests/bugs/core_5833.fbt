@@ -36,15 +36,60 @@ import difflib
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
 
+#--------------------------------------------
 
-ddl_list  = 'CREATE TABLE,ALTER TABLE,DROP TABLE,CREATE PROCEDURE,ALTER PROCEDURE,DROP PROCEDURE'
-ddl_list += ',CREATE FUNCTION,ALTER FUNCTION,DROP FUNCTION,CREATE TRIGGER,ALTER TRIGGER,DROP TRIGGER'
-ddl_list += ',CREATE EXCEPTION,ALTER EXCEPTION,DROP EXCEPTION,CREATE VIEW,ALTER VIEW,DROP VIEW'
-ddl_list += ',CREATE DOMAIN,ALTER DOMAIN,DROP DOMAIN,CREATE ROLE,ALTER ROLE,DROP ROLE'
-ddl_list += ',CREATE SEQUENCE,ALTER SEQUENCE,DROP SEQUENCE,CREATE USER,ALTER USER,DROP USER'
-ddl_list += ',CREATE INDEX,ALTER INDEX,DROP INDEX,CREATE COLLATION,DROP COLLATION,ALTER CHARACTER SET'
-ddl_list += ',CREATE PACKAGE,ALTER PACKAGE,DROP PACKAGE,CREATE PACKAGE BODY,DROP PACKAGE BODY'
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+ddl_list = \
+''.join(
+    (
+          'CREATE TABLE,ALTER TABLE,DROP TABLE,CREATE PROCEDURE,ALTER PROCEDURE,DROP PROCEDURE'
+        , ',CREATE FUNCTION,ALTER FUNCTION,DROP FUNCTION,CREATE TRIGGER,ALTER TRIGGER,DROP TRIGGER'
+        , ',CREATE EXCEPTION,ALTER EXCEPTION,DROP EXCEPTION,CREATE VIEW,ALTER VIEW,DROP VIEW'
+        , ',CREATE DOMAIN,ALTER DOMAIN,DROP DOMAIN,CREATE ROLE,ALTER ROLE,DROP ROLE'
+        , ',CREATE SEQUENCE,ALTER SEQUENCE,DROP SEQUENCE,CREATE USER,ALTER USER,DROP USER'
+        , ',CREATE INDEX,ALTER INDEX,DROP INDEX,CREATE COLLATION,DROP COLLATION,ALTER CHARACTER SET'
+        , ',CREATE PACKAGE,ALTER PACKAGE,DROP PACKAGE,CREATE PACKAGE BODY,DROP PACKAGE BODY'
+    )
+)
+#ddl_list  = 'CREATE TABLE,ALTER TABLE,DROP TABLE,CREATE PROCEDURE,ALTER PROCEDURE,DROP PROCEDURE'
+#ddl_list += ',CREATE FUNCTION,ALTER FUNCTION,DROP FUNCTION,CREATE TRIGGER,ALTER TRIGGER,DROP TRIGGER'
+#ddl_list += ',CREATE EXCEPTION,ALTER EXCEPTION,DROP EXCEPTION,CREATE VIEW,ALTER VIEW,DROP VIEW'
+#ddl_list += ',CREATE DOMAIN,ALTER DOMAIN,DROP DOMAIN,CREATE ROLE,ALTER ROLE,DROP ROLE'
+#ddl_list += ',CREATE SEQUENCE,ALTER SEQUENCE,DROP SEQUENCE,CREATE USER,ALTER USER,DROP USER'
+#ddl_list += ',CREATE INDEX,ALTER INDEX,DROP INDEX,CREATE COLLATION,DROP COLLATION,ALTER CHARACTER SET'
+#ddl_list += ',CREATE PACKAGE,ALTER PACKAGE,DROP PACKAGE,CREATE PACKAGE BODY,DROP PACKAGE BODY'
 
 
 # Initial DDL: create all triggers
@@ -66,9 +111,8 @@ for i in ddl_list.split(','):
 
 f_ddl_sql.write('set term ;^\\n')
 f_ddl_sql.write('commit;\\n')
-f_ddl_sql.close()
+flush_and_close( f_ddl_sql )
 
-db_conn.close()
 runProgram('isql', [dsn, '-i', f_ddl_sql.name] )
 
 # Prepare check query:
@@ -85,7 +129,7 @@ sql_text='''\
 
 f_chk_sql=open( os.path.join(context['temp_directory'],'tmp_check_trg_5833.sql'), 'w')
 f_chk_sql.write( sql_text )
-f_chk_sql.close()
+flush_and_close( f_chk_sql )
 
 # Query RDB$TRIGGERS before b/r:
 ################################
@@ -94,13 +138,13 @@ f_xmeta1_log = open( os.path.join(context['temp_directory'],'tmp_xmeta1_5833.log
 f_xmeta1_err = open( os.path.join(context['temp_directory'],'tmp_xmeta1_5833.err'), 'w')
 
 # Add to log result of query to rdb$triggers table:
-subprocess.call( ["isql", dsn, "-i", f_chk_sql.name],
+subprocess.call( [context['isql_path'], dsn, "-i", f_chk_sql.name],
                  stdout = f_xmeta1_log,
                  stderr = f_xmeta1_err
                )
 
-f_xmeta1_log.close()
-f_xmeta1_err.close()
+flush_and_close( f_xmeta1_log )
+flush_and_close( f_xmeta1_err )
 
 # Do backup and restore into temp file:
 #######################################
@@ -119,13 +163,13 @@ runProgram('gbak', ['-c', tmp_bkup, 'localhost:'+tmp_rest ] )
 f_xmeta2_log = open( os.path.join(context['temp_directory'],'tmp_xmeta2_5833.log'), 'w')
 f_xmeta2_err = open( os.path.join(context['temp_directory'],'tmp_xmeta2_5833.err'), 'w')
 
-subprocess.call( ["isql", 'localhost:'+tmp_rest, "-i", f_chk_sql.name],
+subprocess.call( [context['isql_path'], 'localhost:'+tmp_rest, "-i", f_chk_sql.name],
                  stdout = f_xmeta2_log,
                  stderr = f_xmeta2_err
                )
 
-f_xmeta2_log.close()
-f_xmeta2_err.close()
+flush_and_close( f_xmeta2_log )
+flush_and_close( f_xmeta2_err )
 
 # Every STDERR log should be EMPTY:
 ###################################
@@ -137,7 +181,6 @@ for i in range(len(f_list)):
        with open( f_name,'r') as f:
            for line in f:
                print("Unexpected STDERR, file "+f_name+": "+line)
-       f.close()
 
 
 # DIFFERENCE between f_xmeta1_log and f_xmeta2_log should be EMPTY:
@@ -158,25 +201,16 @@ new_rdb_triggers_data.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5833_metadata_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         print("Unexpected DIFF in metadata: "+line)
-f.close()
 
 # CLEANUP
 #########
 time.sleep(1)
-
-f_list=(f_ddl_sql, f_chk_sql, f_xmeta1_log, f_xmeta1_err, f_xmeta2_log, f_xmeta2_err, f_diff_txt)
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
-os.remove(tmp_bkup)
-os.remove(tmp_rest)
-
+cleanup( (f_ddl_sql, f_chk_sql, f_xmeta1_log, f_xmeta1_err, f_xmeta2_log, f_xmeta2_err, f_diff_txt, tmp_bkup, tmp_rest) )
   """,
  'expected_stdout': 
   """
