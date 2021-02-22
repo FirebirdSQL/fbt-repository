@@ -51,9 +51,42 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+db_file = db_conn.database_name
 
 db_conn.close()
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 usr=user_name
 pwd=user_password
@@ -95,19 +128,19 @@ eds_query='''
 
 f_eds_to_unavail_host_sql = open( os.path.join(context['temp_directory'],'tmp_unavail_host_5648.sql'), 'w')
 f_eds_to_unavail_host_sql.write( eds_query % locals() )
-f_eds_to_unavail_host_sql.close()
+flush_and_close( f_eds_to_unavail_host_sql )
 
 remote_host = 'localhost'
 f_eds_to_local_host_sql = open( os.path.join(context['temp_directory'],'tmp_local_host_5648.sql'), 'w')
 f_eds_to_local_host_sql.write( eds_query % locals() )
-f_eds_to_local_host_sql.close()
+flush_and_close( f_eds_to_local_host_sql )
 
 
 
 f_eds_to_unavail_host_log = open( os.path.join(context['temp_directory'],'tmp_unavail_host_5648.log'), 'w')
 f_eds_to_unavail_host_err = open( os.path.join(context['temp_directory'],'tmp_unavail_host_5648.err'), 'w')
 p_isql_to_unavail_host=\
-subprocess.Popen( [fb_home+"isql", dsn, "-n", "-i", f_eds_to_unavail_host_sql.name ],
+subprocess.Popen( [context['isql_path'], dsn, "-n", "-i", f_eds_to_unavail_host_sql.name ],
                  stdout = f_eds_to_unavail_host_log,
                  stderr = f_eds_to_unavail_host_err
                )
@@ -117,7 +150,7 @@ time.sleep(1)
 
 f_eds_to_local_host_log = open( os.path.join(context['temp_directory'],'tmp_local_host_5648.log'), 'w')
 f_eds_to_local_host_err = open( os.path.join(context['temp_directory'],'tmp_local_host_5648.err'), 'w')
-subprocess.call( [fb_home+"isql", dsn, "-n", "-i", f_eds_to_local_host_sql.name ],
+subprocess.call( [context['isql_path'], dsn, "-n", "-i", f_eds_to_local_host_sql.name ],
                  stdout = f_eds_to_local_host_log,
                  stderr = f_eds_to_local_host_err
                )
@@ -125,16 +158,11 @@ subprocess.call( [fb_home+"isql", dsn, "-n", "-i", f_eds_to_local_host_sql.name 
 #............ kill ISQL that is attampting to found 192.0.2.2 host and thus will hang for about 45 seconds .......
 
 p_isql_to_unavail_host.terminate()
-f_eds_to_unavail_host_log.close()
-f_eds_to_unavail_host_err.close()
+flush_and_close( f_eds_to_unavail_host_log )
+flush_and_close( f_eds_to_unavail_host_err )
 
-
-f_eds_to_local_host_log.close()
-f_eds_to_local_host_err.close()
-
-#time.sleep(1)
-
-db_file="$(DATABASE_LOCATION)bugs.core_5648.fdb"
+flush_and_close( f_eds_to_local_host_log )
+flush_and_close( f_eds_to_local_host_err )
 
 # Make DB shutdown and bring online because some internal server process still can be active!
 # If we skip this step than runtime error related to dropping test DB can occur!
@@ -145,7 +173,7 @@ f_db_reset_err=open( os.path.join(context['temp_directory'],'tmp_reset_5648.err'
 
 f_db_reset_log.write('Point before DB shutdown.'+os.linesep)
 f_db_reset_log.seek(0,2)
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0",
                   "dbname", db_file,
                  ],
@@ -154,7 +182,7 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
                )
 f_db_reset_log.write(os.linesep+'Point after DB shutdown.'+os.linesep)
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_db_online",
                   "dbname", db_file,
                  ],
@@ -163,33 +191,29 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
                )
 
 f_db_reset_log.write(os.linesep+'Point after DB online.'+os.linesep)
-f_db_reset_log.close()
-f_db_reset_err.close()
-
+flush_and_close( f_db_reset_log )
+flush_and_close( f_db_reset_err )
 
 with open( f_eds_to_local_host_log.name,'r') as f:
   for line in f:
       if line.split():
         print('STDLOG of 2nd EDS: ', ' '.join(line.split()) )
-f.close()
+
 
 with open( f_eds_to_local_host_err.name,'r') as f:
   for line in f:
       if line.split():
         print('UNEXPECTED STDERR in '+f_eds_to_local_host_err.name+': '+line)
-f.close()
 
 with open( f_db_reset_log.name,'r') as f:
   for line in f:
       if line.split():
         print('STDLOG of DB reset: ', ' '.join(line.split()) )
-f.close()
 
 with open( f_db_reset_err.name,'r') as f:
   for line in f:
       if line.split():
         print('UNEXPECTED STDERR in '+f_db_reset_log.name+': '+line)
-f.close()
 
 ###############################
 # Cleanup.
@@ -205,11 +229,7 @@ f_list=(
     ,f_db_reset_log 
     ,f_db_reset_err 
 )
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+cleanup( f_list )
 
   """,
  'expected_stdout':
