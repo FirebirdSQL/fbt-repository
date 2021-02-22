@@ -38,13 +38,49 @@ import zipfile
 import difflib
 import time
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+this_fdb = db_conn.database_name
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 def svc_get_fb_log( f_fb_log ):
 
   import subprocess
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     "action_get_fb_log"
                   ],
@@ -57,15 +93,15 @@ def svc_get_fb_log( f_fb_log ):
 # Move database to FW = OFF in order to increase speed of insertions and output its header info:
 
 fwoff_log=open( os.path.join(context['temp_directory'],'tmp_fw_off_5618.log'), 'w')
-subprocess.call( [ "fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [ context['fbsvcmgr_path'], "localhost:service_mgr",
                    "action_properties",
                    "prp_write_mode", "prp_wm_async",
-                   "dbname", "$(DATABASE_LOCATION)bugs.core_5618.fdb" 
+                   "dbname", this_fdb
                  ],
                  stdout=fwoff_log, 
                  stderr=subprocess.STDOUT
                )
-fwoff_log.close()
+flush_and_close( fwoff_log )
 
 zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_5618.zip') )
 blob_src = 'core_5618.bin'
@@ -89,7 +125,7 @@ con1.close()
 
 f_fblog_before=open( os.path.join(context['temp_directory'],'tmp_4337_fblog_before.txt'), 'w')
 svc_get_fb_log( f_fblog_before )
-f_fblog_before.close()
+flush_and_close( f_fblog_before )
 
 
 ##########################################################
@@ -97,17 +133,17 @@ f_fblog_before.close()
 
 val_log=open( os.path.join(context['temp_directory'],'tmp_onval_5618.log'), 'w')
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_repair", 
                   "rpr_validate_db",
                   "rpr_full",
-                  "dbname","$(DATABASE_LOCATION)bugs.core_5618.fdb"
+                  "dbname", this_fdb
                  ],
                  stdout=val_log, 
                  stderr=subprocess.STDOUT
                )
 
-val_log.close()
+flush_and_close( val_log )
 
 
 # Get content of firebird.log AFTER test finish.
@@ -115,7 +151,7 @@ val_log.close()
 
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_4337_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
-f_fblog_after.close()
+flush_and_close( f_fblog_after )
 
 
 # Compare firebird.log versions BEFORE and AFTER this test:
@@ -133,14 +169,13 @@ newfb.close()
 
 f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_4337_diff.txt'), 'w')
 f_diff_txt.write(difftext)
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
 
 with open( f_diff_txt.name,'r') as f:
     for line in f:
         if line.startswith('+') and 'warning'.upper() in line.upper():
                 print( 'DIFF IN FIREBIRD.LOG: ' + (' '.join(line.split()).upper()) )
-f.close()
 
 with open( fwoff_log.name,'r') as f:
     for line in f:
@@ -154,12 +189,7 @@ with open( val_log.name,'r') as f:
 # Cleanup:
 ##########
 time.sleep(1)
-f_list = (f_fblog_before, f_fblog_after, f_diff_txt, val_log, blob_handle, fwoff_log)
-
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+cleanup( (f_fblog_before, f_fblog_after, f_diff_txt, val_log, blob_handle, fwoff_log) )
   """,
  'expected_stdout':
   """
