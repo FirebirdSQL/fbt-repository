@@ -29,7 +29,7 @@
    For unclear reason ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL + DROP DATABASE do not work as expected in this test:
    test DB remains opened by firebird.exe about 5...7 seconds after test finish, and 'drop database' does not issues any error.
    Because of this it was decided to forcedly change DB state to full shutdown in order to have ability to drop it.
-   To be investigated later.
+   22.02.2021: perhaps, this was somehow related to core-6441.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -52,14 +52,21 @@ import shutil
 import re
 from fdb import services
 
-#os.environ.pop("ISC_USER")
-#os.environ.pop("ISC_PASSWORD")
+# 23.08.2020: !!! REMOVING OS-VARIABLE ISC_USER IS MANDATORY HERE !!!
+# This variable could be set by other .fbts which was performed before current within batch mode (i.e. when fbt_run is called from <rundaily>)
+# NB: os.unsetenv('ISC_USER') actually does NOT affect on content of os.environ dictionary, see: https://docs.python.org/2/library/os.html
+# We have to remove OS variable either by os.environ.pop() or using 'del os.environ[...]', but in any case this must be enclosed intro try/exc:
+#os.environ.pop('ISC_USER')
+try:
+    del os.environ["ISC_USER"]
+except KeyError as e:
+    pass
 
 db_conn.close()
 
 #--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -67,30 +74,42 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    os.fsync(file_handle.fileno())
-
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
     file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
-
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+svc = services.connect(host='localhost', user= user_name, password= user_password)
+fb_home = svc.get_home_directory()
+svc.close()
 # Resut: fb_home is full path to FB instance home (with trailing slash).
 
 dts = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-dbconf_bak = fb_home+'databases_'+dts+'.bak'
 
-shutil.copy2( fb_home+'databases.conf', dbconf_bak )
+dbconf = os.path.join( fb_home, 'databases.conf')
+dbcbak = os.path.join( fb_home, 'databases_'+dts+'.bak')
+
+shutil.copy2( dbconf, dbcbak )
 
 tmp_fdb=os.path.join(context['temp_directory'],'tmp_6147.fdb')
-
 cleanup( (tmp_fdb,) )
 
 text2app=\
@@ -104,10 +123,10 @@ tmp_alias_6147 = %(tmp_fdb)s
 ##############################
 ''' % locals()
 
-f_dbconf=open(fb_home+'databases.conf','a')
+f_dbconf=open( dbconf, 'a')
 f_dbconf.seek(0, 2)
 f_dbconf.write( text2app )
-f_dbconf.close()
+flush_and_close( f_dbconf )
 
 sql_txt=\
 '''
@@ -138,25 +157,25 @@ sql_txt=\
     select * from v_map_info;
 ''' % dict(globals(), **locals())
 
-f_prepare_sql = open( os.path.join(context['temp_directory'],'tmp_6147_prepare.sql'), 'w', buffering=0)
+f_prepare_sql = open( os.path.join(context['temp_directory'],'tmp_6147_prepare.sql'), 'w')
 f_prepare_sql.write(sql_txt)
 flush_and_close( f_prepare_sql )
 
-f_prepare_log=open( os.path.join(context['temp_directory'],'tmp_6147_prepare.log'), 'w', buffering=0)
-subprocess.call( [ fb_home + "isql", "-q", "-i", f_prepare_sql.name ], stdout=f_prepare_log, stderr=subprocess.STDOUT )
+f_prepare_log=open( os.path.join(context['temp_directory'],'tmp_6147_prepare.log'), 'w')
+subprocess.call( [ context['isql_path'], "-q", "-i", f_prepare_sql.name ], stdout=f_prepare_log, stderr=subprocess.STDOUT )
 flush_and_close( f_prepare_log )
 
 
 # Extract metadata from test DB:
 ##################
 f_medatata_log=open( os.path.join(context['temp_directory'],'tmp_6147_meta.mapping.sql'), 'w', buffering = 0)
-subprocess.call( [fb_home+'isql', '-x', 'localhost:tmp_alias_6147' ], stdout=f_medatata_log, stderr=subprocess.STDOUT )
+subprocess.call( [ context['isql_path'], '-x', 'localhost:tmp_alias_6147' ], stdout=f_medatata_log, stderr=subprocess.STDOUT )
 flush_and_close( f_medatata_log )
 
 
 # Remove global mapping:
 ########################
-f_cleanup_sql = open( os.path.join(context['temp_directory'],'tmp_6147_cleanup.sql'), 'w', buffering=0)
+f_cleanup_sql = open( os.path.join(context['temp_directory'],'tmp_6147_cleanup.sql'), 'w')
 sql_txt='''
     set bail on;
     -- NB: here we have to connect as "common" SYSDBA (using Srp) rather than Win_SSPI.
@@ -170,7 +189,7 @@ sql_txt='''
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     -- This I can not explain: why user who did create global mapping can not delete it ???
     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    connect 'localhost:tmp_alias_6147' user %(user_name)s password %(user_password)s;
+    connect 'localhost:tmp_alias_6147' user %(user_name)s password '%(user_password)s';
     drop global mapping trusted_auth_c6147;
     commit;
 
@@ -184,20 +203,17 @@ sql_txt='''
 ''' % dict(globals(), **locals())
 
 f_cleanup_sql.write(sql_txt)
-f_cleanup_sql.close()
+flush_and_close( f_cleanup_sql )
 
-f_cleanup_log = open( os.path.join(context['temp_directory'],'tmp_6147_cleanup.log'), 'w', buffering=0)
-subprocess.call( [ fb_home + "isql", "-q", "-i", f_cleanup_sql.name ], stdout=f_cleanup_log, stderr=subprocess.STDOUT )
+f_cleanup_log = open( os.path.join(context['temp_directory'],'tmp_6147_cleanup.log'), 'w')
+subprocess.call( [ context['isql_path'], "-q", "-i", f_cleanup_sql.name ], stdout=f_cleanup_log, stderr=subprocess.STDOUT )
 flush_and_close( f_cleanup_log )
 
-subprocess.call( ['gfix', 'localhost:tmp_alias_6147', '-shut', 'single', '-force', '0', '-user', user_name, '-pas', user_password] )
+subprocess.call( [context['gfix_path'], 'localhost:tmp_alias_6147', '-shut', 'single', '-force', '0', '-user', user_name, '-pas', user_password] )
 
 # RESTORE original config:
 ##########################
-shutil.copy2( dbconf_bak, fb_home+'databases.conf' )
-os.remove(dbconf_bak)
-cleanup( (tmp_fdb,) )
-
+shutil.move( dbcbak, dbconf)
 
 with open(f_prepare_log.name, 'r') as f:
     for line in f:
@@ -214,17 +230,18 @@ with open(f_cleanup_log.name, 'r') as f:
         if line.split():
             print('CLEANUP: ' + line)
 
+# CLEANUP:
+##########
 time.sleep(1)
-
-
 f_list=( 
      f_prepare_sql
     ,f_prepare_log
     ,f_medatata_log
     ,f_cleanup_sql
     ,f_cleanup_log
+    ,tmp_fdb
 )
-cleanup( [ i.name for i in f_list ] )
+cleanup( f_list )
 
 
   """,
