@@ -51,31 +51,47 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
-
-db_conn.close()
-svc = services.connect(host='localhost', user=user_name, password=user_password)
-fb_home = svc.get_home_directory()
 
 
 DBNAME_A = os.path.join(context['temp_directory'],'tmp_6141_a.fdb')
 DBNAME_B = os.path.join(context['temp_directory'],'tmp_6141_b.fdb')
 
-
 LIMBO_COUNT = 255
-if os.path.isfile(DBNAME_A):
-    os.remove(DBNAME_A)
-if os.path.isfile(DBNAME_B):
-    os.remove(DBNAME_B)
+cleanup( (DBNAME_A,DBNAME_B) )
 
 con1 = fdb.create_database( dsn = 'localhost:' + DBNAME_A)
 con2 = fdb.create_database( dsn = 'localhost:' + DBNAME_B)
@@ -125,6 +141,7 @@ cur2.close()
 tx2.prepare()
 tx2.commit()
 
+svc = services.connect(host='localhost', user=user_name, password=user_password)
 svc.shutdown( DBNAME_A, services.SHUT_FULL, services.SHUT_FORCE, 0)
 
 print('Database <DBNAME_A> is in full shutdown state now.')
@@ -157,13 +174,13 @@ except:
     pass
 
 f_gfix_list_log=open( os.path.join(context['temp_directory'],'tmp_6141_gfix_list.log'), 'w', buffering = 0)
-subprocess.call( [ 'gfix', '-list', DBNAME_A  ], stdout=f_gfix_list_log, stderr=subprocess.STDOUT )
-f_gfix_list_log.close()
+subprocess.call( [ context['gfix_path'], '-list', DBNAME_A  ], stdout=f_gfix_list_log, stderr=subprocess.STDOUT )
+flush_and_close( f_gfix_list_log )
 
 
 f_svc_list_log=open( os.path.join(context['temp_directory'],'tmp_6141_fbsvc_list.log'), 'w', buffering = 0)
-subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr', 'action_repair', 'rpr_list_limbo_trans', 'dbname', DBNAME_A ], stdout=f_svc_list_log, stderr=subprocess.STDOUT )
-f_svc_list_log.close()
+subprocess.call( [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_repair', 'rpr_list_limbo_trans', 'dbname', DBNAME_A ], stdout=f_svc_list_log, stderr=subprocess.STDOUT )
+flush_and_close( f_svc_list_log )
 
 pattern_for_limbo_in_gfix_output=re.compile('Transaction\s+\d+\s+.*limbo', re.IGNORECASE)
 pattern_for_limbo_in_fsvc_output=re.compile('Transaction\s+in\s+limbo:\s+\d+', re.IGNORECASE)
@@ -181,6 +198,9 @@ for i,g in enumerate( (f_gfix_list_log, f_svc_list_log) ):
                 print( 'Additional output from ' + ('GFIX: ' if i==0 else 'FBSVCMGR: ') + line )
     print(  msg + str(lines_with_limbo_info) )
 
+# CLEANUP
+#########
+time.sleep(1)
 cleanup( (DBNAME_A, DBNAME_B, f_gfix_list_log.name, f_svc_list_log.name) )
 
   """,
