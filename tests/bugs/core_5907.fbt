@@ -34,11 +34,43 @@ from subprocess import Popen
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-# Obtain engine version:
-engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
+this_fdb = db_conn.database_name
+test_fdb = os.path.join( os.path.split(this_fdb)[0], "{core_5907.97}.tmp")  # name of copy will be: %FBT_REPO%\tmp\{core_5907.97}.tmp
+
 db_conn.close()
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 txt30 = '''# Trace config, format for 3.0. Generated auto, do not edit!
 database=(%[\\\\\\\\/](\\{{core_5907.[[:DIGIT:]]{{2}}\\}}).tmp)
@@ -52,14 +84,9 @@ database=(%[\\\\\\\\/](\\{{core_5907.[[:DIGIT:]]{{2}}\\}}).tmp)
 
 f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_5907.cfg'), 'w')
 f_trc_cfg.write(txt30)
-f_trc_cfg.close()
-
-this_fdb = "$(DATABASE_LOCATION)bugs.core_5907.fdb"
-test_fdb = "$(DATABASE_LOCATION){core_5907.97}.tmp"  # name of copy will be: %FBT_REPO%\tmp\{core_5907.97}.tmp
+flush_and_close( f_trc_cfg )
 
 shutil.copy2( this_fdb, test_fdb )
-
-
 
 # ##############################################################
 # S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
@@ -68,7 +95,7 @@ shutil.copy2( this_fdb, test_fdb )
 f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_5907.log'), "w")
 f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_5907.err'), "w")
 
-p_trace = Popen( [ fb_home+'fbsvcmgr', 
+p_trace = Popen( [ context['fbsvcmgr_path'], 
                    'localhost:service_mgr',
                    'action_trace_start', 
                    'trc_cfg', f_trc_cfg.name
@@ -85,16 +112,16 @@ time.sleep(1)
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
 f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_5907.lst'), 'w')
-subprocess.call( [ fb_home+'fbsvcmgr', 
+subprocess.call( [ context['fbsvcmgr_path'], 
                    'localhost:service_mgr', 
                    'action_trace_list'
                  ],
                  stdout=f_trc_lst
                )
-f_trc_lst.close()
+flush_and_close( f_trc_lst )
 
 # !!! DO NOT REMOVE THIS LINE !!!
-time.sleep(3)
+#time.sleep(3)
 
 trcssn=0
 with open( f_trc_lst.name,'r') as f:
@@ -106,10 +133,7 @@ with open( f_trc_lst.name,'r') as f:
                     trcssn=word
                 i=i+1
             break
-f.close()
 # Result: `trcssn` is ID of active trace session. Now we have to terminate it:
-
-
 #.............................................................................
 
 #sql_cmd="insert into extdecimal(dec34_34) values (1)"
@@ -131,7 +155,7 @@ finally:
 con1.close()
 #.............................................................................
 
-time.sleep(3)
+time.sleep(1)
 
 # ####################################################
 # S E N D   R E Q U E S T    T R A C E   T O   S T O P
@@ -139,7 +163,7 @@ time.sleep(3)
 if trcssn>0:
     fn_nul = open(os.devnull, 'w')
     #f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_5907.log'), "w")
-    subprocess.call( [ fb_home+'fbsvcmgr', 
+    subprocess.call( [ context['fbsvcmgr_path'], 
                        'localhost:service_mgr',
                        'action_trace_stop','trc_id', trcssn
                      ], 
@@ -147,15 +171,13 @@ if trcssn>0:
                    )
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
-    time.sleep(2)
+    time.sleep(1)
 
 
 p_trace.terminate()
 
-f_trc_log.close()
-f_trc_err.close()
-
-time.sleep(1)
+flush_and_close( f_trc_log )
+flush_and_close( f_trc_err )
 
 # 1. Trace STDERR log should be EMPTY:
 ######################################
@@ -172,7 +194,6 @@ for i in range(len(f_list)):
        with open( f_name,'r') as f:
            for line in f:
                print("Unexpected STDERR, file "+f_name+": "+line)
-       f.close()
 
 # 2. Trace STDOUT log must contain one ATTACH and one DETACH events, e.g:
 #########################################################################
@@ -194,13 +215,8 @@ with open( f_trc_log.name,'r') as f:
 
 # CLEANUP
 #########
-
-f_list=(f_trc_cfg, f_trc_log, f_trc_err, f_trc_lst)
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
-
-os.remove(test_fdb)
+time.sleep(1)
+cleanup( (f_trc_cfg, f_trc_log, f_trc_err, f_trc_lst, test_fdb) )
 
   """,
  'expected_stdout': 
