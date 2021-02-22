@@ -56,7 +56,41 @@ from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+this_db = db_conn.database_name
+fb_vers = str(db_conn.engine_version)[:1] # character for security.db file: engine = 4.0  --> '4'
+db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
 def svc_get_fb_log( fb_home, f_fb_log ):
@@ -70,19 +104,13 @@ def svc_get_fb_log( fb_home, f_fb_log ):
                  )
   return
 
-#--------------------------------------------
-def cleanup( f_names_list ):
-    global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-#--------------------------------------------
+svc = services.connect(host='localhost', user= user_name, password= user_password)
+fb_home = svc.get_home_directory()
+svc.close()
+dbconf = os.path.join(fb_home, 'databases.conf')
+dbcbak = os.path.join(fb_home, 'databases.bak')
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-fb_vers = str(db_conn.engine_version)[:1] # character for security.db file: engine = 4.0  --> '4'
-sec_db = fb_home + 'security' + fb_vers+ '.fdb'
-db_conn.close()
+sec_db = context['isc4_path']
 
 fdb_init = os.path.join(context['temp_directory'],'tmp_6208_initial.fdb')
 fdb_bkup = os.path.join(context['temp_directory'],'tmp_6208_initial.fbk')
@@ -93,7 +121,7 @@ cleanup( (fdb_init, fdb_rest) )
 shutil.copy2( sec_db, fdb_init )
 
 # Resut: fb_home is full path to FB instance home (with trailing slash).
-shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
+shutil.copy2( dbconf, dbcbak)
 
 alias_data=\
 '''
@@ -104,10 +132,10 @@ alias_data=\
     }
 ''' % locals()
 
-f_dbconf=open(fb_home+'databases.conf','a', buffering = 0)
+f_dbconf=open( dbconf,'a', buffering = 0)
 f_dbconf.seek(0, 2)
 f_dbconf.write(alias_data)
-f_dbconf.close()
+flush_and_close( f_dbconf )
 
 sql_init=\
 '''
@@ -124,12 +152,12 @@ runProgram('isql',[ fdb_init ], sql_init)
 f_backup_log = open( os.path.join(context['temp_directory'],'tmp_6208.backup.log'), 'w', buffering = 0)
 f_backup_err = open( ''.join( (os.path.splitext(f_backup_log.name)[0], '.err' ) ), 'w', buffering = 0)
 
-subprocess.call( [ os.path.join( fb_home, 'gfix'), '-h', '54321', fdb_init ], stdout = f_backup_log, stderr = f_backup_err)
-subprocess.call( [ os.path.join( fb_home, 'gstat'), '-h', fdb_init ], stdout = f_backup_log, stderr = f_backup_err)
-subprocess.call( [ os.path.join( fb_home, 'gbak'), '-b', fdb_init, fdb_bkup, '-v', '-st', 'tdrw' ], stdout = f_backup_log, stderr = f_backup_err)
+subprocess.call( [ context['gfix_path'], '-h', '54321', fdb_init ], stdout = f_backup_log, stderr = f_backup_err)
+subprocess.call( [ context['gstat_path'], '-h', fdb_init ], stdout = f_backup_log, stderr = f_backup_err)
+subprocess.call( [ context['gbak_path'], '-b', fdb_init, fdb_bkup, '-v', '-st', 'tdrw' ], stdout = f_backup_log, stderr = f_backup_err)
 
-f_backup_log.close()
-f_backup_err.close()
+flush_and_close( f_backup_log )
+flush_and_close( f_backup_err )
 
 ########################################################################
 
@@ -138,13 +166,12 @@ cleanup( (fdb_rest,) )
 f_restore_log = open( os.path.join(context['temp_directory'],'tmp_6208.restore.log'), 'w', buffering = 0)
 f_restore_err = open( ''.join( (os.path.splitext(f_restore_log.name)[0], '.err' ) ), 'w', buffering = 0)
 
-subprocess.call( [ os.path.join( fb_home, 'gbak'), '-c', fdb_bkup, fdb_rest, '-v', '-st', 'tdrw' ], stdout = f_restore_log, stderr = f_restore_err)
+subprocess.call( [ context['gbak_path'], '-c', fdb_bkup, fdb_rest, '-v', '-st', 'tdrw' ], stdout = f_restore_log, stderr = f_restore_err)
 
-f_restore_log.close()
-f_restore_err.close()
+flush_and_close( f_restore_log )
+flush_and_close( f_restore_err )
 
 ########################################################################
-
 
 runProgram('gfix',['-shut', 'full', '-force', '0', fdb_init] )
 runProgram('gfix',['-shut', 'full', '-force', '0', fdb_rest] )
@@ -152,10 +179,6 @@ runProgram('gfix',['-shut', 'full', '-force', '0', fdb_rest] )
 shutil.move( fdb_rest, fdb_init )
 
 runProgram('gfix',['-online', fdb_init] )
-
-###############
-#time.sleep(8.5)
-###############
 
 sql_chk=\
 '''
@@ -200,27 +223,22 @@ sql_chk=\
 
 f_chk_sql = open( os.path.join(context['temp_directory'],'tmp_6208_chk.sql'), 'w', buffering = 0)
 f_chk_sql.write(sql_chk)
-f_chk_sql.close()
-
-# 4debug only:
-#f_gstat_log = open( os.path.join(context['temp_directory'],'tmp_6208_gstat.log'), 'w', buffering = 0)
-#subprocess.call( ["gstat", "-h", fdb_init ], stdout = f_gstat_log, stderr = subprocess.STDOUT)
-#f_gstat_log.close()
+flush_and_close( f_chk_sql )
 
 f_chk_log = open( os.path.join(context['temp_directory'],'tmp_6208_chk.log'), 'w', buffering = 0)
-subprocess.call( ["isql", "-q", "-i", f_chk_sql.name ], stdout = f_chk_log, stderr = subprocess.STDOUT)
-f_chk_log.close()
+subprocess.call( [context['isql_path'], "-q", "-i", f_chk_sql.name ], stdout = f_chk_log, stderr = subprocess.STDOUT)
+flush_and_close( f_chk_log )
 
 #######runProgram('isql',[ fdb_init ], 'drop user tmp6208dba using plugin Srp; commit;')
 
 f_shut_log = open( os.path.join(context['temp_directory'],'tmp_6208_shut.log'), 'w', buffering = 0)
-subprocess.call( ["gfix", "-shut", "full", "-force", "0",  fdb_init ], stdout = f_shut_log, stderr = subprocess.STDOUT)
-subprocess.call( ["gstat", "-h", fdb_init ], stdout = f_shut_log, stderr = subprocess.STDOUT)
-f_shut_log.close()
+subprocess.call( [ context['gfix_path'], "-shut", "full", "-force", "0",  fdb_init ], stdout = f_shut_log, stderr = subprocess.STDOUT)
+subprocess.call( [ context['gstat_path'], "-h", fdb_init ], stdout = f_shut_log, stderr = subprocess.STDOUT)
+flush_and_close( f_shut_log )
 
 
 # Restore previous content:
-shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
+shutil.move( dbcbak, dbconf )
 
 with open(f_chk_log.name,'r') as f:
    for line in f:
@@ -230,7 +248,7 @@ with open(f_chk_log.name,'r') as f:
 # cleanup:
 ##########
 time.sleep(1)
-cleanup( [x.name for x in (f_backup_log, f_backup_err, f_restore_log, f_restore_err, f_chk_sql, f_chk_log, f_shut_log) ] + [ fdb_init, fdb_bkup, fb_home+'databases.bak' ] )
+cleanup( (f_backup_log, f_backup_err, f_restore_log, f_restore_err, f_chk_sql, f_chk_log, f_shut_log, fdb_init, fdb_bkup) )
 
 """,
  'expected_stdout': 
