@@ -78,30 +78,48 @@ import codecs
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+db_source=db_conn.database_name
 
-db_source='$(DATABASE_LOCATION)bugs.core_6319.fdb'
-
-nbk_level_0='$(DATABASE_LOCATION)tmp_core_6319.standby.fdb'
+nbk_level_0 = os.path.splitext(db_source)[0] + '.standby.fdb'
 
 # this is for 3.x only by using command:
 # nbackup -r db_3x_restore nbk_level_0 nbk_level_1 nbk_level_2
-db_3x_restore='$(DATABASE_LOCATION)tmp_core_6319.restored_in_3x.fdb'
+db_3x_restore = os.path.splitext(db_source)[0] + '.restored_in_3x.fdb'
 
-#shutil.copy2( db_3x_rest, nbk_level_0 )
+nbk_level_1 = os.path.splitext(db_source)[0] + '.nbk_01'
+nbk_level_2 = os.path.splitext(db_source)[0] + '.nbk_02'
 
-nbk_level_1='$(DATABASE_LOCATION)tmp_core_6319.nbk_01'
-nbk_level_2='$(DATABASE_LOCATION)tmp_core_6319.nbk_02'
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
 cleanup( (db_3x_restore, nbk_level_0, nbk_level_1, nbk_level_2,) )
@@ -110,9 +128,9 @@ cleanup( (db_3x_restore, nbk_level_0, nbk_level_1, nbk_level_2,) )
 ########################
 f_nbk0_log=open( os.path.join(context['temp_directory'],'tmp_nbk0_6319.log'), 'w')
 f_nbk0_err=open( os.path.join(context['temp_directory'],'tmp_nbk0_6319.err'), 'w')
-subprocess.call( ['nbackup', '-b', '0', db_source, nbk_level_0], stdout=f_nbk0_log, stderr=f_nbk0_err )
-f_nbk0_log.close()
-f_nbk0_err.close()
+subprocess.call( [ context['nbackup_path'], '-b', '0', db_source, nbk_level_0], stdout=f_nbk0_log, stderr=f_nbk0_err )
+flush_and_close( f_nbk0_log )
+flush_and_close( f_nbk0_err )
 
 get_last_bkup_guid_sttm = 'select h.rdb$guid from rdb$backup_history h order by h.rdb$backup_id desc rows 1'
 
@@ -126,13 +144,13 @@ for r in cur:
 
 # Create 1st copy using just obtained DB backup GUID:
 ############
-nbk_call_01 = ['nbackup', '-b' ] + ( [ db_guid ] if db_conn.engine_version >= 4.0 else [ '1' ] ) + [ db_source, nbk_level_1 ]
+nbk_call_01 = [ context['nbackup_path'], '-b' ] + ( [ db_guid ] if db_conn.engine_version >= 4.0 else [ '1' ] ) + [ db_source, nbk_level_1 ]
 
 f_nbk1_log=open( os.path.join(context['temp_directory'],'tmp_nbk1_6319.log'), 'w')
 f_nbk1_err=open( os.path.join(context['temp_directory'],'tmp_nbk1_6319.err'), 'w')
 subprocess.call( nbk_call_01, stdout=f_nbk1_log, stderr=f_nbk1_err )
-f_nbk1_log.close()
-f_nbk1_err.close()
+flush_and_close( f_nbk1_log )
+flush_and_close( f_nbk1_err )
 
 # Re-read DB backup GUID: it is changed after each new nbackup!
 ########################
@@ -142,14 +160,13 @@ for r in cur:
 
 # Create 2nd copy using LAST obtained GUID of backup:
 ############
-nbk_call_02 = ['nbackup', '-b' ] + ( [ db_guid ] if db_conn.engine_version >= 4.0 else [ '2' ] ) + [ db_source, nbk_level_2 ]
+nbk_call_02 = [ context['nbackup_path'], '-b' ] + ( [ db_guid ] if db_conn.engine_version >= 4.0 else [ '2' ] ) + [ db_source, nbk_level_2 ]
 
 f_nbk2_log=open( os.path.join(context['temp_directory'],'tmp_nbk2_6319.log'), 'w')
 f_nbk2_err=open( os.path.join(context['temp_directory'],'tmp_nbk2_6319.err'), 'w')
 subprocess.call( nbk_call_02, stdout=f_nbk2_log, stderr=f_nbk2_err )
-f_nbk2_log.close()
-f_nbk2_err.close()
-
+flush_and_close( f_nbk2_log )
+flush_and_close( f_nbk2_err )
 
 # Try to merge standby DB and SECOND copy, i.e. wrongly skip 1st incremental copy.
 # NB: we do this TWISE. And both time this attempt should fail with:
@@ -157,10 +174,10 @@ f_nbk2_err.close()
 ########################
 
 if db_conn.engine_version >= 4.0:
-    nbk_wrong_call = ['nbackup', '-inplace', '-restore', 'localhost:'+ nbk_level_0, nbk_level_2]
+    nbk_wrong_call = [ context['nbackup_path'], '-inplace', '-restore', 'localhost:'+ nbk_level_0, nbk_level_2]
 else:
     # Invalid level 2 of incremental backup file: C:/FBTESTING/qa/fbt-repo/tmp/tmp_core_6319.nbk_02, expected 1
-    nbk_wrong_call = ['nbackup', '-restore', db_3x_restore, nbk_level_0, nbk_level_2]
+    nbk_wrong_call = [ context['nbackup_path'], '-restore', db_3x_restore, nbk_level_0, nbk_level_2]
 
 f_nbk_poor_log=open( os.path.join(context['temp_directory'],'tmp_nbk_poor_6319.log'), 'w')
 f_nbk_poor_err=open( os.path.join(context['temp_directory'],'tmp_nbk_poor_6319.err'), 'w')
@@ -177,8 +194,8 @@ subprocess.call( nbk_wrong_call, stdout=f_nbk_poor_log, stderr=f_nbk_poor_err ) 
 # Wrong order of backup files or invalid incremental backup file detected, file: <nbk_02>
 # Wrong order of backup files or invalid incremental backup file detected, file: <nbk_02>
 
-f_nbk_poor_log.close()
-f_nbk_poor_err.close()
+flush_and_close( f_nbk_poor_log )
+flush_and_close( f_nbk_poor_err )
 
 cleanup( (db_3x_restore,) )
 
@@ -187,11 +204,11 @@ cleanup( (db_3x_restore,) )
 # Wrong order of backup files or invalid incremental backup file detected, file: C:/FBTESTING/qa/fbt-repo/tmp/tmp_core_6319.nbk_02
 
 if db_conn.engine_version >= 4.0:
-    fbsvc_call_01 = [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'nbk_inplace', 'dbname', nbk_level_0, 'nbk_file', nbk_level_1]
-    fbsvc_call_02 = [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'nbk_inplace', 'dbname', nbk_level_0, 'nbk_file', nbk_level_2]
+    fbsvc_call_01 = [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_nrest', 'nbk_inplace', 'dbname', nbk_level_0, 'nbk_file', nbk_level_1]
+    fbsvc_call_02 = [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_nrest', 'nbk_inplace', 'dbname', nbk_level_0, 'nbk_file', nbk_level_2]
 else:
-    fbsvc_call_01 = [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'dbname', db_3x_restore, 'nbk_file', nbk_level_0, 'nbk_file', nbk_level_1, 'nbk_file', nbk_level_2]
-    fbsvc_call_02 = [ 'fbsvcmgr', 'localhost:service_mgr', 'action_nrest', 'dbname', db_3x_restore, 'nbk_file', nbk_level_0, 'nbk_file', nbk_level_2, 'nbk_file', nbk_level_2]
+    fbsvc_call_01 = [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_nrest', 'dbname', db_3x_restore, 'nbk_file', nbk_level_0, 'nbk_file', nbk_level_1, 'nbk_file', nbk_level_2]
+    fbsvc_call_02 = [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_nrest', 'dbname', db_3x_restore, 'nbk_file', nbk_level_0, 'nbk_file', nbk_level_2, 'nbk_file', nbk_level_2]
 
 # On 4.0.0.2000 second attempt raised:
 # Error opening database file: [disk]:\path\to\standby_db.dfb
@@ -212,10 +229,9 @@ subprocess.call( fbsvc_call_02, stdout=f_svc_poor_log, stderr=f_svc_poor_err ) #
 # Wrong order of backup files or invalid incremental backup file detected, file: <nbk_02>
 # Wrong order of backup files or invalid incremental backup file detected, file: <nbk_02>
  
-f_svc_poor_log.close()
-f_svc_poor_err.close()
+flush_and_close( f_svc_poor_log )
+flush_and_close( f_svc_poor_err )
 cleanup( (db_3x_restore,) )
-
 
 # Try to apply incremental copies in proper order, also using FBSVCMGR.
 # No errors must occur in this case:
@@ -229,10 +245,8 @@ subprocess.call( fbsvc_call_01, stdout=f_svc_good_log, stderr=f_svc_good_err )
 if db_conn.engine_version >= 4.0:
     subprocess.call( fbsvc_call_02, stdout=f_svc_good_log, stderr=f_svc_good_err )
 
-#subprocess.call( [ 'fbsvcmgr', 'localhost:service_mgr', 'action_validate', 'dbname', db_3x_restore], stdout=f_svc_good_log, stderr=f_svc_good_err )
-
-f_svc_good_log.close()
-f_svc_good_err.close()
+flush_and_close( f_svc_good_log )
+flush_and_close( f_svc_good_err )
 
 
 # Check. All of these files must be empty:
@@ -263,9 +277,8 @@ for e in (f_nbk_poor_err, f_svc_poor_err):
 
 # Cleanup.
 ##########
-
-f_list=[ i.name for i in (f_nbk0_log,f_nbk0_err, f_nbk1_log,f_nbk1_err, f_nbk2_log,f_nbk2_err, f_nbk_poor_log, f_nbk_poor_err, f_svc_poor_log, f_svc_poor_err, f_svc_good_log, f_svc_good_err) ] + [ db_3x_restore, nbk_level_0, nbk_level_1, nbk_level_2 ]
-cleanup(f_list)
+time.sleep(1)
+cleanup( (f_nbk0_log,f_nbk0_err, f_nbk1_log,f_nbk1_err, f_nbk2_log,f_nbk2_err, f_nbk_poor_log, f_nbk_poor_err, f_svc_poor_log, f_svc_poor_err, f_svc_good_log, f_svc_good_err, db_3x_restore, nbk_level_0, nbk_level_1, nbk_level_2 ) )
 
   """,
  'expected_stdout':
