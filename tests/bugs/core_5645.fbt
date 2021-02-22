@@ -30,12 +30,40 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_db = db_conn.database_name
+fb_major=db_conn.engine_version
+
 #--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
 #--------------------------------------------
 
 table_ddl=\
@@ -48,10 +76,6 @@ table_ddl=\
     );
 '''
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-fb_major=db_conn.engine_version
-
 
 fdb_repl = os.path.join(context['temp_directory'],'tmp_5645_repl.fdb')
 cleanup( (fdb_repl,) )
@@ -60,7 +84,6 @@ con_repl = fdb.create_database(  dsn = 'localhost:%(fdb_repl)s' % locals() )
 con_repl.execute_immediate( table_ddl )
 con_repl.commit()
 con_repl.close()
-
 
 db_conn.execute_immediate( table_ddl )
 db_conn.commit()
@@ -90,11 +113,11 @@ ddl_for_replication=\
 
 f_apply_ddl_sql = open( os.path.join(context['temp_directory'],'tmp_5645.sql'), 'w', buffering = 0)
 f_apply_ddl_sql.write( ddl_for_replication )
-f_apply_ddl_sql.close()
+flush_and_close( f_apply_ddl_sql )
 
 f_apply_ddl_log = open( '.'.join( (os.path.splitext( f_apply_ddl_sql.name )[0], 'log') ), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', dsn, '-q', '-i', f_apply_ddl_sql.name ], stdout = f_apply_ddl_log, stderr = subprocess.STDOUT)
-f_apply_ddl_log.close()
+subprocess.call( [ context['isql_path'], dsn, '-q', '-i', f_apply_ddl_sql.name ], stdout = f_apply_ddl_log, stderr = subprocess.STDOUT)
+flush_and_close( f_apply_ddl_log )
 
 #--------------------------------
 
@@ -104,11 +127,11 @@ db_conn.commit()
 db_conn.close()
 
 if fb_major >= 4.0:
-    runProgram( fb_home+'isql', ['-q', dsn], 'ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL;' )
+    runProgram( 'isql', ['-q', dsn], 'ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL;' )
 
-runProgram( fb_home+'isql', ['-q', 'localhost:%(fdb_repl)s' % locals()], 'set list on; set count on; select id,name,address,info as info_blob_id from persons;rollback; drop database;' )
+runProgram( 'isql', ['-q', 'localhost:%(fdb_repl)s' % locals()], 'set list on; set count on; select id,name,address,info as info_blob_id from persons;rollback; drop database;' )
 
-cleanup( (f_apply_ddl_sql.name, f_apply_ddl_log.name,) )
+cleanup( (f_apply_ddl_sql,f_apply_ddl_log) )
 
   """,
  'expected_stdout': 
