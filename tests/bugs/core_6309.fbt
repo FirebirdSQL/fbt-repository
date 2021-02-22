@@ -49,9 +49,12 @@ LIMBO_COUNT = 250
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-#---------------------------------------------
+db_name=db_conn.database_name
+db_conn.close()
 
-def flush_and_close(file_handle):
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -59,7 +62,7 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    if file_handle.mode not in ('r', 'rb'):
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
         # otherwise: "OSError: [Errno 9] Bad file descriptor"!
         os.fsync(file_handle.fileno())
     file_handle.close()
@@ -68,19 +71,19 @@ def flush_and_close(file_handle):
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
-
-svc = services.connect(host='localhost', user=user_name, password=user_password)
-fb_home = svc.get_home_directory()
-db_name=db_conn.database_name
-db_conn.close()
-# svc - keep it open, do not close now.
 
 dbname_a=os.path.join(context['temp_directory'],'c6309_a.fdb')
 dbname_b=os.path.join(context['temp_directory'],'c6309_b.fdb')
@@ -121,6 +124,7 @@ cur2.close()
 tx2.prepare()
 tx2.commit()
 
+svc = services.connect(host='localhost', user=user_name, password=user_password)
 svc.shutdown( dbname_a, services.SHUT_FULL, services.SHUT_FORCE, 0)
 
 for tx1 in tx1_list:
@@ -150,11 +154,11 @@ svc.close()
 
 
 f_limbo_gfix=open( os.path.join(context['temp_directory'],'tmp_c6309_gfix_list.log'), 'w', buffering=0)
-subprocess.call( [ fb_home + "gfix", "localhost:" + dbname_a, "-list" ], stdout=f_limbo_gfix, stderr=subprocess.STDOUT )
+subprocess.call( [ context['gfix_path'], "localhost:" + dbname_a, "-list" ], stdout=f_limbo_gfix, stderr=subprocess.STDOUT )
 flush_and_close( f_limbo_gfix )
 
 f_limbo_fbsvc=open( os.path.join(context['temp_directory'],'tmp_c6309_fbsvc_list.log'), 'w', buffering=0)
-subprocess.call( [ fb_home + "fbsvcmgr", "localhost:service_mgr", "action_repair", "rpr_list_limbo_trans", "dbname", dbname_a], stdout=f_limbo_fbsvc, stderr=subprocess.STDOUT )
+subprocess.call( [ context['fbsvcmgr_path'], "localhost:service_mgr", "action_repair", "rpr_list_limbo_trans", "dbname", dbname_a], stdout=f_limbo_fbsvc, stderr=subprocess.STDOUT )
 flush_and_close( f_limbo_fbsvc )
 
 # 'gfix -list' issues:
@@ -184,7 +188,7 @@ for x in found_limbos:
 # Cleanup
 ##########
 time.sleep(1)
-cleanup( [ i.name for i in (f_limbo_gfix, f_limbo_fbsvc) ] + [ dbname_a, dbname_b ] )
+cleanup( (f_limbo_gfix, f_limbo_fbsvc, dbname_a, dbname_b) )
 
   """,
  'expected_stdout': 
