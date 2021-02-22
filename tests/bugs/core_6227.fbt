@@ -33,8 +33,9 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
+
 security_db_info=subprocess.check_output(
-                  [ "fbsvcmgr",
+                  [ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     "info_user_dbpath"
                   ]
