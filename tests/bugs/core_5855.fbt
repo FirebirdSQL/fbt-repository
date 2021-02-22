@@ -38,19 +38,52 @@ import time
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-db_conn.close()
-
-thisdb='$(DATABASE_LOCATION)bugs.core_5855.fdb'
+thisdb=db_conn.database_name
 tmpbkp='$(DATABASE_LOCATION)tmp_core_5855.fbk'
 tmpres='$(DATABASE_LOCATION)tmp_core_5855.tmp'
 
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
 fn_bkp_log=open( os.path.join(context['temp_directory'],'tmp_5855_backup.log'), 'w')
 fn_bkp_err=open( os.path.join(context['temp_directory'],'tmp_5855_backup.err'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "action_backup", "dbname", thisdb, "verbose", "bkp_file", tmpbkp ],
                 stdout=fn_bkp_log, stderr=fn_bkp_err)
-fn_bkp_log.close()
-fn_bkp_err.close()
+flush_and_close( fn_bkp_log )
+flush_and_close( fn_bkp_err )
 
 backup_error_flag=0
 with open(fn_bkp_err.name,'r') as f:
@@ -58,20 +91,16 @@ with open(fn_bkp_err.name,'r') as f:
         backup_error_flag=1
         print('UNEXPECTED STDERR DURING BACKUP '+fn_bkp_err.name+': '+line)
 
-f_list=( fn_bkp_err, fn_bkp_log )
-for i in range(len(f_list)):
-    if os.path.isfile(f_list[i].name):
-        os.remove(f_list[i].name)
-
+cleanup( (fn_bkp_err, fn_bkp_log ) )
 
 if backup_error_flag==0:
     fn_res_log=open( os.path.join(context['temp_directory'],'tmp_5855_restore.log'), 'w')
     fn_res_err=open( os.path.join(context['temp_directory'],'tmp_5855_restore.err'), 'w')
-    subprocess.call(["fbsvcmgr","localhost:service_mgr",
+    subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                      "action_restore", "res_replace", "verbose", "bkp_file", tmpbkp, "dbname", tmpres ],
                     stdout=fn_res_log, stderr=fn_res_err)
-    fn_res_log.close()                   
-    fn_res_err.close()                   
+    flush_and_close( fn_res_log )
+    flush_and_close( fn_res_err )
 
     sql_text='''
         set list on; 
@@ -88,16 +117,16 @@ if backup_error_flag==0:
 
     fn_sql_chk=open( os.path.join(context['temp_directory'],'tmp_5855_check.sql'), 'w')
     fn_sql_chk.write(sql_text)
-    fn_sql_chk.close()
+    flush_and_close( fn_sql_chk )
 
     fn_sql_log=open( os.path.join(context['temp_directory'],'tmp_5855_check.log'), 'w')
     fn_sql_err=open( os.path.join(context['temp_directory'],'tmp_5855_check.err'), 'w')
-    subprocess.call( [ "isql", 'localhost:'+tmpres, "-i", fn_sql_chk.name ],
+    subprocess.call( [ context['isql_path'], 'localhost:'+tmpres, "-i", fn_sql_chk.name ],
                      stdout=fn_sql_log, stderr=fn_sql_err
                    )
 
-    fn_sql_log.close()
-    fn_sql_err.close()
+    flush_and_close( fn_sql_log )
+    flush_and_close( fn_sql_err )
     
     for fe in ( fn_res_err, fn_sql_err ):
         with open(fe.name,'r') as f:
@@ -115,23 +144,15 @@ if backup_error_flag==0:
         for line in f:
             print(line)
     
-    # Cleanup:
-
-    # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-    # Exception raised while executing Python test script. exception: WindowsError: 32
+    # cleanup:
+    ##########
     time.sleep(1)
-    f_list=( fn_res_err, fn_sql_err, fn_res_log, fn_sql_log, fn_sql_chk )
-    
-    for i in range(len(f_list)):
-        if os.path.isfile(f_list[i].name):
-            os.remove(f_list[i].name)
+    cleanup( (fn_res_err, fn_sql_err, fn_res_log, fn_sql_log, fn_sql_chk ) )
     
 #############################################################
 
-if os.path.isfile(tmpbkp):
-    os.remove(tmpbkp)
-if os.path.isfile(tmpres):
-    os.remove(tmpres)
+cleanup( (tmpbkp, tmpres) )
+
   """,
   'expected_stdout':
   """

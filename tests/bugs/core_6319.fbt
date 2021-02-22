@@ -165,9 +165,9 @@ else:
 f_nbk_poor_log=open( os.path.join(context['temp_directory'],'tmp_nbk_poor_6319.log'), 'w')
 f_nbk_poor_err=open( os.path.join(context['temp_directory'],'tmp_nbk_poor_6319.err'), 'w')
 
-cleanup( db_3x_restore, )
+cleanup( (db_3x_restore,) )
 subprocess.call( nbk_wrong_call, stdout=f_nbk_poor_log, stderr=f_nbk_poor_err ) # [1]
-cleanup( [db_3x_restore] )
+cleanup( (db_3x_restore,) )
 subprocess.call( nbk_wrong_call, stdout=f_nbk_poor_log, stderr=f_nbk_poor_err ) # [2]
 
 # FB 3.0.6.33307:
@@ -180,7 +180,7 @@ subprocess.call( nbk_wrong_call, stdout=f_nbk_poor_log, stderr=f_nbk_poor_err ) 
 f_nbk_poor_log.close()
 f_nbk_poor_err.close()
 
-cleanup( [db_3x_restore] )
+cleanup( (db_3x_restore,) )
 
 # Try to do the same using FBSVCMGR.
 # We also do this twise and both attempts must finish the same as previous pair:
@@ -200,9 +200,9 @@ else:
 f_svc_poor_log=open( os.path.join(context['temp_directory'],'tmp_svc_res_poor_6319.log'), 'w')
 f_svc_poor_err=open( os.path.join(context['temp_directory'],'tmp_svc_res_poor_6319.err'), 'w')
 
-cleanup( [db_3x_restore] )
+cleanup( (db_3x_restore,) )
 subprocess.call( fbsvc_call_02, stdout=f_svc_poor_log, stderr=f_svc_poor_err ) # [1]
-cleanup( [db_3x_restore] )
+cleanup( (db_3x_restore,) )
 subprocess.call( fbsvc_call_02, stdout=f_svc_poor_log, stderr=f_svc_poor_err ) # [2]
 
 # FB 3.0.6.33307:
@@ -214,7 +214,7 @@ subprocess.call( fbsvc_call_02, stdout=f_svc_poor_log, stderr=f_svc_poor_err ) #
  
 f_svc_poor_log.close()
 f_svc_poor_err.close()
-cleanup( [db_3x_restore] )
+cleanup( (db_3x_restore,) )
 
 
 # Try to apply incremental copies in proper order, also using FBSVCMGR.
@@ -223,7 +223,7 @@ cleanup( [db_3x_restore] )
 f_svc_good_log=open( os.path.join(context['temp_directory'],'tmp_svc_res_good_6319.log'), 'w')
 f_svc_good_err=open( os.path.join(context['temp_directory'],'tmp_svc_res_good_6319.err'), 'w')
 
-cleanup( [db_3x_restore] )
+cleanup( (db_3x_restore,) )
 
 subprocess.call( fbsvc_call_01, stdout=f_svc_good_log, stderr=f_svc_good_err )
 if db_conn.engine_version >= 4.0:

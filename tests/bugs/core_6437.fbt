@@ -61,7 +61,7 @@ fb_home = services.connect(host='localhost', user=user_name, password=user_passw
 
 db_name = os.path.join(context['temp_directory'],'tmp_gfix_6437.fdb')
 
-cleanup( db_name )
+cleanup( (db_name,) )
 
 runProgram(fb_home + 'isql',[ '-q' ], "create database '%(db_name)s';" % locals())
 

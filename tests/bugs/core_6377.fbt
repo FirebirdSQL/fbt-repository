@@ -68,7 +68,7 @@ def cleanup( f_names_list ):
 # https://docs.python.org/2/library/subprocess.html#replacing-shell-pipeline
 
 tmp_restdb = os.path.join(context['temp_directory'],'tmp_6377_rest.fdb')
-cleanup( tmp_restdb, )
+cleanup( (tmp_restdb,) )
 
 f_br_err=open( os.path.join(context['temp_directory'],'tmp_6377_br.err'), 'w')
 p_sender = subprocess.Popen( [ fb_home+'gbak', '-b', dsn, 'stdout' ], stdout=PIPE)

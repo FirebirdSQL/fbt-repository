@@ -92,7 +92,7 @@ shutil.copy2( dbconf, dbcbak )
 
 tmp_fdb = os.path.join(context['temp_directory'],'tmp_4864.fdb')
 
-cleanup( tmp_fdb, )
+cleanup( (tmp_fdb,) )
 
 f_dbconf=open(dbconf,'a')
 f_dbconf.seek(0, 2)

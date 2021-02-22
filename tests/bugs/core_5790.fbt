@@ -70,7 +70,7 @@ def cleanup( f_names_list ):
            os.remove( del_name )
 
 #--------------------------------------------
-cleanup( tmpfdb, )
+cleanup( (tmpfdb,) )
 
 sql_txt='''
     create database 'localhost:%(tmpfdb)s';

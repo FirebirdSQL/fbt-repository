@@ -91,7 +91,7 @@ shutil.copy2( fb_home+'databases.conf', dbconf_bak )
 
 tmp_fdb=os.path.join(context['temp_directory'],'tmp_6147.fdb')
 
-cleanup( tmp_fdb, )
+cleanup( (tmp_fdb,) )
 
 text2app=\
 '''
@@ -196,7 +196,7 @@ subprocess.call( ['gfix', 'localhost:tmp_alias_6147', '-shut', 'single', '-force
 ##########################
 shutil.copy2( dbconf_bak, fb_home+'databases.conf' )
 os.remove(dbconf_bak)
-cleanup( [ tmp_fdb ] )
+cleanup( (tmp_fdb,) )
 
 
 with open(f_prepare_log.name, 'r') as f:

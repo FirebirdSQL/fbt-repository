@@ -67,7 +67,7 @@ def cleanup( f_names_list ):
 #--------------------------------------------
 
 tmpfdb = os.path.join( context['temp_directory'], 'tmp_5364.fdb')
-cleanup( tmpfdb, )
+cleanup( (tmpfdb,) )
 
 con1=fdb.create_database(dsn = 'localhost:' + tmpfdb)
 con1.close()

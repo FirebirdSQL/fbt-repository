@@ -133,7 +133,7 @@ f_backup_err.close()
 
 ########################################################################
 
-cleanup( [ fdb_rest ] )
+cleanup( (fdb_rest,) )
 
 f_restore_log = open( os.path.join(context['temp_directory'],'tmp_6208.restore.log'), 'w', buffering = 0)
 f_restore_err = open( ''.join( (os.path.splitext(f_restore_log.name)[0], '.err' ) ), 'w', buffering = 0)
