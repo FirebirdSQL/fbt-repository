@@ -38,11 +38,10 @@ import subprocess
 import difflib
 import re
 import time
-from fdb import services
 
 #--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -50,7 +49,7 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    if file_handle.mode not in ('r', 'rb'):
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
         # otherwise: "OSError: [Errno 9] Bad file descriptor"!
         os.fsync(file_handle.fileno())
     file_handle.close()
@@ -59,18 +58,24 @@ def flush_and_close(file_handle):
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
 def svc_get_fb_log( fb_home, f_fb_log ):
 
   global subprocess
-  subprocess.call( [ fb_home + "fbsvcmgr",
+  subprocess.call( [ context['fbsvcmgr_path'],
                      "localhost:service_mgr",
                      "action_get_fb_log"
                    ],
@@ -83,10 +88,8 @@ def svc_get_fb_log( fb_home, f_fb_log ):
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-
 f_init_log = open( os.path.join(context['temp_directory'],'tmp_fb_old.log'), 'w')
-subprocess.call( [ fb_home + "fbsvcmgr","localhost:service_mgr",  "action_get_fb_log" ], stdout = f_init_log, stderr = subprocess.STDOUT)
+subprocess.call( [ context['fbsvcmgr_path'],"localhost:service_mgr",  "action_get_fb_log" ], stdout = f_init_log, stderr = subprocess.STDOUT)
 flush_and_close( f_init_log )
 
 db_conn.close() # this leads to zero divide error in trg_disconnect which must be reflected in the firebird.log
@@ -94,7 +97,7 @@ db_conn.close() # this leads to zero divide error in trg_disconnect which must b
 time.sleep(1)
 
 f_curr_log = open( os.path.join(context['temp_directory'],'tmp_fb_new.log'), 'w')
-subprocess.call( [ fb_home + "fbsvcmgr","localhost:service_mgr",  "action_get_fb_log" ], stdout = f_curr_log, stderr = subprocess.STDOUT)
+subprocess.call( [ context['fbsvcmgr_path'],"localhost:service_mgr",  "action_get_fb_log" ], stdout = f_curr_log, stderr = subprocess.STDOUT)
 flush_and_close( f_curr_log )
 
 f_init_log=open(f_init_log.name, 'r')
@@ -120,7 +123,7 @@ with open( f_diff_txt.name,'r') as f:
 ###############################
 # Cleanup.
 time.sleep(1)
-cleanup( [x.name for x in (f_init_log,f_curr_log,f_diff_txt) ] )
+cleanup( (f_init_log,f_curr_log,f_diff_txt) )
 
   """,
  'expected_stdout':
