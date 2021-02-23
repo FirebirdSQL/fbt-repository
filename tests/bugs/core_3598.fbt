@@ -202,6 +202,10 @@ f_trclst.seek(0,2)
 subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr", "action_trace_stop","trc_id",trcssn],stdout=f_trclst, stderr=subprocess.STDOUT)
 flush_and_close( f_trclst )
 
+# 23.02.2021. DELAY FOR AT LEAST 1 SECOND REQUIRED HERE!
+# Otherwise trace log can remain empty.
+time.sleep(1)
+
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
 flush_and_close( f_trclog )
