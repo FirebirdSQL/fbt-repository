@@ -184,10 +184,13 @@ flush_and_close( val_log )
 f_stopper_cmd=open( os.path.join(context['temp_directory'],'tmp_stop_4855.sql'), 'w')
 f_stopper_cmd.write('insert into stop(id) values(1); commit;')
 flush_and_close( f_stopper_cmd )
-
 p_stopper = subprocess.call([ context['isql_path'], dsn, "-i", f_stopper_cmd.name])
 
-# Stop working ISQL:
+# Stop working ISQL. NB: in rare cases this can lead to:
+# + Statement failed, SQLSTATE = HY008
+# + operation was cancelled
+# + After line ... in file .../tmp_isql_4855.sql
+
 p_heavy_dml.terminate()
 flush_and_close( f_heavy_dml_log )
 
@@ -200,11 +203,8 @@ with open( val_log.name,'r') as f:
 
 #####################################################################
 # Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
-cleanup( (fwoff_log, f_stopper_cmd, val_log, f_heavy_dml_cmd, f_heavy_dml_log) )
+cleanup( (fwoff_log, val_log, f_heavy_dml_cmd, f_heavy_dml_log, f_stopper_cmd) )
 
 
   """,
@@ -234,8 +234,11 @@ Iteration #2:
   """
   """,
   'substitutions':[
-    ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]',''),
-    ('Relation [0-9]{3,4}','Relation')
+     ('[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]','')
+    ,('Relation [0-9]{3,4}','Relation')
+    ,('Statement failed, SQLSTATE = HY008', '')
+    ,('operation was cancelled', '')
+    ,('After line', '')
   ]
 }
 ]
