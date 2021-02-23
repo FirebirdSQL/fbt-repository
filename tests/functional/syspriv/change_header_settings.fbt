@@ -90,8 +90,42 @@
 import os
 import subprocess
 
+db_file = db_conn.database_name
 db_conn.close()
-db_file="$(DATABASE_LOCATION)functional.syspriv.change_header_settings.fdb"
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
+#--------------------------------------------
+
 
 # Check that current non-sysdba user:
 # 1) can SKIP db-level trigger firing:
@@ -100,7 +134,7 @@ db_file="$(DATABASE_LOCATION)functional.syspriv.change_header_settings.fdb"
 runProgram('isql',[dsn,'-nod','-user','U01', '-pas', '123'], 'set list on; set count on; select * from att_log; select * from v_check;')
 
 f_hdr_props_log = open( os.path.join(context['temp_directory'],'tmp_syspriv_hdr_props.log'), 'w')
-subprocess.call( ["fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "user","U01", "password", "123",
                   "action_properties",
                   "dbname", db_file,
@@ -110,7 +144,7 @@ subprocess.call( ["fbsvcmgr","localhost:service_mgr",
                  stderr=subprocess.STDOUT
                )
 
-subprocess.call( ["fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "user","U01", "password", "123",
                   "action_properties",
                   "dbname", db_file,
@@ -120,7 +154,7 @@ subprocess.call( ["fbsvcmgr","localhost:service_mgr",
                  stderr=subprocess.STDOUT
                )
 
-subprocess.call( ["fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "user","U01", "password", "123",
                   "action_properties",
                   "dbname", db_file,
@@ -130,7 +164,7 @@ subprocess.call( ["fbsvcmgr","localhost:service_mgr",
                  stderr=subprocess.STDOUT
                )
 
-f_hdr_props_log.close()
+flush_and_close( f_hdr_props_log )
 
 # Checks
 ########
@@ -148,16 +182,11 @@ runProgram('isql',[dsn,'-nod','-user','U01', '-pas', '123'], sql_chk)
 with open( f_hdr_props_log.name,'r') as f:
     for line in f:
         print('DB SHUTDOWN LOG: '+line.upper())
-f.close()
 
 
 # Cleanup:
 ##########
-f_list=[f_hdr_props_log]
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
+cleanup( (f_hdr_props_log,) )
 
   """,
   'expected_stdout':
