@@ -617,8 +617,8 @@ for x in f_list:
 
 ######################################################################
 # Cleanup:
-f_list |= set( ( f_init_ddl, f_init_log, f_meta_log1, f_meta_log2, f_backup_log, f_restore_log, ) )
-cleanup( f_list + [ tmpfbk, tmpfdb ])
+f_list |= set( ( f_init_ddl, f_init_log, f_meta_log1, f_meta_log2, f_backup_log, f_restore_log, tmpfbk, tmpfdb) )
+cleanup( f_list )
 
   """,
  'expected_stdout':
