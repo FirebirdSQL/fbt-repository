@@ -131,6 +131,10 @@ fn_nul = open(os.devnull, 'w')
 subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr", "action_trace_stop","trc_id", trcssn], stdout=fn_nul)
 fn_nul.close()
 
+# 23.02.2021. DELAY FOR AT LEAST 1 SECOND REQUIRED HERE!
+# Otherwise trace log can remain empty.
+time.sleep(1)
+
 # Doc about Popen.terminate():
 # https://docs.python.org/2/library/subprocess.html
 # Stop the child. On Posix OSs the method sends SIGTERM to the child.
