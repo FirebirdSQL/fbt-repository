@@ -28,25 +28,14 @@
  'test_script':"""\
 
 import os
-import subprocess
+from fdb import services
 
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
-db_conn.close()
+svc = services.connect(host='localhost', user= user_name, password= user_password)
+security_db_info = svc.get_security_database_path()
+svc.close()
 
-security_db_info=subprocess.check_output(
-                  [ context['fbsvcmgr_path'],
-                    "localhost:service_mgr",
-                    "info_user_dbpath"
-                  ]
-                 )
-# Path and name of file for security database:
-#######################
-security_db_file = ''.join( security_db_info.split()[2:] )
-secdb_dir_and_file = os.path.split(security_db_file) #  ('', 'security.db')
-secdb_directory = os.path.split(security_db_file)[0] # '' or c:\path\to\firebird
-secdb_dir_start = secdb_directory.split(os.sep)[0] # '' or 'c:'
-print( 'Is DIRECTORY included into security DB info ? => ', ( 'YES' if secdb_dir_start else ('NO. >' + security_db_info.strip()+'<' ) )  )
+print( 'Is DIRECTORY included into security DB info ? => ', ( 'YES' if os.path.split(security_db_info)[0] else ('NO. >' + security_db_info + '<' ) )  )
+
   """,
  'expected_stdout':
   """
