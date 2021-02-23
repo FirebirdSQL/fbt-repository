@@ -53,16 +53,9 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-#--------------------------------------------
-def cleanup( f_names_list ):
-    global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-#--------------------------------------------
-
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
 this_db = db_conn.database_name
+tmpfbk='$(DATABASE_LOCATION)'+'tmp_zipped_backup.fbk'
+tmpfdb='$(DATABASE_LOCATION)'+'tmp_zipped_restore.fdb'
 
 ################################################
 ###    e n c r y p t      d a t a b a s e    ###
@@ -73,6 +66,38 @@ db_conn.commit()
 time.sleep(1)
 db_conn.close()
 
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #-------------------------------------------
 sql_ddl=\
 '''
@@ -515,58 +540,55 @@ Togané, d''où on les expédierait à Yedo.
 	select 'All OK.' from rdb$database;
 '''
 #-------------------------------------------
-f_init_ddl=open( os.path.join(context['temp_directory'],'tmp_check_ddl.sql'), 'w', buffering = 0)
+f_init_ddl=open( os.path.join(context['temp_directory'],'tmp_check_ddl.sql'), 'w')
 f_init_ddl.write(sql_ddl)
-f_init_ddl.close()
+flush_and_close( f_init_ddl )
 
-f_init_log = open( os.path.join(context['temp_directory'],'tmp_check_ddl.log'), 'w', buffering = 0)
-f_init_err = open( os.path.join(context['temp_directory'],'tmp_check_ddl.err'), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', dsn, '-ch', 'utf8', '-i', f_init_ddl.name ], stdout = f_init_log,stderr = f_init_err)
-f_init_log.close()
-f_init_err.close()
+f_init_log = open( os.path.join(context['temp_directory'],'tmp_check_ddl.log'), 'w')
+f_init_err = open( os.path.join(context['temp_directory'],'tmp_check_ddl.err'), 'w')
+subprocess.call( [ context['isql_path'], dsn, '-ch', 'utf8', '-i', f_init_ddl.name ], stdout = f_init_log,stderr = f_init_err)
+flush_and_close( f_init_log )
+flush_and_close( f_init_err )
 
-f_meta_log1 = open( os.path.join(context['temp_directory'],'tmp_initial_meta.sql'), 'w', buffering = 0)
-f_meta_err1 = open( os.path.join(context['temp_directory'],'tmp_initial_meta.err'), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', dsn, '-x', '-ch', 'utf8' ], stdout = f_meta_log1, stderr = f_meta_err1)
-f_meta_log1.close()
-f_meta_err1.close()
+f_meta_log1 = open( os.path.join(context['temp_directory'],'tmp_initial_meta.sql'), 'w')
+f_meta_err1 = open( os.path.join(context['temp_directory'],'tmp_initial_meta.err'), 'w')
+subprocess.call( [ context['isql_path'], dsn, '-x', '-ch', 'utf8' ], stdout = f_meta_log1, stderr = f_meta_err1)
+flush_and_close( f_meta_log1 )
+flush_and_close( f_meta_err1 )
 
-
-tmpfbk='$(DATABASE_LOCATION)'+'tmp_zipped_backup.fbk'
-tmpfdb='$(DATABASE_LOCATION)'+'tmp_zipped_restore.fdb'
 
 # Backup with '-ZIP' command switch
 ########
 
-f_backup_log = open( os.path.join(context['temp_directory'],'tmp_backup.log'), 'w', buffering = 0)
-f_backup_err = open( os.path.join(context['temp_directory'],'tmp_backup.err'), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'gbak', '-b', '-zip', dsn, tmpfbk ], stdout = f_backup_log, stderr = f_backup_err)
-f_backup_log.close()
-f_backup_err.close()
+f_backup_log = open( os.path.join(context['temp_directory'],'tmp_backup.log'), 'w')
+f_backup_err = open( os.path.join(context['temp_directory'],'tmp_backup.err'), 'w')
+subprocess.call( [ context['gbak_path'], '-b', '-zip', dsn, tmpfbk ], stdout = f_backup_log, stderr = f_backup_err)
+flush_and_close( f_backup_log )
+flush_and_close( f_backup_err )
 
 # Restore:
 ##########
 
-f_restore_log = open( os.path.join(context['temp_directory'],'tmp_restore.log'), 'w', buffering = 0)
-f_restore_err = open( os.path.join(context['temp_directory'],'tmp_restore.err'), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'gbak', '-rep', tmpfbk, 'localhost:' + tmpfdb ], stdout = f_restore_log, stderr = f_restore_err)
-f_restore_log.close()
-f_restore_err.close()
+f_restore_log = open( os.path.join(context['temp_directory'],'tmp_restore.log'), 'w')
+f_restore_err = open( os.path.join(context['temp_directory'],'tmp_restore.err'), 'w')
+subprocess.call( [ context['gbak_path'], '-rep', tmpfbk, 'localhost:' + tmpfdb ], stdout = f_restore_log, stderr = f_restore_err)
+flush_and_close( f_restore_log )
+flush_and_close( f_restore_err )
 
 # Validate restored database:
 ##########
 
-f_validate_log = open( os.path.join(context['temp_directory'],'tmp_validate.log'), 'w', buffering = 0)
-f_validate_err = open( os.path.join(context['temp_directory'],'tmp_validate.err'), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'gfix', '-v', '-full', 'localhost:' + tmpfdb ], stdout = f_validate_log, stderr = f_validate_err)
-f_validate_log.close()
-f_validate_err.close()
+f_validate_log = open( os.path.join(context['temp_directory'],'tmp_validate.log'), 'w')
+f_validate_err = open( os.path.join(context['temp_directory'],'tmp_validate.err'), 'w')
+subprocess.call( [ context['gfix_path'], '-v', '-full', 'localhost:' + tmpfdb ], stdout = f_validate_log, stderr = f_validate_err)
+flush_and_close( f_validate_log )
+flush_and_close( f_validate_err )
 
-f_meta_log2 = open( os.path.join(context['temp_directory'],'tmp_restored_meta.sql'), 'w', buffering = 0)
-f_meta_err2 = open( os.path.join(context['temp_directory'],'tmp_restored_meta.err'), 'w', buffering = 0)
-subprocess.call( [ fb_home + 'isql', dsn, '-x', '-ch', 'utf8' ], stdout = f_meta_log2, stderr = f_meta_err2)
-f_meta_log2.close()
-f_meta_err2.close()
+f_meta_log2 = open( os.path.join(context['temp_directory'],'tmp_restored_meta.sql'), 'w')
+f_meta_err2 = open( os.path.join(context['temp_directory'],'tmp_restored_meta.err'), 'w')
+subprocess.call( [ context['isql_path'], dsn, '-x', '-ch', 'utf8' ], stdout = f_meta_log2, stderr = f_meta_err2)
+flush_and_close( f_meta_log2 )
+flush_and_close( f_meta_err2 )
 
 
 # Compare extracted metadata:
@@ -575,12 +597,12 @@ f_meta_err2.close()
 f_meta_log1 = open( f_meta_log1.name,'r' )
 f_meta_log2 = open( f_meta_log2.name,'r')
 
-f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_meta_diff.txt'), 'w', buffering = 0)
+f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_meta_diff.txt'), 'w')
 f_diff_txt.write( ''.join( difflib.unified_diff( f_meta_log1.readlines(), f_meta_log2.readlines() ) ) )
-f_diff_txt.close()
+flush_and_close( f_diff_txt )
 
-f_meta_log1.close()
-f_meta_log2.close()
+flush_and_close( f_meta_log1 )
+flush_and_close( f_meta_log2 )
 
 # Check: all files from following set must be EMPTY:
 ########
@@ -596,7 +618,7 @@ for x in f_list:
 ######################################################################
 # Cleanup:
 f_list |= set( ( f_init_ddl, f_init_log, f_meta_log1, f_meta_log2, f_backup_log, f_restore_log, ) )
-cleanup( [ i.name for i in f_list ]  + [ tmpfbk, tmpfdb ])
+cleanup( f_list + [ tmpfbk, tmpfdb ])
 
   """,
  'expected_stdout':
