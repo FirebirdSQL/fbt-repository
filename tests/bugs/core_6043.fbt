@@ -59,19 +59,46 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_db = db_conn.database_name
+db_conn.close()
+
+svc = services.connect(host='localhost', user= user_name, password= user_password)
+fb_home = svc.get_home_directory()
+svc.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb'):
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-db_conn.close()
 
 tmp_fdb_keep=os.path.join(context['temp_directory'],'tmp_6043.keep_GTT_data.fdb')
 tmp_fdb_kill=os.path.join(context['temp_directory'],'tmp_6043.kill_GTT_data.fdb')
@@ -79,8 +106,11 @@ tmp_fdb_kill=os.path.join(context['temp_directory'],'tmp_6043.kill_GTT_data.fdb'
 shutil.copy2( this_db, tmp_fdb_keep )
 shutil.copy2( this_db, tmp_fdb_kill )
 
+dbconf = os.path.join( fb_home, 'databases.conf')
+dbcbak = os.path.join( fb_home, 'databases.bak')
+
 # Resut: fb_home is full path to FB instance home (with trailing slash).
-shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
+shutil.copy2( dbconf, dbcbak )
 
 # ----------------------------------------------------------------------
 
@@ -105,13 +135,13 @@ isql_script='''
     select * from gtt; -- point 2
 '''
 
-f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_6043.sql'), 'w', buffering = 0)
+f_isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_6043.sql'), 'w')
 f_isql_cmd.write( isql_script )
-f_isql_cmd.close()
+flush_and_close( f_isql_cmd )
 
 # --------------------------------------------------------------------
 
-f_dbconf=open(fb_home+'databases.conf','a', buffering = 0)
+f_dbconf=open( dbconf,'a')
 f_dbconf.seek(0, 2)
 
 alias_data=\
@@ -146,15 +176,15 @@ alias_data=\
 ''' % locals()
 
 f_dbconf.write(alias_data)
-f_dbconf.close()
+flush_and_close( f_dbconf )
 
 # 4debug: shutil.copy2( fb_home+'databases.conf', fb_home+'databases.conf.check_it' )
 
 # NB: buffering = 0 - we want this file be immediately on disk after closing in order to avoid excessive waiting for it
 ###################
-f_isql_keep_log=open( os.path.join(context['temp_directory'],'tmp_6043.keep_GTT_data.log'), 'w', buffering = 0)
-subprocess.call(["isql", 'localhost:tmp_6043_keep',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_keep_log, stderr=subprocess.STDOUT)
-f_isql_keep_log.close()
+f_isql_keep_log=open( os.path.join(context['temp_directory'],'tmp_6043.keep_GTT_data.log'), 'w')
+subprocess.call([ context['isql_path'], 'localhost:tmp_6043_keep',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_keep_log, stderr=subprocess.STDOUT)
+flush_and_close( f_isql_keep_log )
 
 with open( f_isql_keep_log.name,'r') as f:
     for line in f:
@@ -164,9 +194,9 @@ with open( f_isql_keep_log.name,'r') as f:
 ####################################################################
 
 # NB: buffering = 0 - we want this file be immediately on disk after closing in order to avoid excessive waiting for it
-f_isql_kill_log=open( os.path.join(context['temp_directory'],'tmp_6043.kill_GTT_data.log'), 'w', buffering = 0)
-subprocess.call(["isql", 'localhost:tmp_6043_kill',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_kill_log, stderr=subprocess.STDOUT)
-f_isql_kill_log.close()
+f_isql_kill_log=open( os.path.join(context['temp_directory'],'tmp_6043.kill_GTT_data.log'), 'w')
+subprocess.call([context['isql_path'], 'localhost:tmp_6043_kill',  "-q", "-i", f_isql_cmd.name], stdout=f_isql_kill_log, stderr=subprocess.STDOUT)
+flush_and_close( f_isql_kill_log )
 
 with open( f_isql_kill_log.name,'r') as f:
     for line in f:
@@ -176,17 +206,12 @@ with open( f_isql_kill_log.name,'r') as f:
 ####################################################################
 
 # Restore previous content:
-shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
-os.remove( fb_home+'databases.bak' )
+shutil.move( dbcbak, dbconf )
 
 #####################################################################
 # Cleanup:
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
-# >>>> 13.12.2019 we can remove this delay because use buffering=0 for open() calls: >>>> time.sleep(1)
-
-cleanup( [ i.name for i in ( f_isql_keep_log, f_isql_kill_log, f_isql_cmd ) ] + [ tmp_fdb_keep, tmp_fdb_kill ]   )
+time.sleep(1)
+cleanup( ( f_isql_keep_log, f_isql_kill_log, f_isql_cmd, tmp_fdb_keep, tmp_fdb_kill ) )
 
   """,
  'expected_stdout':
