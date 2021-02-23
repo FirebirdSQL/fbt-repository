@@ -89,9 +89,41 @@ import os
 import subprocess
 from subprocess import Popen
 
+db_file=db_conn.database_name
 db_conn.close()
-db_file="$(DATABASE_LOCATION)functional.syspriv.access_shutdown_database.fdb"
 
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
+#--------------------------------------------
 
 # Change DB state to 'shutdown single maintenance':
 ##################################################
@@ -101,7 +133,7 @@ f_dbshut_u01_err=open( os.path.join(context['temp_directory'],'tmp_dbshut_u01.er
 
 # Must FAIL when we do this as non-sysdba:
 
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "user", "U01", "password", "123",
                  "action_properties", 
                  "dbname", db_file,
@@ -112,9 +144,8 @@ subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  stderr=f_dbshut_u01_err
                )
 
-f_dbshut_u01_log.close()
-f_dbshut_u01_err.close()
-
+flush_and_close( f_dbshut_u01_log )
+flush_and_close( f_dbshut_u01_err )
 
 #-------------------------------------------------
 # Must PASS because 2nd time se do this as SYSDBA:
@@ -122,7 +153,7 @@ f_dbshut_u01_err.close()
 f_dbshut_sys_log=open( os.path.join(context['temp_directory'],'tmp_dbshut_sys.log'), 'w')
 f_dbshut_sys_err=open( os.path.join(context['temp_directory'],'tmp_dbshut_sys.err'), 'w')
 
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "user", user_name, "password", user_password,
                  "action_properties", 
                  "dbname", db_file,
@@ -132,8 +163,8 @@ subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  stdout=f_dbshut_sys_log, 
                  stderr=f_dbshut_sys_err
                )
-f_dbshut_sys_log.close()
-f_dbshut_sys_err.close()
+flush_and_close( f_dbshut_sys_log )
+flush_and_close( f_dbshut_sys_err )
 
 #---------------------------------------------------------------------------------------------------
 
@@ -172,7 +203,7 @@ f_online_u01_err=open( os.path.join(context['temp_directory'],'tmp_online_u01.er
 
 # Must FAIL when we do this as non-sysdba:
 
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "user", "U01", "password", "123",
                  "action_properties", 
                  "dbname", db_file,
@@ -181,8 +212,8 @@ subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  stdout=f_online_u01_log, 
                  stderr=f_online_u01_err
                )
-f_online_u01_log.close()
-f_online_u01_err.close()
+flush_and_close( f_online_u01_log )
+flush_and_close( f_online_u01_err )
 
 #-------------------------------------------------
 # Must PASS because 2nd time se do this as SYSDBA:
@@ -190,7 +221,7 @@ f_online_u01_err.close()
 f_online_sys_log=open( os.path.join(context['temp_directory'],'tmp_online_sys.log'), 'w')
 f_online_sys_err=open( os.path.join(context['temp_directory'],'tmp_online_sys.err'), 'w')
 
-subprocess.call(["fbsvcmgr", "localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "user", user_name, "password", user_password,
                  "action_properties", 
                  "dbname", db_file,
@@ -200,8 +231,8 @@ subprocess.call(["fbsvcmgr", "localhost:service_mgr",
                  stderr=f_online_sys_err
                )
 
-f_online_sys_log.close()
-f_online_sys_err.close()
+flush_and_close( f_online_sys_log )
+flush_and_close( f_online_sys_err )
 
 # ------------------------------------------------------------------------
 
@@ -226,13 +257,12 @@ for i in range(len(f_list)):
     with open( f_list[i].name,'r') as f:
         for line in f:
             print( os.path.basename( f_list[i].name ) + ' : ' + line)
-    f.close()
     os.remove(f_list[i].name)
 
 # cleanup: drop user 'U01'
 ##########
-
 runProgram('isql',[dsn, '-user', user_name, '-pas', user_password], 'drop user u01; commit;')
+
   """,
   'expected_stdout':
   """
