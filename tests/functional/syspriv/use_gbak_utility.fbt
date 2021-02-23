@@ -74,21 +74,53 @@
 import os
 import subprocess
 
+db_pref = os.path.splitext(db_conn.database_name)[0]
 db_conn.close()
 
-db_pref='$(DATABASE_LOCATION)functional.syspriv.use_gbak_utility'
-fdb_this=db_pref+'.fdb'
-fbk_name=db_pref+'.fbk'
-fdb_test=db_pref+'.tmp'
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
+#--------------------------------------------
+
+fdb_this = db_pref+'.fdb'
+fbk_name = db_pref+'.fbk'
+fdb_test = db_pref+'.tmp'
 
 # !!! NB !!! See CORE-5291. We have to remove file that will be used as target for restoring,
 # otherwise error msg will contain strange phrase "gbak: ERROR:could not drop ... (database might be in use)"
-if os.path.isfile(fdb_test):
-    os.remove(fdb_test)
+cleanup( (fdb_test,) )
 
 f_backup_u01_log=open( os.path.join(context['temp_directory'],'tmp_backup_u01.log'), 'w')
 f_backup_u01_err=open( os.path.join(context['temp_directory'],'tmp_backup_u01.err'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "user","U01","password","123",
                  "action_backup",
                  "dbname",   fdb_this,
@@ -98,8 +130,8 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                  stderr=f_backup_u01_err
                 )
 
-f_backup_u01_log.close()
-f_backup_u01_err.close()
+flush_and_close( f_backup_u01_log )
+flush_and_close( f_backup_u01_err )
 
 # NB: user U01 has right only to make BACKUP, but has NO right for RESTORING database
 # (to restore he has to be granted with system privilege CREATE_DATABASE).
@@ -112,7 +144,7 @@ f_backup_u01_err.close()
 
 f_restore_u01_log=open( os.path.join(context['temp_directory'],'tmp_restore_u01.log'), 'w')
 f_restore_u01_err=open( os.path.join(context['temp_directory'],'tmp_restore_u01.err'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "user","U01","password","123",
                  "action_restore", "res_replace", 
                  "verbose", 
@@ -121,8 +153,8 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                 stdout=f_restore_u01_log, 
                 stderr=f_restore_u01_err
               )
-f_restore_u01_log.close()
-f_restore_u01_err.close()
+flush_and_close( f_restore_u01_log )
+flush_and_close( f_restore_u01_err )
 
 
 # Now try to restore as SYSDBA and then check that U01 will be able 
@@ -130,7 +162,7 @@ f_restore_u01_err.close()
 
 f_restore_sys_log=open( os.path.join(context['temp_directory'],'tmp_restore_sys.log'), 'w')
 f_restore_sys_err=open( os.path.join(context['temp_directory'],'tmp_restore_sys.err'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "user", user_name, "password", user_password,
                  "action_restore", "res_replace", 
                  "verbose", 
@@ -139,24 +171,22 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                 stdout=f_restore_sys_log, 
                 stderr=f_restore_sys_err
               )
-f_restore_sys_log.close()
-f_restore_sys_err.close()
+flush_and_close( f_restore_sys_log )
+flush_and_close( f_restore_sys_err )
 
 
-# Check content of logs:
+# Check content of logs.
 
 # Must be EMPTY:
 with open( f_backup_u01_err.name,'r') as f:
     for line in f:
         print('U01 BACKUP STDERR: '+line.upper())
-f.close()
 
 # Must contain: "closing file, committing, and finishing"
 with open( f_backup_u01_log.name,'r') as f:
     for line in f:
         if 'closing file' in line:
             print('U01 BACKUP STDLOG: ' + ' '.join(line.split()).upper() )
-f.close()
 
 
 # Must contain errors:
@@ -166,22 +196,17 @@ f.close()
 with open( f_restore_u01_err.name,'r') as f:
     for line in f:
         print('U01 RESTORE STDERR: ' + ' '.join(line.split()).upper() )
-f.close()
-
 
 # Must contain: "finishing, closing, and going home "
 with open( f_restore_sys_log.name,'r') as f:
     for line in f:
         if 'going home' in line:
             print('SYSDBA RESTORE STDLOG: ' + ' '.join(line.split()).upper() )
-f.close()
 
 # Must be EMPTY:
 with open( f_restore_sys_err.name,'r') as f:
     for line in f:
         print('SYSDBA RESTORE STDERR: '+line.upper())
-f.close()
-
 
 # Check that non-sysdba user can connect and query table 'test':
 #######
@@ -198,26 +223,8 @@ runProgram('isql',['localhost:'+fdb_test,'-user','U01', '-pas', '123'], sql_chk)
 
 # Cleanup:
 ##########
-
 runProgram('isql',[dsn,'-user',user_name, '-pas', user_password], 'drop user u01; commit;')
-
-if os.path.isfile(fbk_name):
-    os.remove(fbk_name)
-if os.path.isfile(fdb_test):
-    os.remove(fdb_test)
-
-f_list=[
-    f_backup_u01_log,
-    f_backup_u01_err,
-    f_restore_u01_log,
-    f_restore_u01_err,
-    f_restore_sys_log,
-    f_restore_sys_err
-]
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
+cleanup( (fbk_name, fdb_test, f_backup_u01_log,f_backup_u01_err,f_restore_u01_log,f_restore_u01_err,f_restore_sys_log,f_restore_sys_err) )
 
   """,
   'expected_stdout':
