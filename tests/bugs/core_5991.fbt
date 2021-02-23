@@ -231,6 +231,10 @@ else:
                    )
     flush_and_close( trc_lst )
 
+    # 23.02.2021. DELAY FOR AT LEAST 1 SECOND REQUIRED HERE!
+    # Otherwise trace log can remain empty.
+    time.sleep(1)
+
     p_svcmgr.terminate()
     flush_and_close( trc_log )
 
