@@ -107,25 +107,45 @@ import os
 import subprocess
 import re
 
+db_file=db_conn.database_name
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
-
-db_conn.close()
-
-db_file='$(DATABASE_LOCATION)functional.syspriv.use_gstat_utility.fdb'
-
-#-----------------------
 
 f_db_stat_log=open( os.path.join(context['temp_directory'],'tmp_dbstat.log'), 'w')
 f_db_stat_err=open( os.path.join(context['temp_directory'],'tmp_dbstat.err'), 'w')
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "user","U01","password","123",
                  "action_db_stats",
                  "dbname", db_file,
@@ -138,15 +158,15 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                  stderr=f_db_stat_err
                 )
 
-f_db_stat_log.close()
-f_db_stat_err.close()
+flush_and_close( f_db_stat_log )
+flush_and_close( f_db_stat_err )
 
 # Separate call for get encryption statistics:
 
 f_db_encr_log=open( os.path.join(context['temp_directory'],'tmp_dbencr.log'), 'w')
 f_db_encr_err=open( os.path.join(context['temp_directory'],'tmp_dbencr.err'), 'w')
 
-subprocess.call(["fbsvcmgr","localhost:service_mgr",
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
                  "user","U01","password","123",
                  "action_db_stats",
                  "dbname", db_file,
@@ -156,8 +176,8 @@ subprocess.call(["fbsvcmgr","localhost:service_mgr",
                  stderr=f_db_encr_err
                 )
 
-f_db_encr_log.close()
-f_db_encr_err.close()
+flush_and_close( f_db_encr_log )
+flush_and_close( f_db_encr_err )
 
 #-----------------------
 
@@ -169,7 +189,6 @@ f_db_encr_err.close()
 with open( f_db_stat_err.name,'r') as f:
     for line in f:
         print('UNEXPECTED GSTAT STDERR: '+line.upper())
-f.close()
 
 # Pointer pages: 1, data page slots: 2 
 # Data pages: 2, average fill: 8% 
@@ -207,14 +226,14 @@ for i in range(len(check_words)):
         print( 'Found in base "sts_" output: ' + check_words[i].lower() )
     else:
         print( 'UNEXPECTEDLY NOT found in base "sts_" output: ' + check_words[i].lower() )
-f.close()
+flush_and_close( f )
 
 
 # Must be EMPTY:
 with open( f_db_encr_err.name,'r') as f:
     for line in f:
         print('UNEXPECTED STS_ENCRYPTION STDERR: '+line.upper())
-f.close()
+
 
 # Encryption statistics should be like this:
 # ---------------------
@@ -229,7 +248,6 @@ with open( f_db_encr_log.name,'r') as f:
         # if enc_pattern.match(line):
         if 'encrypted' in line:
             print('Found in "sts_encryption" output: ' + line.lower())
-f.close()
 
 
 # Cleanup:
@@ -245,8 +263,7 @@ sql_final='''
 '''
 runProgram('isql',[dsn,'-user',user_name, '-pas', user_password], sql_final)
 
-f_list = [ i.name for i in ( f_db_stat_log, f_db_stat_err, f_db_encr_log, f_db_encr_err ) ]
-cleanup( f_list )
+cleanup( (f_db_stat_log, f_db_stat_err, f_db_encr_log, f_db_encr_err) )
 
   """,
   'expected_stdout':
