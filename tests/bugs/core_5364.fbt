@@ -102,6 +102,10 @@ with open(f_gfix_online_err.name, 'r') as f:
 ##########
 time.sleep(1)
 cleanup( (f_gfix_online_log, f_gfix_online_err, tmpfdb) )
+
+# database C:\FBTESTING\QA\FBT-REPO\TMP\TMP_5364.FDB shutdown
+# database /opt/scripts/qa-rundaily/fbt-repo/tmp/tmp_5364.fdb shutdown
+
   """,
  'expected_stdout':
   """
@@ -111,7 +115,7 @@ cleanup( (f_gfix_online_log, f_gfix_online_err, tmpfdb) )
  'expected_stderr':
   """
   """,
-  'substitutions': [ ('database .*TMP_5364.FDB shutdown', 'database shutdown') ]
+  'substitutions': [ ('database .* shutdown', 'database shutdown') ]
 }
 ]
 }
