@@ -160,11 +160,10 @@ this_dbg=os.path.splitext(this_fdb)[0] + '.4debug.fdb'
 ##############################
 
 db_conn.close()
-fb_home = services.connect(host='localhost').get_home_directory()
 
-#-----------------------------------
+#--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
     # If you're starting with a Python file object f, 
     # first do f.flush(), and 
@@ -172,21 +171,27 @@ def flush_and_close(file_handle):
     global os
     
     file_handle.flush()
-    os.fsync(file_handle.fileno())
-
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
     file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
-
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
@@ -198,7 +203,7 @@ for checked_mode in('table', 'view'):
     f_init_log=open( os.path.join(context['temp_directory'],'read-consist-sttm-restart-DDL.log'), 'w')
     f_init_err=open( ''.join( ( os.path.splitext(f_init_log.name)[0], '.err') ), 'w')
 
-    subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', sql_init_ddl], stdout=f_init_log, stderr=f_init_err )
+    subprocess.call( [context['isql_path'], dsn, '-q', '-i', sql_init_ddl], stdout=f_init_log, stderr=f_init_err )
     flush_and_close(f_init_log)
     flush_and_close(f_init_err)
 
@@ -285,7 +290,7 @@ for checked_mode in('table', 'view'):
     ###  L A U N C H     W O R K E R    U S I N G     I S Q L,   A S Y N C.  ###
     ############################################################################
 
-    p_worker = Popen( [ fb_home+'isql', '-pag', '9999999', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
+    p_worker = Popen( [ context['isql_path'], '-pag', '9999999', '-q', '-i', f_worker_sql.name ],stdout=f_worker_log, stderr=f_worker_err)
     time.sleep(1)
 
 
@@ -345,11 +350,7 @@ for checked_mode in('table', 'view'):
 # Cleanup.
 ##########
 time.sleep(1)
-f_list = [ i.name for i in (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err) ]
-
-cleanup( f_list )
-#shutil.copy2(this_fdb, this_dbg)
-
+cleanup( (f_init_log, f_init_err, f_worker_sql, f_worker_log, f_worker_err)  )
   """,
  'expected_stdout':
   """
