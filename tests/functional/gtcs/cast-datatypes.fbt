@@ -34,32 +34,54 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 db_conn.close()
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-
 
 #--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
-    for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+    for f in f_names_list:
+       if type(f) == file:
+          del_name = f.name
+       elif type(f) == str:
+          del_name = f
+       else:
+          print('Unrecognized type of element:', f, ' - can not be treated as file.')
+          del_name = None
 
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+    
 #--------------------------------------------
 
 sql_gen_ddl = os.path.join(context['files_location'],'gtcs-cast-gen-ddl.sql')
 
 f_init_run=open( os.path.join(context['temp_directory'],'tmp_gtcs_cast_ddl.sql'), 'w', buffering = 0)
 f_init_err=open( os.path.join(context['temp_directory'],'tmp_gtcs_cast_ddl.err'), 'w', buffering = 0)
-subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', sql_gen_ddl], stdout=f_init_run, stderr=f_init_err )
-f_init_run.close()
-f_init_err.close()
+subprocess.call( [context['isql_path'], dsn, '-q', '-i', sql_gen_ddl], stdout=f_init_run, stderr=f_init_err )
+flush_and_close( f_init_run )
+flush_and_close( f_init_err )
 
 
 f_cast_log=open( os.path.join(context['temp_directory'],'tmp_gtcs_cast_run.log'), 'w', buffering = 0)
 f_cast_err=open( os.path.join(context['temp_directory'],'tmp_gtcs_cast_run.err'), 'w', buffering = 0)
-subprocess.call( [fb_home + 'isql', dsn, '-q', '-i', f_init_run.name], stdout=f_cast_log, stderr=f_cast_err )
-f_cast_log.close()
-f_cast_err.close()
+subprocess.call( [context['isql_path'], dsn, '-q', '-i', f_init_run.name], stdout=f_cast_log, stderr=f_cast_err )
+flush_and_close( f_cast_log )
+flush_and_close( f_cast_err )
 
 # CHECKS:
 #########
@@ -79,10 +101,7 @@ with open(f_cast_log.name, 'r') as f:
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
-
-cleanup( [ i.name for i in ( f_init_run, f_init_err, f_cast_log, f_cast_err ) ] )
-
-
+cleanup( ( f_init_run, f_init_err, f_cast_log, f_cast_err ) )
   """,
  'expected_stdout':
   """
