@@ -266,7 +266,7 @@ f_list=(
     ,f_shut_log
     ,f_shut_err
 )
-cleanup( flist )
+cleanup( f_list )
 
   """,
  'expected_stdout':
