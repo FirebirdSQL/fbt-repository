@@ -260,6 +260,7 @@ for r in xcur:
 dbfile=db_conn.database_name
 db_conn.close()
 
+ISQL_BINARY = context['isql_path']
 svc = services.connect(host='localhost')
 FB_HOME = os.path.normpath( svc.get_home_directory() ) # 'c:\firebird\30\' --> 'c:\firebird\30' (i.e. remove trailing backslash if needed)
 svc.close()
@@ -413,7 +414,9 @@ if __name__ == '__main__':
     os.fsync(f_detach_info_sql.fileno())
     f_detach_info_sql.close()
 
-    subprocess.call( [ os.path.join( v_fb_home, 'isql'), v_dsn, '-user', '%(user_name)s', '-password', '%(user_password)s', '-nod', '-n', '-i', f_detach_info_sql.name] )
+    # subprocess.call( [ os.path.join( v_fb_home, 'isql'), v_dsn, '-user', '%(user_name)s', '-password', '%(user_password)s', '-nod', '-n', '-i', f_detach_info_sql.name] )
+    subprocess.call( [ r'%(ISQL_BINARY)s', v_dsn, '-user', '%(user_name)s', '-password', '%(user_password)s', '-nod', '-n', '-i', f_detach_info_sql.name] )
+    
     os.remove(f_detach_info_sql.name)
 ''' % dict(globals(), **locals())
 # (context['temp_directory'].replace('\\\\','\\\\\\\\'), planned_attachments, dsn, reconnect_count, dsn)
@@ -445,7 +448,7 @@ with open(f_top_slow_log.name) as f:
 # Cleanup.
 #########
 time.sleep(1)
-cleanup( (f_top_slow_sql,f_top_slow_log,f_parallel_py,f_parallel_py.name+'c') )
+#cleanup( (f_top_slow_sql,f_top_slow_log,f_parallel_py,f_parallel_py.name+'c') )
 
   """,
  'expected_stdout': 
