@@ -170,7 +170,7 @@ cur1.callproc('sp_test')
 con1.close()
 
 # Let trace log to be entirely written on disk:
-# time.sleep(2)
+time.sleep(1)
 
 # ####################################################
 # S E N D   R E Q U E S T    T R A C E   T O   S T O P
@@ -179,7 +179,9 @@ if trcssn>0:
     fn_nul = open(os.devnull, 'w')
     subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
-    # DO NOT REMOVE THIS LINE:
+
+    # 23.02.2021. DELAY FOR AT LEAST 1 SECOND REQUIRED HERE!
+    # Otherwise trace log can remain empty.
     time.sleep(2)
 
 p_trace.terminate()
