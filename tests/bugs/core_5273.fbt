@@ -220,6 +220,11 @@ subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                )
 flush_and_close( f_trclst )
 
+# 23.02.2021. DELAY FOR AT LEAST 1 SECOND REQUIRED HERE!
+# On windows preliminary termination of running trace before it completes 'stop' request leads to:
+#    INET/inet_error: read errno = 10054, client host = ..., address = ::1/62963, user = ...
+time.sleep(1)
+
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
 flush_and_close( f_trclog )
@@ -232,7 +237,6 @@ flush_and_close( f_trcerr )
 f_fblog_after=open( os.path.join(context['temp_directory'],'tmp_5273_fblog_after.txt'), 'w')
 svc_get_fb_log( f_fblog_after )
 flush_and_close( f_fblog_after )
-
 
 # STDERR for ISQL (that created DB) and trace session - they both must be EMPTY:
 #################
