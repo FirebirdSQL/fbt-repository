@@ -27,11 +27,7 @@ import subprocess
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-c1 = db_conn.cursor()
-
-c1.execute("select rdb$get_context('SYSTEM','ENGINE_VERSION') as engine_version from rdb$database")
-for row in c1:
-    engine = row[0]
+engine = str(db_conn.engine_version)
 db_conn.close()
 
 sql_cmd='''
@@ -102,7 +98,7 @@ f_sql.close()
 
 f_log = open( os.path.join(context['temp_directory'],'tmp_opt_full_join_01.log'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_sql.name],
+subprocess.call( [ context['isql_path'], dsn, "-i", f_sql.name],
                  stdout=f_log,
                  stderr=subprocess.STDOUT
                )
@@ -126,12 +122,9 @@ with open(f_log.name) as f:
                 print( 'Actual plan: '+line+' - differs from expected: '+plan_expected)
         else:
             print(line )
-f.close()
 
-if os.path.isfile(f_log.name):
-    os.remove(f_log.name)
-if os.path.isfile(f_sql.name):
-    os.remove(f_sql.name)
+os.remove(f_log.name)
+os.remove(f_sql.name)
 
   """,
  'expected_stdout': 
