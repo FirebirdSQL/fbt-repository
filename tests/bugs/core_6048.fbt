@@ -138,7 +138,7 @@ sql_scrypt=\
     set term ;^
     commit;
 
-    alter database encrypt with "%(PLUGIN_NAME)s" key Red;
+    alter database encrypt with %(PLUGIN_NAME)s key Red;
     commit;
     set transaction lock timeout 2; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY
     execute procedure sp_delay;
