@@ -67,7 +67,7 @@ import time
 # * for Linux we use:
 #   ** 'DbCrypt_example' for FB 3.x
 #   ** 'fbSampleDbCrypt' for FB 4.x+
-PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( 'DbCrypt_example' if db_conn.engine_version < 4 else 'fbSampleDbCrypt' )
+PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( '"DbCrypt_example"' if db_conn.engine_version < 4 else '"fbSampleDbCrypt"' )
 
 db_conn.execute_immediate( 'alter database encrypt with %s key Red' % PLUGIN_NAME )
 db_conn.commit()
