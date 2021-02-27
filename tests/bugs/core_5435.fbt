@@ -52,10 +52,6 @@ db_conn.close()
 
 FETCHES_THRESHOLD = 80
 
-svc = services.connect(host='localhost')
-fb_home=svc.get_home_directory()
-svc.close()
-
 #--------------------------------------------
 
 def flush_and_close( file_handle ):
@@ -146,7 +142,7 @@ flush_and_close( sql_cmd )
 sql_log=open(os.path.join(context['temp_directory'],'tmp_core_5435.log'),'w')
 sql_err=open(os.path.join(context['temp_directory'],'tmp_core_5435.err'),'w')
 
-subprocess.call([fb_home+"isql", dsn, "-i", sql_cmd.name],stdout=sql_log, stderr=sql_err)
+subprocess.call([ context['isql_path'], dsn, "-i", sql_cmd.name],stdout=sql_log, stderr=sql_err)
 
 flush_and_close( sql_log )
 flush_and_close( sql_err )
