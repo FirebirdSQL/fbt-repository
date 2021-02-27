@@ -329,9 +329,15 @@ for r in cur:
     pg_size=r[0]
     gen_page_number=r[1]
     # print(r[0],r[1])
+
+# 28.02.2021, temporary:
+srv_mode='UNKNOWN'
+cur.execute("select rdb$config_value from rdb$config where rdb$config_name='ServerMode'")
+for r in cur:
+    srv_mode=r[0]
+
 cur.close()
-
-
+ 
 # Read gen page, convert it to hex and check whether generator values can be found there or no:
 # Expected result: YES for all values because DB not encrypted now.
 # ~~~~~~~~~~~~~~~
@@ -352,20 +358,29 @@ check_page_for_readable_values(this_fdb, gen_page_number, pg_size, check_sequenc
 #
 PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( '"DbCrypt_example"' if db_conn.engine_version < 4 else '"fbSampleDbCrypt"' )
 
-################################################
-###    e n c r y p t      d a t a b a s e    ###
-################################################
-runProgram('isql', [ dsn ], 'alter database encrypt with %(PLUGIN_NAME)s key Red;' % locals())
-time.sleep(1)
+if srv_mode == 'Classic':
+    print('### ERROR ### Test hangs on Classic. SKIP encryption temporary.')
+else:
+    ################################################
+    ###    e n c r y p t      d a t a b a s e    ###
+    ################################################
+    runProgram('isql', [ dsn ], 'alter database encrypt with %(PLUGIN_NAME)s key Red; commit;' % locals())
+    time.sleep(2)
 
 # We can close single connection only HERE! NOT before ISQL call!
 ##############
 db_conn.close()
 
+# 28.02.2021, attempt to drop all attachments via shutdown DB because of problems on Classic.
+# Unfortunately, not helped:
+#runProgram('fbsvcmgr', [ 'localhost:service_mgr', 'action_properties', 'prp_shutdown_mode', 'prp_sm_full', 'prp_shutdown_db', '0', 'dbname', this_fdb ])
+#runProgram('fbsvcmgr', [ 'localhost:service_mgr', 'action_properties', 'prp_db_online', 'dbname', this_fdb ])
+
 # Read again gen page, convert it to hex and check whether generator values can be found there or no.
 # Expected result: NOT for all values because DB was encrypted.
 # ~~~~~~~~~~~~~~~~
 check_page_for_readable_values(this_fdb, gen_page_number, pg_size, check_sequence_values)
+
 
   """,
  'expected_stdout': 
