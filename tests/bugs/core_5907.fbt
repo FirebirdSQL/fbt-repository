@@ -228,7 +228,10 @@ cleanup( (f_trc_cfg, f_trc_log, f_trc_err, f_trc_lst, test_fdb) )
  'expected_stderr': 
   """
   """,
-  'substitutions':[('.*{CORE_5907.97}.TMP', '{CORE_5907.97}.TMP')]
+  'substitutions':[
+      ('.*{CORE_5907.97}.TMP', '{CORE_5907.97}.TMP')
+     ,('.*{core_5907.97}.tmp', '{CORE_5907.97}.TMP')
+  ]
 }
 ]
 }
