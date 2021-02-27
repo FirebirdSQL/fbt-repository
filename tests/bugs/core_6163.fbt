@@ -82,7 +82,20 @@ import binascii
 import time
 #import shutil
 
-this_fdb = "$(DATABASE_LOCATION)bugs.core_6163.fdb"
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+this_fdb = db_conn.database_name
+# ::: NB ::: DO NOT close db_conn now! We can close it only after encryption will finish!
+
+db_conn.execute_immediate('create sequence gen_ba0bab start with 12192683')
+db_conn.execute_immediate('create sequence gen_badf00d start with 195948557')
+db_conn.execute_immediate('create sequence gen_caca0  start with 830624')
+db_conn.execute_immediate('create sequence gen_c0ffee start with 12648430')
+db_conn.execute_immediate('create sequence gen_dec0de start with 14598366')
+db_conn.execute_immediate('create sequence gen_decade start with 14600926')
+db_conn.execute_immediate('create sequence gen_7FFFFFFF start with 2147483647')
+db_conn.commit()
 
 ######################################################################################
 
@@ -122,14 +135,6 @@ def check_page_for_readable_values(dbname, gen_page_number, pg_size, check_seque
 
 ######################################################################################
 
-db_conn.execute_immediate('create sequence gen_ba0bab start with 12192683')
-db_conn.execute_immediate('create sequence gen_badf00d start with 195948557')
-db_conn.execute_immediate('create sequence gen_caca0  start with 830624')
-db_conn.execute_immediate('create sequence gen_c0ffee start with 12648430')
-db_conn.execute_immediate('create sequence gen_dec0de start with 14598366')
-db_conn.execute_immediate('create sequence gen_decade start with 14600926')
-db_conn.execute_immediate('create sequence gen_7FFFFFFF start with 2147483647')
-db_conn.commit()
 
 cur=db_conn.cursor()
 get_current_seq_values=\
@@ -153,8 +158,6 @@ cur.execute(get_current_seq_values)
 check_sequence_values=[]
 for r in cur:
     check_sequence_values += r[0],
-#print('check_sequence_values=',check_sequence_values)
-
 
 
 # Obtain page size and number of generators page:
@@ -167,20 +170,33 @@ for r in cur:
     # print(r[0],r[1])
 cur.close()
 
-
 # Read gen page, convert it to hex and check whether generator values can be found there or no:
 # Expected result: YES for all values because DB not encrypted now.
 # ~~~~~~~~~~~~~~~
 check_page_for_readable_values(this_fdb, gen_page_number, pg_size, check_sequence_values)
 
+# 27.02.2021.
+# Name of encryption plugin depends on OS:
+# * for Windows we (currently) use plugin by IBSurgeon, its name is 'dbcrypt';
+#      later it can be replaced with built-in plugin 'fbSampleDbCrypt'
+#      but currently it is included only in FB 4.x builds (not in FB 3.x).
+#      Discussed tih Dimitr, Alex, Vlad, letters since: 08-feb-2021 00:22
+#      "Windows-distributive FB 3.x: it is desired to see sub-folder 'examples\prebuild' with files for encryption, like it is in FB 4.x
+#      *** DEFERRED ***
+# * for Linux we use:
+#   ** 'DbCrypt_example' for FB 3.x
+#   ** 'fbSampleDbCrypt' for FB 4.x+
+#
+PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( '"DbCrypt_example"' if db_conn.engine_version < 4 else '"fbSampleDbCrypt"' )
+
 ################################################
 ###    e n c r y p t      d a t a b a s e    ###
 ################################################
-db_conn.execute_immediate('alter database encrypt with dbcrypt key Red')
-db_conn.commit()
-
+runProgram('isql', [ dsn ], 'alter database encrypt with %(PLUGIN_NAME)s key Red;' % locals())
 time.sleep(1)
 
+# We can close single connection only HERE! NOT before ISQL call!
+##############
 db_conn.close()
 
 # Read again gen page, convert it to hex and check whether generator values can be found there or no.
@@ -225,9 +241,21 @@ import os
 import sys
 import binascii
 import time
-#import shutil
 
-this_fdb = "$(DATABASE_LOCATION)bugs.core_6163.fdb"
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+this_fdb = db_conn.database_name
+
+db_conn.execute_immediate('create sequence gen_ba0bab start with 12192683')
+db_conn.execute_immediate('create sequence gen_badf00d start with 195948557')
+db_conn.execute_immediate('create sequence gen_caca0  start with 830624')
+db_conn.execute_immediate('create sequence gen_c0ffee start with 12648430')
+db_conn.execute_immediate('create sequence gen_dec0de start with 14598366')
+db_conn.execute_immediate('create sequence gen_decade start with 14600926')
+db_conn.execute_immediate('create sequence gen_7FFFFFFF start with 2147483647')
+db_conn.commit()
+
+# ::: NB ::: DO NOT close db_conn now! We can close it only after encryption will finish!
 
 ######################################################################################
 
@@ -266,15 +294,6 @@ def check_page_for_readable_values(dbname, gen_page_number, pg_size, check_seque
         # print(n, n_as_reversed_hex, 'UNEXPECTEDLY FOUND AT POS. ' + '{:5d}'.format( page_as_hex.index(n_as_reversed_hex) ) if n_as_reversed_hex in page_as_hex else 'Not found (expected).' )
 
 ######################################################################################
-
-db_conn.execute_immediate('create sequence gen_ba0bab start with 12192683')
-db_conn.execute_immediate('create sequence gen_badf00d start with 195948557')
-db_conn.execute_immediate('create sequence gen_caca0  start with 830624')
-db_conn.execute_immediate('create sequence gen_c0ffee start with 12648430')
-db_conn.execute_immediate('create sequence gen_dec0de start with 14598366')
-db_conn.execute_immediate('create sequence gen_decade start with 14600926')
-db_conn.execute_immediate('create sequence gen_7FFFFFFF start with 2147483647')
-db_conn.commit()
 
 cur=db_conn.cursor()
 get_current_seq_values=\
@@ -318,14 +337,29 @@ cur.close()
 # ~~~~~~~~~~~~~~~
 check_page_for_readable_values(this_fdb, gen_page_number, pg_size, check_sequence_values)
 
+
+# 27.02.2021.
+# Name of encryption plugin depends on OS:
+# * for Windows we (currently) use plugin by IBSurgeon, its name is 'dbcrypt';
+#      later it can be replaced with built-in plugin 'fbSampleDbCrypt'
+#      but currently it is included only in FB 4.x builds (not in FB 3.x).
+#      Discussed tih Dimitr, Alex, Vlad, letters since: 08-feb-2021 00:22
+#      "Windows-distributive FB 3.x: it is desired to see sub-folder 'examples\prebuild' with files for encryption, like it is in FB 4.x
+#      *** DEFERRED ***
+# * for Linux we use:
+#   ** 'DbCrypt_example' for FB 3.x
+#   ** 'fbSampleDbCrypt' for FB 4.x+
+#
+PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( '"DbCrypt_example"' if db_conn.engine_version < 4 else '"fbSampleDbCrypt"' )
+
 ################################################
 ###    e n c r y p t      d a t a b a s e    ###
 ################################################
-db_conn.execute_immediate('alter database encrypt with dbcrypt key Red')
-db_conn.commit()
-
+runProgram('isql', [ dsn ], 'alter database encrypt with %(PLUGIN_NAME)s key Red;' % locals())
 time.sleep(1)
 
+# We can close single connection only HERE! NOT before ISQL call!
+##############
 db_conn.close()
 
 # Read again gen page, convert it to hex and check whether generator values can be found there or no.
