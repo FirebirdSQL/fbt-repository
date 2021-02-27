@@ -55,6 +55,10 @@
   """
 import os
 import time
+import subprocess
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 
 # 27.02.2021.
 # Name of encryption plugin depends on OS:
@@ -67,43 +71,122 @@ import time
 # * for Linux we use:
 #   ** 'DbCrypt_example' for FB 3.x
 #   ** 'fbSampleDbCrypt' for FB 4.x+
+#
 PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( '"DbCrypt_example"' if db_conn.engine_version < 4 else '"fbSampleDbCrypt"' )
 
-db_conn.execute_immediate( 'alter database encrypt with %s key Red' % PLUGIN_NAME )
-db_conn.commit()
+db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f, 
+    # first do f.flush(), and 
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+    
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+
+
+sql_scrypt=\
+'''
+    set list on;
+    recreate table test(x bigint unique);
+    set term ^;
+    create or alter procedure sp_delay as
+        declare r bigint;
+    begin
+        r = rand() * 9223372036854775807;
+        insert into test(x) values(:r);
+        begin
+            -- #########################################################
+            -- #######################  D E L A Y  #####################
+            -- #########################################################
+            in autonomous transaction do
+            insert into test(x) values(:r); -- this will cause delay because of duplicate in index
+        when any do 
+            begin
+                -- nop --
+            end
+        end
+    end
+    ^
+    set term ;^
+    commit;
+
+    alter database encrypt with "%(PLUGIN_NAME)s" key Red;
+    commit;
+    set transaction lock timeout 2; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY
+    execute procedure sp_delay;
+    rollback;
+    select mon$crypt_state as "Is database encrypted ?" from mon$database;
+    commit;
+
+    alter database decrypt;
+    commit;
+    set transaction lock timeout 2; -- THIS LOCK TIMEOUT SERVES ONLY FOR DELAY
+    execute procedure sp_delay;
+    rollback;
+    select mon$crypt_state as "Is database encrypted ?" from mon$database;
+''' % locals()
+
+f_sql_cmd = open(os.path.join(context['temp_directory'],'tmp_core_6048.sql'), 'w')
+f_sql_cmd.write(sql_scrypt)
+flush_and_close( f_sql_cmd )
+
+f_sql_log = open( os.path.join(context['temp_directory'],'tmp_core_6048.log'), 'w')
+
+subprocess.call( [ context['isql_path'], dsn, "-n", "-q", "-i", f_sql_cmd.name ],
+                   stdout = f_sql_log,
+                   stderr = subprocess.STDOUT
+                )
+flush_and_close( f_sql_log )
+
+with open(f_sql_log.name,'r') as f:
+   for line in f:
+       print(line)
+
+# cleanup:
+##########
 time.sleep(1)
-
-cur=db_conn.cursor()
-
-sttm="select mon$crypt_state as db_crypt_state from mon$database"
-cur.execute( sttm )
-col=cur.description
-for r in cur:
-    for i in range(0,len(col)):
-        print( col[i][0],':', r[i] )
-
-for r in cur:
-    print(r[0])
-
-db_conn.execute_immediate( 'alter database decrypt' )
-db_conn.commit()
-time.sleep(1)
-
-cur.execute( sttm )
-col=cur.description
-for r in cur:
-    for i in range(0,len(col)):
-        print( col[i][0],':', r[i] )
+cleanup( (f_sql_cmd,f_sql_log) )
 
   """,
  'expected_stdout':
   """
-    DB_CRYPT_STATE : 1
-    DB_CRYPT_STATE : 0
+    Is database encrypted ?         1
+    Is database encrypted ?         0
   """,
  'expected_stderr':
   """
-  """
+  """,
+ 'substitutions': [
+     ('[ \t]+',' '),
+  ]
 }
 ]
 }
