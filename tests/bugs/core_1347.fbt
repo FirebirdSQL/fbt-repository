@@ -8,10 +8,9 @@
 'versions': [
 {
  'firebird_version': '2.5',
- 'platform': 'All',
+ 'platform': 'Windows',
  'database_character_set': 'WIN1251',
  'connection_character_set': 'WIN1251',
- 'page_size': '4096',
  'init_script': 
   """
     set term ^ ;
