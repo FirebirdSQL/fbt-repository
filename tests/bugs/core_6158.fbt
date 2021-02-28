@@ -8,12 +8,24 @@
     Confirmed regression on build 4.0.0.1629, 4.0.0.1631 
 	Worked as expected on 4.0.0.1535 (build 24.06.2019, before replacement old regexp library with 're2')
     Works fine on: 4.0.0.1632 (build 19.10.2019)
+
+    28.02.2021
+    Regression on 4.0.0.1629 can be reproduced only when connection charset is WIN1251. NO problem with UTF8.
+    Becase of this, attribute 'platform' was restricted to be run only on Windows.
+    On Linux this test (with use connection_character_set = 'WIN1251') leads to compilation error:
+    ====
+      Statement failed, SQLSTATE = 42000
+      Dynamic SQL Error
+      -SQL error code = -104
+      -Token unknown - line 4, column 1
+      -ommit
+    ====
  """,
 'min_versions': '4.0',
 'versions': [
 {
  'firebird_version': '4.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'database_character_set': 'WIN1251',
  'connection_character_set': 'WIN1251',
  'init_script': 
