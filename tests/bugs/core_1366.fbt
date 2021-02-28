@@ -28,6 +28,25 @@
 		4.0.0.2151 SS: 1.672s.
 		3.0.7.33348 SS: 0.984s.
 		2.5.9.27150 SC: 0.277s. 
+
+	28.02.2021
+	Changed connection charset to UTF8 otherwise on Linux this test leads to 'ERROR' with issuing:
+	====
+        Statement failed, SQLSTATE = 42000
+        Dynamic SQL Error
+        -SQL error code = -104
+        -Token unknown - line 4, column 1
+        -e
+        Statement failed, SQLSTATE = 42000
+        Dynamic SQL Error
+        -SQL error code = -104
+        -Token unknown - line 3, column 1
+        -o
+        . . .
+    ====
+    Checked again on:
+    1) Windows: 4.0.0.2372; 3.0.8.33416
+    2) Linux:   4.0.0.2377
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -36,7 +55,7 @@
  'platform': 'All',
  'test_type': 'ISQL',
  'database_character_set': 'ISO8859_1',
- 'connection_character_set': 'ISO8859_1',
+ 'connection_character_set': 'UTF8',
  'init_script': 
   """
 	recreate table test(id int);
