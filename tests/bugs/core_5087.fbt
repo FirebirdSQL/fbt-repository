@@ -145,7 +145,7 @@ def svc_get_fb_log( engine, f_fb_log ):
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ "fbsvcmgr",
+  subprocess.call([ context['fbsvcmgr_path'],
                     "localhost:service_mgr",
                     get_firebird_log_key
                   ],
@@ -270,7 +270,7 @@ for i in range(len(f_list)):
     ###########################################
     #   a s y n c h r o n o u s     l a u n c h
     ###########################################
-    p_isql=Popen( [ "isql" , 'localhost:' + db_dml_sessions, "-i", f_dml_sql.name ],
+    p_isql=Popen( [ context['isql_path'], 'localhost:' + db_dml_sessions, "-i", f_dml_sql.name ],
                   stdout=f_list[i],
                   stderr=subprocess.STDOUT
                 )
@@ -327,7 +327,7 @@ f_shutdown_log = open( os.path.join(context['temp_directory'],'tmp_shutdown_5087
 # S H U T D O W N    D A T A B A S E
 ####################################
 
-subprocess.call( ["fbsvcmgr","localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'],"localhost:service_mgr",
                   "action_properties",
                   "dbname", db_dml_sessions,
                   "prp_shutdown_mode", "prp_sm_full", "prp_force_shutdown", "0"
@@ -423,7 +423,7 @@ f_chk_log.seek(0,os.SEEK_END)
 f_chk_log.write('\\n')
 f_chk_log.write('Point before bring DML database online.' )
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_db_online",
                   "dbname", db_dml_sessions,
                  ]
@@ -432,7 +432,7 @@ subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
 f_chk_log.write('\\n')
 f_chk_log.write('Point after bring DML database online.' )
 
-subprocess.call( [ "isql" , "localhost:"+db_dml_sessions, "-nod", "-i", f_chk_sql.name ],
+subprocess.call( [ context['isql_path'], "localhost:"+db_dml_sessions, "-nod", "-i", f_chk_sql.name ],
                   stdout=f_chk_log,
                   stderr=subprocess.STDOUT
                 )
