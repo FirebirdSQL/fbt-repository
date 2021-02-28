@@ -135,7 +135,7 @@ for i in range(0, planned_dml_attachments):
     f_list.append(sqllog)
 
 for i in range(len(f_list)):
-    p_isql=Popen( [ "isql" , dsn, "-i", f_run_sql.name ],
+    p_isql=Popen( [ context['isql_path'] , dsn, "-i", f_run_sql.name ],
                   stdout=f_list[i],
                   stderr=subprocess.STDOUT
                 )
