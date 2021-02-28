@@ -11,7 +11,7 @@
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'connection_character_set': 'WIN1251',
  'test_type': 'ISQL',
  'init_script':
