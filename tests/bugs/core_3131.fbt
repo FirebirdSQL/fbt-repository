@@ -8,8 +8,7 @@
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'All',
- 'page_size': '4096',
+ 'platform': 'Windows',
  'test_type': 'ISQL',
  'database_character_set': 'WIN1257',
  'connection_character_set': 'WIN1257',
