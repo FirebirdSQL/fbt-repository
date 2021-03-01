@@ -5,21 +5,24 @@
 'title': "TRACE: add statistics of actions that were after transaction finished",
 'description':
  """
-   1. Obtain engine_version from built-in context variable.
-   2. Make config for trace in proper format according to FB engine version.
-   3. Launch trace session in separate child process using 'FBSVCMGR action_trace_start'
-   4. Run ISQL with test commands.
-   5. Stop trace session. Output its log with filtering only interested lines.
+    Test verifies only FB 3.0 and above.
+    Three tables are created: permanent, GTT with on commit PRESERVE rows and on commit DELETE rows.
 
-   Checked on: 
-   *  WI-V2.5.6.26963 -- absent line with per-table info for ROLLBACK event, see issue in the ticket 20.01.2016
-   *  WI-V3.0.0.32280 (SS, SC, CS). -- works fine.
-   
-   ##########################
-   NB: implementation for 2.5 was deferred because its output does not contain per-table block for ROLLBACK event.
-   11.05.2017: TEMPLY REPLACED 'min_versions': '2.5.2' with '3.0' because trace for 3.0+ always contains auxiliary
-   Tx with TIL = RC (see sample of trace log below).
-   Checked on 3.0.3.32721 (SS, CS), 4.0.0.638 (SS, CS)
+    Trace config is created with *prohibition* of any activity related to security<N>.fdb
+    but allow to log transactions-related events (commits and rollbacks) for working database.
+    Trace is started before furthe actions.
+
+    Then we launch ISQL and apply two DML for each of these tables:
+    1) insert row + commit;
+    2) insert row + rollback.
+
+    Finally (after ISQL will finish), we stop trace and parse its log.
+    For *each* table TWO lines with performance statristics must exist: both for COMMIT and ROLLBACK events.
+    Checked on Windows and Linux, builds:
+        4.0.0.2377 SS: 7.741s.
+        4.0.0.2377 CS: 8.746s.
+        3.0.8.33420 SS: 6.784s.
+        3.0.8.33420 CS: 8.262s.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -68,26 +71,18 @@ def flush_and_close(file_handle):
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
-
-
-txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
-    <database %[\\\\\\\\/]security?.fdb>
-        enabled false
-    </database>
-    <database %[\\\\\\\\/]bugs.core_3598.fdb>
-        enabled true
-        log_transactions true
-        print_perf true
-        time_threshold 0 
-        log_initfini false
-    </database>
-'''
 
 # NOTES ABOUT TRACE CONFIG FOR 3.0:
 # 1) Header contains `database` clause in different format vs FB 2.5: its data must be enclosed with '{' '}'
@@ -95,7 +90,7 @@ txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
 #    element "<. . .>" have no attribute value set
 
 txt30 = '''# Trace config, format for 3.0. Generated auto, do not edit!
-    database=%[\\\\\\\\/]security?.fdb
+    database='%[\\\\\\\\/](security[[:digit:]].fdb)|(security.db)
     {
         enabled = false
     }
@@ -103,10 +98,11 @@ txt30 = '''# Trace config, format for 3.0. Generated auto, do not edit!
     database=%[\\\\\\\\/]bugs.core_3598.fdb
     {
         enabled = true
-        log_transactions = true
-        print_perf = true
         time_threshold = 0 
         log_initfini = false
+        log_transactions = true
+        # log_statement_finish = true
+        print_perf = true
     }
 '''
 
@@ -132,6 +128,11 @@ time.sleep(1)
 
 sqltxt=\
 '''
+	set autoddl off;
+	set echo on;
+	set count on;
+	set bail on;
+	connect '%(dsn)s';
     insert into tfix(id) values(1);
     commit;
     insert into tfix(id) values(2);
@@ -144,35 +145,20 @@ sqltxt=\
     commit;
     insert into gtt_tra(id) values(2);
     rollback;
-'''
+''' % dict(globals(), **locals())
 
-# !!! NB !!! 11.05.2017
-# Command switch "-n" does NOT help to prevent "auxiliary" Tx and its rollback, TIL=RC (3.0.2 & 4.0)
-# Trace logs in current FB versions looks like this:
-'''
-	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
-	C:\MIX\firebird\fb30\isql.exe:288
-		(TRA_14, CONCURRENCY | WAIT | READ_WRITE)
+f_run_sql = open( os.path.join(context['temp_directory'],'tmp_run_5685.sql'), 'w')
+f_run_sql.write( sqltxt )
+flush_and_close( f_run_sql )
 
-2017-05-11T17:28:04.0000 (3264:014B2558) START_TRANSACTION
-	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
-	C:\MIX\firebird\fb30\isql.exe:288
-		(TRA_15, READ_COMMITTED | NO_REC_VERSION | WAIT | READ_WRITE)
+f_run_log = open( os.path.join(context['temp_directory'],'tmp_run_5685.log'), 'w')
 
-2017-05-11T17:28:04.0000 (3264:014B2558) ROLLBACK_TRANSACTION
-	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
-	C:\MIX\firebird\fb30\isql.exe:288
-		(TRA_15, READ_COMMITTED | NO_REC_VERSION | WAIT | READ_WRITE)
-      0 ms, 1 read(s), 1 write(s), 1 fetch(es), 1 mark(s) <<<<<< THIS TX DID APPEAR IN RECENT FB 3.0 & 4.0
+subprocess.call( [ context['isql_path'],'-q', '-i', f_run_sql.name ],
+                     stdout = f_run_log,
+                     stderr = subprocess.STDOUT
+                   )
 
-2017-05-11T17:28:04.0000 (3264:014B2558) COMMIT_TRANSACTION
-	C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3598.FDB (ATT_9, SYSDBA:NONE, NONE, TCPv4:127.0.0.1/4029)
-	C:\MIX\firebird\fb30\isql.exe:288
-		(TRA_14, CONCURRENCY | WAIT | READ_WRITE)
-      0 ms, 1 read(s), 4 write(s), 1 fetch(es), 1 mark(s) <<<<<<<<<< THIS IS TX WHICH WAS STARTED BY US
-'''
-
-runProgram('isql',[dsn,'-n'],sqltxt)
+flush_and_close( f_run_log )
 
 # do NOT remove this otherwise trace log can contain only message about its start before being closed!
 time.sleep(2)
@@ -216,50 +202,48 @@ flush_and_close( f_trclog )
 
 # Pwerformance header text (all excessive spaces will be removed before comparison - see below):
 perf_header='Table                             Natural     Index    Update    Insert    Delete   Backout     Purge   Expunge'
-i=0
+
+checked_events= {
+    ') COMMIT_TRANSACTION' : 'commit'
+    ,') ROLLBACK_TRANSACTION' : 'rollback'
+    ,') EXECUTE_STATEMENT' : 'execute_statement'
+    ,') START_TRANSACTION' : 'start_transaction'
+}
+
+i,k = 0,0
+watched_event = ''
 with open( f_trclog.name,'r') as f:
     for line in f:
-        if ' ms,' in line and ('fetch' in line or 'mark' in line): # One of these always WILL be in trace statistics.
-            print('Statement statistics detected.')
-            i =  i +1
-            '''
-            if engine.startswith('2.5') and ( i == 2 or i == 4):
-                # Dummy emulation of output in 2.5 for it will match to 3.0 - see comment by hvlad in the ticket, 21/Jan/16 11:26 AM:
-                # Per-table statistics at transaction level are not accumulated in v2.5
-                # Enabling it is possible but have almost no sence as it adds some run-time cost, 
-                # while there is no way to query it (except of "tx end" trace event). 
+        k += 1
+        e = ''.join( [v.upper() for x,v in checked_events.items() if x in line] )
+        watched_event = e if e else watched_event
 
-                print('Performance block detected.')
-                if i==2:
-                    print('Found table statistics for: TFIX')
-                else:
-                    print('Found table statistics for: GTT_SSN')
-            '''
+        if ' ms,' in line and ('fetch' in line or 'mark' in line): # One of these *always* must be in trace statistics.
+            print('Statement statistics detected for %s' % watched_event)
+            i =  i +1
         if ' '.join(line.split()).upper() == ' '.join(perf_header.split()).upper():
-            print('Performance block detected.')
+            print('Found performance block header')
         if line.startswith('TFIX') or line.startswith('GTT_SSN') or line.startswith('GTT_TRA'):
-            print('Found table statistics for: '+line.split()[0])
+            print('Found table statistics for %s' % line.split()[0] )
 
 # Cleanup:
 ##########
 time.sleep(1)
-
-cleanup( [i.name for i in (f_trccfg, f_trclst,f_trclog)] )
+cleanup( (f_trccfg, f_trclst,f_trclog,f_run_log,f_run_sql) )
 
   """,
  'expected_stdout': 
   """
-    Statement statistics detected.
-    Statement statistics detected.
-    Statement statistics detected.
-    Performance block detected.
-    Found table statistics for: TFIX
-    Statement statistics detected.
-    Statement statistics detected.
-    Performance block detected.
-    Found table statistics for: GTT_SSN
-    Statement statistics detected.
-    Statement statistics detected.
+    Statement statistics detected for COMMIT
+    Statement statistics detected for ROLLBACK
+    Found performance block header
+    Found table statistics for TFIX
+    Statement statistics detected for COMMIT
+    Statement statistics detected for ROLLBACK
+    Found performance block header
+    Found table statistics for GTT_SSN
+    Statement statistics detected for COMMIT
+    Statement statistics detected for ROLLBACK
   """,
  'expected_stderr': 
   """
