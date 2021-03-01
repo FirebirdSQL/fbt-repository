@@ -177,6 +177,7 @@ f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_5435.err'), "w
 
 p_trace = Popen( [ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
 
+
 sql_run=\
 '''
   set list on;
@@ -202,6 +203,11 @@ subprocess.call([ context['isql_path'], dsn, "-i", sql_cmd.name],stdout=sql_log,
 
 flush_and_close( sql_log )
 flush_and_close( sql_err )
+
+# 01-mar-2021: do NOT remove delay from here.
+# It must be at least 2 seconds, otherwise trace log will not be fulfilled
+# when run on Linux!
+time.sleep(2)
 
 # ####################################################
 # G E T  A C T I V E   T R A C E   S E S S I O N   I D
@@ -232,13 +238,12 @@ if trcssn>0:
     fn_nul = open(os.devnull, 'w')
     subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
-    # DO NOT REMOVE THIS LINE:
-    time.sleep(1)
+else:
+    print('Trace session was finished forcedly: could not find its trc_id.')
 
 p_trace.terminate()
 flush_and_close( f_trc_log )
 flush_and_close( f_trc_err )
-
 
 run_with_plan=''
 num_of_fetches=-1
@@ -253,12 +258,21 @@ with open( f_trc_log.name,'r') as f:
                 if words[k].startswith('fetch'):
                     num_of_fetches = int( words[k-1] )
 
-print(run_with_plan)
-print('Number of fetches: acceptable.' if num_of_fetches < FETCHES_THRESHOLD else 'Too much fetches %(num_of_fetches)s: more than threshold = %(FETCHES_THRESHOLD)s' % locals())
-
+if run_with_plan and num_of_fetches>0:
+    print(run_with_plan)
+    print('Number of fetches: acceptable.' if num_of_fetches < FETCHES_THRESHOLD else 'Too much fetches %(num_of_fetches)s: more than threshold = %(FETCHES_THRESHOLD)s' % locals())
+else:
+    print('Trace log was not fulfilled: can not find lines with PLAN and/or STATISTICS. Increase delays in the test code!')
+    print('Content of trace log:')
+    print('=' * 21)
+    f=open( f_trc_log.name,'r')
+    for r in f.readlines():
+        print(r)
+    f.close()
+    print('=' * 21)
+    
 # CLEANUP
 #########
-
 time.sleep(1)
 cleanup( (f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, sql_log, sql_err, sql_cmd) )
   """,
