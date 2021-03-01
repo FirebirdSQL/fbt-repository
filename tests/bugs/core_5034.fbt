@@ -448,7 +448,7 @@ with open(f_top_slow_log.name) as f:
 # Cleanup.
 #########
 time.sleep(1)
-#cleanup( (f_top_slow_sql,f_top_slow_log,f_parallel_py,f_parallel_py.name+'c') )
+cleanup( (f_top_slow_sql,f_top_slow_log,f_parallel_py,f_parallel_py.name+'c') )
 
   """,
  'expected_stdout': 
