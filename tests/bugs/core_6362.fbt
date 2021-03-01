@@ -10,12 +10,14 @@
     Otherwise firebird.log will not contain any message like "Available context(s): ..."
 
     Checked on 3.0.7.33348, 4.0.0.2119 (SS/CS): OK.
+
+    01-mar-2021: attribute 'platform' was restricted to 'Windows'.
  """,
 'min_versions': '3.0.7',
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'All',
+ 'platform': 'Windows',
  'init_script':
   """
   """,
