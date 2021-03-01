@@ -54,16 +54,8 @@
     Resulting dict must contain 'FOUND' and value for every of its keys (patterns).
 
     Confirmed bug on 3.0.4.33054.
-    Checked on:
-        4.0.0.1421: OK, 5.536s.
-        3.0.5.33106: OK, 4.184s.
-    Additional check 10.12.2019:
-        4.0.0.1685 SS: 5.016s.
-        4.0.0.1637 SC: 4.718s.
-        4.0.0.1685 CS: 5.907s.
-        3.0.5.33206 SS: 4.547s.
-        3.0.5.33152 SC: 5.320s.
-        3.0.5.33206 CS: 5.285s.
+    01-mar-2021: adapted for work on Linux.
+    Checked on 4.0.0.2377 and 3.0.8.33415 (both Windows and Linux).
 
  """,
 'min_versions': '3.0.5',
@@ -76,7 +68,6 @@
   """,
  'test_type': 'Python',
  'test_script':"""\
-
 import os
 import re
 import time
@@ -87,8 +78,7 @@ from fdb import services
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
-fdb_file="$(DATABASE_LOCATION)tmp_5991.o'clock.fdb"
-
+fdb_file=os.path.join( '$(DATABASE_LOCATION)', "tmp_5991.o'clock.fdb" )
 db_conn.close()
 
 #--------------------------------------------
@@ -125,7 +115,11 @@ def cleanup( f_names_list ):
 #--------------------------------------------
 
 cleanup( fdb_file, )
-fdb_trace=fdb_file.replace('/','\\\\')
+
+if os.name == 'nt':
+    fdb_trace = fdb_file.replace('/','\\\\')
+else:
+    fdb_trace = fdb_file
 
 #####################################################################
 # Prepare config for trace session that will be launched by call of FBSVCMGR:
