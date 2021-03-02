@@ -10,12 +10,16 @@
  'firebird_version': '2.5.0',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
-""",
- 'expected_stderr': """Statement failed, SQLSTATE = 42000
-unsuccessful metadata update
--Invalid collation attributes
-"""
+ 'test_script':
+  """
+    CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+  """,
+ 'expected_stderr':
+  """
+    Statement failed, SQLSTATE = 42000
+    unsuccessful metadata update
+    -Invalid collation attributes
+  """
 },
 {
  'firebird_version': '3.0',
@@ -36,7 +40,7 @@ unsuccessful metadata update
 },
 {
  'firebird_version': '4.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
   """
