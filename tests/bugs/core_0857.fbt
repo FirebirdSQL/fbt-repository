@@ -12,6 +12,14 @@
         3.0.5.33218 SS: 1.000s.
         3.0.5.33084 SC: 0.890s.
         2.5.9.27149 SC: 0.266s.
+
+    02-mar-2021. Re-implemented in ordeer to have ability to run this test on Linux.
+    We run 'init_script' using charset = utf8 but then run separate ISQL-process
+    with request to establish connection using charset = win1252.
+     
+    Checked on:
+    * Windows: 4.0.0.2377, 3.0.8.33420, 2.5.9.27152
+    * Linux:   4.0.0.2377, 3.0.8.33415
  """,
 'min_versions': '2.5.0',
 'versions': [
