@@ -12,7 +12,7 @@
  'test_type': 'ISQL',
  'test_script':
   """
-    CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+    CREATE COLLATION UNICODE_ENUS_CI_25X FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
   """,
  'expected_stderr':
   """
@@ -28,7 +28,7 @@
  'test_script':
   """
     -- Attribute 'LOCALE=en_US' is defined for charset = ISO8859_1 rather that for UTF8, see intl/fbintl.conf
-    CREATE COLLATION UNICODE_ENUS_CI FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+    CREATE COLLATION UNICODE_ENUS_CI_3X FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
   """,
  'expected_stderr':
   """
@@ -50,7 +50,7 @@
 
     set list on;
     set count on;
-    create collation unicode_enus_ci for utf8 from unicode case insensitive 'LOCALE=en_US';
+    create collation unicode_enus_ci_4x for utf8 from unicode case insensitive 'LOCALE=en_US';
     commit;
 
     select
@@ -66,11 +66,11 @@
     on rc.rdb$character_set_id = rs.rdb$character_set_id
     where
         rc.rdb$system_flag is distinct from 1
-        and rc.rdb$collation_name = upper('unicode_enus_ci');
+        and rc.rdb$collation_name = upper('unicode_enus_ci_4x');
   """,
  'expected_stdout':
   """
-    RDB$COLLATION_NAME              UNICODE_ENUS_CI
+    RDB$COLLATION_NAME              UNICODE_ENUS_CI_4X
 
     RDB$COLLATION_ATTRIBUTES        3
     RDB$BASE_COLLATION_NAME         UNICODE
