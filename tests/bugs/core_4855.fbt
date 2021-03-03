@@ -238,7 +238,7 @@ Iteration #2:
     ,('Relation [0-9]{3,4}','Relation')
     ,('Statement failed, SQLSTATE = HY008', '')
     ,('operation was cancelled', '')
-    ,('After line', '')
+    ,('After line .*', '')
   ]
 }
 ]
