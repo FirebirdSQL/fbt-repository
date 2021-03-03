@@ -11,6 +11,12 @@
     This is known bug, see Alex's issue in the tracker, 07-apr-2020 10:39.
 
     Checked on 4.0.0.1865 SS/CS.
+
+    03-mar-2021.
+    Adapted for Linux: add to substituion section pattern for suppress differences
+    between Windows and Linux message for gdscode = 335544344:
+        * WINDOWS: 335544344 : I/O error during "CreateFile (open)" operation ...
+        * LINUX:   335544344 : I/O error during "open" operation ...
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -171,13 +177,13 @@ cleanup( ( f_trc_log, f_trc_err, f_trc_cfg, f_trc_lst ) )
   """
     FAILED ATTACH_DATABASE
     ERROR AT JProvider::attachDatabase
-    335544344 : I/O error during "CreateFile (open)" operation for file "non_such_alias"
+    335544344 : I/O error during open operation for file "non_such_alias"
     335544734 : Error while trying to open file
     FAILED ATTACH_DATABASE
     ERROR AT JProvider::attachDatabase
     FAILED ATTACH_DATABASE
     ERROR AT JProvider::attachDatabase
-    335544344 : I/O error during "CreateFile (open)" operation for file "non_such_alias"
+    335544344 : I/O error during open operation for file "non_such_alias"
     335544734 : Error while trying to open file
   """,
  'expected_stderr': 
@@ -188,6 +194,7 @@ cleanup( ( f_trc_log, f_trc_err, f_trc_cfg, f_trc_lst ) )
       ,('[ \t]+',' ')
       ,('.* FAILED ATTACH_DATABASE', 'FAILED ATTACH_DATABASE')
       ,('.* ERROR AT JProvider::attachDatabase', 'ERROR AT JProvider::attachDatabase')
+      ,('335544344 : I/O error during .*', '335544734 : Error while trying to open file')
   ]
 }
 ]
