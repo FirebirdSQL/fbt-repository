@@ -11,6 +11,8 @@
        Statement failed, SQLSTATE = 08006
        Error occurred during login, please check server firebird.log for details
        Error occurred during login, please check server firebird.log for details
+    This was because of: http://tracker.firebirdsql.org/browse/CORE-6441 (fixed).
+
     Content of firebird.log will be added with following lines:
        Srp Server
        connection shutdown
@@ -31,6 +33,13 @@ import subprocess
 import shutil
 import uuid
 from fdb import services
+
+svc = services.connect(host='localhost', user = user_name, password = user_password)
+fb_home=svc.get_home_directory()
+svc.close()
+
+dbconf = os.path.join(fb_home,'databases.conf')
+dbcbak = os.path.join(fb_home,'databases.bak')
 
 try:
     del os.environ["ISC_USER"]
@@ -77,16 +86,11 @@ def cleanup( f_names_list ):
 
 #--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-db_conn.close()
-
 fdb_test = os.path.join(context['temp_directory'],'tmp_6412.fdb')
 
-#rnd_suff=uuid.uuid4().hex[:8]
-#fdb_test = os.path.join(context['temp_directory'],'tmp_6412_'+rnd_suff+'.fdb')
 
 # NB: fb_home is full path to FB instance home (with trailing slash).
-shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
+shutil.copy2( dbconf, dbcbak )
 
 tmp_alias = 'self_security_6412'
 
@@ -162,19 +166,19 @@ sql_init=\
 
 ''' % locals()
 
-runProgram(fb_home + 'isql',[ '-q' ], sql_init)
-runProgram(fb_home + 'gfix',[ '-shut', 'full', '-force', '0', 'localhost:' + fdb_test, '-user', 'SYSDBA', '-pas', 'QweRty' ])
+runProgram( 'isql',[ '-q' ], sql_init)
+runProgram( 'gfix',[ '-shut', 'full', '-force', '0', 'localhost:' + fdb_test, '-user', 'SYSDBA', '-pas', 'QweRty' ])
 
-shutil.copy2( fb_home+'databases.bak', fb_home+'databases.conf' )
+shutil.move( dbcbak, dbconf )
 
-cleanup( (fdb_test, fb_home+'databases.bak',) )
+cleanup( (fdb_test,) )
 
-# !!! WARNING !!! This delay is necessary for running this test multiple times (in loop) on SS and SC.
+# This delay is necessary for running this test multiple times (in loop) on SS and SC.
 # Otherwise we get runtime error "SQLSTATE = 08006 / Error occurred during login, please check server firebird.log"
 # and firebird.log will be filled with: "Srp Server / connection shutdown / Database is shutdown."
 # Delay must be not less than 4 seconds. Tested on 4.0.0.2249.
 #############
-time.sleep(4)
+# 03-mar-2021: can be deleted (related to CORE-6441) >>> time.sleep(4)
 #############
 
 
