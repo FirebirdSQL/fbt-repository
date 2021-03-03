@@ -6,8 +6,15 @@
 'description':
   """
     Test script should display only ONE record.
+    Confirmed problem on:
+        3.0.0.32483: three(!) records are displayed instead of one.
+        3.0.1.32609: no records displayed with 'sysdba' account.
     Confirmed bug on 3.0.2.32658, WI-V3.0.2.32691.
+
+    Checked on 3.0.2.32703: all OK.
     Checked on 4.0.0.1479, 3.0.5.33115 - all fine.
+
+    03-mar-2021: replaced 'xnet' with 'localhost' in order have ability to run this test on Linux.
   """,
 'min_versions': '3.0.2',
 'versions': [
@@ -28,7 +35,8 @@ os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
 
 check_sql='''
-    connect 'xnet://security.db';
+    -- connect 'xnet://security.db';
+    connect 'localhost:security.db';
     create or alter user foo password '123' grant admin role using plugin Srp;
     create or alter user rio password '123' grant admin role using plugin Srp;
     create or alter user bar password '123' grant admin role using plugin Srp;
