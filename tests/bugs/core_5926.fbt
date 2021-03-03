@@ -5,86 +5,163 @@
 'title': "Attempt to create mapping with non-ascii user name which is encoded in SINGLE-BYTE codepage leads to '-Malformed string'",
 'description':
  """
-   Reproduced 'malformed string' error on: 3.0.4.33053, 4.0.0.1172.
-   
-   Connection charset was changed from Win-1251 to Win-1252 because FB Textbox has Windows with installed codepage 1252.
-   Code pages 1251 and 1252 have several common characters and two of them are used here:
-   * "The copyright sign", unicode 00A9;
-   * "The registered trademark" symbol, unicode 00AE
-   We use these characters as user name and map it to 'cr' -- see below.
+    Reproduced 'malformed string' error on: 3.0.4.33053, 4.0.0.1172.
 
-   See also:
-       https://ru.wikipedia.org/wiki/Windows-1251
-       https://en.wikipedia.org/wiki/Windows-1252
-   
-   Checked on:
-     3.0.5.33084: OK, 2.578s.
-     4.0.0.1340: OK, 2.640s.
+    03-mar-2021. Re-implemented in order to have ability to run this test on Linux.
+    Test encodes to UTF8 all needed statements (SET NAMES; CONNECT; DDL and DML) and stores this text in .sql file.
+    NOTE: 'SET NAMES' contain character set that must be used for reproducing problem (WIN1252 in this test).
+    Then ISQL is launched in separate (child) process which performs all necessary actions (using required charset).
+    Result will be redirected to log(s) which will be opened further via codecs.open(...encoding='cp1252').
+    Finally, its content will be converted to UTF8 for showing in expected_stdout.
 
-   ::: NOTE :::
-   In order to run statements with non-ascii (diacritical or special) characters from ISQL:
-   1) open some text editor that supports charset = win1252 and set encoding for new document = WIN1252
-     (e.g. in Notepad++ pull-down menu: "Encoding / Character sets / Baltic / Windows 1252")
-   2) type commands statements that contains diacritical marks (accents) and save to .sql
-   3) open this .sql in FAR editor and ensure that letters with diacritical marks are displayed as SINGLE characters
-   4) run isql -i <script_encoded_in_win1252.sql>
+    NB: different data are used for FB 3.x and 4.x because DDL in 4.x allows to store names with length up to 63 character.
+    See variables 'mapping_name' and 'non_ascii_user_name'.
+    FB 3.x restricts max_length of DB object name with value = 31 (bytes, not character!).
 
-   In order to run this script under fbt_run:
-
-   1) open Notepad++ new .fbt document and set Encoding = "UTF8 without BOM"
-   2) copy-paste text from <script_encoded_in_win1252.sql>, ensure that letters with diacritical marks are readable
-      (it should be pasted here in UTF8 encoding)
-   3) add in `expected_stdout` section required output by copy-paste from result of isql -i <script_encoded_in_win1252.sql>
-      (it should be pasted here in UTF8 encoding)
-   4) save .fbt and ensure that it was saved in UTF8 encoding, otherwise exeption like
-      "UnicodeDecodeError: 'utf8' codec can't decode byte 0xc3 in position NNN: invalid continuation byte"
-      will raise.
- 
+    Checked on:
+        * Windows: 4.0.0.2377, 3.0.8.33420
+        * Linux:   4.0.0.2377, 3.0.8.33415
  """,
-'min_versions': '3.0.5',
+'min_versions': '3.0.4',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'test_type': 'ISQL',
+ 'test_type': 'Python',
  'database_character_set': 'WIN1252',
- 'connection_character_set': 'WIN1252',
+ 'connection_character_set': 'UTF8',
  'init_script': 
   """
-    -- ### ONCE AGAIN ###
-    -- 1) for checking this under ISQL following must be encoded in WIN1252
-    -- 2) for running under fbt_run utility following must be encoded in UTF8.
-
   """,
  'test_script': 
   """
-    create or alter mapping foo using plugin win_sspi from user 'org\©®' to user "org\cr"; 
+import os
+import codecs
+import subprocess
+import time
+engine = db_conn.engine_version
+db_conn.close()
+
+# 03.03.2021 REMOVING OS-VARIABLE ISC_USER IS MANDATORY HERE!
+# This variable could be set by other .fbts which was performed before current within batch mode (i.e. when fbt_run is called from <rundaily>)
+# NB: os.unsetenv('ISC_USER') actually does NOT affect on content of os.environ dictionary, see: https://docs.python.org/2/library/os.html
+# We have to remove OS variable either by os.environ.pop() or using 'del os.environ[...]', but in any case this must be enclosed into try/exc:
+try:
+    del os.environ["ISC_USER"]
+except KeyError as e:
+    pass
+
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+if engine < 4:
+	# Maximal length of user name in FB 3.x is 31 (charset unicode_fss).
+	#mapping_name = 'áâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ'
+    mapping_name  = 'áâãäåæçèéêëìíîï1'
+    # mapping_name  = 'áâãäåæçèéêëìíîïð'
+    non_ascii_user_name = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞ'
+    ascii_only_user_name = 'ABCDEFGHIJKLMNOPQRSTUWYXYZ12345'
+else:
+	# Maximal length of user name in FB 4.x is 63 (charset utf8).
+	#
+    mapping_name = 'áâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒ'
+    non_ascii_user_name = 'ÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸŽžƒ'
+    ascii_only_user_name = 'ABCDEFGHIJKLMNOPQRSTUWYXYZ12345ABCDEFGHIJKLMNOPQRSTUWYXYZ123456'
+
+# plugin_for_mapping = 'win_sspi'
+plugin_for_mapping = 'Srp'
+
+sql_txt='''\
+    set bail on;
+    set names win1252;
+    connect '%(dsn)s' user '%(user_name)s' password '%(user_password)s';
+
+    create or alter mapping "%(mapping_name)s" using plugin %(plugin_for_mapping)s from user '%(non_ascii_user_name)s' to user "%(ascii_only_user_name)s"; 
     commit;
     -- show mapping;
     set count on;
     set list on;
     select 
-        rdb$map_name, 
-        rdb$map_using, 
-        rdb$map_plugin, 
-        rdb$map_db, 
-        rdb$map_from_type, 
-        rdb$map_from, 
-        rdb$map_to_type, 
-        rdb$map_to 
-    from rdb$auth_mapping;
+         rdb$map_using
+        ,rdb$map_db
+        ,rdb$map_from_type
+        ,rdb$map_to_type
+        -- ,rdb$map_plugin
+        -- 03.03.2021: do NOT show because it differs for FB 3.x and 4.x: ,rdb$map_from
+        -- 03.03.2021: do NOT show because it differs for FB 3.x and 4.x: ,rdb$map_to 
+    from rdb$auth_mapping
+    where
+        upper(rdb$map_name) = upper('%(mapping_name)s')
+        and rdb$map_plugin = upper('%(plugin_for_mapping)s')
+        and rdb$map_from = '%(non_ascii_user_name)s'
+        and rdb$map_to containing '%(ascii_only_user_name)s'
+    ;
     commit;
+''' % dict(globals(), **locals())
+
+f_run_sql = open( os.path.join(context['temp_directory'], 'tmp_5926_win1252.sql'), 'w' )
+f_run_sql.write( sql_txt.decode('utf8').encode('cp1252') )
+flush_and_close( f_run_sql )
+
+# result: file tmp_5926_win1252.sql is encoded in win1252
+
+f_run_log = open( os.path.splitext(f_run_sql.name)[0]+'.log', 'w')
+subprocess.call( [ context['isql_path'], '-q', '-i', f_run_sql.name ],
+                 stdout = f_run_log,
+                 stderr = subprocess.STDOUT
+               )
+flush_and_close( f_run_log ) # result: output will be encoded in win1252
+
+with codecs.open(f_run_log.name, 'r', encoding='cp1252' ) as f:
+    result_in_win1252 = f.readlines()
+
+for i in result_in_win1252:
+    print( i.encode('utf8') )
+
+# cleanup:
+###########
+# cleanup( (f_run_sql, f_run_log) )
+
+  
   """,
  'expected_stdout':
   """
-    RDB$MAP_NAME                    FOO
     RDB$MAP_USING                   P
-    RDB$MAP_PLUGIN                  WIN_SSPI
     RDB$MAP_DB                      <null>
     RDB$MAP_FROM_TYPE               USER
-    RDB$MAP_FROM                    org\©®
     RDB$MAP_TO_TYPE                 0
-    RDB$MAP_TO                      org\cr
+
     Records affected: 1
   """,
  'expected_stderr':
