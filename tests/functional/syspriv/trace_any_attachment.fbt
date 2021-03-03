@@ -15,14 +15,14 @@
   """
     set wng off;
     set bail on;
-    create or alter user u01 password '123' revoke admin role;
-    revoke all on all from u01;
+    create or alter user sys_tracer_for_anyone password '123' revoke admin role;
+    revoke all on all from sys_tracer_for_anyone;
     commit;
     -- Trace other users' attachments
     create role role_for_trace_any_attachment 
         set system privileges to TRACE_ANY_ATTACHMENT;
     commit;
-    grant default role_for_trace_any_attachment to user u01;
+    grant default role_for_trace_any_attachment to user sys_tracer_for_anyone;
     commit;
 
     recreate table test_trace_any_attachment(id int);
@@ -101,7 +101,7 @@ f_trcerr=open( os.path.join(context['temp_directory'],'tmp_syspriv_trace_any_att
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
 p_trace=Popen([context['fbsvcmgr_path'], "localhost:service_mgr",
-               "user", "U01", "password", "123",
+               "user", "sys_tracer_for_anyone", "password", "123",
                "action_trace_start",
                 "trc_cfg", f_trccfg.name],
                 stdout=f_trclog, 
@@ -117,7 +117,7 @@ time.sleep(1)
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 f_trclst=open( os.path.join(context['temp_directory'],'tmp_trace_5273.lst'), 'w')
 subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
-                 "user", "U01", "password", "123",
+                 "user", "sys_tracer_for_anyone", "password", "123",
                  "action_trace_list"],
                  stdout=f_trclst, 
                  stderr=subprocess.STDOUT
@@ -145,12 +145,14 @@ time.sleep(1)
 f_trclst=open(f_trclst.name,'a')
 f_trclst.seek(0,2)
 subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
-                 "user", "U01", "password", "123",
+                 "user", "sys_tracer_for_anyone", "password", "123",
                  "action_trace_stop",
                  "trc_id",trcssn],
                  stdout=f_trclst, stderr=subprocess.STDOUT
                )
 flush_and_close( f_trclst )
+
+time.sleep(2)
 
 # Terminate child process of launched trace session (though it should already be killed):
 p_trace.terminate()
@@ -177,7 +179,7 @@ with open( f_trclog.name,'r') as f:
                 print('FOUND SYSDBA STATEMENT.')
                 found_sysdba_statement = True
 
-runProgram('isql',[dsn], 'drop user u01;')
+runProgram('isql',[dsn], 'drop user sys_tracer_for_anyone;')
 
 # Cleanup:
 ##########
