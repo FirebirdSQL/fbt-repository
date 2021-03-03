@@ -134,7 +134,7 @@ for i in stderr_encoded_in_latin_1:
 
 # cleanup:
 ###########	
-#cleanup( (f_run_sql, f_run_log, f_run_err) )
+cleanup( (f_run_sql, f_run_log, f_run_err) )
 
   """,
  'expected_stdout':
