@@ -8,6 +8,10 @@
 	Original test see in:
         https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/EXT_REL_0_6_D.script
     Checked on: 4.0.0.2240; 3.0.7.33380
+
+    03-mar-2021.
+    Added substitution for zero value ('F02') as result of evaluating exp(-745.1332192):
+    on Windows number of digits in decimal representation more than on Linux for 1.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -67,7 +71,7 @@ os.remove( tmp_file )
  'expected_stderr':
   """
   """,
-  'substitutions':[ ('[ \t]+', ' ') ]
+  'substitutions':[ ('[ \t]+', ' '), ('0.0000000000000000', '0.000000000000000') ]
 }
 ]
 }
