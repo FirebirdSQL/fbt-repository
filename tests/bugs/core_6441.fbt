@@ -22,6 +22,11 @@
     This is expected (got reply from Alex, e-mail 19.11.2020 11:12).
 
    Checked on 3.0.8.33392 SS/SC, 4.0.0.2269 SC/SS - all fine.
+   
+   03-mar-2021: fixed call syntax in runProgram() macros.
+   Checked on:
+        * WINDOWS: 335544344 : I/O error during "CreateFile (open)" operation ...
+        * LINUX:   335544344 : I/O error during "open" operation ...
  """,
 'min_versions': '3.0.8',
 'versions': [
@@ -37,6 +42,15 @@ import subprocess
 import shutil
 from fdb import services
 
+from fdb import services
+
+svc = services.connect(host='localhost', user = user_name, password = user_password)
+fb_home=svc.get_home_directory()
+svc.close()
+
+dbconf = os.path.join(fb_home,'databases.conf')
+dbcbak = os.path.join(fb_home,'databases.bak')
+
 try:
     del os.environ["ISC_USER"]
 except KeyError as e:
@@ -44,28 +58,15 @@ except KeyError as e:
 
 #--------------------------------------------
 
-def svc_get_fb_log( fb_home, f_fb_log ):
-
-  global subprocess
-  subprocess.call( [ fb_home + "fbsvcmgr",
-                     "localhost:service_mgr",
-                     "action_get_fb_log"
-                   ],
-                   stdout=f_fb_log, stderr=subprocess.STDOUT
-                 )
-  return
-
-#--------------------------------------------
-
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
-    # If you're starting with a Python file object f, 
-    # first do f.flush(), and 
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
     # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
     global os
-    
+
     file_handle.flush()
-    if file_handle.mode not in ('r', 'rb'):
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
         # otherwise: "OSError: [Errno 9] Bad file descriptor"!
         os.fsync(file_handle.fileno())
     file_handle.close()
@@ -75,21 +76,23 @@ def flush_and_close(file_handle):
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-db_conn.close()
 
 fdb_test = os.path.join(context['temp_directory'],'tmp_6441.fdb')
 
-# NB: fb_home is full path to FB instance home (with trailing slash).
-shutil.copy2( fb_home+'databases.conf', fb_home+'databases.bak' )
-
+shutil.copy2( dbconf, dbcbak )
 tmp_alias = 'self_security_6441'
 
 alias_data=\
@@ -102,7 +105,7 @@ alias_data=\
 }
 ''' % locals()
 
-f_dbconf=open(fb_home+'databases.conf','a')
+f_dbconf=open( dbconf, 'a')
 f_dbconf.seek(0, 2)
 f_dbconf.write( alias_data )
 flush_and_close( f_dbconf )
@@ -141,11 +144,11 @@ sql_init=\
 '''
 
 for i in range(0,3):
-    runProgram(fb_home + 'isql',[ '-q' ], sql_init % locals() )
-    runProgram(fb_home + 'gfix',[ '-shut', 'full', '-force', '0', 'localhost:' + fdb_test, '-user', 'SYSDBA', '-pas', 'QweRty' ])
+    runProgram('isql',[ '-q' ], sql_init % locals() )
+    runProgram('gfix',[ '-shut', 'full', '-force', '0', 'localhost:' + fdb_test, '-user', 'SYSDBA', '-pas', 'QweRty' ])
     cleanup( (fdb_test,) )
 
-shutil.move( fb_home+'databases.bak', fb_home+'databases.conf' )
+shutil.move( dbcbak, dbconf )
 
 """,
  'expected_stdout': 
