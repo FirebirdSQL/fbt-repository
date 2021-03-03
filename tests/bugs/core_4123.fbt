@@ -128,7 +128,7 @@ for i in result_in_iso8859_1:
 
 # cleanup:
 ###########
-#cleanup( (f_run_sql, f_run_log) )
+cleanup( (f_run_sql, f_run_log) )
 
 
   """,
