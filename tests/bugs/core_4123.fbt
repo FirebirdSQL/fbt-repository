@@ -5,22 +5,22 @@
 'title': 'Firebird crash when executing an stored procedure called by a trigger that converts string to upper',
 'description':
   """
-        Confirmed problem on 2.5.2.26540 when trying convert iso8859_1 `y` with diersis sign to upper:
+    Confirmed problem on 2.5.2.26540 when trying convert iso8859_1 `y` with diersis sign to upper:
         Statement failed, SQLSTATE = 22001
         arithmetic exception, numeric overflow, or string truncation
         -string right truncation
     Checked on 2.5.326780 -- all OK.
 
-        02-mar-2021. Re-implemented in order to have ability to run this test on Linux.
-        Test encodes to UTF8 all needed statements (SET NAMES; CONNECT; DDL and DML) and stores this text in .sql file.
-        NOTE: 'SET NAMES' contain character set that must be used for reproducing problem (ISO8859_1 in this test).
-        Then ISQL is launched in separate (child) process which performs all necessary actions (using required charset).
-        Result will be redirected to log(s) which will be opened further via codecs.open(...encoding='iso-8859-1').
-        Finally, its content will be converted to UTF8 for showing in expected_stdout.
+    02-mar-2021. Re-implemented in order to have ability to run this test on Linux.
+    Test encodes to UTF8 all needed statements (SET NAMES; CONNECT; DDL and DML) and stores this text in .sql file.
+    NOTE: 'SET NAMES' contain character set that must be used for reproducing problem (ISO8859_1 in this test).
+    Then ISQL is launched in separate (child) process which performs all necessary actions (using required charset).
+    Result will be redirected to log(s) which will be opened further via codecs.open(...encoding='iso-8859-1').
+    Finally, its content will be converted to UTF8 for showing in expected_stdout.
 
-        Checked on:
-                * Windows: 4.0.0.2377, 3.0.8.33420, 2.5.9.27152
-                * Linux:   4.0.0.2377, 3.0.8.33415
+    Checked on:
+            * Windows: 4.0.0.2377, 3.0.8.33420, 2.5.9.27152
+            * Linux:   4.0.0.2377, 3.0.8.33415
   """,
 'min_versions': '2.5.3',
 'versions': [
