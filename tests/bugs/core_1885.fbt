@@ -34,7 +34,7 @@
   """
     Statement failed, SQLSTATE = HY000
     unsuccessful metadata update
-    -CREATE COLLATION UNICODE_ENUS_CI failed
+    -CREATE COLLATION UNICODE_ENUS_CI_3X failed
     -Invalid collation attributes
   """
 },
