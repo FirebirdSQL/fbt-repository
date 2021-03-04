@@ -12,11 +12,14 @@
 
     Checked on 4.0.0.1865 SS/CS.
 
-    03-mar-2021.
-    Adapted for Linux: add to substituion section pattern for suppress differences
-    between Windows and Linux message for gdscode = 335544344:
+    04-mar-2021.
+    Adapted to be run both on Windows and Linux.
+    NOTE-1. There is difference between Windows and Linux message for gdscode = 335544344:
         * WINDOWS: 335544344 : I/O error during "CreateFile (open)" operation ...
         * LINUX:   335544344 : I/O error during "open" operation ...
+    NOTE-2. Some messages can appear in the trace log ONE or TWO times (SS/CS ?).
+    Because of this, we are interested only for at least one occurence of each message
+    rather than for each of them (see 'found_patterns', type: set()).
  """,
 'min_versions': '4.0.0',
 'versions': [
@@ -154,48 +157,41 @@ p_trace.terminate()
 flush_and_close( f_trc_log )
 flush_and_close( f_trc_err )
 
+# Every of following patterns must be found at *least* one time in the trace log:
 allowed_patterns = [ 
-    re.compile(' FAILED ATTACH_DATABASE', re.IGNORECASE)
-   ,re.compile(' ERROR AT JProvider::attachDatabase', re.IGNORECASE)
-   ,re.compile('335544344 : I/O error', re.IGNORECASE)
-   ,re.compile('335544734 : Error while trying to open', re.IGNORECASE)
+    re.compile('FAILED\s+ATTACH_DATABASE', re.IGNORECASE)
+   ,re.compile('ERROR\s+AT\s+JProvider(:){1,2}attachDatabase', re.IGNORECASE)
+    # ::: NB ::: windows and linux messages *differ* for this gdscode:
+   ,re.compile('335544344\s*(:)?\s+I(/)?O\s+error', re.IGNORECASE)     
+   ,re.compile('335544734\s*(:)\s+?Error\s+while', re.IGNORECASE)
 ]
+found_patterns = set()
 
 with open(f_trc_log.name, 'r') as f:
     for line in f:
         for p in allowed_patterns:
             if p.search(line):
-                print(line)
+                found_patterns.add( p.pattern )
 
 # cleanup:
 ##########
 time.sleep(1)
 cleanup( ( f_trc_log, f_trc_err, f_trc_cfg, f_trc_lst ) )
 
+for p in sorted(found_patterns):
+    print('FOUND pattern: ' + p)
+
   """,
  'expected_stdout': 
   """
-    FAILED ATTACH_DATABASE
-    ERROR AT JProvider::attachDatabase
-    335544344 : I/O error during open operation for file "non_such_alias"
-    335544734 : Error while trying to open file
-    FAILED ATTACH_DATABASE
-    ERROR AT JProvider::attachDatabase
-    FAILED ATTACH_DATABASE
-    ERROR AT JProvider::attachDatabase
-    335544344 : I/O error during open operation for file "non_such_alias"
-    335544734 : Error while trying to open file
+    FOUND pattern: 335544344\s*(:)?\s+I(/)?O\s+error
+    FOUND pattern: 335544734\s*(:)\s+?Error\s+while
+    FOUND pattern: ERROR\s+AT\s+JProvider(:){1,2}attachDatabase
+    FOUND pattern: FAILED\s+ATTACH_DATABASE
   """,
  'expected_stderr': 
   """
-  """,
-  'substitutions':[
-       ('^((?!(ATTACH_DATABASE|ERROR AT|335544344|335544734)).)*$','')
-      ,('[ \t]+',' ')
-      ,('.* FAILED ATTACH_DATABASE', 'FAILED ATTACH_DATABASE')
-      ,('.* ERROR AT JProvider::attachDatabase', 'ERROR AT JProvider::attachDatabase')
-      ,('335544344 : I/O error during .*', '335544734 : Error while trying to open file')
-  ]
+  """
 }
 ]
 }
