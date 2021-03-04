@@ -509,6 +509,8 @@ subprocess.call( [context['isql_path'], '-q', '-i', f_sql_cmd.name],
 flush_and_close( f_isql_log )
 flush_and_close( f_isql_err )
 
+# 04.03.2021: do NOT remove this delay!
+time.sleep(1)
 
 # ####################################################
 # G E T  A C T I V E   T R A C E   S E S S I O N   I D
@@ -541,7 +543,7 @@ if trcssn>0:
     subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'user', user_name, 'password', user_password, 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
     fn_nul.close()
     # DO NOT REMOVE THIS LINE:
-    time.sleep(3)
+    time.sleep(1)
 
 p_trace.terminate()
 flush_and_close( f_trc_log )
