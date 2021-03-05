@@ -142,7 +142,8 @@
   """
     Statement failed, SQLSTATE = 22003
     Floating-point overflow.  The exponent of a floating-point operation is greater than the magnitude allowed.
-  """
+  """,
+  'substitutions': [('0.0000000000000000', '0.000000000000000')]
 }
 ]
 }
