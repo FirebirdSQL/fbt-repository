@@ -99,7 +99,8 @@
     Dynamic SQL Error
     -SQL error code = -303
     -Floating-point underflow.  The exponent of a floating-point operation is less than the magnitude allowed.
-  """
+  """,
+  'substitutions': [('0.0000000000000000', '0.000000000000000')]
 }
 ]
 }
