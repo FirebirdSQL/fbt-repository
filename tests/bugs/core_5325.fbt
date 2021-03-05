@@ -72,7 +72,7 @@ def cleanup( f_names_list ):
 
 sql_txt='''\
     set bail on;
-    set names win1257;
+    set names win1251;
     connect '%(dsn)s' user '%(user_name)s' password '%(user_password)s';
 
     
