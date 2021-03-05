@@ -13,7 +13,7 @@
      Changed expected std_err: added text with "SQL error code = -303"
 
      Checked on: WI-T4.0.0.1685, 1.38 s.
-
+     05.03.2021: added subst.: max. floating point precision on Linux is 15 rather than on Windows (16 digits).
  """,
 'min_versions': '4.0',
 'versions': [
