@@ -44,7 +44,7 @@
     NOTE-2: unstable results detected for 2.5.9 SuperClassic. Currently test contains min_version = 3.0.3 rather than 2.5.9
 
     06.03.2021.
-    Removed separate section for 3.x because code for 4.x was made unfied.
+    Removed separate section for 3.x because code for 4.x was made unified.
     Checked on:
     * Windows: 4.0.0.2377 (SS/CS), 3.0.8.33423 (SS/CS)
     * Linux:   4.0.0.2379, 3.0.8.33415
