@@ -23,7 +23,7 @@
 },
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
   """
