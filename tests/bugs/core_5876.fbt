@@ -48,7 +48,7 @@
     cstring(80), smallint, smallint
     returns cstring(80)
     entry_point 'IB_UDF_substr'
-    module_name 'ib_udf.dll'
+    module_name 'ib_udf'
     ;
     commit;
 
