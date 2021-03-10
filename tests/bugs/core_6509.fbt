@@ -27,13 +27,9 @@ os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
 
 runProgram('gfix',[dsn,'-buffers','2147483646'])
-
-# Check that number of buffers was not changed:
-runProgram('isql',[dsn], 'set list on;select mon$page_buffers from mon$database;')
   """,
  'expected_stdout': 
   """
-    MON$PAGE_BUFFERS                20000
   """,
  'expected_stderr': 
   """
