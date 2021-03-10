@@ -1,0 +1,45 @@
+{
+'id': 'bugs.core_6509',
+'qmid': None,
+'tracker_id': 'CORE-6509',
+'title': 'Segfault when gfix requests for database page buffer more memory than available from OS',
+'description':
+ """
+    Confirmed crash on 4.0.0.2377 (Windows and Linux)
+    Checked on 4.0.0.2384 - all OK, get STDERR: "unable to allocate memory from operating system"
+    NB: currently acceptable value for '-buffers' is limited from 50 to 2147483646.
+ """,
+'min_versions': '4.0.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'page_size': '32768',
+ 'test_type': 'Python',
+ 'init_script':
+  """
+  """,
+ 'test_script':
+  """\
+import os
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+
+runProgram('gfix',[dsn,'-buffers','2147483646'])
+
+# Check that number of buffers was not changed:
+runProgram('isql',[dsn], 'set list on;select mon$page_buffers from mon$database;')
+  """,
+ 'expected_stdout': 
+  """
+    MON$PAGE_BUFFERS                20000
+  """,
+ 'expected_stderr': 
+  """
+    unable to allocate memory from operating system
+  """,
+ 'substitutions': [ ('[ \t]+',' ') ]
+}
+]
+}
