@@ -61,11 +61,12 @@
     RDB$OWNER_NAME                  SYSDBA
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
-    RDB$SECURITY_CLASS              <null>
+    RDB$SECURITY_CLASS              SQL$383
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
 
     Records affected: 1
-  """
+  """,
+  'substitutions':[('RDB\$SECURITY_CLASS\s+SQL.*', 'RDB\$SECURITY_CLASS SQL'), ('[\t ]+', ' ')]
 }
 ]
 }
