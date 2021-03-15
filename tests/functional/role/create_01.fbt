@@ -80,7 +80,7 @@
     RDB$OWNER_NAME                  SYSDBA
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
-    RDB$SECURITY_CLASS              <null>
+    RDB$SECURITY_CLASS              SQLnnnn
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
 
     RDB$ROLE_NAME                   TEST
