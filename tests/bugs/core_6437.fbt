@@ -77,18 +77,22 @@ with open(f_run_log.name,'r') as f:
         if 'file' in line:
             print('UNEXPECTED GFIX OUTPUT: ' + line)
 
-runProgram('isql',[ db_name ], 'set heading off;select mon$page_buffers from mon$database;')
+runProgram('gstat',[ '-h', db_name ])
 
 cleanup( (db_name, f_run_log,) )
 
   """,
  'expected_stdout': 
   """
-    1000000
+    Page buffers          1000000
   """,
  'expected_stderr': 
   """
-  """
+  """,
+ 'substitutions': [
+   ('^((?!Page buffers).)*$',''),
+   ('[\t ]+', ' ')
+ ]
 }
 ]
 }
