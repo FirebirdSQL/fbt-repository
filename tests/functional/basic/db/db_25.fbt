@@ -39,10 +39,11 @@
     RDB$OWNER_NAME                  SYSDBA
     RDB$DESCRIPTION                 <null>
     RDB$SYSTEM_FLAG                 1
-    RDB$SECURITY_CLASS              <null>
+    RDB$SECURITY_CLASS              SQL$162
 
     Records affected: 1
-  """
+  """,
+  'substitutions':[('RDB\$SECURITY_CLASS\s+SQL.*', 'RDB\$SECURITY_CLASS SQL'), ('[\t ]+', ' ')]
 },
 {
  'firebird_version': '4.0',
