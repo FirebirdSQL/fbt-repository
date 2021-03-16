@@ -195,11 +195,58 @@
     -- 30.10.2015: field rdb$grantor now contain NULLs in all records for new empty database (since build ~32134).
     -- Confirmed by Alex that this is OK 30.10.2015 15:28.
     set list on;
+
+    -- Query for check whether fields list of table was changed:
+    select rf.rdb$field_name
+    from rdb$relation_fields rf
+    where rf.rdb$relation_name = upper('rdb$user_privileges')
+    order by rf.rdb$field_name;
+
     set count on;
-    select * from rdb$user_privileges order by rdb$user,rdb$grantor,rdb$relation_name,rdb$privilege;
+
+    select * from rdb$user_privileges t
+    order by
+        t.rdb$user
+        ,coalesce(t.rdb$grantor,'[none]')
+        ,t.rdb$relation_name
+        ,t.rdb$privilege
+        ,t.rdb$grant_option
+        ,coalesce(t.rdb$field_name, '[none')
+        ,t.rdb$user_type
+        ,t.rdb$object_type
+    ;
+
+    set count off;
+    select iif(
+                count(*) =
+                 count(distinct rdb$user || coalesce(rdb$grantor,'[none]') || rdb$privilege || rdb$relation_name || rdb$privilege || rdb$grant_option || coalesce(rdb$field_name, '[none') || rdb$user_type || rdb$object_type
+                      )
+                 ,1
+                 ,0
+              ) as "Are ordered columns unique ?" from rdb$user_privileges
+    ;
   """,
  'expected_stdout': 
   """
+
+    RDB$FIELD_NAME                  RDB$FIELD_NAME                                                                               
+
+    RDB$FIELD_NAME                  RDB$GRANTOR                                                                                  
+
+    RDB$FIELD_NAME                  RDB$GRANT_OPTION                                                                             
+
+    RDB$FIELD_NAME                  RDB$OBJECT_TYPE                                                                              
+
+    RDB$FIELD_NAME                  RDB$PRIVILEGE                                                                                
+
+    RDB$FIELD_NAME                  RDB$RELATION_NAME                                                                            
+
+    RDB$FIELD_NAME                  RDB$USER                                                                                     
+
+    RDB$FIELD_NAME                  RDB$USER_TYPE                                                                                
+
+
+
     RDB$USER                        PUBLIC                                                                                       
     RDB$GRANTOR                     <null>
     RDB$PRIVILEGE                   S     
@@ -2584,6 +2631,15 @@
     RDB$FIELD_NAME                  <null>
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 9
+
+    RDB$USER                        SYSDBA                                                                                       
+    RDB$GRANTOR                     <null>
+    RDB$PRIVILEGE                   G     
+    RDB$GRANT_OPTION                1
+    RDB$RELATION_NAME               RDB$ADMIN                                                                                    
+    RDB$FIELD_NAME                  <null>
+    RDB$USER_TYPE                   8
+    RDB$OBJECT_TYPE                 13
 
     RDB$USER                        SYSDBA                                                                                       
     RDB$GRANTOR                     <null>
@@ -6167,7 +6223,11 @@
     RDB$USER_TYPE                   8
     RDB$OBJECT_TYPE                 17
 
-    Records affected: 663
+
+    Records affected: 664
+
+    Are ordered columns unique ?    1
+
   """
 },
 {
