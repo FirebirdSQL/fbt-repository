@@ -13,7 +13,10 @@
        This action should IMMEDIATELY be denied (i.e. no objects should be created in database at all).
        Also, two logs should be created for this attempt:
             1.1) STDOUT with first (and single) statement that ISQL was to be executed;
-            1.2) STDERR with single exception details (SQLSTATE = 22000 / malformed string).
+            1.2) STDERR with single exception, it depends on major FB version:
+                * for FB 3.x: SQLSTATE = 22000 / malformed string;
+                * for FB 4.x: SQLSTATE = 22018 / Cannot transliterate ...
+
     2. Attempt to apply the same script but now _WITH_ specification of connect charset: -ch win1251.
        This attempt should finish SUCCESSFULLY, and we will verify it by checking its:
             2.1) STDOUT - it should contain phrase "Metadata created OK."
@@ -23,33 +26,32 @@
     script which 
     1) was encoded in NON unicode character set (e.g. win1251 - as is used in this test) and 
     2) did create DB objects with non-ascii names.
-
     
-    NOTE-1: 'min_version' here was set to 3.0 rather than 2.5.x intentionally: one may NOT to use 
-    sequence with non-ascii name in TRIGGER as arg. of gen_id() - see code below:
-        ...
-        -- not avail up to 2.5.6: 
-        new."ИД'шник" = coalesce( new."ИД'шник", gen_id("Генерилка", 1) );   
-        ...
-    
-    NOTE-2: test was implemented to run only on Windows platform. 
-    I could not find how save script in cyrillic codepage there: it become unreadable (OS locale is UTF8).
-
     Checked on:
         4.0.0.1635 SS: 3.217s.
         4.0.0.1633 CS: 3.619s.
         3.0.5.33180 SS: 2.548s.
         3.0.5.33178 CS: 3.153s.
 
-    NB: old checked on: 4.0.0.153, WI-V3.0.0.32499 - did pass without using codecs! Strange!..
+	17-mar-2021. Re-implemented in order to have ability to run this test on Linux.
+	Ttest creates table and fills it with non-ascii characters in init_script, using charset = UTF8.
+	Then it generates .sql script for running it in separae ISQL process.
+	This script makes connection to test DB using charset = WIN1251 and perform needed DML.
+	Result will be redirected to .log which will be opened via codecs.open(...encoding='cp1251').
+	Its content will be converted to UTF8 for further parsing.
+	
+	Checked on:
+		* Windows: 4.0.0.2387, 3.0.8.33426
+		* Linux:   4.0.0.2387, 3.0.8.33426
         
  """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'Python',
+ 'connection_character_set': 'UTF8',
  'init_script':
   """
   """,
@@ -62,20 +64,42 @@ import subprocess
 # 28.10.2019. This is needed in Python 2.7 for converting string in UTF8 to cp1251
 import codecs
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
 
 #--------------------------------------------
 
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
-
-os.environ["ISC_USER"] = user_name
-os.environ["ISC_PASSWORD"] = user_password
 
 # Obtain engine version:
 cur1 = db_conn.cursor()
@@ -87,6 +111,10 @@ db_conn.close()
 
 non_ascii_ddl='''
     set bail on;
+
+    -- set names win1251;
+    connect '%(dsn)s' user '%(user_name)s' password '%(user_password)s';
+    
     set echo on;
 
     create collation "Циферки" for utf8 from unicode case insensitive 'NUMERIC-SORT=1';
@@ -235,21 +263,14 @@ non_ascii_ddl='''
     set echo off;
     select 'Metadata created OK.' as msg from rdb$database;
 	
-'''
+''' % dict(globals(), **locals())
 
-# NB, 28.10.2019: this *did* work correctly before!
-# It is very strange that now we have to use codecs for this test!
-# ------------------
-#f_checksql=open( os.path.join(context['temp_directory'],'tmp_non_ascii_ddl_0986.sql'), 'w')
-#f_checksql.write( non_ascii_ddl.encode('windows-1251') )
-#f_checksql.close()
-# ------------------
 
-f_checksql=os.path.join(context['temp_directory'],'tmp_non_ascii_ddl_0986.sql')
-with codecs.open( f_checksql, 'w', encoding='cp1251') as f:
-    f.write( non_ascii_ddl.decode('utf-8') )
+f_checksql = open( os.path.join(context['temp_directory'], 'tmp_0986_w1251.sql'), 'w' )
+f_checksql.write( non_ascii_ddl.decode('utf8').encode('cp1251') )
+flush_and_close( f_checksql )
 
-# Result: file 'tmp_non_ascii_ddl_0986' is encoded in cp1251 and contains SQL statements to be executed.
+# Result: file 'tmp_0986_w1251' is encoded in cp1251 and contains SQL statements to be executed.
 
 ###########################################################################################################
 ###  check-1:  attempt to apply DDL with non-ascii characters __WITHOUT__ charset specifying (for ISQL) ###
@@ -258,7 +279,7 @@ with codecs.open( f_checksql, 'w', encoding='cp1251') as f:
 f_apply_cset_none_log = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_none.log'), 'w')
 f_apply_cset_none_err = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_none.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_checksql ],
+subprocess.call( [ context['isql_path'], "-q", "-i", f_checksql.name ],
                  stdout = f_apply_cset_none_log,
                  stderr = f_apply_cset_none_err
                )
@@ -266,15 +287,21 @@ subprocess.call( ["isql", dsn, "-i", f_checksql ],
 # This file should contain only FIRST statement from DDL hich contains non-ascii characters:
 # (because of 'set BAIL on' ISQL should immediately terminate its job):
 # create collation "Циферки" for utf8 from unicode case insensitive 'NUMERIC-SORT=1';:
-f_apply_cset_none_log.close()
+#
+flush_and_close( f_apply_cset_none_log )
 
 # This file should contain error on 1st DDL statement which contains non-ascii characters:
-# Statement failed, SQLSTATE = 22000
-# unsuccessful metadata update
-# -CREATE COLLATION Циферки failed
-# -Malformed string
-# After line 2 in file C:\MIX\firebird\QA\fbt-repo\tmp\tmp_non_ascii_ddl_0986.sql
-f_apply_cset_none_err.close()
+# FB 3.x:
+#     Statement failed, SQLSTATE = 22000
+#     unsuccessful metadata update
+#     -CREATE COLLATION Циферки failed
+#     -Malformed string
+# FB 4.x:
+#     Statement failed, SQLSTATE = 22018
+#     arithmetic exception, numeric overflow, or string truncation
+#     -Cannot transliterate character between character sets
+#
+flush_and_close( f_apply_cset_none_err )
 
 #############################################################################################################
 ###  check-2:  attempt to apply DDL with non-ascii characters ___WITH___ specifying: ISQL ... -ch WIN1251 ###
@@ -283,57 +310,43 @@ f_apply_cset_none_err.close()
 f_apply_cset_1251_log = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_1251.log'), 'w')
 f_apply_cset_1251_err = open( os.path.join(context['temp_directory'],'tmp_0986_apply_cset_1251.err'), 'w')
 
-subprocess.call( ["isql", dsn, "-i", f_checksql, "-ch", "win1251" ],
+subprocess.call( [ context['isql_path'], "-q", "-i", f_checksql.name, "-ch", "win1251" ],
                  stdout = f_apply_cset_1251_log,
                  stderr = f_apply_cset_1251_err
                )
 
 # This file should contain ALL applied statements, plus final message:
 # MSG                             Metadata created OK.
-f_apply_cset_1251_log.close()
+flush_and_close( f_apply_cset_1251_log )
 
 # This file should NOT contain any errors:
-f_apply_cset_1251_err.close()
-
-# do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
-# Exception raised while executing Python test script. exception: WindowsError: 32
-time.sleep(1)
+flush_and_close( f_apply_cset_1251_err )
 
 # CHECK RESULTS:
 ################
                
 # This stdout log should contain only ONE statement (create collation <non_ascii_name> ...),
 # this DDL failed and caused ISQL to immediately terminate:
+#
 with open( f_apply_cset_none_log.name, 'r') as f:
     for line in f:
         out_txt='STDLOG WHEN CSET=NONE: ';
         if line.strip():
             if line.strip().decode("cp1251").encode('utf8').startswith('create collation'):
-                print( out_txt+'CREATE COLLATION STATEMENT' )
+                print( out_txt + "FOUND EXPECTED 'CREATE COLLATION STATEMENT'" )
             else:
                 print( out_txt+'SOME OTHER STATEMENT FOUND' )
-f.close()
-
-#################################################################################################
-# NB: important notice about 'f_apply_cset_none_err':
-# this stderr log should contain __EXACTLY__ONE__ERROR, with SQLSTATE = 22000 (Malformed string).
-#################################################################################################
-# NOTE: if some other error messages will be found here (i.e. lines with 'SQLSTATE =' text)
-# then it means that we could to issue DDL with non-ascii characters using NONE charset 
-# (this was possible in FB 2.0.x)
 
 with open( f_apply_cset_none_err.name, 'r') as f:
     for line in f:
         out_txt='STDERR WHEN CSET=NONE: ';
-        if 'SQLSTATE =' in line.strip():
-            if 'SQLSTATE = 22000' in line.strip() and engine.startswith('3.') \
+        if 'SQLSTATE =' in line:
+            if 'SQLSTATE = 22000' in line and engine.startswith('3.') \
                or \
-               'SQLSTATE = 22018' in line.strip() and not engine.startswith('3.'):
-                print( out_txt+'EXPECTED SQLSTATE IN ERROR MESSAGE' )
+               'SQLSTATE = 22018' in line and not engine.startswith('3.'):
+                print( out_txt+'FOUND EXPECTED SQLSTATE IN ERROR MESSAGE' )
             else:
                 print( out_txt+'SOME OTHER ERROR FOUND: '+line )
-f.close()
-
 
 # This log should contain 'magic text' which tells that all finished OK:
 # MSG                             Metadata created OK.
@@ -341,35 +354,25 @@ f.close()
 if 'Metadata created OK.' in open(f_apply_cset_1251_log.name).read():
     print('STDLOG WHEN CSET=1251: ALL FINISHED OK.')
     
-# This log should be EMPTY: when we used '-ch win1251' metadata creation 
-# with non-ascii names in DB objects should be finished successfully!
+# This log should be EMPTY: when we used '-ch win1251' then metadata
+# with non-ascii names in DB objects should be created successfully:
+#
 with open( f_apply_cset_1251_err.name, 'r') as f:
     for line in f:
-        out_txt='STDERR WHEN CSET=1251: ';
-        if 'SQLSTATE =' in line.strip():
-            if 'SQLSTATE = 22000' in line.strip() and engine.startswith('3.') \
-               or \
-               'SQLSTATE = 22018' in line.strip() and not engine.startswith('3.'):
-                print( out_txt+'EXPECTED SQLSTATE IN ERROR MESSAGE' )
-            else:
-                print( out_txt+'SOME OTHER ERROR FOUND: '+line )
-f.close()
-
-#####################################################################
+        if line:
+            print('Unexpected STDERR when use -ch win1251: ' + line)
 
 # CLEANUP
 #########
-
-f_list = [ i.name for i in ( f_apply_cset_none_log, f_apply_cset_none_err, f_apply_cset_1251_log, f_apply_cset_1251_err ) ]
-f_list += [ f_checksql, ]
-cleanup( f_list )
+time.sleep(1)
+cleanup( ( f_apply_cset_none_log, f_apply_cset_none_err, f_apply_cset_1251_log, f_apply_cset_1251_err,f_checksql, ) )
 
   """,
  'expected_stdout': 
   """
-     STDLOG WHEN CSET=NONE: CREATE COLLATION STATEMENT
-     STDERR WHEN CSET=NONE: EXPECTED SQLSTATE IN ERROR MESSAGE
-     STDLOG WHEN CSET=1251: ALL FINISHED OK.
+    STDLOG WHEN CSET=NONE: FOUND EXPECTED 'CREATE COLLATION STATEMENT'
+    STDERR WHEN CSET=NONE: FOUND EXPECTED SQLSTATE IN ERROR MESSAGE
+    STDLOG WHEN CSET=1251: ALL FINISHED OK.
   """,
  'expected_stderr': 
   """
