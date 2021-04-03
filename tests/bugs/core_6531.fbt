@@ -2,7 +2,7 @@
 'id': 'bugs.core_6531',
 'qmid': '',
 'tracker_id': 'CORE-6531',
-'title': ' Incorrect timestamp arithmetic when one of operands is negative number',
+'title': 'COMPUTED BY column looses charset and collate of source field <F> when <F> is either of type BLOB or VARCHAR casted to BLOB',
 'description':
   """
     Confirmed bug on 4.0.0.2394, 3.0.8.33426
