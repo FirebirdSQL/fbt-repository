@@ -3,7 +3,11 @@
 'qmid': None,
 'tracker_id': 'CORE-2977',
 'title': 'FB 2.1 incorrectly works with indexed fields of type DATE in OLD ODS (9.1)',
-'description': '',
+'description':
+ """
+   08.04.2021: number of DAY in the date representation becomes padded with '0' (NB: dialect 1 is used here!)
+   Expected output was changed according to this after discuss with Adriano.
+ """,
 'min_versions': '2.5.0',
 'versions': [
 {
@@ -36,7 +40,7 @@
     OPDATE                          31-DEC-2000
 
     ID                              2
-    OPDATE                           1-JAN-2001
+    OPDATE                          01-JAN-2001
   """
 }
 ]
