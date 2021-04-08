@@ -29,6 +29,8 @@
     Added domains with datatype that did appear only in FB 4.0: DECFLOAT and TIME[STAMP] WITH TIME ZONE. For this reason only FB 4.0+ can be tested.
 
     Checked on 4.0.0.1954.
+
+    08.04.2021: changed expected output for date 01-jan-0001 after discuss with Adriano.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -301,7 +303,7 @@
 	alter domain dom21_06 drop constraint;
 	
 	alter domain dom21_07 set default '01.01.0001 01:01:01.001';
-	insert into test default values; -- validation error for column "TEST"."F07", value "1-JAN-1 1:01:01.0010"
+	insert into test default values; -- validation error for column "TEST"."F07", value "01-JAN-1 1:01:01.0010" // changed 08.04.2021, was: '1-jan'
 	alter domain dom21_07 drop constraint;
 
 	alter domain dom21_08 set default '21.12.2013 10:31:00 Indian/Cocos';
@@ -512,7 +514,7 @@
 	validation error for column "TEST"."F06", value "13:00:00.0000 Indian/Cocos"
 
 	Statement failed, SQLSTATE = 23000
-	validation error for column "TEST"."F07", value "1-JAN-1 1:01:01.0010"
+	validation error for column "TEST"."F07", value "01-JAN-0001 1:01:01.0010"
 
 	Statement failed, SQLSTATE = 23000
 	validation error for column "TEST"."F08", value "21-DEC-2013 10:31:00.0000 Indian/Cocos"
