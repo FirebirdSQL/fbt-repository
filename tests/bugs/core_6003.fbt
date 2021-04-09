@@ -5,7 +5,7 @@
 'title': "RDB$GET_TRANSACTION_CN works different in Super and Classic",
 'description':
  """
-    Confirmed bug on 4.0.0.2411 CS.
+    Confirmed bug on 4.0.0.2411 CS: got null instead of positive number.
     Checked on intermediate build 4.0.0.2416 (08-apr-2021 09:56) - all OK.
 
     NB-1: bug can be reproduced using ISQL but it must be lacunhed with '-n' command switch.
