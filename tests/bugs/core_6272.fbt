@@ -89,7 +89,7 @@ txt = '''
     }
 '''
 
-f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_6272.cfg'), 'w', buffering = 0)
+f_trc_cfg=open( os.path.join(context['temp_directory'],'tmp_trace_6272.cfg'), 'w')
 f_trc_cfg.write(txt)
 flush_and_close( f_trc_cfg )
 
@@ -97,8 +97,8 @@ flush_and_close( f_trc_cfg )
 # S T A R T   T R A C E   i n   S E P A R A T E    P R O C E S S
 # ##############################################################
 
-f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_6272.log'), "w", buffering = 0)
-f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_6272.err'), "w", buffering = 0)
+f_trc_log=open( os.path.join(context['temp_directory'],'tmp_trace_6272.log'), "w")
+f_trc_err=open( os.path.join(context['temp_directory'],'tmp_trace_6272.err'), "w")
 
 # ::: NB ::: DO NOT USE 'localhost:service_mgr' here! Use only local protocol:
 p_trace = Popen( [ context['fbsvcmgr_path'], 'service_mgr', 'action_trace_start' , 'trc_cfg', f_trc_cfg.name],stdout=f_trc_log,stderr=f_trc_err)
@@ -110,7 +110,7 @@ time.sleep(1)
 # ####################################################
 # Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
-f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_6272.lst'), 'w', buffering = 0)
+f_trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_6272.lst'), 'w')
 subprocess.call([ context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_list'], stdout=f_trc_lst)
 flush_and_close( f_trc_lst )
 
