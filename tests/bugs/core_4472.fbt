@@ -18,12 +18,16 @@
         Unexpected call to register plugin Arc4, type 16 - ignored
         INET/inet_error: read errno = 10054
         Modifying function FN_01 which is currently in use by active user requests
+
+   13.04.2021. Adapted for run both on Windows and Linux. Checked on:
+      Windows: 3.0.8.33445, 4.0.0.2416
+      Linux:   3.0.8.33426, 4.0.0.2416
  """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'Python',
  'init_script':
   """
@@ -34,14 +38,50 @@ import os
 import time
 import subprocess
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
 
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          print('type(f_names_list[i])=',type(f_names_list[i]))
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
+
+
 fb_log_before=open( os.path.join(context['temp_directory'],'tmp_fb_log_4472_before.log'), 'w')
-fb_log_before.close()
-fn_log=open(fb_log_before.name, "w")
-subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey","action_get_fb_log"],\
-                       stdout=fn_log, stderr=subprocess.STDOUT)
-fn_log.close()
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr","action_get_fb_log"],
+                       stdout=fb_log_before, stderr=subprocess.STDOUT)
+flush_and_close( fb_log_before )
 
 sqltxt='''
     set autoddl off;
@@ -67,21 +107,23 @@ sqltxt='''
     commit; 
 '''
 
-sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_4472.log'), 'w')
-sqllog.close()
-runProgram('isql',[ dsn, '-user',user_name,'-pas',user_password,'-q','-m','-o',sqllog.name],sqltxt)
+f_sqllog=open( os.path.join(context['temp_directory'],'tmp_isql_4472.log'), 'w')
+f_sqllog.close()
+runProgram('isql',[ dsn, '-q','-m','-o',f_sqllog.name],sqltxt)
 
 fb_log_after=open( os.path.join(context['temp_directory'],'tmp_fb_log_4472_after.log'), 'w')
-fb_log_after.close()
-fn_log=open(fb_log_after.name, "w")
-subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey","action_get_fb_log"],\
-                       stdout=fn_log, stderr=subprocess.STDOUT)
-fn_log.close()
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr", "action_get_fb_log"],
+                       stdout=fb_log_after, stderr=subprocess.STDOUT)
+flush_and_close( fb_log_after )
 
 # This log should be EMPTY:
-with open( sqllog.name,'r') as f:
-  print(f.read())
-f.close()
+with open( f_sqllog.name,'r') as f:
+    for line in f:
+        if line.split() and not 'Database:' in line:
+            # This line must be ignored:
+            # Database: localhost/3333:C:\FBTESTING\qa\fbt-repo\tmp\bugs.core_4472.fdb, User: SYSDBA
+            print('UNEXPECTED: ' + line)
+
 
 # This difference should be ZERO:
 fb_log_diff=os.path.getsize(fb_log_after.name)-os.path.getsize(fb_log_before.name)
@@ -98,12 +140,8 @@ else:
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
 
-if os.path.isfile(fb_log_before.name):
-  os.remove(fb_log_before.name)
-if os.path.isfile(fb_log_after.name):
-  os.remove(fb_log_after.name)
-if os.path.isfile(sqllog.name):
-  os.remove(sqllog.name)
+cleanup( (fb_log_before, fb_log_after, f_sqllog ) )
+
   """,
  'expected_stdout': 
   """
