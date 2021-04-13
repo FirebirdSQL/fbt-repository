@@ -28,12 +28,17 @@
         3.0.5.33178 CS: 6.720s.
         2.5.9.27119 SS: 6.506s.
         2.5.9.27146 SC: 5.388s.
+
+   13.04.2021. Adapted for run both on Windows and Linux. Checked on:
+      Windows: 3.0.8.33445, 4.0.0.2416
+      Linux:   3.0.8.33426, 4.0.0.2416
+
  """,
 'min_versions': '2.5.2',
 'versions': [
 {
  'firebird_version': '2.5',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'Python',
  'init_script':
   """
@@ -60,15 +65,39 @@ os.environ["ISC_PASSWORD"] = user_password
 # Obtain engine version:
 engine = str(db_conn.engine_version) # convert to text because 'float' object has no attribute 'startswith'
 
-# NB, 06.12.2016: as of  fdb 1.6.1 one need to EXPLICITLY specify user+password pair when doing connect 
-# via to FB services API by services.connect() - see FB tracker, PYFB-69
-# ("Can not connect to FB services if set ISC_USER & ISC_PASSWORD by os.environ[ ... ]")
+#--------------------------------------------
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-# fb_home = services.connect(host='localhost').get_home_directory()
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
 
-if engine.startswith('2.5'):
-  fb_home = fb_home + 'bin'+os.sep
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          print('type(f_names_list[i])=',type(f_names_list[i]))
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 sqltxt='''
     set term ^;
@@ -103,12 +132,12 @@ sqltxt='''
 
 f_hanged_sql=open( os.path.join(context['temp_directory'],'tmp_4298_hang.sql'), 'w')
 f_hanged_sql.write(sqltxt)
-f_hanged_sql.close()
+flush_and_close( f_hanged_sql )
 
 f_hanged_log=open( os.path.join(context['temp_directory'],'tmp_4298_hang.log'), 'w')
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_hang = Popen(["isql", dsn, "-i" , f_hanged_sql.name], stdout=f_hanged_log, stderr=subprocess.STDOUT)
+p_hang = Popen([context['isql_path'], dsn, "-i" , f_hanged_sql.name], stdout=f_hanged_log, stderr=subprocess.STDOUT)
 
 time.sleep(1)
 
@@ -119,7 +148,7 @@ this_fdb='$(DATABASE_LOCATION)bugs.core_4298.fdb'
 f_stat_log=open( os.path.join(context['temp_directory'],'tmp_4298_dbstat.log'), 'w')
 f_stat_err=open( os.path.join(context['temp_directory'],'tmp_4298_dbstat.err'), 'w')
 
-subprocess.call( [ fb_home+"fbsvcmgr","localhost:service_mgr",
+subprocess.call( [ context['fbsvcmgr_path'],"localhost:service_mgr",
                    "action_db_stats", "dbname", this_fdb, 
                    "sts_record_versions"
                  ],
@@ -127,8 +156,8 @@ subprocess.call( [ fb_home+"fbsvcmgr","localhost:service_mgr",
                  stderr=f_stat_err
                )
 
-f_stat_log.close()
-f_stat_err.close()
+flush_and_close( f_stat_log )
+flush_and_close( f_stat_err )
 
 # do NOT remove this pause: Classic 3.0 keeps database opened even after we kill hanged ISQL by p_hang.terminate().
 # So we have to wait enough for 1st ISQL process that currently will hangs about 4 seconds to be CORRECTLY closed 
@@ -139,24 +168,21 @@ time.sleep(3)
 # These kill and close commands are also needed here, despite that corresponding ISQL has been already closed itself.
 # It is so at least for Cs 3.0:
 p_hang.terminate()
-f_hanged_log.close()
+flush_and_close( f_hanged_log )
 
 # ERRORS log of obtaining DB statistics should be EMPTY:
-if os.path.getsize(f_stat_err.name) > 0:
-  with open( f_stat_err.name,'r') as f:
-    print("action_db_stats STDERR: "+f.read())
-  f.close()
+with open( f_stat_err.name,'r') as f:
+    for line in f:
+        if line.split():
+            print("UNEXPECTED STDERR for 'action_db_stats': " + line)
 
 # STDOUT of obtaining DB statistics should NOT be EMPTY:
 with open(f_stat_log.name,'r') as f:
-  for line in f:
-    if 'versions:' in line.lower():
-      print(line)
-f.close()
+    for line in f:
+        if 'versions:' in line.lower():
+            print(line)
 
 #####################################################################
-# Cleanup:
-
 # 28.10.2019: add full shutdown to forcedly drop all attachments.
 ##                                    ||||||||||||||||||||||||||||
 ## ###################################|||  FB 4.0+, SS and SC  |||##############################
@@ -173,20 +199,20 @@ f.close()
 
 f_shutdown_log=open( os.path.join(context['temp_directory'],'tmp_4298_shutdown.log'), 'w')
 
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_shutdown_mode", "prp_sm_full", "prp_shutdown_db", "0", "dbname", this_fdb,
                  ],
                  stdout = f_shutdown_log,
                  stderr = subprocess.STDOUT
                )
-subprocess.call( ["fbsvcmgr", "localhost:service_mgr",
+subprocess.call( [context['fbsvcmgr_path'], "localhost:service_mgr",
                   "action_properties", "prp_db_online", "dbname", this_fdb,
                  ],
                  stdout = f_shutdown_log,
                  stderr = subprocess.STDOUT
                )
 
-f_shutdown_log.close()
+flush_and_close( f_shutdown_log )
 
 with open( f_shutdown_log.name,'r') as f:
     for line in f:
@@ -194,15 +220,13 @@ with open( f_shutdown_log.name,'r') as f:
             print( 'UNEXPECTED OUTPUT IN DB SHUTDOWN LOG: ' + (' '.join(line.split()).upper()) )
 
 
+# Cleanup:
+##########
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
 
-f_list=[f_hanged_sql, f_hanged_log, f_stat_log, f_stat_err, f_shutdown_log]
-
-for i in range(len(f_list)):
-   if os.path.isfile(f_list[i].name):
-       os.remove(f_list[i].name)
+cleanup( (f_hanged_sql, f_hanged_log, f_stat_log, f_stat_err, f_shutdown_log) )
 
   """,
  'expected_stdout': 
