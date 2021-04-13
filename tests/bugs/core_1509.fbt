@@ -1,31 +1,39 @@
 {
 'id': 'bugs.core_1509',
-'qmid': 'bugs.core_1509',
+'qmid': '',
 'tracker_id': 'CORE-1509',
 'title': 'Conversion from double to varchar insert trailing spaces',
-'description': '',
+'description':
+ """
+   Confirmed bug on WI-V2.0.0.12724: output of cast(cast(0e0 as double precision) as varchar(32))||'z'
+   is: |0.0000000000000000    z| (four spaces inside)
+ """,
 'versions': [
 {
- 'firebird_version': '2.1.0',
- 'platform': 'Linux:MacOS:Solaris:FreeBSD:HP-UX',
+ 'firebird_version': '2.5.0',
+ 'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': "SELECT CAST(COS(0) AS VARCHAR(32))||'z' T1, CAST(SIN(0) AS VARCHAR(32))||'z' T2, CAST(CAST(1 AS DOUBLE PRECISION) AS VARCHAR(32))||'z' T3 FROM RDB$DATABASE;",
- 'expected_stdout': """
-T1                                T2                                T3
-================================= ================================= =================================
-1.000000000000000z                0.000000000000000z                1.000000000000000z
-
-"""
-},
-{
- 'firebird_version': '2.1.0',
- 'platform': 'Windows',
- 'test_type': 'ISQL',
- 'test_script': "SELECT CAST(COS(0) AS VARCHAR(32))||'z' T1, CAST(SIN(0) AS VARCHAR(32))||'z' T2, CAST(CAST(1 AS DOUBLE PRECISION) AS VARCHAR(32))||'z' T3 FROM RDB$DATABASE;",
- 'expected_stdout': """T1                                T2                                T3
-================================= ================================= =================================
-1.000000000000000z                0.0000000000000000z               1.000000000000000z
-"""
+ 'test_script':
+  """
+     set list on;
+     select
+          iif( position(' z' in t1)>0, 'BAD: >' || t1 || '<', 'OK.') as chk1
+         ,iif( position(' z' in t2)>0, 'BAD: >' || t2 || '<', 'OK.') as chk2
+         ,iif( position(' z' in t3)>0, 'BAD: >' || t3 || '<', 'OK.') as chk3
+     from (
+         select
+              cast(exp(-744.0346068132731393)-exp(-745.1332191019410399) as varchar(32))||'z' t1
+             ,cast(sin(0) as varchar(32))||'z' t2
+             ,cast(cast(0e0 as double precision) as varchar(32))||'z' t3
+         from rdb$database
+     );
+  """,
+ 'expected_stdout':
+  """
+    CHK1                            OK.
+    CHK2                            OK.
+    CHK3                            OK.
+  """
 }
 ]
 }
