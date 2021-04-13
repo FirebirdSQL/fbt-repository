@@ -5,66 +5,18 @@
 'title': 'Buffer overflow in conversion',
 'description':
  """
-   One 'zero' character disappeared in 4.0 output.
-   It was confirmed by Alex that this is expected, letter 31.10.2019 09:08.
+  Confirmed bug on WI-V2.0.0.12724:
+      * "buffer overrun" when use dialect 1;
+      * "string right truncation" when use dialect 3.
+   Checked on:
+       Windows: 3.0.8.33445, 4.0.0.2416
+       Linux:   3.0.8.33426, 4.0.0.2416
  """,
-'min_versions': '3.0',
+'min_versions': '2.5.0',
 'versions': [
 {
- 'firebird_version': '3.0',
- 'platform': 'Windows',
- 'sql_dialect': 1,
- 'page_size': '4096',
- 'init_script': 
-  """
-  """,
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    recreate table testtable(f1 numeric(15, 2));
-    commit;
-    
-    insert into testtable(f1) values(1e19);
-    commit;
-    
-    set list on;
-    select cast(f1 as varchar(30)) f1_as_varchar30 from testtable;
-    commit;
-  """,
- 'expected_stdout': 
-  """
-    F1_AS_VARCHAR30                 1.000000000000000e+019
-  """
-},
-{
- 'firebird_version': '3.0',
- 'platform': 'Linux:Solaris:FreeBSD:HP-UX',
- 'sql_dialect': 1,
- 'page_size': '4096',
- 'init_script': 
-  """
-  """,
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    recreate table testtable(f1 numeric(15, 2));
-    commit;
-    
-    insert into testtable(f1) values(1e19);
-    commit;
-    
-    set list on;
-    select cast(f1 as varchar(30)) f1_as_varchar30 from testtable;
-    commit;
-  """,
- 'expected_stdout': 
-  """
-    F1_AS_VARCHAR30                 1.000000000000000e+19
-  """
-},
-{
- 'firebird_version': '4.0',
- 'platform': 'Windows',
+ 'firebird_version': '2.5',
+ 'platform': 'All',
  'sql_dialect': 1,
  'init_script': 
   """
@@ -79,12 +31,12 @@
     commit;
     
     set list on;
-    select cast(f1 as varchar(30)) f1_as_varchar30 from testtable;
+    select replace(cast(f1 as varchar(30)),'0','') f1_as_varchar30 from testtable;
     commit;
   """,
  'expected_stdout': 
   """
-    F1_AS_VARCHAR30                 1.000000000000000e+19
+    F1_AS_VARCHAR30                 1.e+19
   """
 }
 ]
