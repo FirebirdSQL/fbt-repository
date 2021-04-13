@@ -5,12 +5,15 @@
 'title': 'Database replace through services API fails',
 'description':
  """
+    13.04.2021. Adapted for run both on Windows and Linux. Checked on:
+       Windows: 3.0.8.33445, 4.0.0.2416
+       Linux:   3.0.8.33426, 4.0.0.2416
  """,
 'min_versions': '2.5.3',
 'versions': [
 {
  'firebird_version': '2.5',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'Python',
  'init_script':
   """
@@ -21,57 +24,84 @@ import os
 import time
 import subprocess
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
 db_conn.close()
+
+#--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
+def cleanup( f_names_list ):
+    global os
+    for i in range(len( f_names_list )):
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          print('type(f_names_list[i])=',type(f_names_list[i]))
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 tmpsrc='$(DATABASE_LOCATION)bugs.core_4224.fdb'
 tmpbkp='$(DATABASE_LOCATION)tmp_core_4224.fbk'
 
-log_backup=open( os.path.join(context['temp_directory'],'tmp_4224_backup.log'), 'w')
-log_backup.close()
-err_backup=open( os.path.join(context['temp_directory'],'tmp_4224_backup.err'), 'w')
-err_backup.close()
+fn_bkp_log=open( os.path.join(context['temp_directory'],'tmp_4224_backup.log'), 'w')
+fn_bkp_err=open( os.path.join(context['temp_directory'],'tmp_4224_backup.err'), 'w')
 
-fn_bkp_log=open(log_backup.name, "w")
-fn_bkp_err=open(err_backup.name, "w")
-
-subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
-                 "action_backup", "dbname", tmpsrc, "bkp_file", tmpbkp ],\
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
+                 "action_backup", "dbname", tmpsrc, "bkp_file", tmpbkp ],
                 stdout=fn_bkp_log, stderr=fn_bkp_err)
-fn_bkp_log.close()
-fn_bkp_err.close()
+flush_and_close( fn_bkp_log )
+flush_and_close( fn_bkp_err )
 
 src_timestamp1 = -1
 if os.path.isfile(tmpsrc):
   src_timestamp1 = os.path.getmtime(tmpsrc)
 
-log_restore=open( os.path.join(context['temp_directory'],'tmp_4224_restore.log'), 'w')
-err_restore=open( os.path.join(context['temp_directory'],'tmp_4224_restore.err'), 'w')
-log_restore.close()
-err_restore.close()
-
-fn_res_log=open(log_restore.name, "w")
-fn_res_err=open(err_restore.name, "w")
-subprocess.call(["fbsvcmgr","localhost:service_mgr","user","SYSDBA","password","masterkey",\
-                 "action_restore", "res_replace", "verbose", "bkp_file", tmpbkp, "dbname", tmpsrc ],\
+fn_res_log=open( os.path.join(context['temp_directory'],'tmp_4224_restore.log'), 'w')
+fn_res_err=open( os.path.join(context['temp_directory'],'tmp_4224_restore.err'), 'w')
+subprocess.call([context['fbsvcmgr_path'],"localhost:service_mgr",
+                 "action_restore", "res_replace", "verbose", "bkp_file", tmpbkp, "dbname", tmpsrc ],
                 stdout=fn_res_log, stderr=fn_res_err)
-fn_res_log.close()                   
-fn_res_err.close()                   
+flush_and_close( fn_res_log )
+flush_and_close( fn_res_err )
 
 src_timestamp2 = -2
 if os.path.isfile(tmpsrc):
   src_timestamp2 = os.path.getmtime(tmpsrc)
 
 # Log ERRORS on BACKUP should be EMPTY:
-if os.path.getsize(err_backup.name) > 0:
-  with open( err_backup.name,'r') as f:
-    print("BACKUP STDERR: "+f.read())
-  f.close()
+with open( fn_bkp_err.name,'r') as f:
+    for line in f:
+        if line.split():
+           print("UNEXPECTED BACKUP STDERR: " + line)
+
 
 # Log ERRORS on RESTORE should also be EMPTY:
-if os.path.getsize(err_restore.name) > 0:
-  with open( err_restore.name,'r') as f:
-    print("RESTORE STDERR: "+f.read())
-  f.close()
+with open( fn_res_err.name,'r') as f:
+    for line in f:
+        if line.split():
+            print("UNEXPECTED RESTORE STDERR: " + line)
 
 # If restore will fail due to source database in use, its error logs will be like this:
 # RESTORE STDERR: could not drop database <...> (database might be in use)
@@ -82,9 +112,9 @@ if os.path.getsize(err_restore.name) > 0:
 src_timestamps_diff = src_timestamp2 - src_timestamp1
 
 if src_timestamps_diff > 0:
-  print("OK: 'fbsvcmgr action_restore res_replace' DID change database file.")
+    print("OK: 'fbsvcmgr action_restore res_replace' DID change database file.")
 else:
-  print("Problems on backup or restore. Timestamps difference is "+str(src_timestamps_diff))
+    print("Problems on backup or restore. Timestamps difference is "+str(src_timestamps_diff))
 
 #####################################################################
 # Cleanup:
@@ -92,17 +122,8 @@ else:
 # do NOT remove this pause otherwise some of logs will not be enable for deletion and test will finish with 
 # Exception raised while executing Python test script. exception: WindowsError: 32
 time.sleep(1)
+cleanup( (fn_bkp_log, fn_bkp_err, fn_res_log, fn_res_err, tmpbkp) )
 
-if os.path.isfile(log_backup.name):
-  os.remove(log_backup.name)
-if os.path.isfile(err_backup.name):
-  os.remove(err_backup.name)
-if os.path.isfile(log_restore.name):
-  os.remove(log_restore.name)
-if os.path.isfile(err_restore.name):
-  os.remove(err_restore.name)
-if os.path.isfile(tmpbkp):
-  os.remove(tmpbkp)
   """,
  'expected_stdout': 
   """
