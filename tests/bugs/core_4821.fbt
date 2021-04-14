@@ -31,31 +31,58 @@
         3.0.5.33084 SC: 4.031s.
         3.0.5.33212 CS: 7.672s.
 
+   13.04.2021. Adapted for run both on Windows and Linux. Checked on:
+      Windows: 3.0.8.33445, 4.0.0.2416
+      Linux:   3.0.8.33426, 4.0.0.2416
  """,
 'min_versions': '3.0.5',
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'Python',
  'test_script': """
 import os
-from fdb import services
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
+this_db = db_conn.database_name
+db_conn.close()
+
 #--------------------------------------------
+
+def flush_and_close( file_handle ):
+    # https://docs.python.org/2/library/os.html#os.fsync
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
+    # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
+    global os
+
+    file_handle.flush()
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
+        # otherwise: "OSError: [Errno 9] Bad file descriptor"!
+        os.fsync(file_handle.fileno())
+    file_handle.close()
+
+#--------------------------------------------
+
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-#--------------------------------------------
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          print('type(f_names_list[i])=',type(f_names_list[i]))
+          del_name = None
 
-fb_home = services.connect(host='localhost', user= user_name, password= user_password).get_home_directory()
-this_db = db_conn.database_name
-db_conn.close()
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
+
+#--------------------------------------------
 
 fdb_test1 = os.path.join(context['temp_directory'],'tmp_4821_test1.fdb')
 fdb_test2 = os.path.join(context['temp_directory'],'tmp_4821_test2.fdb')
@@ -146,46 +173,38 @@ sql_fini=\
 runProgram('isql', [ 'localhost:security.db' ], sql_fini)
 
 cleanup( f_list )
-
+  
 """,
+ 'expected_stdout': 
+  """
+    CREATED_DB_NAME                 /opt/scripts/qa-rundaily/dbg-repo/tmp/tmp_4821_test2.fdb
+    FDB_RESTORED_USING_GBAK         /opt/scripts/qa-rundaily/dbg-repo/tmp/tmp_4821_restored.gbak.fdb
+    FDB_RESTORED_USING_SMGR         /opt/scripts/qa-rundaily/dbg-repo/tmp/tmp_4821_restored.smgr.fdb
+  """,
  'expected_stderr': 
   """
     Statement failed, SQLSTATE = 28000
-    no permission for CREATE access to DATABASE TMP_4821_TEST1.FDB
-
-    gbak: ERROR:no permission for CREATE access to DATABASE TMP_4821_RESTORED.GBAK.FDB
-    gbak: ERROR:failed to create database localhost:tmp_4821_restored.gbak.fdb
+    no permission for CREATE access to DATABASE
+    gbak: ERROR:no permission for CREATE access to DATABASE
+    gbak: ERROR:failed to create database
     gbak:Exiting before completion due to errors
-
-    no permission for CREATE access to DATABASE TMP_4821_RESTORED.SMGR.FDB
-    -failed to create database tmp_4821_restored.smgr.fdb
+    no permission for CREATE access to DATABASE
+    -failed to create database
     -Exiting before completion due to errors
-
-    gbak: ERROR:no permission for CREATE access to DATABASE TMP_4821_RESTORED.WO_GRANT.FDB
-    gbak: ERROR:failed to create database tmp_4821_restored.wo_grant.fdb
+    gbak: ERROR:no permission for CREATE access to DATABASE
+    gbak: ERROR:failed to create database
     gbak:Exiting before completion due to errors
-
-    no permission for CREATE access to DATABASE TMP_4821_RESTORED.WO_GRANT.FDB
-    -failed to create database tmp_4821_restored.wo_grant.fdb
-    -Exiting before completion due to errors
-  """,
- 'expected_stdout': 
-  """
-    CREATED_DB_NAME TMP_4821_TEST2.FDB
-    FDB_RESTORED_USING_GBAK TMP_4821_RESTORED.GBAK.FDB
-    FDB_RESTORED_USING_SMGR TMP_4821_RESTORED.SMGR.FDB
+    no permission for CREATE access to DATABASE
+    -failed to create database
+    -Exiting before completion due to errors  
   """,
   'substitutions': [
-       ('DATABASE.*TMP_4821_TEST1.FDB', 'DATABASE TMP_4821_TEST1.FDB')
-      ,('CREATED_DB_NAME.*TMP_4821_TEST2.FDB', 'CREATED_DB_NAME TMP_4821_TEST2.FDB')
-      ,('DATABASE.*TMP_4821_RESTORED.GBAK.FDB', 'DATABASE TMP_4821_RESTORED.GBAK.FDB')
-      ,('localhost:.*tmp_4821_restored.gbak.fdb', 'localhost:tmp_4821_restored.gbak.fdb')
-      ,('FDB_RESTORED_USING_GBAK.*TMP_4821_RESTORED.GBAK.FDB', 'FDB_RESTORED_USING_GBAK TMP_4821_RESTORED.GBAK.FDB')
-      ,('DATABASE.*TMP_4821_RESTORED.SMGR.FDB', 'DATABASE TMP_4821_RESTORED.SMGR.FDB')
-      ,('database.*tmp_4821_restored.smgr.fdb', 'database tmp_4821_restored.smgr.fdb')
-      ,('FDB_RESTORED_USING_SMGR.*TMP_4821_RESTORED.SMGR.FDB', 'FDB_RESTORED_USING_SMGR TMP_4821_RESTORED.SMGR.FDB')
-      ,('DATABASE.*TMP_4821_RESTORED.WO_GRANT.FDB', 'DATABASE TMP_4821_RESTORED.WO_GRANT.FDB')
-      ,('database.*tmp_4821_restored.wo_grant.fdb', 'database tmp_4821_restored.wo_grant.fdb')
+      ('no permission for CREATE access to DATABASE .*', 'no permission for CREATE access to DATABASE')
+     ,('gbak: ERROR:failed to create database .*', 'gbak: ERROR:failed to create database')
+     ,('-failed to create database .*', '-failed to create database')
+     ,('CREATED_DB_NAME .*', 'CREATED_DB_NAME')
+     ,('FDB_RESTORED_USING_GBAK .*', 'FDB_RESTORED_USING_GBAK')
+     ,('FDB_RESTORED_USING_SMGR .*', 'FDB_RESTORED_USING_SMGR')
   ]
 }
 ]
