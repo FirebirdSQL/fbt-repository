@@ -23,13 +23,16 @@
 
     Checked on WI-V3.0.0.32008, machine: P-IV 3.0 Ghz RAM 2Gb, OS = Win XP.
     Duration of test on that machine is about 45-55 seconds.
+
+    13.04.2021. Adapted for run both on Windows and Linux. Checked on:
+      Windows: 3.0.8.33445, 4.0.0.2416
+      Linux:   3.0.8.33426, 4.0.0.2416
   """,
 'min_versions': '3.0',
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
- 'page_size': '4096',
+ 'platform': 'All',
  'init_script':
   """
     recreate table log(
@@ -47,14 +50,17 @@
 import os
 import zipfile
 
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
 db_conn.close()
-runProgram('gfix',['-w','async','-user',user_name,'-pas',user_password,dsn])
+runProgram('gfix',['-w','async',dsn])
 
 zf = zipfile.ZipFile( os.path.join(context['files_location'],'core_4880.zip') )
 zf.extractall( context['temp_directory'] )
 zf.close()
-runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password,'-i', os.path.join(context['temp_directory'],'core_4880_fnc.tmp ') ])
-runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password,'-i', os.path.join(context['temp_directory'],'core_4880_pkg.tmp ') ])
+runProgram('isql',[dsn,'-q','-i', os.path.join(context['temp_directory'],'core_4880_fnc.tmp') ])
+runProgram('isql',[dsn,'-q','-i', os.path.join(context['temp_directory'],'core_4880_pkg.tmp') ])
 
 os.remove( os.path.join(context['temp_directory'],'core_4880_fnc.tmp') )
 os.remove( os.path.join(context['temp_directory'],'core_4880_pkg.tmp') )
@@ -63,7 +69,11 @@ script="""set list on;
 set term ^;
 execute block as 
 begin 
-  rdb$set_context('USER_SESSION', 'MAX_ACCEPTABLE_RATIO', '2'); -- ###  S E T T I N G    'C O N S T A N T'  ###
+  rdb$set_context('USER_SESSION', 'MAX_ACCEPTABLE_RATIO', '2');
+  --                                                       ^
+  --                                               #################
+  --                                               T H R E S H O L D
+  --                                               #################
 end
 ^
 set term ;^
@@ -88,7 +98,7 @@ select iif( x.ratio < cast( rdb$get_context('USER_SESSION', 'MAX_ACCEPTABLE_RATI
   )
 ) x;
 """
-runProgram('isql',[dsn,'-q','-user',user_name,'-password',user_password],script)
+runProgram('isql',[dsn,'-q'],script)
 ''',
  'expected_stdout': 
   """
