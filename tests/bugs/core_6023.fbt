@@ -37,7 +37,7 @@
 'versions': [
 {
  'firebird_version': '4.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'test_type': 'Python',
  'test_script': """
 import os
