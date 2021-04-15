@@ -205,7 +205,7 @@ with open( f_diff_txt.name,'r') as f:
 #####################################################################
 # Cleanup:
 time.sleep(1)
-cleanup((f_extract_meta1_sql,f_extract_meta2_sql,f_apply_meta_log,f_remove_meta_log,f_remove_meta_sql,f_diff_txt))
+cleanup((f_extract_meta1_sql,f_extract_meta2_sql,f_apply_meta_log,f_remove_meta_log,f_remove_meta_sql,f_diff_txt,f_ddl_sql,f_ddl_log))
 
   """,
  'expected_stdout': 
