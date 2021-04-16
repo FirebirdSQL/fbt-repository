@@ -147,7 +147,7 @@ for iter in (1,2):
             fbconf_content[i] = '# [temply commented by fbtest for core_6348.fbt] ' + s
 
 
-    WIRE_COMPRESSION_VALUE = 'True' if iter == 1 else 'False'
+    WIRE_COMPRESSION_VALUE = 'true' if iter == 1 else 'false'
 
     text2app=\
     '''
@@ -209,15 +209,15 @@ for iter in (1,2):
 shutil.move( fbconf_bak, fbconf_cur )
 
 #print(blob_load_elapsed_time)
-#print( 1.00 * blob_load_elapsed_time['True'] / blob_load_elapsed_time['False'] )
+#print( 1.00 * blob_load_elapsed_time['true'] / blob_load_elapsed_time['false'] )
 
-# 4.0.0.1994 SC:  {'False': 2036, 'True': 126711}, ratio: 62.24
-# 4.0.0.2422 SS:  {'False': 831, 'True': 3722},    ratio:  4.48 // LINUX: 3.42; 3.11; 3.49; 3.44; 3.45
-# 4.0.0.2422 CS:  {'False': 2088, 'True': 6903},   ratio:  3.31 // LINUX: 1.46; 1.46; 1.48; 1.46; 1.51
-# 3.0.8.33445 SS: {'False': 1135, 'True': 3862},   ratio:  3.40 // LINUX: 1.52; 1.63; 1.52; 1.48; 1.51
-# 3.0.8.33445 CS: {'False': 2160, 'True': 7675},   ratio:  3.55 // LINUX: 1.56; 1.61; 1.56; 1.55; 1.54
+# 4.0.0.1994 SC:  {'false': 2036, 'true': 126711}, ratio: 62.24
+# 4.0.0.2422 SS:  {'false': 831, 'true': 3722},    ratio:  4.48 // LINUX: 3.42; 3.11; 3.49; 3.44; 3.45
+# 4.0.0.2422 CS:  {'false': 2088, 'true': 6903},   ratio:  3.31 // LINUX: 1.46; 1.46; 1.48; 1.46; 1.51
+# 3.0.8.33445 SS: {'false': 1135, 'true': 3862},   ratio:  3.40 // LINUX: 1.52; 1.63; 1.52; 1.48; 1.51
+# 3.0.8.33445 CS: {'false': 2160, 'true': 7675},   ratio:  3.55 // LINUX: 1.56; 1.61; 1.56; 1.55; 1.54
 
-ratio = 1.00 * blob_load_elapsed_time['True'] / blob_load_elapsed_time['False']
+ratio = 1.00 * blob_load_elapsed_time['true'] / blob_load_elapsed_time['false']
 
 MAX_RATIO_THRESHOLD = 7
 #                     ^
@@ -230,7 +230,7 @@ msg = 'Ratio is acceptable.' \
      if ratio < MAX_RATIO_THRESHOLD \
      else ( 
             'Performance degradation when WireCompression = true is too high. ' +
-            'Without compression: %15.2f, with compression: %15.2f, ratio is %15.2f' % ( blob_load_elapsed_time['False'], blob_load_elapsed_time['true'], ratio) 
+            'Without compression: %15.2f, with compression: %15.2f, ratio is %15.2f' % ( blob_load_elapsed_time['false'], blob_load_elapsed_time['true'], ratio) 
           )
 
 print(msg)
