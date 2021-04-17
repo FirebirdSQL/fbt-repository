@@ -219,18 +219,22 @@ shutil.move( fbconf_bak, fbconf_cur )
 
 ratio = 1.00 * blob_load_elapsed_time['true'] / blob_load_elapsed_time['false']
 
-MAX_RATIO_THRESHOLD = 7
-#                     ^
-#                     |
-#            ##################
-#            ### THRESHOLD ####
-#            ##################
+if os.name == 'nt':
+    MAX_RATIO_THRESHOLD = 7
+else:
+    MAX_RATIO_THRESHOLD = 20
+#                         ^
+#                         |
+#                         |
+#                ##################
+#                ### THRESHOLD ####
+#                ##################
 
 msg = 'Ratio is acceptable.' \
      if ratio < MAX_RATIO_THRESHOLD \
      else ( 
             'Performance degradation when WireCompression = true is too high. ' +
-            'Without compression: %15.2f, with compression: %15.2f, ratio is %15.2f' % ( blob_load_elapsed_time['false'], blob_load_elapsed_time['true'], ratio) 
+            'Without compression: %15.2f, with compression: %15.2f, ratio is %15.2f - more than max. threshold = %3d' % ( blob_load_elapsed_time['false'], blob_load_elapsed_time['true'], ratio, MAX_RATIO_THRESHOLD) 
           )
 
 print(msg)
