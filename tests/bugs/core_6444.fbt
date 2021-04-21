@@ -50,7 +50,8 @@
     Because of such valuable differences, it was decided to make code for Windows and Linux separate.
 
     Initially checked on 4.0.0.2365 (Windows only).
-    Checked on 4.0.0.2422 (both Windows and Linux).
+    Checked on 4.0.0.2422 - after adapted for work both Windows and Linux.
+    Checked on 4.0.0.2436 - parameter 'TempTableDirectory' appeared.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -92,10 +93,17 @@ def flush_and_close(file_handle):
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          print('type(f_names_list[i])=',type(f_names_list[i]))
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
@@ -137,7 +145,9 @@ shutil.copy2( dbconf_cur, dbconf_bak )
 
 shutil.copy2( sec_db, fdb_test )
 
-TMPDIR = os.path.join( FB_HOME, 'examples' ) # tempfile.gettempdir()
+TEMP_DIRECTORIES_VALUE = os.path.normpath( os.path.join(FB_HOME, 'examples') )
+TTABLE_DIRECTORY_VALUE = os.path.normpath( context['temp_directory'] )
+
 TMP_FREE_PORT = find_free_port()
 
 cfg_params_to_change= {
@@ -172,7 +182,8 @@ cfg_params_to_change= {
    ,'TcpNoNagle' : 'false'
    ,'TcpRemoteBufferSize' : '5555'
    ,'TempBlockSize' : '5m'
-   ,'TempDirectories' : os.path.normpath( TMPDIR )
+   ,'TempDirectories' : TEMP_DIRECTORIES_VALUE
+   ,'TempTableDirectory' : os.path.normpath( tempfile.gettempdir() ) # since 4.0.0.2436, 21.04.2021
    ,'UDFaccess' : 'Restrict UDF'
    ,'UseFileSystemCache' : 'false'
    ,'WireCompression' : 'true'
@@ -221,6 +232,18 @@ alias_data=\
 
         TempBlockSize = 3m
         TempCacheLimit = 8589934591G
+
+        ###############################
+        # Appeared since 4.0.0.2436, 21.04.2021; per-database:
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Directory to put data of temporary tables and blobs
+        # When empty, not exists or not accessible, default directory will be used
+        # as determined by FIREBIRD_TMP, TEMP or TMP environment variables.
+        # Per-database configurable.
+        # Type: string
+        #TempTableDirectory =
+        ###############################
+        TempTableDirectory = %(TTABLE_DIRECTORY_VALUE)s
         
         TipCacheBlockSize = 3m
 
@@ -246,10 +269,14 @@ sql_text=\
     create or alter view v_config as
     select
          g.rdb$config_name param_name
-        ,iif(trim(g.rdb$config_value)='', '[empty]'
-             ,iif(  g.rdb$config_name = 'TempDirectories' and upper(g.rdb$config_value) = upper('%(TMPDIR)s') or g.rdb$config_name = 'RemoteServicePort' and g.rdb$config_value = %(TMP_FREE_PORT)s
-                   ,'[MATCHES]'
-                   ,g.rdb$config_value)
+        ,iif(  trim(g.rdb$config_value)=''
+              ,'[empty]'
+               ,iif(  upper(g.rdb$config_name) = upper('TempDirectories') and upper(g.rdb$config_value) = upper('%(TEMP_DIRECTORIES_VALUE)s')
+                      or upper(g.rdb$config_name) = upper('TempTableDirectory') and upper(g.rdb$config_value) = upper('%(TTABLE_DIRECTORY_VALUE)s')
+                      or upper(g.rdb$config_name) = upper('RemoteServicePort') and g.rdb$config_value = %(TMP_FREE_PORT)s
+                     ,'[MATCHES]'
+                     ,g.rdb$config_value
+                   )
             ) param_value
         ,iif(trim(g.rdb$config_default)='', '[empty]', replace(g.rdb$config_default,'%(FB_HOME)s','') ) param_default
         ,g.rdb$config_is_set param_is_set
@@ -403,6 +430,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     TempBlockSize                                      5242880                                                          1048576                                                          <true>       firebird.conf                                                   
     TempCacheLimit                                     9223372035781033984                                              67108864                                                         <true>       databases.conf                                                   
     TempDirectories                                    [MATCHES]                                                        <null>                                                           <true>       firebird.conf                                                    
+    TempTableDirectory                                 [MATCHES]                                                        [empty]                                                          <true>       databases.conf                                                   
     TipCacheBlockSize                                  3145728                                                          4194304                                                          <true>       databases.conf                                                   
     TraceDSQL                                          0                                                                0                                                                <false>      <null>                                                           
     TracePlugin                                        fbtrace                                                          fbtrace                                                          <false>      <null>                                                           
@@ -413,7 +441,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
     WireCryptPlugin                                    Arc4                                                             ChaCha, Arc4                                                     <true>       firebird.conf                                                    
 
-    Records affected: 70
+    Records affected: 71
     Records affected: 0
   """,
  'expected_stderr': 
@@ -440,19 +468,18 @@ import time
 import datetime
 import tempfile
 import subprocess
-from fdb import services
 
 #--------------------------------------------
 
-def flush_and_close(file_handle):
+def flush_and_close( file_handle ):
     # https://docs.python.org/2/library/os.html#os.fsync
-    # If you're starting with a Python file object f, 
-    # first do f.flush(), and 
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
     # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
     global os
-    
+
     file_handle.flush()
-    if file_handle.mode not in ('r', 'rb'):
+    if file_handle.mode not in ('r', 'rb') and file_handle.name != os.devnull:
         # otherwise: "OSError: [Errno 9] Bad file descriptor"!
         os.fsync(file_handle.fileno())
     file_handle.close()
@@ -462,10 +489,17 @@ def flush_and_close(file_handle):
 def cleanup( f_names_list ):
     global os
     for i in range(len( f_names_list )):
-       if os.path.isfile( f_names_list[i]):
-            os.remove( f_names_list[i] )
-            if os.path.isfile( f_names_list[i]):
-                print('ERROR: can not remove file ' + f_names_list[i])
+       if type(f_names_list[i]) == file:
+          del_name = f_names_list[i].name
+       elif type(f_names_list[i]) == str:
+          del_name = f_names_list[i]
+       else:
+          print('Unrecognized type of element:', f_names_list[i], ' - can not be treated as file.')
+          print('type(f_names_list[i])=',type(f_names_list[i]))
+          del_name = None
+
+       if del_name and os.path.isfile( del_name ):
+           os.remove( del_name )
 
 #--------------------------------------------
 
@@ -484,7 +518,9 @@ def find_free_port():
 
 #--------------------------------------------
 
-FB_HOME = services.connect(host='localhost', user=user_name, password=user_password).get_home_directory()
+svc = fdb.services.connect(host='localhost', user=user_name, password=user_password)
+FB_HOME = svc.get_home_directory()
+svc.close()
 
 fb_vers = str(db_conn.engine_version)[:1] # character for security.db file: engine = 4.0  --> '4'
 sec_db = os.path.join( FB_HOME, 'security' + fb_vers+ '.fdb')
@@ -506,7 +542,9 @@ shutil.copy2( dbconf_cur, dbconf_bak )
 
 shutil.copy2( sec_db, fdb_test )
 
-TMPDIR = os.path.join( FB_HOME, 'examples' ) # tempfile.gettempdir()
+TEMP_DIRECTORIES_VALUE = os.path.normpath( os.path.join(FB_HOME, 'examples') )
+TTABLE_DIRECTORY_VALUE = os.path.normpath( context['temp_directory'] )
+
 TMP_FREE_PORT = find_free_port()
 #TMP_FREE_PORT = 57456
 
@@ -542,7 +580,8 @@ cfg_params_to_change= {
    ,'TcpNoNagle' : 'false'
    ,'TcpRemoteBufferSize' : '5555'
    ,'TempBlockSize' : '5m'
-   ,'TempDirectories' : os.path.normpath( TMPDIR )
+   ,'TempDirectories' : TEMP_DIRECTORIES_VALUE
+   ,'TempTableDirectory' : os.path.normpath( tempfile.gettempdir() ) # since 4.0.0.2436, 21.04.2021
    ,'UDFaccess' : 'Restrict UDF'
    ,'UseFileSystemCache' : 'false'
    ,'WireCompression' : 'true'
@@ -591,6 +630,18 @@ alias_data=\
 
         TempBlockSize = 3m
         TempCacheLimit = 8589934591G
+
+        ###############################
+        # Appeared since 4.0.0.2436, 21.04.2021; per-database:
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~
+        # Directory to put data of temporary tables and blobs
+        # When empty, not exists or not accessible, default directory will be used
+        # as determined by FIREBIRD_TMP, TEMP or TMP environment variables.
+        # Per-database configurable.
+        # Type: string
+        #TempTableDirectory =
+        ###############################
+        TempTableDirectory = %(TTABLE_DIRECTORY_VALUE)s
         
         TipCacheBlockSize = 3m
 
@@ -617,10 +668,14 @@ sql_text=\
     create or alter view v_config as
     select
          g.rdb$config_name param_name
-        ,iif(trim(g.rdb$config_value)='', '[empty]'
-             ,iif(  g.rdb$config_name = 'TempDirectories' and upper(g.rdb$config_value) = upper('%(TMPDIR)s') or g.rdb$config_name = 'RemoteServicePort' and g.rdb$config_value = %(TMP_FREE_PORT)s
-                   ,'[MATCHES]'
-                   ,g.rdb$config_value)
+        ,iif(  trim(g.rdb$config_value)=''
+              ,'[empty]'
+               ,iif(  upper(g.rdb$config_name) = upper('TempDirectories') and upper(g.rdb$config_value) = upper('%(TEMP_DIRECTORIES_VALUE)s')
+                      or upper(g.rdb$config_name) = upper('TempTableDirectory') and upper(g.rdb$config_value) = upper('%(TTABLE_DIRECTORY_VALUE)s')
+                      or upper(g.rdb$config_name) = upper('RemoteServicePort') and g.rdb$config_value = %(TMP_FREE_PORT)s
+                     ,'[MATCHES]'
+                     ,g.rdb$config_value
+                   )
             ) param_value
         ,iif(trim(g.rdb$config_default)='', '[empty]', replace(g.rdb$config_default,'%(FB_HOME)s','') ) param_default
         ,g.rdb$config_is_set param_is_set
@@ -704,13 +759,11 @@ with open(f_sql_log.name, 'r') as f:
         if line.split():
             print(line)
 
-time.sleep(1)
-
-f_list=( f_sql_log, f_sql_err, f_sql_cmd )
 
 # Cleanup
 ##########
-# cleanup( [ i.name for i in f_list ] + [fdb_test] )
+time.sleep(1)
+cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
 
   """,
  'expected_stdout': 
@@ -778,6 +831,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     TempBlockSize                                      5242880                                                          1048576                                                          <true>       firebird.conf                                                   
     TempCacheLimit                                     9223372035781033984                                              67108864                                                         <true>       databases.conf                                                   
     TempDirectories                                    [MATCHES]                                                        <null>                                                           <true>       firebird.conf                                                    
+    TempTableDirectory                                 [MATCHES]                                                        [empty]                                                          <true>       databases.conf                                                   
     TipCacheBlockSize                                  3145728                                                          4194304                                                          <true>       databases.conf                                                   
     TraceDSQL                                          0                                                                0                                                                <false>      <null>                                                           
     TracePlugin                                        fbtrace                                                          fbtrace                                                          <false>      <null>                                                           
@@ -788,7 +842,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
     WireCryptPlugin                                    Arc4                                                             ChaCha, Arc4                                                     <true>       firebird.conf                                                    
 
-    Records affected: 70
+    Records affected: 71
     Records affected: 0
   """,
  'expected_stderr': 
