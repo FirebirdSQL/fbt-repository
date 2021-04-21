@@ -1119,6 +1119,8 @@ runProgram( 'isql', ['-q', '-i', f_run_sql.name] )
      ,('DM_FVALID.*', '')
      ,('DM_FDEFAULT.*', '')
      ,('0.0000000000000000', '0.000000000000000')
+     ,('X_DATE                          20.*', 'X_DATE 20')
+     ,('validation error for column "TEST"."X_DATE", value .*', 'validation error for column "TEST"."X_DATE"')
   ]
 }
 ]
