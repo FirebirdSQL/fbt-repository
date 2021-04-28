@@ -15,8 +15,8 @@
       iRaw = struct.pack(myformat, i)
       iConv = api.isc_vax_integer(iRaw, len(iRaw))
    This function cuts off high 4 bytes when we pass to it bugint values greater than 2^31, i.e.:
-   2147483648L  ==> reversed = b'\x00\x00\x00\x00\x00\x00\x00\x00'
-   -2147483649L ==> reversed = b'\x00\x00\x00\x00\x00\x00\x00\x00'
+   2147483648L  ==> reversed = b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'
+   -2147483649L ==> reversed = b'\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00'
         
    For this reason it was decided currently to limit scope by specifying numbers with abs() less than 2^31 - untill fdb driver will be fixed.
    See letter from dimitr 08-jan-2018 20:56
