@@ -1,5 +1,5 @@
 {
-'id': 'functional.procedure.create_07',
+'id': 'functional.procedure.create.07',
 'qmid': 'functional.procedure.create.create_procedure_07',
 'tracker_id': '',
 'title': 'CREATE PROCEDURE - try create SP with same name',

@@ -1,5 +1,5 @@
 {
-'id': 'functional.index.alter_05',
+'id': 'functional.index.alter.05',
 'qmid': 'functional.index.alter.alter_index_05',
 'tracker_id': '',
 'title': 'ALTER INDEX - INACTIVE FOREIGN KEY',

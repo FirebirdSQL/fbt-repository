@@ -1,5 +1,5 @@
 {
-'id': 'functional.table.create_05',
+'id': 'functional.table.create.05',
 'qmid': 'functional.table.create.create_table_05',
 'tracker_id': '',
 'title': 'CREATE TABLE - create table with same name',

@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_952',
+'id': 'bugs.core_0952',
 'qmid': 'bugs.core_952',
 'tracker_id': 'CORE-952',
 'title': 'AV when blob is used in expression index',

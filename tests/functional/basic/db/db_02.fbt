@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.db.db_02',
+'id': 'functional.basic.db.02',
 'qmid': 'functional.basic.db.db_02',
 'tracker_id': '',
 'title': 'Empty DB - RDB$CHARACTER_SETS',

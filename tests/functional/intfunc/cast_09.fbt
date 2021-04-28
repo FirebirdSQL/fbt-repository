@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.cast_09',
+'id': 'functional.intfunc.cast.09',
 'qmid': 'functional.intfunc.cast.cast_09',
 'tracker_id': '',
 'title': 'CAST CHAR -> DATE',

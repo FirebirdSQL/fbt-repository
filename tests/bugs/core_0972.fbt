@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_972',
+'id': 'bugs.core_0972',
 'qmid': 'bugs.core_972',
 'tracker_id': 'CORE-972',
 'title': 'Case insensitive collation for UTF-8',

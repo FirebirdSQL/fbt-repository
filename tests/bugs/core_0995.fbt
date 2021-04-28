@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_995',
+'id': 'bugs.core_0995',
 'qmid': 'bugs.core_995',
 'tracker_id': 'CORE-995',
 'title': 'select with FIRST and LEFT JOIN needs excess SORT in plan',

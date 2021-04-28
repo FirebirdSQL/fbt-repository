@@ -1,5 +1,5 @@
 {
-'id': 'functional.procedure.alter_02',
+'id': 'functional.procedure.alter.02',
 'qmid': 'functional.procedure.alter.alter_procedure_02',
 'tracker_id': '',
 'title': 'ALTER PROCEDURE - Alter non exists procedure',

@@ -1,5 +1,5 @@
 {
-'id': 'functional.database.alter_02',
+'id': 'functional.database.alter.02',
 'qmid': '',
 'tracker_id': '',
 'title': 'ALter database: adding secondary file with alternate keyword',

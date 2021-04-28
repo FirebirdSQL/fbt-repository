@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_842',
+'id': 'bugs.core_0842',
 'qmid': 'bugs.core_842',
 'tracker_id': 'CORE-842',
 'title': 'Specific query crashing server',

@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_899',
+'id': 'bugs.core_0899',
 'qmid': 'bugs.core_899-250',
 'tracker_id': 'CORE-899',
 'title': 'Problems with explicit cursors in unwanted states',

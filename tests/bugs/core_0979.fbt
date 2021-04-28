@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_979',
+'id': 'bugs.core_0979',
 'qmid': 'bugs.core_979',
 'tracker_id': 'CORE-979',
 'title': 'Make RDB$DB_KEY in outer joins return NULL when appropriate',

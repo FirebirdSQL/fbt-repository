@@ -1,5 +1,5 @@
 {
-'id': 'functional.view.create_04',
+'id': 'functional.view.create.04',
 'qmid': 'functional.view.create.create_view_04',
 'tracker_id': '',
 'title': 'CREATE VIEW - bad number of columns',

@@ -1,5 +1,5 @@
 {
-'id': 'functional.database.create_10',
+'id': 'functional.database.create.10',
 'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE - Multi file DB - starting',

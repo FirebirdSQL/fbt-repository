@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.indexes.upper_bound_desc_01_segments_02',
+'id': 'functional.arno.indices.upper_bound_desc_01_segments_02',
 'qmid': 'functional.arno.indexes.upper_bound_desc_01_segments_02',
 'tracker_id': '',
 'title': 'DESC single index upper bound',

@@ -1,5 +1,5 @@
 {
-'id': 'functional.database.alter_03',
+'id': 'functional.database.alter.03',
 'qmid': '',
 'tracker_id': '',
 'title': 'Alter database: add file with name of this database or previously added files must fail',

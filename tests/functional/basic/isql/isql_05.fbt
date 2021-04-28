@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.isql.isql_05',
+'id': 'functional.basic.isql.05',
 'qmid': None,
 'tracker_id': '',
 'title': 'ISQL should be able to process single statement with length up to 10*1024*1024 chars',

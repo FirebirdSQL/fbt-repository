@@ -1,5 +1,5 @@
 {
-'id': 'functional.role.create_02',
+'id': 'functional.role.create.02',
 'qmid': 'functional.role.create.create_role_02',
 'tracker_id': '',
 'title': 'CREATE ROLE - try create role with same name',

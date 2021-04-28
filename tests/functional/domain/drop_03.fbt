@@ -1,5 +1,5 @@
 {
-'id': 'functional.domain.drop_03',
+'id': 'functional.domain.drop.03',
 'qmid': 'functional.domain.drop.drop_domain_03',
 'tracker_id': '',
 'title': "DROP DOMAIN - that doesn't exists",

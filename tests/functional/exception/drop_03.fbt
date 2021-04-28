@@ -1,5 +1,5 @@
 {
-'id': 'functional.exception.drop_03',
+'id': 'functional.exception.drop.03',
 'qmid': 'functional.exception.drop.drop_exception_03',
 'tracker_id': '',
 'title': "DROP EXCEPTION - that doesn't exists",

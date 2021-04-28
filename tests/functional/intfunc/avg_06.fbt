@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.avg_06',
+'id': 'functional.intfunc.avg.06',
 'qmid': 'functional.intfunc.avg.avg_06',
 'tracker_id': '',
 'title': 'AVG - Integer OverFlow',

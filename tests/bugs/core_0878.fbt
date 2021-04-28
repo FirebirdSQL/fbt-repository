@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_878',
+'id': 'bugs.core_0878',
 'qmid': 'bugs.core_878',
 'tracker_id': 'CORE-878',
 'title': 'problem when dropping column that is a primary key',

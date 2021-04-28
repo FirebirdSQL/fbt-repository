@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.derived_tables.derived_tables_22',
+'id': 'functional.arno.derived_tables.22',
 'qmid': 'functional.arno.derived_tables.derived_tables_22',
 'tracker_id': '',
 'title': 'Derived table outer reference (triggers)',

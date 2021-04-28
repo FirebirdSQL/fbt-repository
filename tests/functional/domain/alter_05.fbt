@@ -1,5 +1,5 @@
 {
-'id': 'functional.domain.alter_05',
+'id': 'functional.domain.alter.05',
 'qmid': 'functional.domain.alter.alter_domain_05',
 'tracker_id': '',
 'title': "ALTER DOMAIN - Alter domain that doesn't exists",

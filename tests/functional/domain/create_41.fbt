@@ -1,5 +1,5 @@
 {
-'id': 'functional.domain.create_41',
+'id': 'functional.domain.create.41',
 'qmid': 'functional.domain.create.create_domain_41',
 'tracker_id': '',
 'title': 'CREATE DOMAIN - create two domain with same name',

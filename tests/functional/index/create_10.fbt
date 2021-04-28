@@ -1,5 +1,5 @@
 {
-'id': 'functional.index.create_10',
+'id': 'functional.index.create.10',
 'qmid': 'functional.index.create.create_index_10',
 'tracker_id': '',
 'title': 'CREATE INDEX - try create index with same name',

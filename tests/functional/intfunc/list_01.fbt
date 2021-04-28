@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.list_01',
+'id': 'functional.intfunc.list.01',
 'qmid': 'functional.intfunc.list.list_01',
 'tracker_id': 'CORE-964',
 'title': 'List with default options',

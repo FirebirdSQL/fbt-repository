@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.isql.isql_01',
+'id': 'functional.basic.isql.01',
 'qmid': 'functional.basic.isql.isql_01',
 'tracker_id': '',
 'title': 'ISQL - SHOW DATABASE',

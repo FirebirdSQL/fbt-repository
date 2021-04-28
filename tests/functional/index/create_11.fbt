@@ -1,5 +1,5 @@
 {
-'id': 'functional.index.create_11',
+'id': 'functional.index.create.11',
 'qmid': 'functional.index.create.create_index_11',
 'tracker_id': '',
 'title': 'CREATE UNIQUE INDEX - Non unique data in table',

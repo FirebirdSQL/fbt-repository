@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_907',
+'id': 'bugs.core_0907',
 'qmid': 'bugs.core_907-250',
 'tracker_id': 'CORE-907',
 'title': 'Server crash on violation of NOT NULL constraint',
