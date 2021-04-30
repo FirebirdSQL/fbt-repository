@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.list_03',
+'id': 'functional.intfunc.list.03',
 'qmid': 'functional.intfunc.list.list_03',
 'tracker_id': 'CORE-964',
 'title': 'List function with distinct option',

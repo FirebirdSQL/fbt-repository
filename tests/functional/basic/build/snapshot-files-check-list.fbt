@@ -1,5 +1,5 @@
 {
-'id': 'functional\basic\build\snapshot-files-check-list',
+'id': 'functional.basic.build.snapshot-files-check-list',
 'tracker_id': '',
 'title': "Check list of files in the current Firebird snapshot",
 'description':

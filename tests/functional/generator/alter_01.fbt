@@ -1,5 +1,5 @@
 {
-'id': 'functional.generator.alter_01',
+'id': 'functional.generator.alter.01',
 'qmid': '',
 'tracker_id': '',
 'title': 'Run ALTER SEQUENCE',

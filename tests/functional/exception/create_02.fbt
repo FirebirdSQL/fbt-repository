@@ -1,5 +1,5 @@
 {
-'id': 'functional.exception.create_02',
+'id': 'functional.exception.create.02',
 'qmid': 'functional.exception.create.create_exception_02',
 'tracker_id': '',
 'title': 'CREATE EXCEPTION - try create Exception with the same name',

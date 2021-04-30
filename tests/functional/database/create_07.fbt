@@ -1,5 +1,5 @@
 {
-'id': 'functional.database.create_07',
+'id': 'functional.database.create.07',
 'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE with PAGE_SIZE=16384: check actual size of page in the created database.',

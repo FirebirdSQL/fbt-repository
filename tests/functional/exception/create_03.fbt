@@ -1,5 +1,5 @@
 {
-'id': 'functional.exception.create_03',
+'id': 'functional.exception.create.03',
 'qmid': 'functional.exception.create.create_exception_03',
 'tracker_id': '',
 'title': 'CREATE EXCEPTION - too long message',

@@ -1,5 +1,5 @@
 {
-'id': 'functional.dml.cte_02',
+'id': 'functional.dml.cte.02',
 'qmid': 'functional.dml.cte.cte_02',
 'tracker_id': '',
 'title': 'test for Recursive CTEs',

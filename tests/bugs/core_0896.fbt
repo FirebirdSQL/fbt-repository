@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_896',
+'id': 'bugs.core_0896',
 'qmid': 'bugs.core_896',
 'tracker_id': 'CORE-896',
 'title': "SUBSTRING with NULL offset or length don't return NULL",

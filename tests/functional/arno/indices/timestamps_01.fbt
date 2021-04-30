@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.indexes.timestamps_01',
+'id': 'functional.arno.indices.timestamps_01',
 'qmid': 'functional.arno.indexes.timestamps_01',
 'tracker_id': '',
 'title': 'TIMESTAMP in index with values below julian date',

@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_881',
+'id': 'bugs.core_0881',
 'qmid': 'bugs.core_881-250',
 'tracker_id': 'CORE-881',
 'title': "Singleton isn't respected in COMPUTED BY expressions",

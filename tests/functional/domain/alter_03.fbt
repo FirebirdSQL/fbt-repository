@@ -1,5 +1,5 @@
 {
-'id': 'functional.domain.alter_03',
+'id': 'functional.domain.alter.03',
 'qmid': 'functional.domain.alter.alter_domain_03',
 'tracker_id': '',
 'title': 'ALTER DOMAIN - ADD CONSTRAINT',

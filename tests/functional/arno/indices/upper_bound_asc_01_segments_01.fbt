@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.indexes.upper_bound_asc_01_segments_01',
+'id': 'functional.arno.indices.upper_bound_asc_01_segments_01',
 'qmid': 'functional.arno.indexes.upper_bound_asc_01_segments_01',
 'tracker_id': '',
 'title': 'ASC single index upper bound',

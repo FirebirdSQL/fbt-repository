@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.isql.isql_01',
+'id': 'functional.basic.isql.01',
 'qmid': 'functional.basic.isql.isql_01',
 'tracker_id': '',
 'title': 'ISQL - SHOW DATABASE',
@@ -58,7 +58,7 @@ Transaction -.*""",'')]
   """,
  'expected_stdout': 
   """
-    Database: localhost:c:\job\qa\fbtest-repo\tmp\functional.basic.isql.isql_01.fdb
+    Database: localhost:c:\\job\\qa\\fbtest-repo\\tmp\\functional.basic.isql.isql_01.fdb
     Owner: SYSDBA
     PAGE_SIZE 8192
     Number of DB pages allocated
@@ -98,7 +98,7 @@ Transaction -.*""",'')]
   """,
  'expected_stdout': 
   """
-    Database: localhost:c:\job\qa\fbtest-repo\tmp\functional.basic.isql.isql_01.fdb
+    Database: localhost:c:\\job\\qa\\fbtest-repo\\tmp\\functional.basic.isql.isql_01.fdb
     Owner: SYSDBA
     PAGE_SIZE 8192
     Number of DB pages allocated = 212

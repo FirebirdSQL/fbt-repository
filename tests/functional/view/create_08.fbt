@@ -1,5 +1,5 @@
 {
-'id': 'functional.view.create_08',
+'id': 'functional.view.create.08',
 'qmid': 'functional.view.create.create_view_08',
 'tracker_id': '',
 'title': 'CREATE VIEW - updateable WITH CHECK OPTION',

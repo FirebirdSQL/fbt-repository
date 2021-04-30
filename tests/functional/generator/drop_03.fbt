@@ -1,5 +1,5 @@
 {
-'id': 'functional.generator.drop_03',
+'id': 'functional.generator.drop.03',
 'qmid': 'functional.generator.drop.drop_generator_03',
 'tracker_id': '',
 'title': 'DROP GENERATOR - generator does not exists',

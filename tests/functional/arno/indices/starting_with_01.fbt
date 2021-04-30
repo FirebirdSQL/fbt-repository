@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.indexes.starting_with_01',
+'id': 'functional.arno.indices.starting_with_01',
 'qmid': 'functional.arno.indexes.starting_with_01',
 'tracker_id': '',
 'title': 'STARTING WITH charset NONE',

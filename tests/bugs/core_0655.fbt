@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_655',
+'id': 'bugs.core_0655',
 'qmid': None,
 'tracker_id': 'CORE-655',
 'title': 'Blob Type 1 compatibility with VarChar',

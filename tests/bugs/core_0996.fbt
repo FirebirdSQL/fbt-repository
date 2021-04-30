@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_996',
+'id': 'bugs.core_0996',
 'qmid': 'bugs.core_996',
 'tracker_id': 'CORE-996',
 'title': 'Keyword AS not recognized in clause FROM',

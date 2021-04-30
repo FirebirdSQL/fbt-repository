@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_852',
+'id': 'bugs.core_0852',
 'qmid': 'bugs.core_852',
 'tracker_id': 'CORE-852',
 'title': 'substring(current_user from 4) fails',

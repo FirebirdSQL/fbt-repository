@@ -103,7 +103,7 @@
   """
     set bail on;
 
-    -- See declaration sample in plugins\udr\UdfBackwardCompatibility.sql:
+    -- See declaration sample in plugins\\udr\\UdfBackwardCompatibility.sql:
 
     create function UDR40_frac (
         val double precision

@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_871',
+'id': 'bugs.core_0871',
 'qmid': 'bugs.core_871',
 'tracker_id': 'CORE-871',
 'title': 'Incorrect handling of null within view - returns 0',

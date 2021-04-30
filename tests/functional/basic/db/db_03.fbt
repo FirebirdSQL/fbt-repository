@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.db.db_03',
+'id': 'functional.basic.db.03',
 'qmid': 'functional.basic.db.db_03',
 'tracker_id': '',
 'title': 'Empty DB - RDB$COLLATIONS',

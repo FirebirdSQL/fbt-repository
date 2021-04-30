@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.indexes.lower_bound_desc_02_segments_01',
+'id': 'functional.arno.indices.lower_bound_desc_02_segments_01',
 'qmid': 'functional.arno.indexes.lower_bound_desc_02_segments_01',
 'tracker_id': '',
 'title': 'DESC 2-segment index lower bound',

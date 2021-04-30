@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.isql.isql_03',
+'id': 'functional.basic.isql.03',
 'qmid': 'functional.basic.isql.isql_14',
 'tracker_id': 'CORE-978',
 'title': 'SHOW SYSTEM parameters',

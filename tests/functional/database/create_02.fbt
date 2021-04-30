@@ -1,5 +1,5 @@
 {
-'id': 'functional.database.create_02',
+'id': 'functional.database.create.02',
 'qmid': '',
 'tracker_id': '',
 'title': 'CREATE DATABASE - non sysdba user',

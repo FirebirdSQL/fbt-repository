@@ -1,5 +1,5 @@
 {
-'id': 'functional.generator.create_02',
+'id': 'functional.generator.create.02',
 'qmid': 'functional.generator.create.create_generator_02',
 'tracker_id': '',
 'title': 'CREATE GENERATOR - try create gen with same name',

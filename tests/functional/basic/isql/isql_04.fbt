@@ -1,5 +1,5 @@
 {
-'id': 'functional.basic.isql.isql_00',
+'id': 'functional.basic.isql.00',
 'qmid':'',
 'tracker_id': '',
 'title': 'Check output of "HELP" and "HELP SET" commands',

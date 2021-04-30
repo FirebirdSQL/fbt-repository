@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_91',
+'id': 'bugs.core_0091',
 'qmid': 'bugs.core_91',
 'tracker_id': 'CORE-91',
 'title': 'Recreate and self-referencing indexes',

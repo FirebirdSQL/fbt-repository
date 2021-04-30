@@ -1,5 +1,5 @@
 {
-'id': 'functional.arno.derived_tables.derived_tables_21',
+'id': 'functional.arno.derived_tables.21',
 'qmid': 'functional.arno.derived_tables.derived_tables_21',
 'tracker_id': '',
 'title': 'Implicit derived table by IN predicate',

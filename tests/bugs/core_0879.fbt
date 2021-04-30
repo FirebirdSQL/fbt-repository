@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_879',
+'id': 'bugs.core_0879',
 'qmid': '',
 'tracker_id': 'CORE-879',
 'title': 'Dependencies are not cleared when creation of expression index fails',

@@ -2,7 +2,7 @@
 'id': 'bugs.core_6496',
 'qmid': '',
 'tracker_id': 'CORE-6496',
-'title': "string_to_datetime and '\0' symbol",
+'title': "string_to_datetime and '\\0' symbol",
 'description':
   """
     ascii_char(0) was allowed to be concatenated with string and pass then to cast(... as timestamp)

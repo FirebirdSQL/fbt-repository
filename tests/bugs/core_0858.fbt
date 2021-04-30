@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_858',
+'id': 'bugs.core_0858',
 'qmid': 'bugs.core_858',
 'tracker_id': 'CORE-858',
 'title': 'Server crash when using UDF',

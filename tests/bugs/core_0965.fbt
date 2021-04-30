@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_965',
+'id': 'bugs.core_0965',
 'qmid': 'bugs.core_965-250',
 'tracker_id': 'CORE-965',
 'title': 'Many aggregate functions within a single select list may cause a server crash',

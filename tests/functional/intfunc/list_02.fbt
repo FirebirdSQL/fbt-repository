@@ -1,5 +1,5 @@
 {
-'id': 'functional.intfunc.list_02',
+'id': 'functional.intfunc.list.02',
 'qmid': 'functional.intfunc.list.list_02',
 'tracker_id': 'CORE-964',
 'title': 'List function with delimiter specified',

@@ -1,5 +1,5 @@
 {
-'id': 'functional.generator.create_01',
+'id': 'functional.generator.create.01',
 'qmid': 'functional.generator.create.create_generator_01',
 'tracker_id': '',
 'title': 'Run CREATE GENERATOR and query related data from RDB$GENERATORS.',

@@ -1,5 +1,5 @@
 {
-'id': 'bugs.core_925',
+'id': 'bugs.core_0925',
 'qmid': 'bugs.core_925',
 'tracker_id': 'CORE-925',
 'title': 'ALL predicate works incorrectly for some subqueries',

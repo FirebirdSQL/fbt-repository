@@ -1,5 +1,5 @@
 {
-'id': 'functional.domain.alter_01',
+'id': 'functional.domain.alter.01',
 'qmid': 'functional.domain.alter.alter_domain_01',
 'tracker_id': '',
 'title': 'ALTER DOMAIN - SET DEFAULT',
