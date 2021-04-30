@@ -9,6 +9,7 @@
     
     Confirmed bug on: WI-V4.0.0.2436.
     Checked on: 4.0.0.2448 - works fine.
+    No errors must be during execution of this code.
  """,
 'min_versions': '4.0',
 'versions': [
