@@ -8,6 +8,26 @@
     Confirmed issues on 4.0.0.2422 and 3.0.8.33345: ratio is about 16x ... 17x.
     Checked on 4.0.0.2425 and 3.0.8.33349: ratio is about 1.05 ... 1.07.
     Decided to use threshold = 1.15 for check performance ratio.
+
+    01.05.2021: INCREASED THRESHOLD from 1.15 to 1.30 because test failed several times, both on Linux and Windows.
+
+    ::: NB ::: 
+    SUBSTRING remains most problematic from performance POV.
+    Ratio TIME_UTF8 / TIME_UFSS  for other string functions (checked on 4.0.0.2448):
+        right(..., 10):      0.4;  right(..., 8000):  0.4
+        left(...,10):        1.14;  left(..., 8000):   0.3
+        reverse():           0.7
+        upper() / lower():   0.576 ... 0.635
+        position():          0.5
+        trim():              0.35
+        octet_length():      1.00
+        char_length():       0.632
+        bit_length():        1.00
+        ascii_val():         1.00
+        hash():              1.00
+        overlay():           0.31
+        replace():           0.5
+        lpad()/rpad():       0.73
   """,
 'min_versions': '3.0.8',
 'versions': [
@@ -64,7 +84,11 @@
     from (
         select
             1.000 * cast( rdb$get_context('USER_SESSION', 'TIME_UTF8') as int) / cast( rdb$get_context('USER_SESSION', 'TIME_UFSS') as int) as r
-           ,1.15 as threshold
+           ,1.30 as threshold
+         -- ^^^^
+         -- #########################
+         -- ### T H R E S H O L D ###
+         -- #########################
         from rdb$database
     );
 
