@@ -25,10 +25,12 @@
   """,
  'expected_stdout': 
   """
+    SESSION_TZ                      Defined.
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions': [('[ \t]+', ' ')]
 }
 ]
 }
