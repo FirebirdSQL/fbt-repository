@@ -9,8 +9,9 @@
     
     Test checks only presence of not-null context variable in the 'SYSTEM' namespace,
     without verifying its value (obviously, it can vary on different machines).
+    Name of context variable: 'SESSION_TIMEZONE'.
 
-    Checked on intermediate build 4.0.0.2452 (timestamp: 03-may-2021 14:48).
+    Checked on intermediate build 4.0.0.2453 (timestamp: 04-may-2021 15:53).
  """,
 'min_versions': '4.0',
 'versions': [
@@ -21,7 +22,7 @@
  'test_script':
   """
     set list on;
-    select iif(rdb$get_context('SYSTEM','SESSION_TIME_ZONE') is not null, 'Defined.','UNDEFINED,') as session_tz from rdb$database;
+    select iif(rdb$get_context('SYSTEM','SESSION_TIMEZONE') is not null, 'Defined.','UNDEFINED,') as session_tz from rdb$database;
   """,
  'expected_stdout': 
   """
