@@ -40,6 +40,16 @@
 
    Checked on Windows: 4.0.0.2377 (SS/CS), 3.0.8.33420 (SS/CS), 2.5.9.27152 (SC)
    Checked on Linux:   4.0.0.2377, 3.0.8.33415.
+
+   05-may-2021.
+   Test became failed after this commit:
+       bce0eb60e36c464e605ab3d1273dd6b2443a7a11
+      "GH-6748 : Freeing a statement using DSQL_drop or DSQL_unprepare should send free packet immediately [CORE6519]"
+   The reason is that result of cursor.prep(<sql_statement>) is immediately deleted by FDB if its results is not saved
+   in some variable. We have to assign its result, see: "prepared_sttm = cur1.prep(txt)".
+   Thanks to Vlad for suggestions.
+
+   Checked on 4.0.0.2465.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -166,7 +176,11 @@ att1.commit()
 # The will cause SQL expression with non-ascii character
 # appear in mon$statements.mon$sql_text column.
 # NOTE: charset of current connection is >>> win1252 <<<
-cur1.prep(txt)
+
+#################################
+# 05.05.2021: ALWAYS STORE RESULT of cursor.prep() TO SOME VARIABLE!
+#################################
+prepared_sttm = cur1.prep(txt)
 
 subprocess.call([ r'%(isql_path)s', r'%(dsn)s', '-ch', 'utf8', '-i', r'%(isql_file)s' ])
 
@@ -198,7 +212,7 @@ time.sleep(1)
 # It will fail with 'uknown type' for executed script ('f_python_run')
 # because it will consider its type as 'instance' rather than common 'file'!
 # We have to pass only NAMES list of used files here:
-cleanup( [i.name for i in (f_python_run,f_mon_sql)] )
+#cleanup( [i.name for i in (f_python_run,f_mon_sql)] )
 
   """,
  'expected_stdout':
