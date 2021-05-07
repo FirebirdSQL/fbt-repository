@@ -1,0 +1,61 @@
+{
+'id': 'bugs.gh_6732',
+'qmid': None,
+'tracker_id': '',
+'title': "Stored procedure isn't able to execute statement 'GRANT' [CORE6502]",
+'description':
+ """
+    https://github.com/FirebirdSQL/firebird/issues/6732
+
+    Confirmed bug on 4.0.0.2453, got:
+        Statement failed, SQLSTATE = 27000
+        unsuccessful metadata update
+        -GRANT failed
+        -action cancelled by trigger (0) to preserve data integrity
+        -User cannot write to RDB$USER_PRIVILEGES
+        -At procedure 'SP_TEST' line: 3, col: 8
+
+    Checked on 4.0.0.2468 -- all OK.
+ """,
+'min_versions': '4.0',
+'versions': [
+{
+ 'firebird_version': '4.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    create or alter user tmp$gh6732_boss password 'boss' using plugin Srp;
+    create or alter user tmp$gh6732_acnt password 'acnt' using plugin Srp;
+    commit;
+
+    set term ^;
+    create or alter procedure sp_test SQL SECURITY DEFINER as
+    begin
+       execute statement 'grant alter any generator to tmp$gh6732_acnt';
+    end
+    ^
+    set term ;^
+    commit;
+    grant execute on procedure sp_test to user tmp$gh6732_boss;
+    commit;
+
+    connect '$(DSN)' user tmp$gh6732_boss password 'boss';
+    execute procedure sp_test; -- must NOT raise error.
+    commit;
+
+    -- cleanup:
+    connect '$(DSN)' user sysdba password 'masterkey';
+    drop user tmp$gh6732_boss using plugin Srp;
+    drop user tmp$gh6732_acnt using plugin Srp;
+    commit;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
