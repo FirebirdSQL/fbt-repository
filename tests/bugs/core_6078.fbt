@@ -493,6 +493,7 @@ cleanup( (f_sql_log, f_sql_chk) )
   """,
  'substitutions':[
     ('.*After line \d+.*', ''),
+    ('ALTERED_TRIGGER_SOURCE.*', 'ALTERED_TRIGGER_SOURCE')
   ]
 },
 
