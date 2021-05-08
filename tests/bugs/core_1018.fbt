@@ -78,7 +78,8 @@
  'expected_stdout': 
   """
     VERSION                         4.0
-  """
+  """,
+  'substitutions':[('4\.\d+', '4\.')]
 }
 ]
 }
