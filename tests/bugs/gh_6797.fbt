@@ -1,5 +1,5 @@
 {
-'id': 'bugs.gh_6732',
+'id': 'bugs.gh_6797',
 'qmid': None,
 'tracker_id': '',
 'title': "DECRYPT() must return BLOB if its first argument is blob, otherwise returnted datatype must be VARCHAR with charset NONE",
