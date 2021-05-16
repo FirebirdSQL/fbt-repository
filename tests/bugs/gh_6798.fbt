@@ -7,6 +7,7 @@
   """
     NB. Only basic checks are peformed here.
     This test mostly will be re-implemented later in order to check more complex cases.
+    List of unicode characters and their codes: https://gist.github.com/ngs/2782436
 
     Checked on 5.0.0.29.
   """,
