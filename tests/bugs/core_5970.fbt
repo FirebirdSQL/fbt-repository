@@ -13,9 +13,11 @@
         4.0.0.1646 SS: 3.657s.
         4.0.0.1637 SC: 3.271s.
         4.0.0.1633 CS: 4.191s.
+        5.0.0.43
  """,
 'min_versions': '4.0.0',
 'versions': [
+
 {
  'firebird_version': '4.0',
  'platform': 'All',
@@ -1363,7 +1365,7 @@
     02: sqltype: 448 VARYING scale: 0 subtype: 0 len: 255 charset: 1 OCTETS
       :  name: ENCRYPT  alias: E_CHAR
       : table:   owner: 
-    03: sqltype: 448 VARYING scale: 0 subtype: 0 len: 6 charset: 0 NONE
+    03: sqltype: 448 VARYING scale: 0 subtype: 0 len: 6 charset: 1 OCTETS
       :  name: DECRYPT  alias: D_BIN
       : table:   owner: 
 
