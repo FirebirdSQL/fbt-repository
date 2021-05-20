@@ -32,7 +32,7 @@
   """,
  'expected_stdout': 
   """
-    01: sqltype: 448 VARYING scale: 0 subtype: 0 len: 1 charset: 0 NONE
+    01: sqltype: 448 VARYING scale: 0 subtype: 0 len: 1 charset: 1 OCTETS
     02: sqltype: 520 BLOB scale: 0 subtype: 0 len: 8
   """,
  'expected_stderr': 
