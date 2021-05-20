@@ -11,6 +11,7 @@
         4.0.0.955: OK, 3.453s.
     07.02.2019: fixed wrong connection string which did use local protocol instead of required remote.
     Checked on:
+       5.0.0.43
        4.0.0.1421 CS, SC, SS
        3.0.5.33097 CS, SS
  """,
@@ -91,7 +92,7 @@ sql_txt='''
         ,r.rdb$relation_name  --           sql$database
         ,r.rdb$field_name     --           <null>
         ,r.rdb$user_type      --           8
-        ,iif( r.rdb$object_type = decode( left(rdb$get_context('SYSTEM', 'ENGINE_VERSION'),1), '3',20, '4',21), 'YES.', 'NO: ' || r.rdb$object_type) "rdb_object_type_is_expected ?"
+        ,iif( r.rdb$object_type = decode( left(rdb$get_context('SYSTEM', 'ENGINE_VERSION'),1), '3',20, '4',21, '5', 21), 'YES', 'NO: ' || r.rdb$object_type) "rdb_object_type_is_expected ?"
     from rdb$user_privileges r 
     where r.rdb$user=upper('%(tmpusr)s');
 
