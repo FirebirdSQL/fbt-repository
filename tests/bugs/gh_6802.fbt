@@ -9,6 +9,7 @@
 
     Confirmed bug on 5.0.0.20: no exception for case when statement_timeout < Tx lock_timeout (case #3)
     Checked on 5.0.0.29 -- all OK.
+    20.05.2021: adjusted expected_stderr for case-2: non-suppressed exception raises instead of issuing gdscode.
  """,
 'min_versions': '5.0',
 'versions': [
@@ -93,7 +94,10 @@
     --    * statement_timeout < deadlocktimeout
     --    * Tx lock resolution = WAIT
     -- Expected result:
-    --    * gdscode = 335544336 must be issued on console.
+    --    * non-supressed exception "SQLSTATE = HY008 / operation was cancelled / -Attachment level timeout expired."
+    --      ::: NOTE ::: EXCEPTION 'operation was cancelled' (isc_cancelled, gds = 335544794) can not be supressed in when-block!
+    --      See letter from Vlad, 15.05.2021 19:42.
+    --      NB:  gdscode = 335544336 issued on console on 5.0.0.29, but on 5.0.0.43 it is not so.
     --    * waiting for 4..5 sec (i.e. <StatementTimeout> seconds rather than DeadLockTimeout);
 
     SET STATEMENT TIMEOUT 4 second;
@@ -207,7 +211,6 @@
     RAISED_GDS_01                   335544336
     WAITING_TIME_01                 Acceptable.
 
-    RAISED_GDS_02                   335544336
     WAITING_TIME_02                 Acceptable.
 
     WAITING_TIME_03                 Acceptable.
@@ -217,6 +220,10 @@
   """,
  'expected_stderr': 
   """
+    Statement failed, SQLSTATE = HY008
+    operation was cancelled
+    -Attachment level timeout expired.
+
     Statement failed, SQLSTATE = HY008
     operation was cancelled
     -Attachment level timeout expired.
