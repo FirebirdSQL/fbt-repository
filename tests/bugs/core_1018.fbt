@@ -7,20 +7,6 @@
 'min_versions': None,
 'versions': [
 {
- 'firebird_version': '2.1',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-    set list on;
-    select substring(rdb$get_context('SYSTEM', 'ENGINE_VERSION') from 1 for 3) as version from rdb$database;
-  """,
- 'expected_stdout': 
-  """
-    VERSION                         2.1
-  """
-},
-{
  'firebird_version': '2.5',
  'platform': 'All',
  'test_type': 'ISQL',
@@ -80,6 +66,28 @@
     VERSION                         4.0
   """,
   'substitutions':[('4\.\d+', '4\.')]
+},
+{
+ 'firebird_version': '5.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    set list on;
+    -- Engine version could contain more than one digit in any section or more sections.
+    -- Changed pattern for matching such cases of engine version as:
+    -- '3.2.23' or '3.3.2.1.0.1.2.3.4.5.7' etc
+    select iif( t.ev similar to '[0-9]+.[0-9]+.[0-9]+((.?[0-9]+)*)', substring(ev from 1 for 3), null) as version
+    from (
+        select rdb$get_context('SYSTEM', 'ENGINE_VERSION') ev
+        from rdb$database
+    )t;
+  """,
+ 'expected_stdout': 
+  """
+    VERSION                         5.0
+  """,
+  'substitutions':[('5\.\d+', '5\.')]
 }
 ]
 }
