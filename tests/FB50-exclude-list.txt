@@ -1,4 +1,3 @@
-bugs.core_1544
 bugs.core_2966
 bugs.core_5827
 bugs.core_0858
