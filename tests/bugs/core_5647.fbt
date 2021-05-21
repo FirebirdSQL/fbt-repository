@@ -22,6 +22,7 @@
 
    Checked on intermediate build 3.0.8.33465, timestamp: 05.05.2021 11:26.
    Duration: 4.0.0.2465 ~17s; 3.0.8.33465: ~24s
+   21.05.2021: changed connection protocol to local, time reduced from 19 to 15 seconds.
  """,
 'min_versions': '3.0.8',
 'versions': [
@@ -40,6 +41,7 @@ import time
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
+db_name = db_conn.database_name
 db_conn.close()
 runProgram('gfix',[dsn,'-w','async'])
 
@@ -124,7 +126,7 @@ flush_and_close( f_isql_cmd )
 f_isql_log=open(os.path.join(context['temp_directory'],'tmp_core_5647.log'),'w')
 f_isql_err=open(os.path.join(context['temp_directory'],'tmp_core_5647.err'),'w')
 
-subprocess.call([ context['isql_path'], dsn, "-i", f_isql_cmd.name],stdout = f_isql_log, stderr = f_isql_err)
+subprocess.call([ context['isql_path'], db_name, "-i", f_isql_cmd.name],stdout = f_isql_log, stderr = f_isql_err)
 
 flush_and_close( f_isql_log )
 flush_and_close( f_isql_err )
