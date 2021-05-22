@@ -58,7 +58,7 @@
     But in major version FB 5.x currently remains to use security4.fdb.
     Proper way is either to use Services API (call to get_security_database_path()) or get this info from fbtest
     built-in context variable context['isc4_path'].
-    Checked on 5.0.0.47.
+    Checked on 5.0.0.47  (Linux, Windows).
 
  """,
 'min_versions': '4.0',
@@ -132,7 +132,6 @@ def find_free_port():
 
 svc = fdb.services.connect(host='localhost', user=user_name, password=user_password)
 FB_HOME = svc.get_home_directory()
-#SEC_FDB = svc.get_security_database_path()
 SEC_FDB = context['isc4_path']
 svc.close()
 
