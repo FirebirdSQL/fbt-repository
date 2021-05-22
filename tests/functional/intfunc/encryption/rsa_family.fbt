@@ -2,19 +2,19 @@
 'id': 'functional.intfunc.encryption.rsa_family',
 'qmid': None,
 'tracker_id': '',
-'title':'Basic test for RSA-family: rsa_private(), rsa_public(), rsa_encrypt(), rsa_decrypt(), rsa_sign() and rsa_verify()',
+'title':'Basic test for RSA-family: rsa_private(), rsa_public(), rsa_encrypt(), rsa_decrypt(), rsa_sign_hash() and rsa_verify_hash()',
 'description':
  """
     We create table with one record and write in it UTF8 text with enough length.
     Then we get random substring from this text and use it as "source message" that will be encrypted further.
     After this test generates private and public keys and uses them for two tasks:
     1) get RSA signature of crypted_hash of source message (using private key)
-       and verify it (using public key); RSA_VERIFY must return <true>;
+       and verify it (using public key); RSA_VERIFY_HASH must return <true>;
     2) encrypt source message, then decrypt it and compare result of decryption with original text. They must be equal.
 
     All these actions are applied against four algorithms: MD5, SHA1, SHA256 and SHA512.
 
-    NB: code for FB 5.x is separated from FB 4.x because of renamed functions rsa_sign() and rsa_verify(),
+    NB: code for FB 5.x is separated from FB 4.x because of renamed functions rsa_sign_hash() and rsa_verify_hash(),
     see: https://github.com/FirebirdSQL/firebird/issues/6806
 
     ::: NOTE :::
@@ -27,6 +27,7 @@
     (greec and cyrillic characters are used here in the source text; they both require 2 bytes per character).
 
     Checked on 4.0.0.2479; 5.0.0.20.
+    22.05.2021: correction because of renamed functions rsa_sign and rsa_verify: suffix "_hash" was added to their names after ~14.05.2021
  """,
 'min_versions': '4.0',
 'versions': [
@@ -89,22 +90,22 @@
             -- update rsa set text_decrypted = rsa_decrypt(cast(text_encrypted as varbinary(32760)) key k_prv );
 
             -------------------------------------------------
-            -- RSA_SIGN ( <string> KEY <private key> [HASH <hash>] [SALT_LENGTH <smallint>] )
-            -- RSA_VERIFY ( <string> SIGNATURE <string> KEY <public key> [HASH <hash>] [SALT_LENGTH <smallint>] )
+            -- RSA_SIGN_HASH ( <string> KEY <private key> [HASH <hash>] [SALT_LENGTH <smallint>] )
+            -- RSA_VERIFY_HASH ( <string> SIGNATURE <string> KEY <public key> [HASH <hash>] [SALT_LENGTH <smallint>] )
             -- RSA_ENCRYPT (<data> KEY <public_key> [LPARAM <tag>] [HASH <hash>])
             -- <hash>::= { MD5 | SHA1 | SHA256 | SHA512 } ; Default is SHA256.
 
-            update rsa set text_rsa_sign = rsa_sign( crypt_hash(text_unencrypted using md5) key k_prv hash md5) returning octet_length(text_rsa_sign) into rsa_sign_len_mg5;
-            update rsa set text_rsa_vrfy = rsa_verify( crypt_hash(text_unencrypted using md5) signature text_rsa_sign key k_pub hash md5) returning text_rsa_vrfy into rsa_vrfy_md5;
+            update rsa set text_rsa_sign = rsa_sign_hash( crypt_hash(text_unencrypted using md5) key k_prv hash md5) returning octet_length(text_rsa_sign) into rsa_sign_len_mg5;
+            update rsa set text_rsa_vrfy = rsa_verify_hash( crypt_hash(text_unencrypted using md5) signature text_rsa_sign key k_pub hash md5) returning text_rsa_vrfy into rsa_vrfy_md5;
 
-            update rsa set text_rsa_sign = rsa_sign( crypt_hash(text_unencrypted using sha1) key k_prv hash sha1) returning octet_length(text_rsa_sign) into rsa_sign_len_sha1;
-            update rsa set text_rsa_vrfy = rsa_verify( crypt_hash(text_unencrypted using sha1) signature text_rsa_sign key k_pub hash sha1) returning text_rsa_vrfy into rsa_vrfy_sha1;
+            update rsa set text_rsa_sign = rsa_sign_hash( crypt_hash(text_unencrypted using sha1) key k_prv hash sha1) returning octet_length(text_rsa_sign) into rsa_sign_len_sha1;
+            update rsa set text_rsa_vrfy = rsa_verify_hash( crypt_hash(text_unencrypted using sha1) signature text_rsa_sign key k_pub hash sha1) returning text_rsa_vrfy into rsa_vrfy_sha1;
 
-            update rsa set text_rsa_sign = rsa_sign( crypt_hash(text_unencrypted using sha256) key k_prv hash sha256) returning octet_length(text_rsa_sign) into rsa_sign_len_sha256;
-            update rsa set text_rsa_vrfy = rsa_verify( crypt_hash(text_unencrypted using sha256) signature text_rsa_sign key k_pub hash sha256) returning text_rsa_vrfy into rsa_vrfy_sha256;
+            update rsa set text_rsa_sign = rsa_sign_hash( crypt_hash(text_unencrypted using sha256) key k_prv hash sha256) returning octet_length(text_rsa_sign) into rsa_sign_len_sha256;
+            update rsa set text_rsa_vrfy = rsa_verify_hash( crypt_hash(text_unencrypted using sha256) signature text_rsa_sign key k_pub hash sha256) returning text_rsa_vrfy into rsa_vrfy_sha256;
 
-            update rsa set text_rsa_sign = rsa_sign( crypt_hash(text_unencrypted using sha512) key k_prv hash sha512) returning octet_length(text_rsa_sign) into rsa_sign_len_sha512;
-            update rsa set text_rsa_vrfy = rsa_verify( crypt_hash(text_unencrypted using sha512) signature text_rsa_sign key k_pub hash sha512) returning text_rsa_vrfy into rsa_vrfy_sha512;
+            update rsa set text_rsa_sign = rsa_sign_hash( crypt_hash(text_unencrypted using sha512) key k_prv hash sha512) returning octet_length(text_rsa_sign) into rsa_sign_len_sha512;
+            update rsa set text_rsa_vrfy = rsa_verify_hash( crypt_hash(text_unencrypted using sha512) signature text_rsa_sign key k_pub hash sha512) returning text_rsa_vrfy into rsa_vrfy_sha512;
 
             --#################################################
 
@@ -236,8 +237,8 @@
             -- update rsa set text_decrypted = rsa_decrypt(cast(text_encrypted as varbinary(32760)) key k_prv );
 
             -------------------------------------------------
-            -- RSA_SIGN ( <string> KEY <private key> [HASH <hash>] [SALT_LENGTH <smallint>] )
-            -- RSA_VERIFY ( <string> SIGNATURE <string> KEY <public key> [HASH <hash>] [SALT_LENGTH <smallint>] )
+            -- RSA_SIGN_HASH ( <string> KEY <private key> [HASH <hash>] [SALT_LENGTH <smallint>] )
+            -- RSA_VERIFY_HASH ( <string> SIGNATURE <string> KEY <public key> [HASH <hash>] [SALT_LENGTH <smallint>] )
             -- RSA_ENCRYPT (<data> KEY <public_key> [LPARAM <tag>] [HASH <hash>])
             -- <hash>::= { MD5 | SHA1 | SHA256 | SHA512 } ; Default is SHA256.
 
