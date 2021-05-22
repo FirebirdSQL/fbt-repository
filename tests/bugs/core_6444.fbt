@@ -52,6 +52,14 @@
     Initially checked on 4.0.0.2365 (Windows only).
     Checked on 4.0.0.2422 - after adapted for work both Windows and Linux.
     Checked on 4.0.0.2436 - parameter 'TempTableDirectory' appeared.
+
+    22.05.2021: definition of full path and name to security.db was wrong because it supposed that FB major version
+    corresponds to numeric suffix of security database (FB 3.x --> security3.fdb; FB 4.x --> security4.fdb).
+    But in major version FB 5.x currently remains to use security4.fdb.
+    Proper way is either to use Services API (call to get_security_database_path()) or get this info from fbtest
+    built-in context variable context['isc4_path'].
+    Checked on 5.0.0.47.
+
  """,
 'min_versions': '4.0',
 'versions': [
@@ -122,11 +130,11 @@ def find_free_port():
 
 #--------------------------------------------
 
-FB_HOME = services.connect(host='localhost', user=user_name, password=user_password).get_home_directory()
-FB_BINS = os.path.join(FB_HOME, 'bin') # we are in LINUX branch. Windows see in separate section, not here!
-
-fb_vers = str(db_conn.engine_version)[:1] # character for security.db file: engine = 4.0  --> '4'
-sec_db = os.path.join( FB_HOME, 'security' + fb_vers+ '.fdb')
+svc = fdb.services.connect(host='localhost', user=user_name, password=user_password)
+FB_HOME = svc.get_home_directory()
+#SEC_FDB = svc.get_security_database_path()
+SEC_FDB = context['isc4_path']
+svc.close()
 
 db_conn.close()
 
@@ -143,7 +151,7 @@ dbconf_bak = os.path.join(context['temp_directory'], 'databases_'+dts+'.bak')
 shutil.copy2( fbconf_cur, fbconf_bak )
 shutil.copy2( dbconf_cur, dbconf_bak )
 
-shutil.copy2( sec_db, fdb_test )
+shutil.copy2( SEC_FDB, fdb_test )
 
 TEMP_DIRECTORIES_VALUE = os.path.normpath( os.path.join(FB_HOME, 'examples') )
 TTABLE_DIRECTORY_VALUE = os.path.normpath( context['temp_directory'] )
@@ -520,10 +528,9 @@ def find_free_port():
 
 svc = fdb.services.connect(host='localhost', user=user_name, password=user_password)
 FB_HOME = svc.get_home_directory()
+SEC_FDB = svc.get_security_database_path()
+# context['isc4_path']
 svc.close()
-
-fb_vers = str(db_conn.engine_version)[:1] # character for security.db file: engine = 4.0  --> '4'
-sec_db = os.path.join( FB_HOME, 'security' + fb_vers+ '.fdb')
 
 db_conn.close()
 
@@ -540,7 +547,7 @@ dbconf_bak = os.path.join(context['temp_directory'], 'databases_'+dts+'.bak')
 shutil.copy2( fbconf_cur, fbconf_bak )
 shutil.copy2( dbconf_cur, dbconf_bak )
 
-shutil.copy2( sec_db, fdb_test )
+shutil.copy2( SEC_FDB, fdb_test )
 
 TEMP_DIRECTORIES_VALUE = os.path.normpath( os.path.join(FB_HOME, 'examples') )
 TTABLE_DIRECTORY_VALUE = os.path.normpath( context['temp_directory'] )
