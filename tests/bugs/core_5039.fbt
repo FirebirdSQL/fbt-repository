@@ -22,7 +22,7 @@
  'test_script':
   """
 db_conn.close()
-runProgram('fbsvcmgr',['localhost:qwe_mnb_zxc_9','user','SYSDBA','password','masterkey','info_server_version'])
+runProgram('fbsvcmgr',['localhost:qwe_mnb_zxc_9','user', user_name, 'password', user_password, 'info_server_version'])
   """,
  'expected_stdout': 
   """
@@ -45,7 +45,7 @@ runProgram('fbsvcmgr',['localhost:qwe_mnb_zxc_9','user','SYSDBA','password','mas
 db_conn.close()
 # Server version must be issued here, regardless on the (invalid/non-existing) name of service manager, e.g.:
 # Server version: WI-V4.0.0.2491 Firebird 4.0 Release Candidate 1
-runProgram('fbsvcmgr',['localhost:qwe_mnb_zxc_9','user','SYSDBA','password','masterkey','info_server_version'])
+runProgram('fbsvcmgr',['localhost:qwe_mnb_zxc_9','user', user_name, 'password', user_password, 'info_server_version'])
   """,
  'expected_stdout': 
   """
