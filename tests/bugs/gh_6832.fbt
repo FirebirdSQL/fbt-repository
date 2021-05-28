@@ -1,0 +1,33 @@
+{
+'id': 'bugs.gh_6832',
+'qmid': None,
+'tracker_id': '',
+'title': 'Segfault using "commit retaining" with GTT',
+'description':
+ """
+    https://github.com/FirebirdSQL/firebird/issues/6832
+
+    Confirmed crash on 5.0.0.40 CS, 5.0.0.47 SS.
+    Checked on 5.0.0.56 SS/CS - all OK.
+ """,
+'min_versions': '5.0',
+'versions': [
+{
+ 'firebird_version': '5.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script':
+  """
+    set autoddl off;
+    recreate global temporary table gtt(x int);
+    commit retain;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
+}
+]
+}
