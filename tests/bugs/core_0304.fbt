@@ -16,6 +16,13 @@
         4.0.0.1172: OK, 8.140s.
         4.0.0.1340: OK, 4.797s.
         4.0.0.1378: OK, 4.032s.
+
+    01.06.2021. Adjusted STDERR caused by fixes
+        https://github.com/FirebirdSQL/firebird/pull/6833
+        https://github.com/FirebirdSQL/firebird/pull/6825
+        ("Correct error message for DROP VIEW")
+    Checked on 3.0.8.33470; 4.0.0.2502; 5.0.0.60.
+
  """,
 'min_versions': '3.0',
 'versions': [
@@ -152,7 +159,7 @@
 
     Statement failed, SQLSTATE = 28000
     unsuccessful metadata update
-    -DROP TABLE V_TEST failed
+    -DROP VIEW V_TEST failed
     -no permission for DROP access to VIEW V_TEST
 
     Statement failed, SQLSTATE = 28000
@@ -347,7 +354,7 @@ unsuccessful metadata update
 
 Statement failed, SQLSTATE = 28000
 unsuccessful metadata update
--DROP TABLE V_TEST failed
+-DROP VIEW V_TEST failed
 -no permission for DROP access to VIEW V_TEST
 -Effective user is TMP$C0304
 
