@@ -17,12 +17,12 @@
 
     Discussed with Alex and dimitr 17-18 may 2021.
 
-    Checked on 5.0.0.40.
+    Checked on 5.0.0.40; 4.0.0.2502 (intermediate snapshot, 01.06.2020 16:49).
  """,
-'min_versions': '5.0',
+'min_versions': '4.0',
 'versions': [
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
