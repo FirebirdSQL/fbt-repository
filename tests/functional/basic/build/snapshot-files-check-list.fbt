@@ -626,18 +626,18 @@ set(
         ,'examples/dbcrypt/cryptDb.pas'
         ,'examples/dbcrypt/fbSampleDbCrypt.conf'
         ,'examples/dbcrypt/fbSampleKeyHolder.conf'
-        ,'examples/dbcrypt/msvc/DbCryptApp_MSVC14.vcxproj'
-        ,'examples/dbcrypt/msvc/DbCryptApp_MSVC14.vcxproj.filters'
+
+
         ,'examples/dbcrypt/msvc/DbCryptApp_MSVC15.vcxproj'
         ,'examples/dbcrypt/msvc/DbCryptApp_MSVC15.vcxproj.filters'
-        ,'examples/dbcrypt/msvc/DbCrypt_MSVC14.sln'
-        ,'examples/dbcrypt/msvc/DbCrypt_MSVC14.vcxproj'
-        ,'examples/dbcrypt/msvc/DbCrypt_MSVC14.vcxproj.filters'
+
+
+
         ,'examples/dbcrypt/msvc/DbCrypt_MSVC15.sln'
         ,'examples/dbcrypt/msvc/DbCrypt_MSVC15.vcxproj'
         ,'examples/dbcrypt/msvc/DbCrypt_MSVC15.vcxproj.filters'
-        ,'examples/dbcrypt/msvc/KeyHolder_MSVC14.vcxproj'
-        ,'examples/dbcrypt/msvc/KeyHolder_MSVC14.vcxproj.filters'
+
+
         ,'examples/dbcrypt/msvc/KeyHolder_MSVC15.vcxproj'
         ,'examples/dbcrypt/msvc/KeyHolder_MSVC15.vcxproj.filters'
         ,'examples/empbuild/EMPLOYEE.FDB'
@@ -646,14 +646,14 @@ set(
         ,'examples/extauth/TcWrapper.cpp'
         ,'examples/extauth/TcWrapper.h'
         ,'examples/extauth/keygen.cpp'
-        ,'examples/extauth/msvc/ExtAuth_MSVC14.sln'
-        ,'examples/extauth/msvc/ExtAuth_MSVC14.vcxproj'
-        ,'examples/extauth/msvc/ExtAuth_MSVC14.vcxproj.filters'
+
+
+
         ,'examples/extauth/msvc/ExtAuth_MSVC15.sln'
         ,'examples/extauth/msvc/ExtAuth_MSVC15.vcxproj'
         ,'examples/extauth/msvc/ExtAuth_MSVC15.vcxproj.filters'
-        ,'examples/extauth/msvc/KeyGen_MSVC14.vcxproj'
-        ,'examples/extauth/msvc/KeyGen_MSVC14.vcxproj.filters'
+
+
         ,'examples/extauth/msvc/KeyGen_MSVC15.vcxproj'
         ,'examples/extauth/msvc/KeyGen_MSVC15.vcxproj.filters'
         ,'examples/functions.c'
@@ -805,7 +805,7 @@ set(
         ,'plugins/udr_engine.conf'
         ,'plugins/udr_engine.dll'
         ,'plugins/udr_engine.pdb'
-        ,'qli.exe'
+
         ,'replication.conf'
         ,'security5.fdb'
         ,'tzdata/ids.dat'
