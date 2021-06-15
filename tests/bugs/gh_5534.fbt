@@ -8,6 +8,10 @@
     https://github.com/FirebirdSQL/firebird/issues/5534
 	
 	Test verifies work of predicates, functions for string handling and comparison.
+	::: NOTE :::
+	Test does not verify `CONTAINING`! This will be done in separate test, after gh-6851 will be fixed
+	(see note by Adriano in this ticket, date: 14.06.2021)
+	
 	None of them must raise exception, and result of actions is not displayed via suspend.
     Thus 'expected-' sections must be empty.
 	If some character leads to error, apropriate repord ID is included into the list of problematic
