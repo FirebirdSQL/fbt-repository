@@ -184,7 +184,13 @@
 				v = crypt_hash(c.blb using sha1);
 				v = crypt_hash(c.blb using sha256);
 				v = crypt_hash(c.blb using sha512);
-				/*
+				
+				-- Following statements were commented out because of bug
+				-- described in https://github.com/FirebirdSQL/firebird/issues/6858
+				-- They are uncommented because bug was fixed 17.06.2021.
+				-- Checked on intermediate builds
+				-- 4.0.1.2517 (17.06.2021 15:12) and 5.0.0.79 (17.06.2021 14:44).
+				-- /*
 				text_encrypted = rsa_encrypt(c.blb key k_pub hash md5);
 				text_decrypted = rsa_decrypt(text_encrypted key k_prv hash md5);
 				text_encrypted = rsa_encrypt(c.blb key k_pub hash md5);
@@ -195,7 +201,7 @@
 				text_decrypted = rsa_decrypt(text_encrypted key k_prv hash sha256);
 				text_encrypted = rsa_encrypt(c.blb key k_pub hash sha512);
 				text_decrypted = rsa_decrypt(text_encrypted key k_prv hash sha512);			
-				*/
+				-- */
 
 			when any do
 				begin
