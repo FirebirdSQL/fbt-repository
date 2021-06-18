@@ -2,6 +2,9 @@
 -- ::: NB ::: This script must be launched with '-nodbtriggers' switch because DB can have DB-level triggers!
 
 set bail on;
+set list on;
+
+select mon$database_name as "Start removing objects in: " from mon$database;
 
 -- 1. Removing dependencies for each view, with preserving column names.
 -- One need to do that in separate transaction.
@@ -58,6 +61,7 @@ commit
 
 -- 2. Removing all objects from database is they exists:
 execute block as
+    declare total_objects_removed int;
     declare stt varchar(4096) character set utf8;
     declare def_coll varchar(64) character set utf8;
     declare ref_name varchar(64) character set utf8;
@@ -172,6 +176,7 @@ execute block as
       );
 
 begin
+    total_objects_removed = 0;
 
     open c_trig; ----------   d r o p    t r i g g e r s  ----------------------
     while (1=1) do
@@ -180,6 +185,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop trigger '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_trig;
 
@@ -190,6 +196,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'alter domain ' || stt || ' drop constraint';
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_doms;
 
@@ -201,6 +208,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'create or alter function '||stt||' returns int as begin return 1; end';
         execute statement (:stt);
+        -- total_objects_removed = total_objects_removed + 1;
     end
     close c_func;
 
@@ -211,6 +219,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'create or alter procedure '||stt||' as begin end';
         execute statement (:stt);
+        -- total_objects_removed = total_objects_removed + 1;
     end
     close c_proc;
 
@@ -221,6 +230,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop package body '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_pkg;
 
@@ -232,6 +242,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop view '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_view;
 
@@ -242,6 +253,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop function '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_func;
 
@@ -252,6 +264,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop procedure '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_proc;
 
@@ -263,6 +276,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop package '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_pkg;
 
@@ -274,6 +288,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop exception '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_excp;
 
@@ -284,6 +299,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'alter table '||tab_name||' drop constraint '||ref_name;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_fk;
 
@@ -294,6 +310,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop table '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_tabs;
 
@@ -304,6 +321,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop domain '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_doms;
 
@@ -314,6 +332,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop collation '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_coll;
 
@@ -326,6 +345,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'alter character set ' || trim(stt) || ' set default collation ' || trim(def_coll);
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_cset;
     **********************/
@@ -337,6 +357,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop sequence '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_gens;
 
@@ -347,6 +368,7 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop role '||stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_role;
 
@@ -357,34 +379,38 @@ begin
         if (row_count = 0) then leave;
         stt = 'drop mapping '|| stt;
         execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_local_mapping;
 
     open c_users; ----------  d r o p   u s e r s   e x c e p t   S Y S D B A  ----
     while (1=1) do
     begin
-      fetch c_users into usr_name, sec_plugin;
-      if (row_count = 0) then leave;
+        fetch c_users into usr_name, sec_plugin;
+        if (row_count = 0) then leave;
 
-      begin
-          -- Privileges for GRANT / DROP database remain even when user is droppped.
-          -- We have to use REVOKE ALL ON ALL in order to cleanup them:
-          stt = 'revoke all on all from '|| usr_name;
-          execute statement (:stt);
-          when any do
-          begin
-             --- suppress warning ---
-          end
-      end
+        begin
+            -- Privileges for GRANT / DROP database remain even when user is droppped.
+            -- We have to use REVOKE ALL ON ALL in order to cleanup them:
+            stt = 'revoke all on all from '|| usr_name;
+            execute statement (:stt);
+            when any do
+            begin
+               --- suppress warning ---
+            end
+        end
 
-      stt = 'drop user '|| usr_name || ' using plugin ' || sec_plugin;
-      execute statement (:stt);
+        stt = 'drop user '|| usr_name || ' using plugin ' || sec_plugin;
+        execute statement (:stt);
+        total_objects_removed = total_objects_removed + 1;
     end
     close c_local_mapping;
 
+    rdb$set_context('USER_SESSION', 'total_objects_removed', total_objects_removed);
 
 end
 ^
 set term ;^
 commit;
 
+select rdb$get_context('USER_SESSION', 'total_objects_removed') as "Finish. Total objects removed:" from rdb$database;
