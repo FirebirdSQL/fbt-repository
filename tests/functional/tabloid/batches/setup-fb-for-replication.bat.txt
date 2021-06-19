@@ -40,11 +40,24 @@ if errorlevel 1 (
 
 (
     echo set heading off;
-    echo select rdb$get_context('SYSTEM','ENGINE_VERSION'^) from rdb$database;
+    echo select
+    echo      rdb$get_context('SYSTEM','ENGINE_VERSION'^) 
+    echo     ,rdb$config_value
+    echo from rdb$config where upper(rdb$config_name^) = upper('ServerMode'^)
+    echo ;
 ) > !tmpsql!
-for /f %%a in ('!fbc!\isql security.db -i !tmpsql! -user sysdba') do (
+for /f "tokens=1-2" %%a in ('!fbc!\isql security.db -i !tmpsql! -user sysdba') do (
     set engine=%%a
+    set srvmode=%%b
 )
+if /i .!srvmode!.==.Super. (
+    set srvmode=SS
+) else if /i .!srvmode!.==.SuperClassic. (
+    set srvmode=SC
+) else if /i .!srvmode!.==.Classic. (
+    set srvmode=CS
+)
+
 if "!engine:~0,2!"=="5." (
     set fb_suffix=fb50
 ) else if "!engine:~0,2!"=="4." (
@@ -54,61 +67,60 @@ if "!engine:~0,2!"=="5." (
     goto :fin
 )
 
-if exist !fbt_repo!\tmp\fb-replication.journal\nul (
-    rmdir /q /s !fbt_repo!\tmp\fb-replication.journal
+set repl_journal_dir=!fbt_repo!\tmp\fb-replication.!fb_suffix!.!srvmode!.journal
+set repl_archive_dir=!fbt_repo!\tmp\fb-replication.!fb_suffix!.!srvmode!.archive
+
+if exist !repl_journal_dir!\nul (
+    rmdir /q /s !repl_journal_dir!
 )
-if exist !fbt_repo!\tmp\fb-replication.archive\nul (
-    rmdir /q /s !fbt_repo!\tmp\fb-replication.archive
+if exist !repl_archive_dir!\nul (
+    rmdir /q /s !repl_archive_dir!
 )
-mkdir !fbt_repo!\tmp\fb-replication.journal
-mkdir !fbt_repo!\tmp\fb-replication.archive
+mkdir !repl_journal_dir!
+mkdir !repl_archive_dir!
 
-
-for /d %%x in (main,repl) do (
-    
-    if exist %~dp0fbt-%%x.!fb_suffix!.fdb del %~dp0fbt-%%x.!fb_suffix!.fdb
-    if .%%x.==.main. (
-        echo create database '%~dp0fbt-%%x.!fb_suffix!.fdb'; | !fbc!\isql -q -user sysdba 1>nul 2>!tmplog!
-        if errorlevel 1 (
-          type !tmplog!
-          goto :err
-        )
-
-        set target_dbnm=%~dp0fbt-repl.!fb_suffix!.fdb
-        if exist !target_dbnm! del !target_dbnm!
-        if exist !target_dbnm! (
-           echo FATAL ERROR: CAN NOT DROP FILE !target_dbnm! 
-           goto :err
-        )
-        copy %~dp0fbt-%%x.!fb_suffix!.fdb !target_dbnm! 1>!tmplog! 2>&1
-        if errorlevel 1 (
-            type !tmplog!
-            goto :err
-
-        )
-    ) else (
-        copy %~dp0fbt-main.!fb_suffix!.fdb %~dp0fbt-%%x.!fb_suffix!.fdb 1>!tmplog! 2>&1
-        if errorlevel 1 (
-            type !tmplog!
-            goto :err
-        )
-        !fbc!\gfix -replica read_only %~dp0fbt-%%x.!fb_suffix!.fdb -user sysdba 1>!tmplog! 2>&1
-        if errorlevel 1 (
-            type !tmplog!
-            goto :err
-        )
-        echo alter database enable publication; alter database include all to publication; | !fbc!\isql -user sysdba  %~dp0fbt-main.!fb_suffix!.fdb 1>nul 2>!tmplog!
-        if errorlevel 1 (
-            type !tmplog!
-            goto :err
-        )
-
-        move %~dp0fbt-main.!fb_suffix!.fdb !fbt_repo!\tmp\
-        move %~dp0fbt-%%x.!fb_suffix!.fdb !fbt_repo!\tmp\
+set db_main_name=!fbt_repo!\tmp\fbt-main.!fb_suffix!.!srvmode!.fdb
+set db_repl_name=!fbt_repo!\tmp\fbt-repl.!fb_suffix!.!srvmode!.fdb
+for /d %%x in (!db_main_name!,!db_main_name!) do (
+    if exist %%x del %%x
+    if exist %%x (
+        echo COULD NOT DELETE FILE %%X
+        goto :err
     )
 )
 
-dir !fbt_repo!\tmp | findstr /i /c:"fb-replication.journal" /c:"fb-replication.archive" /c:"fbt-main.!fb_suffix!.fdb" /c:"fbt-repl.!fb_suffix!.fdb"
+for /d %%x in (main,repl) do (
+    
+    if .%%x.==.main. (
+        echo create database '!db_main_name!'; | !fbc!\isql -q -user sysdba 1>nul 2>!tmplog!
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+        )
+
+        copy !db_main_name! !db_repl_name! 1>!tmplog! 2>&1
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+
+        )
+
+    ) else (
+        !fbc!\gfix -replica read_only !db_repl_name! -user sysdba 1>!tmplog! 2>&1
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+        )
+        echo alter database enable publication; alter database include all to publication; | !fbc!\isql -user sysdba !db_main_name! 1>nul 2>!tmplog!
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+        )
+
+    )
+)
+
+dir !fbt_repo!\tmp | findstr /i /c:"fb-replication.!fb_suffix!.!srvmode!." /c:"fbt-main.!fb_suffix!.!srvmode!." /c:"fbt-repl.!fb_suffix!.!srvmode!."
 
 (
     echo database
@@ -116,11 +128,11 @@ dir !fbt_repo!\tmp | findstr /i /c:"fb-replication.journal" /c:"fb-replication.a
     echo   verbose_logging = true
     echo }
     echo ########################################################
-    echo database = !fbt_repo!\tmp\fbt-main.!fb_suffix!.fdb
+    echo database = !db_main_name!
     echo {
     echo     # location of the replication journal files _aka_ segments
-    echo     journal_directory = "!fbt_repo!\tmp\fb-replication.journal"
-    echo     journal_archive_directory = "!fbt_repo!\tmp\fb-replication.archive"
+    echo     journal_directory = "!repl_journal_dir!"
+    echo     journal_archive_directory = "!repl_archive_dir!"
     echo     # journal_archive_command allows to use any system shell command, including scripts / batch files, to deliver segments to the replica side
     echo     # $(pathname^) and $(archivepathname^) are built-in macros that provide the custom shell command with real file names.
     echo     #
@@ -128,10 +140,10 @@ dir !fbt_repo!\tmp | findstr /i /c:"fb-replication.journal" /c:"fb-replication.a
     echo     journal_archive_timeout = 10
     echo }
     echo ########################################################
-    echo database = !fbt_repo!\tmp\fbt-repl.!fb_suffix!.fdb
+    echo database = !db_repl_name!
     echo {
     echo     # location that Firebird server scans for the transmitted segments
-    echo     journal_source_directory = "!fbt_repo!\tmp\fb-replication.archive"
+    echo     journal_source_directory = "!repl_archive_dir!"
     echo }
 ) >!tmplog!
 
