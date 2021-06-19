@@ -1,0 +1,152 @@
+@echo off
+setlocal enabledelayedexpansion enableextensions
+
+@rem 50sS; 50CS, etc - name suffix of FB service
+set fbs=%1
+
+if .!fbs!.==.. (
+    echo Syntax: %~f0 [FB_service_name_suffix],
+    echo e.g.:
+    echo    %~f0 50SS
+    echo    %~f0 40CS
+    echo etc
+    pause
+    goto :err
+)
+
+set fbs=FirebirdServer!fbs!
+
+set fbt_repo=C:\FBTESTING\qa\fbt-repo
+
+set tmpsql=%~dpn0.tmp.sql
+set tmplog=%~dpn0.tmp.log
+
+
+for /f "tokens=3" %%a in ('REG.EXE query HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\!fbs! ^| findstr /i /c:"ImagePath"') do (
+   set fbc=%%~dpa
+   set fbc=!fbc:~0,-1!
+)
+
+net stop !fbs! 2>nul
+
+sc queryex !fbs! | findstr /i /r /c:"1[ ]*STOPPED" 1>!tmplog! 2>&1
+if errorlevel 1 (
+    echo Service !fbs! state:
+    type !tmplog!
+    goto :err
+) else (
+    echo Service !fbs! is in 'STOPPED' state. We can go on.
+)
+
+(
+    echo set heading off;
+    echo select rdb$get_context('SYSTEM','ENGINE_VERSION'^) from rdb$database;
+) > !tmpsql!
+for /f %%a in ('!fbc!\isql security.db -i !tmpsql! -user sysdba') do (
+    set engine=%%a
+)
+if "!engine:~0,2!"=="5." (
+    set fb_suffix=fb50
+) else if "!engine:~0,2!"=="4." (
+    set fb_suffix=fb40
+) else (
+    echo ENGINE VERSION DOES NOT SUPPORT REPLICATION.
+    goto :fin
+)
+
+if exist !fbt_repo!\tmp\fb-replication.journal\nul (
+    rmdir /q /s !fbt_repo!\tmp\fb-replication.journal
+)
+if exist !fbt_repo!\tmp\fb-replication.archive\nul (
+    rmdir /q /s !fbt_repo!\tmp\fb-replication.archive
+)
+mkdir !fbt_repo!\tmp\fb-replication.journal
+mkdir !fbt_repo!\tmp\fb-replication.archive
+
+
+for /d %%x in (main,repl) do (
+    
+    if exist %~dp0fbt-%%x.!fb_suffix!.fdb del %~dp0fbt-%%x.!fb_suffix!.fdb
+    if .%%x.==.main. (
+        echo create database '%~dp0fbt-%%x.!fb_suffix!.fdb'; | !fbc!\isql -q -user sysdba 1>nul 2>!tmplog!
+        if errorlevel 1 (
+          type !tmplog!
+          goto :err
+        )
+
+        set target_dbnm=%~dp0fbt-repl.!fb_suffix!.fdb
+        if exist !target_dbnm! del !target_dbnm!
+        if exist !target_dbnm! (
+           echo FATAL ERROR: CAN NOT DROP FILE !target_dbnm! 
+           goto :err
+        )
+        copy %~dp0fbt-%%x.!fb_suffix!.fdb !target_dbnm! 1>!tmplog! 2>&1
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+
+        )
+    ) else (
+        copy %~dp0fbt-main.!fb_suffix!.fdb %~dp0fbt-%%x.!fb_suffix!.fdb 1>!tmplog! 2>&1
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+        )
+        !fbc!\gfix -replica read_only %~dp0fbt-%%x.!fb_suffix!.fdb -user sysdba 1>!tmplog! 2>&1
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+        )
+        echo alter database enable publication; alter database include all to publication; | !fbc!\isql -user sysdba  %~dp0fbt-main.!fb_suffix!.fdb 1>nul 2>!tmplog!
+        if errorlevel 1 (
+            type !tmplog!
+            goto :err
+        )
+
+        move %~dp0fbt-main.!fb_suffix!.fdb !fbt_repo!\tmp\
+        move %~dp0fbt-%%x.!fb_suffix!.fdb !fbt_repo!\tmp\
+    )
+)
+
+dir !fbt_repo!\tmp | findstr /i /c:"fb-replication.journal" /c:"fb-replication.archive" /c:"fbt-main.!fb_suffix!.fdb" /c:"fbt-repl.!fb_suffix!.fdb"
+
+(
+    echo database
+    echo {
+    echo   verbose_logging = true
+    echo }
+    echo ########################################################
+    echo database = !fbt_repo!\tmp\fbt-main.!fb_suffix!.fdb
+    echo {
+    echo     # location of the replication journal files _aka_ segments
+    echo     journal_directory = "!fbt_repo!\tmp\fb-replication.journal"
+    echo     journal_archive_directory = "!fbt_repo!\tmp\fb-replication.archive"
+    echo     # journal_archive_command allows to use any system shell command, including scripts / batch files, to deliver segments to the replica side
+    echo     # $(pathname^) and $(archivepathname^) are built-in macros that provide the custom shell command with real file names.
+    echo     #
+    echo     journal_archive_command = "copy $(pathname) $(archivepathname)"
+    echo     journal_archive_timeout = 10
+    echo }
+    echo ########################################################
+    echo database = !fbt_repo!\tmp\fbt-repl.!fb_suffix!.fdb
+    echo {
+    echo     # location that Firebird server scans for the transmitted segments
+    echo     journal_source_directory = "!fbt_repo!\tmp\fb-replication.archive"
+    echo }
+) >!tmplog!
+
+copy !tmplog! !fbc!\replication.conf 1>nul 2>&1
+dir 1>nul 2>!fbc!\replication.log
+
+net start !fbs!
+
+del !tmpsql! 2>nul
+del !tmplog! 2>nul
+
+goto :fin
+
+:err
+  echo ### ERROR OCCURED ###
+  goto :fin
+:fin
+  echo Bye-bye from %~f0
