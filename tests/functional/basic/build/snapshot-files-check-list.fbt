@@ -729,7 +729,7 @@ set(
         ,'gsplit.exe'
         ,'gstat.exe'
         ,'gstat.pdb'
-        ,'help/help.fdb'
+
         ,'ib_util.dll'
         ,'icudt63.dll'
         ,'icudt63l.dat'
