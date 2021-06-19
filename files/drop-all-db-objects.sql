@@ -383,28 +383,41 @@ begin
     end
     close c_local_mapping;
 
-    open c_users; ----------  d r o p   u s e r s   e x c e p t   S Y S D B A  ----
-    while (1=1) do
-    begin
-        fetch c_users into usr_name, sec_plugin;
-        if (row_count = 0) then leave;
 
+    /*******************************
+
+        ###################################################
+        ### TEMPORARY DISABLED OTHERWISE FB HANGS! ###
+        WAITING FOR FIX:
+        https://github.com/FirebirdSQL/firebird/issues/6861
+        ###################################################
+        open c_users; ----------  d r o p   u s e r s   e x c e p t   S Y S D B A  ----
+        while (1=1) do
         begin
-            -- Privileges for GRANT / DROP database remain even when user is droppped.
-            -- We have to use REVOKE ALL ON ALL in order to cleanup them:
-            stt = 'revoke all on all from '|| usr_name;
-            execute statement (:stt);
-            when any do
-            begin
-               --- suppress warning ---
-            end
-        end
+            fetch c_users into usr_name, sec_plugin;
+            if (row_count = 0) then leave;
 
-        stt = 'drop user '|| usr_name || ' using plugin ' || sec_plugin;
-        execute statement (:stt);
-        total_objects_removed = total_objects_removed + 1;
-    end
-    close c_local_mapping;
+            stt = 'alter user '|| usr_name || ' revoke admin role using plugin ' || sec_plugin;
+            execute statement (:stt); -- ?! with autonomous transaction;
+
+            begin
+                -- Privileges for GRANT / DROP database remain even when user is droppped.
+                -- We have to use REVOKE ALL ON ALL in order to cleanup them:
+                stt = 'revoke all on all from '|| usr_name;
+                execute statement (:stt); -- ?! with autonomous transaction;
+                when any do
+                begin
+                   --- suppress warning ---
+                end
+            end
+
+            stt = 'drop user '|| usr_name || ' using plugin ' || sec_plugin;
+            execute statement (:stt);
+            total_objects_removed = total_objects_removed + 1;
+        end
+        close c_users;
+    
+    ***********************************/
 
     rdb$set_context('USER_SESSION', 'total_objects_removed', total_objects_removed);
 
