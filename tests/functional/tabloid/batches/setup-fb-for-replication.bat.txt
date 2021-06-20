@@ -46,10 +46,21 @@ if errorlevel 1 (
     echo from rdb$config where upper(rdb$config_name^) = upper('ServerMode'^)
     echo ;
 ) > !tmpsql!
+
 for /f "tokens=1-2" %%a in ('!fbc!\isql security.db -i !tmpsql! -user sysdba') do (
     set engine=%%a
     set srvmode=%%b
 )
+
+@rem Server version: WI-V4.0.0.2453 Firebird 4.0 Release Candidate 1
+@rem   1       2            3
+for /f "tokens=3" %%a in ('!fbc!\fbsvcmgr service_mgr info_server_version') do (
+    set build_str=%%a
+    for /f "tokens=4 delims=." %%b in ("!build_str!") do (
+        set build_num=%%b
+    )
+)
+
 if /i .!srvmode!.==.Super. (
     set srvmode=SS
 ) else if /i .!srvmode!.==.SuperClassic. (
@@ -60,11 +71,24 @@ if /i .!srvmode!.==.Super. (
 
 if "!engine:~0,2!"=="5." (
     set fb_suffix=fb50
+    set replconf_format=new
 ) else if "!engine:~0,2!"=="4." (
     set fb_suffix=fb40
+    if !build_num! GEQ 2465 (
+        set replconf_format=new
+    ) else (
+        set replconf_format=old
+    )
 ) else (
     echo ENGINE VERSION DOES NOT SUPPORT REPLICATION.
     goto :fin
+)
+
+if .1.==.0. (
+echo engine=!engine!
+echo build_str=!build_str!
+echo build_num=!build_num!
+echo replconf_format=!replconf_format!
 )
 
 set repl_journal_dir=!fbt_repo!\tmp\fb-replication.!fb_suffix!.!srvmode!.journal
@@ -111,7 +135,7 @@ for /d %%x in (main,repl) do (
             type !tmplog!
             goto :err
         )
-        echo alter database enable publication; alter database include all to publication; | !fbc!\isql -user sysdba !db_main_name! 1>nul 2>!tmplog!
+        echo alter database enable publication; alter database include all to publication; | !fbc!\isql -user sysdba !db_main_name! 1>!tmplog! 2>&1
         if errorlevel 1 (
             type !tmplog!
             goto :err
@@ -131,19 +155,36 @@ dir !fbt_repo!\tmp | findstr /i /c:"fb-replication.!fb_suffix!.!srvmode!." /c:"f
     echo database = !db_main_name!
     echo {
     echo     # location of the replication journal files _aka_ segments
-    echo     journal_directory = "!repl_journal_dir!"
-    echo     journal_archive_directory = "!repl_archive_dir!"
+    if /i .!replconf_format!.==.new. (
+        echo     journal_directory = "!repl_journal_dir!"
+        echo     journal_archive_directory = "!repl_archive_dir!"
+    ) else (
+        echo     log_directory = "!repl_journal_dir!"
+        echo     log_archive_directory = "!repl_archive_dir!"
+    )
+
     echo     # journal_archive_command allows to use any system shell command, including scripts / batch files, to deliver segments to the replica side
     echo     # $(pathname^) and $(archivepathname^) are built-in macros that provide the custom shell command with real file names.
     echo     #
-    echo     journal_archive_command = "copy $(pathname) $(archivepathname)"
-    echo     journal_archive_timeout = 10
+    if /i .!replconf_format!.==.new. (
+        echo     journal_archive_command = "copy $(pathname) $(archivepathname)"
+        echo     journal_archive_timeout = 10
+    ) else (
+        echo     log_archive_command = "copy $(logpathname) $(archpathname)"
+        echo     log_archive_timeout = 10
+    )
     echo }
+
     echo ########################################################
+    
     echo database = !db_repl_name!
     echo {
     echo     # location that Firebird server scans for the transmitted segments
-    echo     journal_source_directory = "!repl_archive_dir!"
+    if /i .!replconf_format!.==.new. (
+        echo     journal_source_directory = "!repl_archive_dir!"
+    ) else (
+        echo     log_source_directory = "!repl_archive_dir!"
+    )
     echo }
 ) >!tmplog!
 
