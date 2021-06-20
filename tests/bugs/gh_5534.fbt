@@ -16,11 +16,9 @@
     Thus 'expected-' sections must be empty.
 	If some character leads to error, apropriate repord ID is included into the list of problematic
 	unicode characters (see variables 'vchr_id_problem_list' and 'blob_id_problem_list').
-	
-	This is performed for VARCHAR and BLOB datatypes, but currently BLOB datatype has a problem:
-	call of rsa_encrypt() leads to 'malformed string' error.
-	Because of this, such code for BLOBs temporary is commented out.
-	Sent letter to Alex et al, 14-jun-2021 20:03.
+	This is performed for VARCHAR and BLOB datatypes.
+	Bug was detected with BLOBs, see https://github.com/FirebirdSQL/firebird/issues/6858
+	(fixed 17.06.2021)
 	
 	Confirmed problem on 5.0.0.75; 4.0.0.2508 (handling of all characters from this test raise error).
 	Checked on: 5.0.0.79; 4.0.1.2517 - all OK.
