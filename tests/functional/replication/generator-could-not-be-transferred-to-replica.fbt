@@ -313,7 +313,7 @@ if MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG: # ==> initial SQL script finished w/o error
     db_main_meta.close()
     db_repl_meta.close()
 
-    f_meta_diff=open( os.path.join(context['temp_directory'],'db_meta_diff_ûkip_gen_repl.txt'), 'w', buffering = 0)
+    f_meta_diff=open( os.path.join(context['temp_directory'],'db_meta_diff_skip_gen_repl.txt'), 'w', buffering = 0)
     f_meta_diff.write(diffmeta)
     flush_and_close( f_meta_diff )
 
