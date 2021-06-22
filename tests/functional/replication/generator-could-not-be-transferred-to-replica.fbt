@@ -299,7 +299,7 @@ if MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG: # ==> initial SQL script finished w/o error
     subprocess.call( [context['isql_path'], 'localhost:' + db_main, '-q', '-nod', '-ch', 'utf8', '-x'], stdout=f_main_meta_sql, stderr=subprocess.STDOUT )
     flush_and_close( f_main_meta_sql )
 
-    f_repl_meta_sql=open( os.path.join(context['temp_directory'],'db_main_meta_skip_gen_repl.sql'), 'w')
+    f_repl_meta_sql=open( os.path.join(context['temp_directory'],'db_repl_meta_skip_gen_repl.sql'), 'w')
     subprocess.call( [context['isql_path'], 'localhost:' + db_repl, '-q', '-nod', '-ch', 'utf8', '-x'], stdout=f_repl_meta_sql, stderr=subprocess.STDOUT )
     flush_and_close( f_repl_meta_sql )
 
