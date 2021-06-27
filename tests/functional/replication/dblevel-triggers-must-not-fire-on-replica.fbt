@@ -5,6 +5,8 @@
 'title': "Replica DB must not fire DB-level triggers but their activity on master must be eventually seen in replica.",
 'description':
  """
+    https://github.com/FirebirdSQL/firebird/issues/6850
+    
     Test creates five DB-level triggers in the master DB (on connect/disconnect; on tx start/commit/rollback).
     Each of them registers apropriate event in the table with name 'log_db_triggers_activity'.
     This table must eventually have five records in BOTH databases (i.e. not only in master, but in replica also).
