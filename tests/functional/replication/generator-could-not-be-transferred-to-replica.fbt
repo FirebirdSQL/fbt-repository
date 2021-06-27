@@ -2,9 +2,11 @@
 'id': 'tests.functional.replication.generator-could-not-be-transferred-to-replica',
 'qmid': None,
 'tracker_id': '',
-'title': "",
+'title': "Generator values may not replicate after commit",
 'description':
  """
+    https://github.com/FirebirdSQL/firebird/issues/6848
+
     Test creates table and two sequences: 'g_1' and 'g_2'.
     Then we add record in the table and use 'g_2' (i.e. sequence which was created LAST).
     After this we do update record and use 'g_1' (seq. which was created FIRST).
