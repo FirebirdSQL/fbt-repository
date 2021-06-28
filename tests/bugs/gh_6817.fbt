@@ -9,8 +9,6 @@
 
     Confirmed bug on 5.0.0.63, 4.0.0.2508, 3.0.8.33470.
     Checked on intermediate builds 4.x and 5.x with the same numbers, timestamps: 08-jun-2021 16:32, 16:35 -- all OK.
-    NB: intermediate build for FB 3.x was not created due to error. Sent letter to Alex.
-    Attribute `min_version` will be changed to 3.0.8 after fix for FB 3.x.
  """,
 'min_versions': '3.0.8',
 'versions': [
