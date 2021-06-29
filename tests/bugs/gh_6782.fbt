@@ -48,6 +48,10 @@ os.environ["ISC_PASSWORD"] = user_password
 # tmpfdb = db_conn.database_name
 db_conn.close()
 
+####################################
+MAX_WAIT_FOR_TRACE_LOG_COMPLETE = 65
+####################################
+
 #--------------------------------------------
 
 def flush_and_close( file_handle ):
@@ -91,7 +95,12 @@ database= %[\\\\\\\\/]bugs.gh_6782.fdb
   enabled = true
   time_threshold = 0 
   log_initfini = false
+  
+  # 29.06.2021: errors must be logged because
+  # we intentionally will put statement that
+  # causes zero division at the end of .sql:
   log_errors = true
+
   log_procedure_finish = true
   log_function_finish = true
 }
@@ -256,6 +265,16 @@ else:
         commit;
         show procedure;
         show function;
+
+        -- 29.06.2021
+        -- Put LAST statement that causes zero-division exception.
+        -- After trace session will be closed, we start checked its log
+        -- every second for presence of lines with corresponding gdscodes:
+        -- '335544321 :' and '335544778 :'.
+        -- Trace parsing for presence of messages related to this ticket
+        -- can start only AFTER these gdscodes will be encountered.
+        -- Otherwise this test will often fail because of missing some lines.
+        select 1/0 from rdb$database;
     '''
 
     isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_6782.sql'), 'w')
@@ -279,12 +298,24 @@ else:
                       stdout=trc_lst, stderr=subprocess.STDOUT
                    )
     flush_and_close( trc_lst )
-
-    # do NOT remove this delay:
-    time.sleep(3)
-
     flush_and_close( trc_log )
 
+    # 29.06.2021: replaced stupid wait that can give unpredictable outcome
+    # with loop which checks expected gdscode of error caused by zero divide.
+    # Could not find any other reliable way to get completed trace log.
+
+    trace_completed = False
+    for i in range(0,MAX_WAIT_FOR_TRACE_LOG_COMPLETE):
+        time.sleep(1)
+        with open(trc_log.name, 'r') as f:
+            trc_data = f.read()
+            if '335544321 :' in trc_data and '335544778 :' in trc_data:
+                trace_completed = True
+        if trace_completed:
+            break
+
+    if not trace_completed:
+        print( 'ERROR: COULD NOT FIND EXPECTED MESSAGE IN THE TRACE LOG FOR %d SECONDS.' % MAX_WAIT_FOR_TRACE_LOG_COMPLETE )
 
     #####################################################################
 
