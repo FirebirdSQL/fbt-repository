@@ -9,11 +9,14 @@
 
     Confirmed poor performance on 5.0.0.85: ratio was about 45 ... 48x (!)
     Checked on 5.0.0.87 SS/CS: ratio is ~ 1.56 ... 1.62 (for N = 1'000'000 iterations).
+
+    29.06.2021: checked on 4.0.1.2521, intermediate build (19:21) - all OK.
+    Reduced min_version to 4.0.1
  """,
-'min_versions': '5.0',
+'min_versions': '4.0.1',
 'versions': [
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
