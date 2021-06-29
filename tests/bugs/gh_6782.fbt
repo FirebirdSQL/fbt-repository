@@ -21,10 +21,23 @@
               0 ms, 10 fetch(es)
                     ^^^^^^^^^^^^ --- added
 
-    Checked on 3.0.8.33460, 4.0.0.2448 -- all OK.
     Test parses trace log and search there lines with names of known procedures/functions and
     then checks presence of lines with number of fetched records (for selectable procedures) and
     additional statistics ('fetches/reads/writes/marks').
+
+    Checked on:
+        5.0.0.87 SS: 7.231s.
+        5.0.0.85 CS: 6.425s.
+        4.0.1.2520 SS: 6.929s.
+        4.0.1.2519 CS: 9.452s.
+        3.0.8.33476 SS: 12.199s.
+        3.0.8.33476 CS: 14.090s.
+
+    29.06.2021: added delay for 1.1 second after ISQL finished its script and before we ask trace to stop.
+    This is the only way to make trace log be completed. DO NOT EVER remove this delay because fbsvcmgr
+    makes query to FB services only one time per SECOND.
+
+    See also reply from Vlad related to test for core-6469, privately, letter: 04-mar-2021 13:02.
  """,
 'min_versions': '3.0.8',
 'versions': [
@@ -36,7 +49,6 @@
   """,
  'test_type': 'Python',
  'test_script':"""\
-
 import os
 import re
 import subprocess
@@ -45,12 +57,7 @@ import time
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
-# tmpfdb = db_conn.database_name
 db_conn.close()
-
-####################################
-MAX_WAIT_FOR_TRACE_LOG_COMPLETE = 65
-####################################
 
 #--------------------------------------------
 
@@ -95,12 +102,7 @@ database= %[\\\\\\\\/]bugs.gh_6782.fdb
   enabled = true
   time_threshold = 0 
   log_initfini = false
-  
-  # 29.06.2021: errors must be logged because
-  # we intentionally will put statement that
-  # causes zero division at the end of .sql:
   log_errors = true
-
   log_procedure_finish = true
   log_function_finish = true
 }
@@ -115,17 +117,16 @@ flush_and_close( trc_cfg )
 trc_log = open( os.path.join(context['temp_directory'],'tmp_trace_6782.log'), 'w')
 
 # Execute a child program in a new process, redirecting STDERR to the same target as of STDOUT:
-p_svcmgr = Popen( [context['fbsvcmgr_path'], "localhost:service_mgr",
+p_trace = Popen( [context['fbsvcmgr_path'], "localhost:service_mgr",
                    "action_trace_start","trc_cfg", trc_cfg.name],
                   stdout=trc_log, stderr=subprocess.STDOUT)
 
 # Wait! Trace session is initialized not instantly!
-time.sleep(2)
+time.sleep(1)
 
 #####################################################################
 
 # Determine active trace session ID (for further stop):
-
 trc_lst = open( os.path.join(context['temp_directory'],'tmp_trace_6782.lst'), 'w')
 subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
                  "action_trace_list"],
@@ -134,24 +135,16 @@ subprocess.call([context['fbsvcmgr_path'], "localhost:service_mgr",
 flush_and_close( trc_lst )
 
 # Session ID: 5 
-#   user:   
-#   date:  2015-08-27 15:24:14 
-#   flags: active, trace 
-
-trcssn=0
+# ...
+trcssn = None
 with open( trc_lst.name,'r') as f:
     for line in f:
-        i=1
-        if 'Session ID' in line:
-            for word in line.split():
-                if i==3:
-                    trcssn=word
-                i=i+1
-            break
+        if 'Session ID' in line and len(line.split())>=3:
+           trcssn = line.split()[2]
+           break
 
 # Result: `trcssn` is ID of active trace session. 
-# We have to terminate trace session that is running on server BEFORE we termitane process `p_svcmgr`
-if trcssn==0:
+if not trcssn:
     print("Error parsing trace session ID.")
     flush_and_close( trc_log )
 
@@ -256,25 +249,12 @@ else:
           execute procedure pg_test.packaged_nonselected_sp;
         end
         ^
-
         set term ;^
         commit;
 
         set list on;
         execute procedure sp_main;
         commit;
-        show procedure;
-        show function;
-
-        -- 29.06.2021
-        -- Put LAST statement that causes zero-division exception.
-        -- After trace session will be closed, we start checked its log
-        -- every second for presence of lines with corresponding gdscodes:
-        -- '335544321 :' and '335544778 :'.
-        -- Trace parsing for presence of messages related to this ticket
-        -- can start only AFTER these gdscodes will be encountered.
-        -- Otherwise this test will often fail because of missing some lines.
-        select 1/0 from rdb$database;
     '''
 
     isql_cmd=open( os.path.join(context['temp_directory'],'tmp_isql_6782.sql'), 'w')
@@ -282,15 +262,24 @@ else:
     flush_and_close( isql_cmd )
 
     #######################################################################
-
     isql_log=open( os.path.join(context['temp_directory'],'tmp_isql_6782.log'), 'w')
     subprocess.call( [ context['isql_path'], dsn, "-i", isql_cmd.name ], stdout=isql_log,stderr=subprocess.STDOUT)
     flush_and_close( isql_log )
-
-    #####################################################################
-
-    # Stop trace session:
-
+    
+    #########################
+    ###   C R U C I A L   ###
+    #########################
+    # We must stay idle here at least 1.1 second before ask fbsbcmgr to stop trace.
+    # The reason is that fbsvcmgr make query to FB services only one time per second.
+    # If we do not take delay here then test can fail with (most often) empty log
+    # or its log can look incompleted.
+    # See letter from Vlad, 04-mar-2021 13:02 (subj: "Test core_6469 на Linux...").
+    ###############
+    time.sleep(1.1)
+    ###############
+    
+    # Stop trace session. We have to do this BEFORE we termitane process with PID = p_trace.
+    # NOTE ONCE AGAIN: we can do this only after delay for at least 1.1 second!
     trc_lst=open(trc_lst.name, "a")
     trc_lst.seek(0,2)
     subprocess.call([ context['fbsvcmgr_path'], "localhost:service_mgr",
@@ -298,26 +287,11 @@ else:
                       stdout=trc_lst, stderr=subprocess.STDOUT
                    )
     flush_and_close( trc_lst )
+    
+    ###########################
+    p_trace.terminate()
     flush_and_close( trc_log )
-
-    # 29.06.2021: replaced stupid wait that can give unpredictable outcome
-    # with loop which checks expected gdscode of error caused by zero divide.
-    # Could not find any other reliable way to get completed trace log.
-
-    trace_completed = False
-    for i in range(0,MAX_WAIT_FOR_TRACE_LOG_COMPLETE):
-        time.sleep(1)
-        with open(trc_log.name, 'r') as f:
-            trc_data = f.read()
-            if '335544321 :' in trc_data and '335544778 :' in trc_data:
-                trace_completed = True
-        if trace_completed:
-            break
-
-    if not trace_completed:
-        print( 'ERROR: COULD NOT FIND EXPECTED MESSAGE IN THE TRACE LOG FOR %d SECONDS.' % MAX_WAIT_FOR_TRACE_LOG_COMPLETE )
-
-    #####################################################################
+    ###########################
 
     # Check logs:
     #############
