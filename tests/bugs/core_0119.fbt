@@ -5,6 +5,9 @@
 'title': "numeric div in dialect 3 mangles data",
 'description':
  """
+
+    New URL: https://github.com/FirebirdSQL/firebird/issues/441
+
     NOTE. Results for FB 4.0 become differ from old one. Discussed with Alex, 30.10.2019.
     Precise value of 70000 / 1.95583 is: 35790.431683735296 (checked on https://www.wolframalpha.com )
     Section 'expected-stdout' was adjusted to be match for results that are issued in recent FB.
@@ -19,6 +22,11 @@
     (after discuss with dimitr, letter 21.06.2020 08:43).
 
     25.06.2020, 4.0.0.2076: changed types in SQLDA from numeric to int128 // after discuss with Alex about CORE-6342.
+
+    27.07.2021: adjusted expected* sections to results in current snapshots FB 4.x and 5.x: this is needed since fix #6874
+    ("Literal 65536 (interpreted as int) can not be multiplied by itself w/o cast if result more than 2^63-1") because
+    division -4611686018427387904/-0.5 does not issue error since this fix.
+    Checked on 5.0.0.113, 4.0.1.2539.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -72,12 +80,10 @@
     DIV_RESULT_2 -35790.4316837353
 
     01: sqltype: 32752 INT128 scale: -1 subtype: 0 len: 16
+    DIV_RESULT_3 9223372036854775808.0
   """,
  'expected_stderr':
   """
-    Statement failed, SQLSTATE = 22003
-    arithmetic exception, numeric overflow, or string truncation
-    -numeric value is out of range
   """,
   'substitutions':[ ('^((?!(sqltype|DIV_RESULT)).)*$',''), ('[ \t]+',' '), ('.*alias.*', '') ]
 }
