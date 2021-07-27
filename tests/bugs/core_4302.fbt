@@ -120,7 +120,8 @@
     MEASURE                         3
     FETCHES_COUNT                   OK, less then 70
 
-  """
+  """,
+ 'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
