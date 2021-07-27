@@ -184,7 +184,8 @@
 
     MEASURE                         2
     FETCHES_COUNT                   OK, less then max_allowed
-  """
+  """,
+ 'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
