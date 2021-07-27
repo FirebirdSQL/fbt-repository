@@ -23,7 +23,8 @@
  'expected_stdout': 
   """
     D                               -3
-  """
+  """,
+ 'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
