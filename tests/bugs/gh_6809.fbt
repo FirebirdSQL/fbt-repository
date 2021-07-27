@@ -18,6 +18,9 @@
     Discussed with Alex and dimitr 17-18 may 2021.
 
     Checked on 5.0.0.40; 4.0.0.2502 (intermediate snapshot, 01.06.2020 16:49).
+
+    27.07.2021: adjusted expected* sections to results in current snapshots FB 4.x and 5.x: this is needed since fix #6874
+    Checked on 5.0.0.113, 4.0.1.2539.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -160,146 +163,402 @@
   """,
  'expected_stdout': 
   """
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
-    : name: CONSTANT alias: hex +0x7FFFFFFF
-    hex +0x7FFFFFFF 2147483647
+      :  name: CONSTANT  alias: hex +0x7FFFFFFF
+      : table:   owner: 
 
+    hex +0x7FFFFFFF                 2147483647
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
-    : name: CONSTANT alias: hex +0x80000000
-    hex +0x80000000 -2147483648
+      :  name: CONSTANT  alias: hex +0x80000000
+      : table:   owner: 
 
+    hex +0x80000000                 -2147483648
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
-    : name: CONSTANT alias: hex -0x80000000
-    hex -0x80000000 -2147483648
-    
+      :  name: CONSTANT  alias: hex -0x80000000
+      : table:   owner: 
+
+    hex -0x80000000                 -2147483648
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
-    : name: CONSTANT alias: hex -(0x80000000)
-    hex -(0x80000000) -2147483648
+      :  name: CONSTANT  alias: hex -(0x80000000)
+      : table:   owner: 
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: MULTIPLY alias: hex -1*(0x80000000)
-    hex -1*(0x80000000) 2147483648
+    hex -(0x80000000)               -2147483648
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0x07FFFFFFF
-    hex +0x07FFFFFFF 2147483647
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex -0x07FFFFFFF
-    hex -0x07FFFFFFF -2147483647
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0x080000000
-    hex +0x080000000 2147483648
+    INPUT message field count: 0
 
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex -0x080000000
-    hex -0x080000000 -2147483648
+      :  name: MULTIPLY  alias: hex -1*(0x80000000)
+      : table:   owner: 
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0x100000000
-    hex +0x100000000 4294967296
+    hex -1*(0x80000000)             2147483648
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex -0x100000000
-    hex -0x100000000 -4294967296
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0x7FFFFFFFFFFFFFFF
-    hex +0x7FFFFFFFFFFFFFFF 9223372036854775807
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex -0x7FFFFFFFFFFFFFFF
-    hex -0x7FFFFFFFFFFFFFFF -9223372036854775807
+    INPUT message field count: 0
 
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0x8000000000000000
-    hex +0x8000000000000000 -9223372036854775808
+      :  name: CONSTANT  alias: hex +0x07FFFFFFF
+      : table:   owner: 
 
-    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex -0x8000000000000000
+    hex +0x07FFFFFFF                2147483647
 
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex -0x8000000000000000
-    
+      :  name: CONSTANT  alias: hex -0x07FFFFFFF
+      : table:   owner: 
+
+    hex -0x07FFFFFFF                -2147483647
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: MULTIPLY alias: hex -1*(0x8000000000000000)
-    
+      :  name: CONSTANT  alias: hex +0x080000000
+      : table:   owner: 
+
+    hex +0x080000000                2147483648
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0x8000000000000001
-    hex +0x8000000000000001 -9223372036854775807
-    
+      :  name: CONSTANT  alias: hex -0x080000000
+      : table:   owner: 
+
+    hex -0x080000000                -2147483648
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: CONSTANT alias: hex +0xFFFFFFFFFFFFFFFF
-    hex +0xFFFFFFFFFFFFFFFF -1
-    
+      :  name: CONSTANT  alias: hex +0x100000000
+      : table:   owner: 
+
+    hex +0x100000000                4294967296
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex -0x100000000
+      : table:   owner: 
+
+    hex -0x100000000                -4294967296
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex +0x7FFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex +0x7FFFFFFFFFFFFFFF         9223372036854775807
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex -0x7FFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex -0x7FFFFFFFFFFFFFFF         -9223372036854775807
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex +0x8000000000000000
+      : table:   owner: 
+
+    hex +0x8000000000000000         -9223372036854775808
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex -0x8000000000000000
+      : table:   owner: 
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex -0x8000000000000000
+      : table:   owner: 
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex +0x07FFFFFFFFFFFFFFF
-    hex +0x07FFFFFFFFFFFFFFF 9223372036854775807
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: MULTIPLY alias: hex -1*(0x07FFFFFFFFFFFFFFF)
-    hex -1*(0x07FFFFFFFFFFFFFFF) -9223372036854775807
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex +0x08000000000000000
-    hex +0x08000000000000000 9223372036854775808
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex +0x7FFFFFFFFFFFFFFF0
-    hex +0x7FFFFFFFFFFFFFFF0 147573952589676412912
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    hex 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF 170141183460469231731687303715884105727
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex 0x80000000000000000000000000000000
-    hex 0x80000000000000000000000000000000 -170141183460469231731687303715884105728
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: MULTIPLY alias: hex -1*(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
-    hex -1*(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) -170141183460469231731687303715884105727
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex 0x80000000000000000000000000000001
-    hex 0x80000000000000000000000000000001 -170141183460469231731687303715884105727
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex +0x70000000000000000000000000000001
-    hex +0x70000000000000000000000000000001 148873535527910577765226390751398592513
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex +0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    hex +0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF -148873535527910577765226390751398592513
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: CONSTANT alias: hex +0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-    hex +0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF -1
-    
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: ADD alias: hex sum_01
-    hex sum_01 0
+      :  name: MULTIPLY  alias: hex -1*(0x8000000000000000)
+      : table:   owner: 
 
-    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: SUBTRACT alias: hex sub_01
-    hex sub_01 -148873535527910577765226390749251108866
+    hex -1*(0x8000000000000000)                               9223372036854775808
 
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
-    : name: DIVIDE alias: hex div_01
-    hex div_01 -3
+      :  name: CONSTANT  alias: hex +0x8000000000000001
+      : table:   owner: 
 
+    hex +0x8000000000000001         -9223372036854775807
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 580 INT64 scale: 0 subtype: 0 len: 8
+      :  name: CONSTANT  alias: hex +0xFFFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex +0xFFFFFFFFFFFFFFFF         -1
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
     01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
-    : name: DIVIDE alias: hex 33!/32!
-    hex 33!/32! 33
+      :  name: CONSTANT  alias: hex +0x07FFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex +0x07FFFFFFFFFFFFFFF                                  9223372036854775807
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: MULTIPLY  alias: hex -1*(0x07FFFFFFFFFFFFFFF)
+      : table:   owner: 
+
+    hex -1*(0x07FFFFFFFFFFFFFFF)                             -9223372036854775807
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex +0x08000000000000000
+      : table:   owner: 
+
+    hex +0x08000000000000000                                  9223372036854775808
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex +0x7FFFFFFFFFFFFFFF0
+      : table:   owner: 
+
+    hex +0x7FFFFFFFFFFFFFFF0                                147573952589676412912
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF       170141183460469231731687303715884105727
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex 0x80000000000000000000000000000000
+      : table:   owner: 
+
+    hex 0x80000000000000000000000000000000      -170141183460469231731687303715884105728
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: MULTIPLY  alias: hex -1*(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+      : table:   owner: 
+
+    hex -1*(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)      -170141183460469231731687303715884105727
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex 0x80000000000000000000000000000001
+      : table:   owner: 
+
+    hex 0x80000000000000000000000000000001      -170141183460469231731687303715884105727
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex +0x70000000000000000000000000000001
+      : table:   owner: 
+
+    hex +0x70000000000000000000000000000001       148873535527910577765226390751398592513
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex +0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex +0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF      -148873535527910577765226390751398592513
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: CONSTANT  alias: hex +0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      : table:   owner: 
+
+    hex +0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                            -1
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: ADD  alias: hex sum_01
+      : table:   owner: 
+
+    hex sum_01                                                                  0
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: SUBTRACT  alias: hex sub_01
+      : table:   owner: 
+
+    hex sub_01                           -148873535527910577765226390749251108866
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: DIVIDE  alias: hex div_01
+      : table:   owner: 
+
+    hex div_01                                                                 -3
+
+
+
+    INPUT message field count: 0
+
+    OUTPUT message field count: 1
+    01: sqltype: 32752 INT128 scale: 0 subtype: 0 len: 16
+      :  name: DIVIDE  alias: hex 33!/32!
+      : table:   owner: 
+
+    hex 33!/32!                                                                33
+
   """,
  'expected_stderr': 
   """
+    Statement failed, SQLSTATE = 22003
+    Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+
+    Statement failed, SQLSTATE = 22003
+    Integer overflow.  The result of an integer operation caused the most significant bit of the result to carry.
+
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "-0X07FFFFFFFFFFFFFFF"
+
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "-0X07FFFFFFFFFFFFFFF"
+
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "-0X7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "-0X7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+
+    Statement failed, SQLSTATE = 22018
+    conversion error from string "-0X80000000000000000000000000000000"
+
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
     -Token unknown - line 1, column 44
     -as
+
     Statement failed, SQLSTATE = 42000
     Dynamic SQL Error
     -SQL error code = -104
