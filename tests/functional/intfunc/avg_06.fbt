@@ -10,6 +10,9 @@
     09.07.2020, 4.0.0.2091:
         NO more overflow since INT128 was introduced. AVG() is evaluated successfully.
         Removed error message from expected_stderr, added result into expected_stdout.
+
+    27.07.2021: changed sqltype in FB 4.x+ to 580 INT64: this is needed since fix #6874.
+    Checked on 5.0.0.113, 4.0.1.2539.
  """,
 'versions': [
 {
@@ -107,7 +110,7 @@
   """,
  'expected_stdout':
    """
-    01: sqltype: 32752 INT128 Nullable scale: 0 subtype: 0 len: 16
+      01: sqltype: 580 INT64 Nullable scale: 0 subtype: 0 len: 8
       :  name: AVG_RESULT  alias: AVG_RESULT
       : table: V_TEST  owner: SYSDBA
 
