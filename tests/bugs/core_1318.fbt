@@ -63,7 +63,8 @@
  'expected_stdout': 
   """
     CNT                             0
-  """
+  """,
+  'substitutions':[ ('[ \t]+',' ') ]
 }
 ]
 }
