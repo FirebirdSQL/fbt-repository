@@ -2,4 +2,4 @@ bugs.core_2966
 bugs.core_0858
 bugs.core_2582
 functional.replication.oltp-emul-ddl
-functional.replication.ddl-triggers-must-not-fire-on-replica
+
