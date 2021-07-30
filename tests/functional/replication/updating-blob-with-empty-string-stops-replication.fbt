@@ -7,11 +7,6 @@
  """
     https://github.com/FirebirdSQL/firebird/issues/6795
 
-    Test creates five DB-level triggers in the master DB (on connect/disconnect; on tx start/commit/rollback).
-    Each of them registers apropriate event in the table with name 'log_db_triggers_activity'.
-    This table must eventually have five records in BOTH databases (i.e. not only in master, but in replica also).
-    After creating metadata we make test connect to master DB to fire these triggers.
-
     Test creates table with blob column and performs trivial scenario:
         insert into test(id, b) values(1, null);
         update test set b = '' where id = 1;
