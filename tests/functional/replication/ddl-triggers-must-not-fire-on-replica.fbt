@@ -96,7 +96,7 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 #####################################
-MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG = 65
+MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG = 75
 KEEP_LOGS_FOR_DEBUG = 0
 #####################################
 
