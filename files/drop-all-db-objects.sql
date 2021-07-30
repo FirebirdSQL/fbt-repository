@@ -141,14 +141,15 @@ execute block as
         where coalesce(rc.rdb$system_flag,0)=0
       );
 
+    -- cursor for reset charset default collation to initial value
+    -- which name is always equals to rdb$character_set_name:
     declare c_cset cursor for                           -- CHAR. SETS
       (select
-              cs.rdb$character_set_name
-             ,cs.rdb$default_collate_name
+              cs.rdb$character_set_name as cset_name
+             ,cs.rdb$default_collate_name as def_coll
          from rdb$character_sets cs
          where
-             cs.rdb$default_collate_name is not null
-             and coalesce(cs.rdb$system_flag,0)=0
+             cs.rdb$character_set_name is distinct from cs.rdb$default_collate_name
       );
 
     declare c_gens cursor for                            -- SEQUENCES
@@ -336,19 +337,16 @@ begin
     end
     close c_coll;
 
-    /**********************
-    -- can not be applied: previosus (initial) default collation is lost.
     open c_cset;
     while (1=1) do
     begin
         fetch c_cset into stt, def_coll;
         if (row_count = 0) then leave;
-        stt = 'alter character set ' || trim(stt) || ' set default collation ' || trim(def_coll);
+        stt = 'alter character set ' || trim(stt) || ' set default collation ' || trim(stt);
         execute statement (:stt);
         total_objects_removed = total_objects_removed + 1;
     end
     close c_cset;
-    **********************/
 
     open c_gens; -----------------  d r o p    s e q u e n c e s -----------------
     while (1=1) do
