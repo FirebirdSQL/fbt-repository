@@ -100,7 +100,7 @@ os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 #####################################
-MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG = 75
+MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG = 65
 #####################################
 
 svc = fdb.services.connect(host='localhost', user=user_name, password=user_password)
@@ -312,6 +312,16 @@ if MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG: # ==> initial SQL script finished w/o error
             for line in f:
                if line[:1] in ('-', '+') and line[:3] not in ('---','+++'):
                    print('UNEXPECTED METADATA DIFF.: ' + line)
+
+######################
+### A C H T U N G  ###
+######################
+# MANDATORY, OTHERWISE REPLICATION GETS STUCK ON SECOND RUN OF THIS TEST
+# WITH 'ERROR: Record format with length NN is not found for table TEST':
+runProgram('gfix', ['-sweep', 'localhost:' + db_repl])
+runProgram('gfix', ['-sweep', 'localhost:' + db_main])
+#######################
+
 
 # cleanup:
 ##########
