@@ -253,6 +253,8 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                DDL
     RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                DEBUG
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                DEC
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                DECFLOAT
@@ -1002,7 +1004,7 @@
     RDB$KEYWORD_NAME                ZONE
     RDB$KEYWORD_RESERVED            <false>
 
-    Records affected: 489
+    Records affected: 490
   """,
  'expected_stderr': 
   """
