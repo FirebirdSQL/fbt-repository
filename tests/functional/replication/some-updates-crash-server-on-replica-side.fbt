@@ -88,7 +88,7 @@
     Confirmed bug on 5.0.0.126 (31.07.2021, 05:24), 4.0.0.2556 (03.08.2021 04:23):
         FB crashes, segment is not delivered on replica.
     Checked on:
-        5.0.0.126 (intermediate build, timestamp: 04-aud-2021 12:08).
+        5.0.0.126 (intermediate build, timestamp: 04-aug-2021 12:08).
 
     NOTE: currently fix presents only for FB 5.x. Because of this, min_version = 5.0
 
