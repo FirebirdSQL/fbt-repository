@@ -85,18 +85,21 @@
         6) run this test (FB instance will be already launched by setup-fb-for-replication.bat):
             %fpt_repo%\fbt-run2.bat dblevel-triggers-must-not-fire-on-replica.fbt 50ss, etc
 
-    Confirmed bug on 5.0.0.126 (31.07.2021, 05:24), 4.0.0.2556 (03.08.2021 04:23):
+    Confirmed bug on 5.0.0.126 (31.07.2021), 4.0.1.2547 (30.07.2021)
         FB crashes, segment is not delivered on replica.
+    Initial fix was for FB 4.x 30-jul-2021 16:28 (44f48955c250193096c244bee9e5cd7ddf9a099b),
+    frontported to FB 5.x 04-aug-2021 12:48 (220ca99b85289fdd7a5257e576499a1b9c345cd9)
+
     Checked on:
-        5.0.0.126 (intermediate build, timestamp: 04-aug-2021 12:08).
-
-    NOTE: currently fix presents only for FB 5.x. Because of this, min_version = 5.0
-
+        5.0.0.126 SS: 27.290s  // intermediate build, timestamp: 04-aug-2021 12:08.
+        5.0.0.126 CS: 26.239s.
+        4.0.1.2556 SS: 29.956s.
+        4.0.1.2556 CS: 26.108s.
  """,
-'min_versions': '5.0',
+'min_versions': '4.0.1',
 'versions': [
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'Windows',
  'init_script':
   """
