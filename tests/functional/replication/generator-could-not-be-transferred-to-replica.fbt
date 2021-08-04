@@ -328,6 +328,15 @@ if MAX_TIME_FOR_WAIT_SEGMENT_IN_LOG: # ==> initial SQL script finished w/o error
            if line[:1] in ('-', '+') and line[:3] not in ('---','+++'):
                print('UNEXPECTED METADATA DIFF.: ' + line)
 
+######################
+### A C H T U N G  ###
+######################
+# MANDATORY, OTHERWISE REPLICATION MAY GET STUCK ON TESTS THAT ARE EXECUTED AFTER THIS
+# (e.g. on "updating-blob-with-empty-string-stops-replication")
+# with 'ERROR: Record format with length <NN> is not found for table TEST':
+runProgram('gfix', ['-sweep', 'localhost:' + db_repl])
+runProgram('gfix', ['-sweep', 'localhost:' + db_main])
+#######################
 
 # cleanup:
 ##########
