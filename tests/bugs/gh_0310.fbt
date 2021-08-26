@@ -631,6 +631,8 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                PI
     RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                PKCS_1_5
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                PLACING
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                PLAN
@@ -1004,7 +1006,7 @@
     RDB$KEYWORD_NAME                ZONE
     RDB$KEYWORD_RESERVED            <false>
 
-    Records affected: 490
+    Records affected: 491
   """,
  'expected_stderr': 
   """
