@@ -5,6 +5,7 @@
 'title':'RSA-family function, attitional test: verify ability to use PKCS_1_5 keyword',
 'description':
  """
+    See ticket: https://github.com/FirebirdSQL/firebird/issues/6929
     Checked on 5.0.0.169.
  """,
 'min_versions': '5.0',
