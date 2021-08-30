@@ -204,7 +204,7 @@ time.sleep(4)
 killer_sql=\
 '''
    set list on;
-   set count on;
+   -- set count on; -- disabled 30.08.2021: output in ISQL 5.x became differ when RETURNING clause presents.
    /*
    select a.*, s.*
    from mon$attachments a
@@ -286,7 +286,6 @@ cleanup( [i.name for i in (f_worker_sql,f_worker_log,f_killer_sql,f_killer_log)]
  'expected_stdout': 
   """
     KILLER LOG: Found worker ?                  1
-    KILLER LOG: Records affected: 1
     KILLER LOG: DELETED_MON_ATT_ID              1
     KILLER LOG: DELETED_MON_USER                SYSDBA
     KILLER LOG: DELETED_MON_PROTOCOL            tcp
