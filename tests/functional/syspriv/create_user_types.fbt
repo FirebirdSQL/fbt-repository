@@ -15,7 +15,6 @@
   """
     set wng off;
     set list on;
-    set count on;
 
     create or alter view v_check as
     select 
@@ -28,8 +27,8 @@
     grant select on v_check to public;
     commit;
 
-    create or alter user u01 password '123' revoke admin role;
-    revoke all on all from u01;
+    create or alter user dba_helper_create_usr_types password '123' revoke admin role;
+    revoke all on all from dba_helper_create_usr_types;
     commit;
 
     set term ^;
@@ -44,10 +43,10 @@
     -- Add/change/delete non-system records in RDB$TYPES
     create role role_for_create_user_types set system privileges to CREATE_USER_TYPES;
     commit;
-    grant default role_for_create_user_types to user u01;
+    grant default role_for_create_user_types to user dba_helper_create_usr_types;
     commit;
 
-    connect '$(DSN)' user u01 password '123';
+    connect '$(DSN)' user dba_helper_create_usr_types password '123';
     select * from v_check;
     commit;
 
@@ -85,23 +84,21 @@
     commit;
 
     connect '$(DSN)' user sysdba password 'masterkey';
-    drop user u01;
+    drop user dba_helper_create_usr_types;
     drop role role_for_create_user_types;
     commit;
   """,
   'expected_stdout':
   """
-    WHO_AMI                         U01
+    WHO_AMI                         DBA_HELPER_CREATE_USR_TYPES
     RDB$ROLE_NAME                   RDB$ADMIN                                                                                                                                                                                                                                                   
     RDB_ROLE_IN_USE                 <false>
     RDB$SYSTEM_PRIVILEGES           FFFFFFFFFFFFFFFF
 
-    WHO_AMI                         U01
+    WHO_AMI                         DBA_HELPER_CREATE_USR_TYPES
     RDB$ROLE_NAME                   ROLE_FOR_CREATE_USER_TYPES                                                                                                                                                                                                                                  
     RDB_ROLE_IN_USE                 <true>
     RDB$SYSTEM_PRIVILEGES           0800000000000000
-
-    Records affected: 2
 
     RDB$FIELD_NAME                  amount_avaliable                                                                                                                                                                                                                                            
     RDB$TYPE                        -32767
@@ -109,8 +106,6 @@
     RDB$DESCRIPTION                 b:782
     Total number of units that can be sold immediately to any customer
     RDB$SYSTEM_FLAG                 0
-
-    Records affected: 0
 
     RDB$FIELD_NAME                  <null>
     RDB$TYPE                        -32768
