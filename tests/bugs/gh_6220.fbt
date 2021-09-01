@@ -2,7 +2,7 @@
 'id': 'bugs.gh_6220',
 'qmid': None,
 'tracker_id': '',
-'title': "Add way to retrieve statement BLR with Statement::getInfo and ISQL's SET EXEC_PATH_DISPLAY BLR",
+'title': "Slow performance when executing SQL scripts as non-SYSDBA user [CORE5966]",
 'description':
  """
     https://github.com/FirebirdSQL/firebird/issues/6220
