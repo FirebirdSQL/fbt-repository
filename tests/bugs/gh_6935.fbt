@@ -68,7 +68,11 @@
                   Consequently, attempt to insert row into this table must fail.
 
     Confirmed bug on 4.0.1.2573, 5.0.0.163
-    Checked on 4.0.1.2577 (intermediate build of 31-aug-2021 12:12), 5.0.0.169.
+    Checked on:
+        5.0.0.172 SS: 3.050s;    5.0.0.172 CS: 4.491s.
+       4.0.1.2578 SS: 3.017s;    4.0.1.2578 CS: 4.061s.
+
+    01.09.2021: added "where"-filtering for exclude statement with query to RDB$AUTH_MAPPING (4.0 Classic).
  """,
 'min_versions': '4.0.1',
 'versions': [
@@ -117,9 +121,10 @@ begin
         from rdb$database r
         left join 
         ( mon$attachments a
-          left join mon$statements s on a.mon$attachment_id = s.mon$attachment_id
+          join mon$statements s on a.mon$attachment_id = s.mon$attachment_id and s.mon$sql_text not like '%RDB$AUTH_MAPPING%'
         ) on 1=1
-        where a.mon$system_flag is distinct from 1
+        where
+            a.mon$system_flag is distinct from 1
         into mon_user, executing_sql_blob
     do
     begin
@@ -283,7 +288,12 @@ end
 ^
 set term ;^
 
-select /* Invoke sp_chk_syspriv_main. Work as tmp$almost_dba */ p.* from sp_chk_syspriv_main('tmp$outside_caller') p;
+select -- Invoke sp_chk_syspriv_main. Work as tmp$almost_dba
+    'CHECK-1' as msg
+    ,p.* 
+from rdb$database 
+left join sp_chk_syspriv_main('tmp$outside_caller') p on 1=1
+;
 commit;
 
 --###################################################
@@ -296,7 +306,12 @@ commit;
 connect  '$(DSN)' user tmp$sp_definer password '123';
 --###################################################
 
-select /* Invoke sp_chk_syspriv_main. Work as tmp$sp_definer */ p.* from sp_chk_syspriv_main('tmp$outside_caller') p;
+select /* Invoke sp_chk_syspriv_main. Work as tmp$sp_definer */
+    'CHECK-2' as msg
+    ,p.*
+from  rdb$database
+left join sp_chk_syspriv_main('tmp$outside_caller') p on 1=1
+;
 commit;
 
 
@@ -316,14 +331,23 @@ connect  '$(DSN)' user tmp$almost_dba password '123';
 commit;
 set transaction read committed record_version;
 
-select /* Before sp_chk_syspriv_main. Work as tmp$almost_dba */ p.* from sp_chk_syspriv_main('tmp$outside_caller') p;
+select /* Before sp_chk_syspriv_main. Work as tmp$almost_dba */
+     'CHECK-3' as msg
+    ,p.* 
+from rdb$database
+left join sp_chk_syspriv_main('tmp$outside_caller') p on 1=1
+;
 
 -- Verify that system privilege MODIFY_EXT_CONN_POOL not avaliable
 -- for current user (despite that he is 'tmp$almost_dba') because
 -- SP sp_clear_ext_pool was created with SQL SECURITY DEFINER and
 -- its definer ('tmp$sp_definer') has not any system privilege:
 --
-select * from sp_clear_ext_pool;
+select 
+    'CHECK-4' as msg
+    ,p.*
+from rdb$database
+left join sp_clear_ext_pool p on 1=1;
 commit;
 
 --###################################################
@@ -335,7 +359,14 @@ connect  '$(DSN)' user tmp$almost_dba password '123';
 -- SP sp_chk_sql_rights was created with SQL SECURITY DEFINER and
 -- its definer ('tmp$sp_definer') has not any system privilege:
 --
-select who_am_i, eff_user, access_info from sp_chk_sql_rights;
+select
+    'CHECK-5' as msg
+    ,p.who_am_i
+    ,p.eff_user
+    ,p.access_info
+from rdb$database
+left join sp_chk_sql_rights p on 1=1
+;
 commit;
 
 
@@ -354,27 +385,36 @@ commit;
   """,                                                      
  'expected_stdout': 
   """
+    MSG                             CHECK-1
     WHO_AM_I                        TMP$OUTSIDE_CALLER
     EFF_USER                        TMP$SP_DEFINER
     MON_USER                        TMP$SP_DEFINER
-    EXECUTING_SQL_BLOB              0:1
+    EXECUTING_SQL_BLOB
     select 'tmp$sp_definer' from rdb$database
 
+    MSG                             CHECK-2
     WHO_AM_I                        TMP$OUTSIDE_CALLER
     EFF_USER                        TMP$SP_DEFINER
     MON_USER                        TMP$SP_DEFINER
-    EXECUTING_SQL_BLOB              0:1
-    select /* Invoke sp_chk_syspriv_main. Work as tmp$sp_definer */ p.* from sp_chk_syspriv_main('tmp$outside_caller') p
+    EXECUTING_SQL_BLOB
+    select /* Invoke sp_chk_syspriv_main. Work as tmp$sp_definer */
+    'CHECK-2' as msg
+    ,p.*
+    from  rdb$database
+    left join sp_chk_syspriv_main('tmp$outside_caller') p on 1=1
 
+    MSG                             CHECK-3
     WHO_AM_I                        TMP$OUTSIDE_CALLER
     EFF_USER                        TMP$SP_DEFINER
     MON_USER                        <null>
     EXECUTING_SQL_BLOB              <null>
 
+    MSG                             CHECK-4
     WHO_AM_I                        TMP$ALMOST_DBA
     EFF_USER                        TMP$SP_DEFINER
     ACCESS_INFO                     Ext. pool clear all ### FAILED ###, gdscode: 335544351
 
+    MSG                             CHECK-5
     WHO_AM_I                        TMP$ALMOST_DBA
     EFF_USER                        TMP$SP_DEFINER
     ACCESS_INFO                     Insert into log_table ### FAILED ###, gdscode: 335544352
