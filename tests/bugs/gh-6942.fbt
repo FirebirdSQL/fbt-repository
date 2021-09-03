@@ -7,7 +7,8 @@
  """
     https://github.com/FirebirdSQL/firebird/issues/6942
 
-    Checked on: 5.0.0.181
+    Confirmed bug on 5.0.0.172.
+    Checked on: 5.0.0.181 - works fine.
  """,
 'min_versions': '5.0',
 'versions': [
