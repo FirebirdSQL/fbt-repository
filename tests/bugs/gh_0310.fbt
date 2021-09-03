@@ -7,7 +7,6 @@
  """
     https://github.com/FirebirdSQL/firebird/pull/310
 
-    Checked on 5.0.0.40
  """,
 'min_versions': '5.0',
 'versions': [
@@ -19,7 +18,7 @@
   """
     set list on;
     set count on;
-    select * from rdb$keywords;
+    select * from rdb$keywords order by rdb$keyword_name;
   """,
  'expected_stdout': 
   """
@@ -95,6 +94,10 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                BIGINT
     RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                BINARY
+    RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                BIND
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                BIN_AND
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                BIN_NOT
@@ -106,10 +109,6 @@
     RDB$KEYWORD_NAME                BIN_SHR
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                BIN_XOR
-    RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                BINARY
-    RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                BIND
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                BIT_LENGTH
     RDB$KEYWORD_RESERVED            <true>
@@ -141,14 +140,14 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                CHAR
     RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                CHAR_LENGTH
-    RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                CHAR_TO_UUID
-    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                CHARACTER
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                CHARACTER_LENGTH
     RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                CHAR_LENGTH
+    RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                CHAR_TO_UUID
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                CHECK
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                CLEAR
@@ -239,9 +238,9 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                CURSOR
     RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                DATABASE
-    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                DATA
+    RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                DATABASE
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                DATE
     RDB$KEYWORD_RESERVED            <true>
@@ -345,11 +344,11 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                FIRST
     RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                FIRSTNAME
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                FIRST_DAY
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                FIRST_VALUE
-    RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                FIRSTNAME
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                FLOAT
     RDB$KEYWORD_RESERVED            <true>
@@ -451,12 +450,14 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                LAST
     RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                LASTNAME
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                LAST_DAY
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                LAST_VALUE
     RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                LASTNAME
-    RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                LATERAL
+    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                LEAD
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                LEADING
@@ -483,8 +484,6 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                LN
     RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                LATERAL
-    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                LOCAL
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                LOCALTIME
@@ -523,9 +522,9 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                MESSAGE
     RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                MILLISECOND
-    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                MIDDLENAME
+    RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                MILLISECOND
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                MIN
     RDB$KEYWORD_RESERVED            <true>
@@ -565,10 +564,10 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                NTILE
     RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                NULLIF
-    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                NULL
     RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                NULLIF
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                NULLS
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                NUMBER
@@ -765,12 +764,12 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                ROW
     RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                ROWS
+    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                ROW_COUNT
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                ROW_NUMBER
     RDB$KEYWORD_RESERVED            <false>
-    RDB$KEYWORD_NAME                ROWS
-    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                RPAD
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                RSA_DECRYPT
@@ -887,6 +886,8 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                TANH
     RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                TARGET
+    RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                TEMPORARY
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                THEN
@@ -895,10 +896,10 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                TIME
     RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                TIMESTAMP
-    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                TIMEOUT
     RDB$KEYWORD_RESERVED            <false>
+    RDB$KEYWORD_NAME                TIMESTAMP
+    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                TIMEZONE_HOUR
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                TIMEZONE_MINUTE
@@ -963,10 +964,6 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                VALUES
     RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                VAR_POP
-    RDB$KEYWORD_RESERVED            <true>
-    RDB$KEYWORD_NAME                VAR_SAMP
-    RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                VARBINARY
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                VARCHAR
@@ -974,6 +971,10 @@
     RDB$KEYWORD_NAME                VARIABLE
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                VARYING
+    RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                VAR_POP
+    RDB$KEYWORD_RESERVED            <true>
+    RDB$KEYWORD_NAME                VAR_SAMP
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                VIEW
     RDB$KEYWORD_RESERVED            <true>
@@ -1005,12 +1006,12 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                ZONE
     RDB$KEYWORD_RESERVED            <false>
-
-    Records affected: 491
+    Records affected: 492
   """,
  'expected_stderr': 
   """
-  """ #,  'substitutions':[  ('[ \t]+',' ') ]
+  """,
+  # 'substitutions':[  ('[ \t]+',' ') ]
 }
 ]
 }
