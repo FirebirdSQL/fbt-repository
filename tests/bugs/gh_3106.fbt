@@ -19,10 +19,10 @@
    Confirmed bug on 4.0.0.2451: trace statistics contain line with three indexed reads for test table.
    Checked on 4.0.0.2453 SS/CS: all OK, there are no indexed reads on test table in the trace log.
  """,
-'min_versions': '3.0.2',
+'min_versions': '4.0.0',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'page_size': '8192',
  'test_type': 'Python',
