@@ -159,7 +159,7 @@ set(
         ,'ib_util.dll'
         ,'icudt52.dll'
         ,'icudt52l.dat'
-        ,'icudt52l_empty.dat'
+        # -- removed since 3.0.8.33470 -- ,'icudt52l_empty.dat'
         ,'icuin52.dll'
         ,'icuuc52.dll'
         ,'include/firebird/FirebirdInterface.idl'
