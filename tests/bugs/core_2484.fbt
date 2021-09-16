@@ -5,6 +5,8 @@
 'title': 'Success message when connecting to tiny trash database file',
 'description':
  """
+    https://github.com/FirebirdSQL/firebird/issues/2897
+
     We make invalid FDB file by creating binary file and write small data piece to it.
     Then we try to connect to such "database" using ISQL with passing trivial command
     like 'select current_timestamp' for execution.
@@ -19,7 +21,6 @@
     them using codecs.open() with errors='ignore' option.
     We check presense of error message in STDERR file created by ISQL.
     It is ennough to verify that STDERR log contains pattern 'SQLSTATE = '.
-    Checked on 4.0.0.2164; 3.0.7.33356
 
     02-mar-2021. Re-implemented in order to have ability to run this test on Linux.
 
@@ -41,6 +42,18 @@
         -Error while trying to read from file
         -Success <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< :-)
     =====
+
+    RELATED issues:
+    
+    18-MAR-2021 https://github.com/FirebirdSQL/firebird/issues/6747
+    ("Wrong message when connecting to tiny trash database file", ex. CORE-6518)
+
+    31-MAR-2021 https://github.com/FirebirdSQL/firebird/issues/6755
+    ("Connect to database that contains broken pages can lead to FB crash", ex. CORE-6528)
+
+    14-SEP-2021 https://github.com/FirebirdSQL/firebird/issues/6968
+    ("On Windows, engine may hung when works with corrupted database and read after the end of file")
+
 
     Checked on:
     * Windows: 4.0.0.2377, 3.0.8.33420 -- both on SS/CS
@@ -110,7 +123,7 @@ flush_and_close( f_fake_sql )
 
 f_fake_log = open( os.path.splitext(f_fake_fdb.name)[0]+'.log', 'w')
 f_fake_err = open( os.path.splitext(f_fake_fdb.name)[0]+'.err', 'w')
-subprocess.call( [ context['isql_path'], 'localhost:' + f_fake_fdb.name, "-i", f_fake_sql.name ],
+subprocess.call( [ context['isql_path'], 'localhost:' + f_fake_fdb.name, "-q", "-i", f_fake_sql.name ],
                  stdout = f_fake_log,
                  stderr = f_fake_err
                )
