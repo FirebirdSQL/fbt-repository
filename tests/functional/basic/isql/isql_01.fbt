@@ -118,6 +118,7 @@ Transaction -.*""",'')]
     Database not encrypted
     Wire crypt plugin:
     Creation date: Sep 10, 2021 14:43:52
+    Protocol version = 17
     Default Character set: NONE
   """,
  'substitutions': [ 
@@ -132,9 +133,11 @@ Transaction -.*""",'')]
      ('ODS.*', 'ODS'),
      ('Wire crypt plugin.*', 'Wire crypt plugin'),
      ('Creation date.*', 'Creation date'),
+     ('Protocol version.*', 'Protocol version'), 
      ('Default Character.*', 'Default Character'), 
   ]
 },
+
 # ----------------------------------------###  5.x  ###-------------------------------------
 {
  'firebird_version': '5.0',
