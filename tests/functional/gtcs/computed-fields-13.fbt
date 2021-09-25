@@ -9,6 +9,10 @@
         https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/CF_ISQL_13.script
 	SQL script for creating test database ('gtcs_sp1.fbk') and fill it with some data:
         https://github.com/FirebirdSQL/fbtcs/blob/master/GTCS/tests/PROCS_QA_INIT_ISQL.script
+
+    Check that it is not allowed to drop column which is referenced by computed-by column.
+
+    
     Checked on: 4.0.0.1803 SS; 3.0.6.33265 SS; 2.5.9.27149 SC.
  """,
 'min_versions': '2.5.0',
