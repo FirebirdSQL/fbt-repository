@@ -18,7 +18,10 @@
   """,
  'expected_stdout':
   """
+    01: sqltype: 560 TIME scale: 0 subtype: 0 len: 4
     TX_1                            12:11:59.0000
+
+    01: sqltype: 560 TIME scale: 0 subtype: 0 len: 4
     TX_2                            12:11:59.0000
   """,
   'substitutions':[
