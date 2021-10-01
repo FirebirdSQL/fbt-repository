@@ -9,20 +9,21 @@
  'firebird_version': '2.1',
  'platform': 'All',
  'test_type': 'ISQL',
- 'test_script': """select dateadd(-1 second to time '12:12:00' ) as yesterday from rdb$database;
-select dateadd(second,-1, time '12:12:00' ) as yesterday from rdb$database;
-""",
- 'expected_stdout': """
-    YESTERDAY
-=============
-12:11:59.0000
-
-
-    YESTERDAY
-=============
-12:11:59.0000
-
-"""
+ 'test_script':
+  """
+    set list on;
+    set sqlda_display on;
+    select dateadd(-1 second to time '12:12:00' ) as tx_1  from rdb$database;
+    select dateadd(second,-1, time '12:12:00' ) as tx_2 from rdb$database;
+  """,
+ 'expected_stdout':
+  """
+    TX_1                            12:11:59.0000
+    TX_2                            12:11:59.0000
+  """,
+  'substitutions':[
+      ('^((?!sqltype:|DD_).)*$',''),('[ \t]+',' '),('.*alias:.*','')
+   ]
 }
 ]
 }
