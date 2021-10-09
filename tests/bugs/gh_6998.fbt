@@ -10,10 +10,10 @@
     Confirmed ticket issue on 5.0.0.243.
     Checked on: 5.0.0.244, SS/CS, intermediate build (09-oct-2021 06:39).
  """,
-'min_versions': '3.0.8',
+'min_versions': '5.0',
 'versions': [
 {
- 'firebird_version': '3.0',
+ 'firebird_version': '5.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
