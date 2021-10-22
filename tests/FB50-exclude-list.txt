@@ -3,5 +3,7 @@ bugs.core_0858
 bugs.core_2582
 bugs.core_4571
 functional.replication.oltp-emul-ddl
-
+bugs.gh_5082
+bugs.gh_5173
+bugs.gh_3886
 
