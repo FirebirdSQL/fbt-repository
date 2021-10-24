@@ -7,11 +7,7 @@
  """
     https://github.com/FirebirdSQL/firebird/issues/3886
 
-    Checked on 4.0.1.2637; 3.0.8.33524.
-
-    NOTE (23.10.2021): fix for 5.0 not yet committed.
-    Because of this, file fbt-repo\tests\FB50-exclude-list.txt contain this test as EXCLUDED from performing.
-    It will be removed from there after apropriate fix for FB 5.x.
+    Checked on 5.0.0.271; 4.0.1.2637; 3.0.8.33524.
  """,
 'min_versions': '3.0.8',
 'versions': [
