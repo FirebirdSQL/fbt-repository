@@ -8,12 +8,12 @@
     https://github.com/FirebirdSQL/firebird/issues/7018
 
     Confirmed bug on 5.0.0.259
-    Checked on 5.0.0.263 -- all fine.
+    Checked on 5.0.0.263, 4.0.1.2642 -- all fine.
  """,
-'min_versions': '5.0',
+'min_versions': '4.0.1',
 'versions': [
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
