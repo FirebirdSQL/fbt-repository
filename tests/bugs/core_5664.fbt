@@ -5,13 +5,159 @@
 'title': "SIMILAR TO is substantially (500-700x) slower than LIKE on trivial pattern matches with VARCHAR data.",
 'description':
  """
-     Confirmed normal work (ratio is about 1) on WI-T4.0.0.1598
+     01.11.2021. ### NOTE FOR WINDOWS ###
+     Separated code for Windows was implemented in order to use psutil package and evaluate proper value of CPU usage.
+     Package 'psutil' must be installed.
+
+     We make two calls of psutil.Process(fb_pid).cpu_times() (before and after SQL code) and obtain CPU User Time
+     values from each result.
+     Difference between them can be considered as much more accurate performance estimation.
+
+     We make several invocations of PSQL code (see variable N_MEASURES) and within each call dozen execution of
+     LIKE and SIMILAR_TO statements are performed (see variable N_COUNT_PER_MEASURE). Name of procedures which do work:
+     'sp_like_test' and 'sp_sim2_test' (first of them uses 'LIKE' statement, second uses 'SIMILAR TO'). Both procedures
+     uses the same data for handling.
+
+     Each result (difference between cpu_times().user values when PSQL code finished) is added to the list.
+     Finally, we evaluate MEDIAN of ration between cpu user time which was received for SIMILAR_TO and LIKE statements.
+     If this median is less then threshold (see var. SIM2_LIKE_MAX_RATIO) then result can be considered as ACCEPTABLE.
+
+     See also:
+     https://psutil.readthedocs.io/en/latest/#psutil.cpu_times
+
+     Confirmed bug on WI-T4.0.0.1575
+     Checked on WI-T4.0.0.1598, 4.0.1.2649 - all fine, median is about 0.9 ... 1.1 (i.e. SIMILAR_TO is *FASTER* then LIKE).
  """,
 'min_versions': '4.0',
 'versions': [
+
 {
  'firebird_version': '4.0',
- 'platform': 'All',
+ 'platform': 'Windows',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+
+import os
+import psutil
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+
+#------------------
+def median(lst):
+    n = len(lst)
+    s = sorted(lst)
+    return (sum(s[n//2-1:n//2+1])/2.0, s[n//2])[n % 2] if n else None
+#------------------
+
+###########################
+###   S E T T I N G S   ###
+###########################
+# How many times we call PSQL code (two stored procedures:
+# one for performing comparisons based on LIKE, second based on SIMILAR TO statements):
+N_MEASURES = 20
+
+# How many iterations must be done in each of stored procedures when they work:
+N_COUNT_PER_MEASURE = 1000
+
+# Maximal value for MEDIAN of ratios between CPU user time when comparison was made
+# using SIMILAR TO vs LIKE. Lot of measurements show that SIMILAR_TO is FASTER then LIKE
+# when handling long string and pattern that are used in this test, ratio is ~0.9 ... 1.1
+#
+SIM2_LIKE_MAX_RATIO = 1.3
+############################
+
+sp_ddl = '''\
+    create or alter procedure sp_%(sp_prefix)s_test (
+        n_count int
+       ,long_string_form  varchar(20) -- 'starts_with' | 'ends_with'
+    ) as 
+        declare i int = 0;
+        declare long_text varchar(32761);
+        declare word_to_search varchar(6) = 'QWERTY';
+        declare pattern_to_chk varchar(32761);
+        declare v_guid varchar(32755);
+    begin
+        v_guid = lpad( '', 32755, uuid_to_char(gen_uuid()) );
+        if ( long_string_form = 'starts_with' ) then
+            begin
+                long_text = word_to_search || v_guid; 
+                pattern_to_chk = word_to_search || '%%';
+            end
+        else
+            begin
+                long_text = v_guid || word_to_search; 
+                pattern_to_chk = '%%' || word_to_search;
+            end
+    
+        while (i < n_count) do 
+        begin 
+            i = i + iif( long_text %(sp_statement)s pattern_to_chk, 1, 1); 
+        end 
+    end
+'''
+
+op_map = {'like' : 'LIKE', 'sim2' : 'SIMILAR TO'}
+for sp_prefix,sp_statement in op_map.items():
+    db_conn.execute_immediate( sp_ddl % locals() )    
+db_conn.commit()
+
+# Result: procedures with names: 'sp_like_test' and 'sp_sim2_test' have been created.
+# Bothof them use input parameter, n_count -- number of iterations.
+
+cur=db_conn.cursor()
+cur.execute('select mon$server_pid as p from mon$attachments where mon$attachment_id = current_connection')
+
+fb_pid = int(cur.fetchone()[0])
+
+# test_1: string ENDS with pattern (s like '%QWERTY' == vs== s similar to '%QWERTY' )
+# test_2: string STARTS with pattern (s like 'QWERTY%' == vs == s similar to 'QWERTY%' )
+
+for long_text_form in ('starts_with', 'ends_with'):
+    ratio_list = []
+    # N_COUNT_PER_MEASURE = 1000 if long_text_form == 'starts_with' else 1000
+
+    for i in range(0, N_MEASURES):
+        sp_time = {}
+        for sp_name in op_map.keys():
+            fb_info_init = psutil.Process(fb_pid).cpu_times()
+            cur.callproc('sp_' + sp_name + '_test', (N_COUNT_PER_MEASURE, long_text_form) )
+            fb_info_curr = psutil.Process(fb_pid).cpu_times()
+
+            sp_time[ sp_name ]  = max(fb_info_curr.user - fb_info_init.user, 0.000001)
+        try:
+            # print('measure: %5d' % i, 'ratio:', "{:9.2f}".format( sp_time['sim2'] / sp_time['like'] ), sp_time )
+            ratio_list.append( sp_time['sim2'] / sp_time['like'] )
+        except ZeroDivisionError as e:
+            print(e)
+            # print('sim2:', sp_time['sim2'], ';  like:', sp_time['like'])
+
+
+    print( 'String form: "%s", median ratio: %s' % ( long_text_form, 'acceptable' if median(ratio_list) <= SIM2_LIKE_MAX_RATIO else 'TOO BIG: ' + str(median(ratio_list))  ) )
+
+cur.close()
+
+
+  """,
+ 'expected_stdout': 
+  """
+    String form: "starts_with", median ratio: acceptable
+    String form: "ends_with", median ratio: acceptable
+  """,
+ 'expected_stderr': 
+  """
+  """
+},
+
+#---------------------------------------------###   L I N U X   ###----------------------------------------
+
+{
+ 'firebird_version': '4.0',
+ 'platform': 'Linux',
  'init_script': 
   """
   """,
