@@ -273,7 +273,7 @@ else:
     # The reason is that fbsvcmgr make query to FB services only one time per second.
     # If we do not take delay here then test can fail with (most often) empty log
     # or its log can look incompleted.
-    # See letter from Vlad, 04-mar-2021 13:02 (subj: "Test core_6469 на Linux...").
+    # See letter from Vlad, 04-mar-2021 13:02 (subj: "Test core_6469 on Linux...").
     ###############
     time.sleep(1.1)
     ###############
