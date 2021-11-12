@@ -22,6 +22,22 @@
 
     NB: FB 3.+ contain TWO messages with almost the same text about SQLSTATE = -104. 
     Second line is filtered out - see 'substitutions' section.
+    ----------------
+    12-nov-2021: separated code for 5.0.0 because of fixed #6966:
+    https://github.com/FirebirdSQL/firebird/commit/5b7d0c7a64cf9873534acfffeb997718bab89800
+
+    Since this fix status vector contains 5 lines (was: 3):
+    A. STDERR before fix (checked on WI-T5.0.0.304):
+        1 Error while executing SQL statement:
+        2 - SQLCODE: -104
+        3 - Unexpected end of command
+    B. STDERR after fix (checked on WI-T5.0.0.309):
+        1 Error while executing SQL statement:
+        + - SQLCODE: -104
+        + - Dynamic SQL Error
+        2 - SQL error code = -104
+        3 - Unexpected end of command - line 1, column 1
+
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -49,6 +65,34 @@ except Exception, e:
   """
   """,
   'substitutions': [('- SQL error code.*', '')]
+},
+
+{
+ 'firebird_version': '5.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'Python',
+ 'test_script': 
+  """
+try:
+    db_conn.execute_immediate('')
+except Exception, e:
+    print( e[0] )
+  """,
+ 'expected_stdout': 
+  """
+    Error while executing SQL statement:
+    - SQLCODE: -104
+    - Dynamic SQL Error
+    - SQL error code = -104
+    - Unexpected end of command
+  """,
+ 'expected_stderr': 
+  """
+  """,
+  'substitutions': [('end of command.*', 'end of command')]
 }
 ]
 }
