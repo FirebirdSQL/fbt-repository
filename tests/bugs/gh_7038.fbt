@@ -1,11 +1,11 @@
 {
-'id': 'bugs.gh_5664',
+'id': 'bugs.gh_7038',
 'qmid': None,
 'tracker_id': '',
 'title': "Improve performance of STARTING WITH with insensitive collations",
 'description':
  """
-     https://github.com/FirebirdSQL/firebird/issues/7034
+     https://github.com/FirebirdSQL/firebird/issues/7038
 
      01.11.2021. ### NOTE FOR WINDOWS ###
      Separated code for Windows was implemented in order to use psutil package and evaluate proper value of CPU usage.
