@@ -27,6 +27,9 @@
        5b7d0c7a64cf9873534acfffeb997718bab89800
        e4ae6ebe5ac8ed08996bf79a653597476232b4ae
 
+    19.11.21: code for FB 3.x now is the same as for FB 4.x+, see commit:
+       d2b4b6d4c9f84a64bcbf4042308135ad1b1ac804
+
     Since this fix status vector contains 5 lines (was: 3):
     A. STDERR before fix (checked on WI-T5.0.0.304):
         1 Error while executing SQL statement:
@@ -69,7 +72,7 @@ except Exception, e:
 },
 
 {
- 'firebird_version': '4.0',
+ 'firebird_version': '3.0',
  'platform': 'All',
  'init_script': 
   """
