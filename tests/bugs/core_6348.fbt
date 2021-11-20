@@ -55,7 +55,6 @@
 
     ::: NB :::
     Median value of list that has <N_MEASURES> results of measures is used for comparison with <MAX_THRESHOLD_MS>.
-   
 
     NOTE-1
         Test temporary changes firebird.conf, so any abnormal termination of it can cause
