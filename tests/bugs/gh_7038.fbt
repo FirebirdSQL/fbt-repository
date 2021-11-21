@@ -7,9 +7,7 @@
  """
      https://github.com/FirebirdSQL/firebird/issues/7038
 
-     01.11.2021. ### NOTE FOR WINDOWS ###
-     Separated code for Windows was implemented in order to use psutil package and evaluate proper value of CPU usage.
-     Package 'psutil' must be installed.
+     21.11.2021. Totally re-implemented, package 'psutil' must be installed.
 
      We make two calls of psutil.Process(fb_pid).cpu_times() (before and after SQL code) and obtain CPU User Time
      values from each result.
@@ -31,13 +29,15 @@
          Example of data (for 15 calls):
          [ 1.36 ,1.36 ,1.33 ,1.35 ,1.28 ,1.36 ,1.36 ,1.37 ,1.36 ,1.33 ,1.30 ,1.79 ,1.31 ,1.30 ,1.30 ]
 
+     21.11.2021. Checked on Linux (after installing pakage psutil):
+         5.0.0.313 SS: 17.076s
  """,
 'min_versions': '5.0',
 'versions': [
 
 {
  'firebird_version': '5.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'init_script': 
   """
   """,

@@ -27,7 +27,7 @@
     and optimizer will choose it for one of statements then statistics can have big numbers of natural reads for
     if and still no nat. reads in another statement.
 
-    Checked on:
+    Checked on Windows:
         3.0.1.32609 (27-sep-2016, before fix):
         ratio_lst: [222.0, 110.5, 220.0, 220.0, 111.0, 222.0, 109.5, 123.5, 148.0, 133.0, 240.0, 228.0, 224.0, 221.0, 219.0, 217.0, 222.0, 222.0, 221.0, 222.0]
         median_ratio= 220.5
@@ -40,12 +40,14 @@
         ratio_lst: [2.0, 0.5, 1.0, 2.0, 0.5, 1.0, 15625.0, 0.5, 1.0, 0.5, 0.5, 1.0, 3.2e-05, 1.0, 1.0, 0.5, 2.0, 0.5, 1.0, 1.0]
         median_ratio= 1.0
 
-    50sS, build 5.0.0.311 : 2.814s.
-    50Cs, build 5.0.0.311 : 3.153s.
-    40sS, build 4.0.1.2660 : 2.818s.
-    40Cs, build 4.0.1.2660 : 3.532s.
-    30sS, build 3.0.8.33535 : 2.548s.
-    30Cs, build 3.0.8.33535 : 3.162s.
+        50sS, build 5.0.0.311 : 2.814s ;   50Cs, build 5.0.0.311 : 3.153s.
+        40sS, build 4.0.1.2660 : 2.818s ;  40Cs, build 4.0.1.2660 : 3.532s.
+        30sS, build 3.0.8.33535 : 2.548s ; 30Cs, build 3.0.8.33535 : 3.162s.
+
+    21.11.2021. Checked on Linux (after installing pakage psutil):
+        5.0.0.313 SS:   3.264s
+        4.0.1.2668 SS:  2.968s
+        3.0.8.33540 SS: 3.285s
 
     OLD COMMENTS:
     -------------
@@ -58,7 +60,7 @@
 'versions': [
 {
  'firebird_version': '3.0',
- 'platform': 'Windows',
+ 'platform': 'All',
  'init_script':
   """
   """,
