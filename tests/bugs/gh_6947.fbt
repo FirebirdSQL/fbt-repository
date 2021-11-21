@@ -16,7 +16,7 @@
     Note: name for encryption plugin differs on Windows vs Linux:
        PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else '"fbSampleDbCrypt"'
 
-    Confirmed bug on 5.0.0.219 (Windows), 5.0.0.236 (Linux)
+    Confirmed bug on 5.0.0.219 (Windows), 5.0.0.236 (Linux).
     Checked on 5.0.0.240 (Windows; SS/Cs), 5.0.0.241 (Linux; SS/CS)
  """,
 'min_versions': '5.0.0',
