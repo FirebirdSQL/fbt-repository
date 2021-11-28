@@ -8,6 +8,16 @@
     Confirmed on WI-V2.1.7.18553 Firebird 2.1:
     Statement failed, SQLSTATE = XX000
     internal Firebird consistency check (pointer page vanished from DPM_next (249), file: dpm.cpp line: 1698)
+    -------------------------------------------
+    29.11.2021.
+    Separated code for FB 5.x was added because of changes related to cursors introduced 26-nov-2021.
+    See commits:
+        8956b6ab621bd0de30e9976a398e649e59788976 - "Implemented #7051: Network support for bi-directional cursors"
+        67eb9d03d6ded0adf988a1a7a257e2cd3b89f952 - "Check for scrollability locally (without a roundtrip).
+    After this commits FETCH beyond the last record became "quiet", i.e. does not raise error.
+    This new behaviour led test to fall in infinite loop which made FB seems hanging.
+    New code suggested by dimitr, letter 28.11.2021 17:48.
+    Checked on 5.0.0.321.
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -47,6 +57,49 @@
     -At procedure 'P1' line: 19, col: 18
   """,
   'substitutions':[  ('SQLSTATE.*', 'SQLSTATE'), ('line: \d+,','line: x'), ('col: \d+','col: y') ]
+}
+, # -------------------------------------------- 5.x ---------------------------------------
+{
+ 'firebird_version': '5.0',
+ 'platform': 'All',
+ 'init_script': 
+  """
+  """,
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    -- since 29.11.2021.
+    create table t1 ( f1 smallint );
+    insert into t1 values (1);
+    insert into t1 values (2);
+    insert into t1 values (3);
+    commit;
+
+    set term ^ ;
+    create procedure p1
+    as
+       declare v1 smallint;
+       declare c1 cursor for ( select f1 from t1 );
+    begin
+       open c1;
+       while (1=1) do
+       begin
+            fetch c1 into :v1;
+            if (row_count = 0) then leave;
+       end
+       fetch c1 into :v1;
+       close c1;
+    end ^
+    set term ; ^
+    commit;
+    execute procedure p1;
+  """,
+ 'expected_stdout': 
+  """
+  """,
+ 'expected_stderr': 
+  """
+  """
 }
 ]
 }
