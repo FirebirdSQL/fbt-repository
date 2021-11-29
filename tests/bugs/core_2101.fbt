@@ -10,14 +10,15 @@
     internal Firebird consistency check (pointer page vanished from DPM_next (249), file: dpm.cpp line: 1698)
     -------------------------------------------
     29.11.2021.
-    Separated code for FB 5.x was added because of changes related to cursors introduced 26-nov-2021.
-    See commits:
-        8956b6ab621bd0de30e9976a398e649e59788976 - "Implemented #7051: Network support for bi-directional cursors"
-        67eb9d03d6ded0adf988a1a7a257e2cd3b89f952 - "Check for scrollability locally (without a roundtrip).
+    Separated code for FB 4.x+ was added because of changes related to cursors introduced 26-nov-2021.
+    Commit: "Fixed missing BOF flag, better boundary checks, code unification":
+        https://github.com/FirebirdSQL/firebird/commit/067c8040b2c810e76e99593e792a829b25fc8d5e
+        https://github.com/FirebirdSQL/firebird/commit/9397ebb13d65d114a053cc9ce88f3dac5d17e7eb
+
     After this commits FETCH beyond the last record became "quiet", i.e. does not raise error.
     This new behaviour led test to fall in infinite loop which made FB seems hanging.
     New code suggested by dimitr, letter 28.11.2021 17:48.
-    Checked on 5.0.0.321.
+    Checked on 5.0.0.321, 4.0.1.2672
  """,
 'min_versions': '2.5.0',
 'versions': [
@@ -58,9 +59,9 @@
   """,
   'substitutions':[  ('SQLSTATE.*', 'SQLSTATE'), ('line: \d+,','line: x'), ('col: \d+','col: y') ]
 }
-, # -------------------------------------------- 5.x ---------------------------------------
+, # -------------------------------------------- 4.x+ ---------------------------------------
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'init_script': 
   """
