@@ -10,32 +10,41 @@
     Confirmed poor ratio between sysdba/non_dba time on 3.0.4.33054 (03-oct-2018): ratio was about 3.5 ... 4.0.
     Bug was fixed in 3.0.5, 11-nov-2018, build #33081 ( https://www.sql.ru/forum/actualutils.aspx?action=gotomsg&tid=1295388&msg=21800371 ).
 
-    Recent FB versions have no problem, ratio is about 1.00 ... 1.1.
-    This test currently uses threshold = 1.2 for alert if ratio become poor again.
-    Problem can be preproduced if preparation of each DML rquires lot of work,
-    for example - check access rights for many nested views before update underlying table.
-    Number of DML which must be executed can be asjusted by value inserted into the SETTINGS table
-    (see below, column 'iterations_count'; current value is 1000, execution time will be about 10s).
+    Recent FB versions have no problem, ratio is about 1.05 ... 1.15.
+
+    Problem can be preproduced if each DML prepare will require lot of work, for example - check access rights for many nested views before
+    update underlying table.
+
+    30.11.2021. Completely reworked: use psutil package in order to take in account CPU User Time instead of evaluating datediff.
+    Difference between CPU User Time values which are received before and after each call of stored procedure can be considered as much more
+    accurate way to evaluate time that was spent for job.
+
+    Test creates table and lot of nested views based on this table and (furter) on each other.
+    Then stored procedure is created with DYNAMIC SQL, and we intentionally do NOT use parameters in it (because we want engine to compile
+    statement on each iteration).
+    Procedure performs loop for <N_COUNT_PER_MEASURE> times with executing statement like 'UPDATE <top_level_view> SET <new values here on each iteration>'.
+    Engine needs to determine access rights not only for <top_level_view> but also for all NESTED views and, eventually, for underlying table which must be
+    updated.
+    We call this procedure N_MEASURES times for SYSDBA and the same (N_MEASURES times) for NON_DBA user, and store difference values between CPU User Time
+    counters for each call. These differences then are divided (value that was received for NON_DBA is divided for apropriate value of SYSDBA).
+    MEDIAN of these ratios must be LESS than threshold MAX_TIME_RATIO.
 
     Checked on:
-        5.0.0.126 SS: 10.174s.
-        4.0.1.2554 CS: 10.623s.
-        3.0.8.33487 SS: 10.105s.
+        5.0.0.321 : 18.426s.
+        4.0.1.2672 : 18.469s.
+        3.0.8.33540 : 18.220s.
  """,
-'min_versions': '3.0.5',
+'min_versions': '3.0.4',
 'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script':
+ 'init_script':
   """
     set bail on;
-    set list on;
-
     create or alter user tmp$gh_6220 password '123' using plugin Srp;
     recreate sequence g;
-    create table test(id int primary key, x double precision);
+    create table test(id int primary key, measure int, iter_no int);
 
     create view v_test01 as select * from test;
     create view v_test02 as select * from v_test01;
@@ -139,85 +148,119 @@
     create view v_test99 as select * from v_test98;
     commit;
 
-    create table settings(iterations_count int);
-    create table perf_log(whoami varchar(32) default current_user, elap_ms int);
-    commit;
-
     set term ^;
-    create procedure sp_run as
-        declare t0 timestamp;
-        declare n int;
-        declare elap_ms int;
+    create procedure sp_run(a_measure smallint, n_iterations int) as
     begin
-
-        select iterations_count from settings into n;
-        t0 = 'now';
-
-        while (n>0) do
+        while ( n_iterations > 0 ) do
         begin
-            execute statement 'update v_test99 set x = ' || gen_id(g,1);
-            n = n - 1;
+            execute statement 'update v_test99 set measure = ' || a_measure || ', iter_no = ' || n_iterations;
+            n_iterations = n_iterations - 1;
         end
         
-        insert into perf_log(elap_ms) values( datediff(millisecond from :t0 to cast('now' as timestamp)) );
     end
     ^
     set term ;^
     commit;
 
-    grant select on settings to procedure sp_run;
-    grant insert on perf_log to procedure sp_run;
     grant execute on procedure sp_run to tmp$gh_6220;
     grant select, update on v_test99 to tmp$gh_6220;
     grant usage on sequence g to tmp$gh_6220;
     commit;
 
-    insert into v_test99(id,x) values(0,0);
+    insert into v_test99(id, measure, iter_no) values(0,-1,-1);
     commit;
 
-    -- ###############################################
-    -- ###   N U M.   O F    I T E R A T I O N S   ###
-    -- ###############################################
-    insert into settings(iterations_count) values(1000);
-    commit;
+  """,
+ 'test_type': 'Python',
+ 'test_script':
+  """
+
+import os
+import psutil
+from fdb import services
+
+os.environ["ISC_USER"] = user_name
+os.environ["ISC_PASSWORD"] = user_password
+db_conn.close()
+
+#------------------
+def median(lst):
+    n = len(lst)
+    s = sorted(lst)
+    return (sum(s[n//2-1:n//2+1])/2.0, s[n//2])[n % 2] if n else None
+#------------------
+
+###########################
+###   S E T T I N G S   ###
+###########################
+# How many times we call stored procedure 'sp_run':
+#
+N_MEASURES = 30
+
+# How many iterations (EXECUTE STATEMENT invocations) must be done in SP
+#
+N_COUNT_PER_MEASURE = 100
+
+# Maximal allowable threshold for MEDIAN of ratios:
+#
+MAX_TIME_RATIO = 1.3
+
+con_map = {}
+for who in (user_name, 'TMP$GH_6220'):
+        psw = user_password if who == user_name else '123'
+        con = fdb.connect( dsn = dsn, user = who, password = psw)
+        cur = con.cursor()
+        cur.execute('select mon$server_pid as p from mon$attachments where mon$attachment_id = current_connection')
+        fb_pid = int(cur.fetchone()[0])
+        con_map [ who ] = (con, cur, fb_pid)
+
+sp_time = {}
+for who in (user_name, 'TMP$GH_6220'):
+    (con, cur, fb_pid) = con_map [ who ]
+
+    for iter_no in range(0, N_MEASURES):
+        fb_info_init = psutil.Process(fb_pid).cpu_times()
+        cur.callproc( 'sp_run', (iter_no, N_COUNT_PER_MEASURE,) )
+        fb_info_curr = psutil.Process(fb_pid).cpu_times()
+        sp_time[ who, iter_no ]  = max(fb_info_curr.user - fb_info_init.user, 0.000001)
+        
+    cur.close()
+    con.close()
 
 
-    connect '$(DSN)' user tmp$gh_6220 password '123';
-    execute procedure sp_run;
-    commit;
-    
-    connect '$(DSN)' user sysdba password 'masterkey';
-    execute procedure sp_run;
-    commit;
+con = fdb.connect( dsn = dsn )
+con.execute_immediate('drop user tmp$gh_6220 using plugin Srp');
+con.close()
 
-    drop user tmp$gh_6220 using plugin Srp;
-    commit;
+ratio_lst = []
+for iter_no in range(0, N_MEASURES):
+    ratio_lst.append( sp_time['TMP$GH_6220',iter_no]  / sp_time[user_name,iter_no]  )
 
-    select
-        iif(elap_ratio < max_threshold, 'OK, acceptable.', 'POOR: ' || elap_ratio || ' - more than threshold = ' || max_threshold) as "Ratio (SYSDBA/NON_DBA):"
-    from (
-        select
-            min(iif( whoami = 'SYSDBA', elap_ms, null))  as elap_sysdba
-           ,min(iif( whoami <> 'SYSDBA', elap_ms, null)) as elap_nonsys
-           ,1.00 * min(iif( whoami <> 'SYSDBA', elap_ms, null)) / min(iif( whoami = 'SYSDBA', elap_ms, null)) as elap_ratio
-           ,1.2 as max_threshold
-           -- ^
-           -- |
-           -- #################################################
-           -- ###   T H R E S H O L D    F O R   A L E R T  ###
-           -- #################################################
-        from perf_log
-    ) t;
+median_ratio = median(ratio_lst)
+
+msg = 'Durations ratio for execution by NON-DBA vs SYSDBA: '
+if median_ratio < MAX_TIME_RATIO:
+    print(msg + 'acceptable.')
+else:
+    print( msg + 'UNACCEPTABLE: greater than threshold = ', MAX_TIME_RATIO)
+
+    print( 'Check result of %d measures:' % N_MEASURES )
+    for k,v in sorted(sp_time.items()):
+        print(k,':',v)
+
+    print('Ratio values:')
+    for i,p in enumerate(ratio_lst):
+        print('%3d' %i, ':', '%12.2f' % p)
+
 
   """,                                                      
  'expected_stdout': 
   """
-    Ratio (SYSDBA/NON_DBA): OK, acceptable.
+    Durations ratio for execution by NON-DBA vs SYSDBA: acceptable.
   """,
  'expected_stderr': 
   """
-  """,
-  'substitutions':[ ('[ \t]+',' ') ]
+  """
 }
 ]
 }
