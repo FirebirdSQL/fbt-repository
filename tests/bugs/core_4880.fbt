@@ -5,6 +5,8 @@
 'title': "Increase speed of creating package when number of its functions more than several hundreds",
 'description': 
   """
+    Ticket URL: https://github.com/FirebirdSQL/firebird/issues/5175
+
     Test creates package with N_LIMIT functions and the same number of standalone PSQL functions.
     We measure separately N_MEASURES times duration of:
         1. PSQL object(s) compilation and
