@@ -9,11 +9,12 @@
 
     Confirmed bug on 5.0.0.321.
     Checked on 5.0.0.336 - all fine.
+    Checked on 4.0.1.2682 (11.12.2021) - all OK, reduced min_version to 4.0.1
  """,
-'min_versions': '5.0',
+'min_versions': '4.0.1',
 'versions': [
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
