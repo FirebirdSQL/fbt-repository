@@ -446,7 +446,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     UserManager                                        Legacy_UserManager, Srp                                          Srp                                                              <true>       databases.conf                                                   
     WireCompression                                    true                                                             false                                                            <true>       firebird.conf                                                    
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
-    WireCryptPlugin                                    Arc4                                                             ChaCha, Arc4                                                     <true>       firebird.conf                                                    
+    WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
     Records affected: 71
     Records affected: 0
@@ -842,7 +842,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     UserManager                                        Legacy_UserManager, Srp                                          Srp                                                              <true>       databases.conf                                                   
     WireCompression                                    true                                                             false                                                            <true>       firebird.conf                                                    
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
-    WireCryptPlugin                                    Arc4                                                             ChaCha, Arc4                                                     <true>       firebird.conf                                                    
+    WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
     Records affected: 71
     Records affected: 0
@@ -1243,7 +1243,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     UserManager                                        Legacy_UserManager, Srp                                          Srp                                                              <true>       databases.conf                                                   
     WireCompression                                    true                                                             false                                                            <true>       firebird.conf                                                    
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
-    WireCryptPlugin                                    Arc4                                                             ChaCha, Arc4                                                     <true>       firebird.conf                                                    
+    WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
     Records affected: 71
     Records affected: 0
@@ -1644,7 +1644,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     UserManager                                        Legacy_UserManager, Srp                                          Srp                                                              <true>       databases.conf                                                   
     WireCompression                                    true                                                             false                                                            <true>       firebird.conf                                                    
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
-    WireCryptPlugin                                    Arc4                                                             ChaCha, Arc4                                                     <true>       firebird.conf                                                    
+    WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
     Records affected: 71
     Records affected: 0
