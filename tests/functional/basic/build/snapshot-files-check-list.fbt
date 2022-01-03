@@ -13,6 +13,7 @@
     but it seems that there were several other tickets about the same (missing some of necessary files).
 
     Checked on: 3.0.7.33379, 4.0.0.2240.
+    02-jan-2022: file 'fbSampleExtAuthKeygen .exe' became 'fbSampleExtAuthKeygen.exe'.
  """,
 'min_versions': '3.0.7',
 'versions': [
