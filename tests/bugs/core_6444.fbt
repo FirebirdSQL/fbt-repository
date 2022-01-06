@@ -820,7 +820,6 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     RemoteAuxPort                                      0                                                                0                                                                <false>      <null>                                                           
     RemoteBindAddress                                  <null>                                                           <null>                                                           <false>      <null>                                                           
     RemoteFileOpenAbility                              false                                                            false                                                            <false>      <null>                                                           
-    RemotePipeName                                     interbas                                                         interbas                                                         <false>      <null>                                                           
     RemoteServiceName                                  tmp_fbs_6444                                                     gds_db                                                           <true>       firebird.conf                                                    
     RemoteServicePort                                  [MATCHES]                                                        0                                                                <true>       firebird.conf                                                    
     SecurityDatabase                                   tmp_6444                                                         security5.fdb                                                    <true>       databases.conf                                                   
@@ -844,7 +843,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
     WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
-    Records affected: 71
+    Records affected: 70
     Records affected: 0
   """,
  'expected_stderr': 
@@ -1622,7 +1621,6 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     RemoteAuxPort                                      0                                                                0                                                                <false>      <null>                                                           
     RemoteBindAddress                                  <null>                                                           <null>                                                           <false>      <null>                                                           
     RemoteFileOpenAbility                              false                                                            false                                                            <false>      <null>                                                           
-    RemotePipeName                                     interbas                                                         interbas                                                         <false>      <null>                                                           
     RemoteServiceName                                  tmp_fbs_6444                                                     gds_db                                                           <true>       firebird.conf                                                    
     RemoteServicePort                                  [MATCHES]                                                        0                                                                <true>       firebird.conf                                                    
     SecurityDatabase                                   tmp_6444                                                         security5.fdb                                                    <true>       databases.conf                                                   
@@ -1646,7 +1644,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
     WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
-    Records affected: 71
+    Records affected: 70
     Records affected: 0
   """,
  'expected_stderr': 
