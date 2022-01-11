@@ -23,6 +23,8 @@
         5.0.0.181 SS;    5.0.0.169 CS;
         4.0.1.2578 SS;   4.0.1.2578 CS;
         3.0.8.33489 SS;  3.0.8.33476 CS.
+
+    11-jan-2022: removed 'WNET' from list of checked protocols because its support was dropped in FB 5.x
  """,
 'min_versions': '3.0.4',
 'versions': [
@@ -105,7 +107,8 @@ MAX_SECONDS_TO_WAIT = 3
 # Trying to establish connection to database using WNET and XNET protocols.
 # Async. launch of ISQL with check that it will finished within some reasonable time (and w/o errors).
 # If it will hang - kill (this is bug dexcribed in the ticket)
-for p in ('wnet', 'xnet'):
+#for p in ('wnet', 'xnet'):
+for p in ('xnet',):
     f_isql_sql=open(os.path.join(context['temp_directory'],'tmp_gh_5995.'+p+'.sql'),'w')
     f_isql_sql.write('set list on; select mon$remote_protocol from mon$attachments where mon$attachment_id = current_connection;')
     flush_and_close( f_isql_sql )
@@ -148,7 +151,6 @@ runProgram('gfix',[dsn,'-online'])
   """,
  'expected_stdout':
   """
-    MON$REMOTE_PROTOCOL             WNET
     MON$REMOTE_PROTOCOL             XNET
   """,
  'expected_stderr':
