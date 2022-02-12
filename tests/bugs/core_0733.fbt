@@ -167,8 +167,7 @@ def prepare_sql_4run( required_compression, db_path, n_rows, sql_file_name ):
         ^
         set term ;^
 
-        --out %(db_path)s%(sql_dump)s;
-        out nul;
+        out %(NUL_DEVICE)s;
 
         set term ^;
         execute block returns(b dm_dump) as
