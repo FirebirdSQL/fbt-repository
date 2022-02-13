@@ -27911,7 +27911,7 @@
 # -------------------------------------------- 5.0 -----------------------------------------
 
 {
- 'firebird_version': '4.1',
+ 'firebird_version': '5.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script': 
@@ -28235,6 +28235,72 @@
     RDB$GENERATOR_NAME              <null>
     RDB$IDENTITY_TYPE               <null>
 
+    RDB$FIELD_NAME                  MON$COMPILED_STATEMENT_ID                                                                                                                                                                                                                                   
+    RDB$RELATION_NAME               MON$CALL_STACK                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                RDB$STATEMENT_ID                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              10
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    10
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$COMPILED_STATEMENT_ID                                                                                                                                                                                                                                   
+    RDB$RELATION_NAME               MON$COMPILED_STATEMENTS                                                                                                                                                                                                                                     
+    RDB$FIELD_SOURCE                RDB$STATEMENT_ID                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              0
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    0
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$COMPILED_STATEMENT_ID                                                                                                                                                                                                                                   
+    RDB$RELATION_NAME               MON$STATEMENTS                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                RDB$STATEMENT_ID                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              10
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    10
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
     RDB$FIELD_NAME                  MON$CREATION_DATE                                                                                                                                                                                                                                           
     RDB$RELATION_NAME               MON$DATABASE                                                                                                                                                                                                                                                
     RDB$FIELD_SOURCE                RDB$TIMESTAMP_TZ                                                                                                                                                                                                                                            
@@ -28311,6 +28377,28 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    0
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$EXPLAINED_PLAN                                                                                                                                                                                                                                          
+    RDB$RELATION_NAME               MON$COMPILED_STATEMENTS                                                                                                                                                                                                                                     
+    RDB$FIELD_SOURCE                RDB$SOURCE                                                                                                                                                                                                                                                  
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              2
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    2
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -28719,8 +28807,52 @@
     RDB$GENERATOR_NAME              <null>
     RDB$IDENTITY_TYPE               <null>
 
+    RDB$FIELD_NAME                  MON$OBJECT_NAME                                                                                                                                                                                                                                             
+    RDB$RELATION_NAME               MON$COMPILED_STATEMENTS                                                                                                                                                                                                                                     
+    RDB$FIELD_SOURCE                RDB$GENERIC_NAME                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              3
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    3
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
     RDB$FIELD_NAME                  MON$OBJECT_TYPE                                                                                                                                                                                                                                             
     RDB$RELATION_NAME               MON$CALL_STACK                                                                                                                                                                                                                                              
+    RDB$FIELD_SOURCE                RDB$OBJECT_TYPE                                                                                                                                                                                                                                             
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              4
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    4
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$OBJECT_TYPE                                                                                                                                                                                                                                             
+    RDB$RELATION_NAME               MON$COMPILED_STATEMENTS                                                                                                                                                                                                                                     
     RDB$FIELD_SOURCE                RDB$OBJECT_TYPE                                                                                                                                                                                                                                             
     RDB$QUERY_NAME                  <null>
     RDB$BASE_FIELD                  <null>
@@ -28927,6 +29059,28 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    9
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$PACKAGE_NAME                                                                                                                                                                                                                                            
+    RDB$RELATION_NAME               MON$COMPILED_STATEMENTS                                                                                                                                                                                                                                     
+    RDB$FIELD_SOURCE                RDB$PACKAGE_NAME                                                                                                                                                                                                                                            
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              5
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    5
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -29807,6 +29961,28 @@
     RDB$QUERY_HEADER                <null>
     RDB$UPDATE_FLAG                 0
     RDB$FIELD_ID                    9
+    RDB$VIEW_CONTEXT                <null>
+    RDB$DESCRIPTION                 <null>
+    RDB$DEFAULT_VALUE               <null>
+    RDB$SYSTEM_FLAG                 1
+    RDB$SECURITY_CLASS              <null>
+    RDB$COMPLEX_NAME                <null>
+    RDB$NULL_FLAG                   <null>
+    RDB$DEFAULT_SOURCE              <null>
+    RDB$COLLATION_ID                <null>
+    RDB$GENERATOR_NAME              <null>
+    RDB$IDENTITY_TYPE               <null>
+
+    RDB$FIELD_NAME                  MON$SQL_TEXT                                                                                                                                                                                                                                                
+    RDB$RELATION_NAME               MON$COMPILED_STATEMENTS                                                                                                                                                                                                                                     
+    RDB$FIELD_SOURCE                RDB$SOURCE                                                                                                                                                                                                                                                  
+    RDB$QUERY_NAME                  <null>
+    RDB$BASE_FIELD                  <null>
+    RDB$EDIT_STRING                 <null>
+    RDB$FIELD_POSITION              1
+    RDB$QUERY_HEADER                <null>
+    RDB$UPDATE_FLAG                 0
+    RDB$FIELD_ID                    1
     RDB$VIEW_CONTEXT                <null>
     RDB$DESCRIPTION                 <null>
     RDB$DEFAULT_VALUE               <null>
@@ -38884,7 +39060,7 @@
     RDB$IDENTITY_TYPE               <null>
 
 
-    Records affected: 498
+    Records affected: 506
   """,
   'substitutions': [
       ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
