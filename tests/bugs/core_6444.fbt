@@ -1608,6 +1608,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     LockMemSize                                        30408704                                                         1048576                                                          <true>       databases.conf                                                   
     MaxIdentifierByteLength                            31                                                               252                                                              <true>       databases.conf                                                   
     MaxIdentifierCharLength                            31                                                               63                                                               <true>       databases.conf                                                   
+    MaxStatementCacheSize                              2097152                                                          2097152                                                          <false>      <null>
     MaxUnflushedWriteTime                              15                                                               5                                                                <true>       databases.conf                                                   
     MaxUnflushedWrites                                 111                                                              100                                                              <true>       databases.conf                                                   
     MaxUserTraceLogSize                                100                                                              10                                                               <true>       firebird.conf                                                    
@@ -1644,7 +1645,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
     WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
-    Records affected: 70
+    Records affected: 71
     Records affected: 0
   """,
  'expected_stderr': 
