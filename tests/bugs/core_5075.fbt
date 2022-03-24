@@ -5,18 +5,25 @@
 'title': "Regression. Triger on DISCONNECT with dynamic SQL (ES 'insert into ...'): 1) does not work in 3.0; 2) leads FB to crash when it is recreated",
 'description':
  """
-   Test does following:
-   * obtains firebird.log as it was _before_ actions;
-   * stores initial script for creation DB objects in file <f_sql_init> for futher applying it twice (see ticket);
-   * open PIPE object and communicates with ISQL issuing commands into STDIN, three times; result is stored in var.'sqlres'
-   * print variable 'sqlres'; it content must be equal to that we get in FB 2.5;
-   * again apply initial DDL and then - one again launch ISQL with passing to it commands via STDIN and saving result in 'sqlres'
-   * print variable 'sqlres';
-   * obtains firebird.log as it is _after_ actions;
-   * compare two firebird.log versions - diff must be empty.
+    https://github.com/FirebirdSQL/firebird/issues/5362
+    Confirmed crash on 3.0.0.32136 Firebird 3.0. RC1 (build: 06-nov-2015).
 
-   Checked on 3.0.0.32281, SS/SC/CS.
+    Test does following:
+    * obtains firebird.log as it was _before_ actions;
+    * stores initial script for creation DB objects in file <f_sql_init> for futher applying it twice (see ticket);
+    * open PIPE object and communicates with ISQL issuing commands into STDIN, three times; result is stored in var.'sqlres'
+    * print variable 'sqlres'; it content must be equal to that we get in FB 2.5;
+    * again apply initial DDL and then - one again launch ISQL with passing to it commands via STDIN and saving result in 'sqlres'
+    * print variable 'sqlres';
+    * obtains firebird.log as it is _after_ actions;
+    * compare two firebird.log versions - diff must be empty.
 
+    Checked on 3.0.0.32281, SS/SC/CS.
+
+    REFACTORED 24-mar-2022.
+    We must check diff-file of firebird.log for the presence of only those phrases that
+    indicate *real* problem (AV/crash/bugcheck/corruption) -- see var. problem_pattern.
+    Any other messages, e.g. "DEBUG_...:" must be ignored.
  """,
 'min_versions': '3.0',
 'versions': [
@@ -30,10 +37,11 @@
  'test_script':
   """\
 import os
+import time
+import re
+import difflib
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
-import time
-import difflib
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -193,9 +201,14 @@ f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_5075_diff.txt'), 'w
 f_diff_txt.write(difftext)
 flush_and_close( f_diff_txt )
 
+problem_pattern = re.compile( '(Shutting down the server with \d+ active connection)|(Access violation)|(terminated abnormally)|(bugcheck)|(appears corrupt)|(invalid request BLR)|(compile_request failed)|(consistency check)' )
+
+# Difference of firebird.log should NOT contain text which matches to problem_patterns:
 with open( f_diff_txt.name,'r') as f:
     for line in f:
-        print('new messages in firebird.log: '+line)
+        if line.strip() and problem_pattern.search(line):
+            print('UNEXPECTED MESSAGE IN FIREBIRD.LOG: ' + line.strip())
+
 
 # Cleanup.
 ##########
