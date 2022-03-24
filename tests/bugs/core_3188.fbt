@@ -5,23 +5,29 @@
 'title': 'page 0 is of wrong type (expected 6, found 1)',
 'description': 
  """
-   Confirmed on WI-V2.5.0.26074
-     exception:
-     DatabaseError:
-     Error while commiting transaction:
-     - SQLCODE: -902
-     - database file appears corrupt (C:\MIX\FIREBIRD\QA\FBT-REPO\TMP\BUGS.CORE_3188.FDB)
-     - wrong page type
-     - page 0 is of wrong type (expected 6, found 1)
-     -902
-     335544335
+    Confirmed on WI-V2.5.0.26074
+      exception:
+      DatabaseError:
+      Error while commiting transaction:
+      - SQLCODE: -902
+      - database file appears corrupt (...)
+      - wrong page type
+      - page 0 is of wrong type (expected 6, found 1)
+      -902
+      335544335
 
-   New messages in firebird.log in 2.5.0 after running ticket statements:
+    REFACTORED 24-mar-2022.
+    We must check diff-file of firebird.log for the presence of only those phrases that
+    indicate *real* problem (AV/crash/bugcheck/corruption) -- see var. problem_pattern.
+    Any other messages, e.g. "DEBUG_...:" must be ignored.
+    Checked on:
+        50sS, build 5.0.0.437 : 2.811s.
+        50Cs, build 5.0.0.426 : 1.837s.
+        40sS, build 4.0.1.2731 : 1.850s.
+        40Cs, build 4.0.2.2737 : 3.138s.
+        30sS, build 3.0.8.33535 : 1.495s.
+        30sC, build 3.0.4.33054 : 1.501s.
 
-    CSPROG (Client)	Mon Feb 15 07:28:05 2016
-        INET/inet_error: connect errno = 10061
-    CSPROG	Mon Feb 15 07:41:02 2016
-        Shutting down the server with 0 active connection(s) to 0 database(s), 1 active service(s)
  """,
 'min_versions': '2.5.1',
 'versions': [
@@ -32,14 +38,19 @@
  'test_script': 
   """
 import os
+import re
 import difflib
+import time
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
 
 engine = str(db_conn.engine_version)
+#db_cur = db_conn.cursor()
+#db_cur.execute('select mon$server_pid from mon$attachments where mon$attachment_id = %d' % db_conn.attachment_id )
+#srv_pid_init = db_cur.fetchone()[0]
+#db_cur.close()
 db_conn.close()
-
 
 #---------------------------------------------
 
@@ -79,9 +90,10 @@ def svc_get_fb_log( engine, f_fb_log ):
   else:
       get_firebird_log_key='action_get_fb_log'
 
-  subprocess.call([ context['fbsvcmgr_path'],
-                    "localhost:service_mgr",
-                    get_firebird_log_key
+  subprocess.call([ context['fbsvcmgr_path']
+                    ,"localhost:service_mgr"
+                    ,"user", "SYSDBA","password", "masterkey" # need in old FB 2.5.x, even when ISC_* exist!
+                    ,get_firebird_log_key
                   ],
                   stdout=f_fb_log, stderr=subprocess.STDOUT
                  )
@@ -91,8 +103,8 @@ def svc_get_fb_log( engine, f_fb_log ):
 
 
 # Start two attachments:
-con1 = kdb.connect(dsn=dsn)
-con2 = kdb.connect(dsn=dsn)
+con1 = fdb.connect(dsn=dsn)
+con2 = fdb.connect(dsn=dsn)
 
 # Session-1:
 c1 = con1.cursor()
@@ -111,7 +123,6 @@ c2 = con2.cursor()
 c2.execute('drop table test')
 con2.commit()
 
-# cleanup
 con1.close()
 con2.close()
 
@@ -135,11 +146,14 @@ f_diff_txt=open( os.path.join(context['temp_directory'],'tmp_3188_diff.txt'), 'w
 f_diff_txt.write(difftext)
 flush_and_close( f_diff_txt )
 
-# Difference of firebird.log should be EMPTY:
+problem_pattern = re.compile( '(Shutting down the server with \d+ active connection)|(Access violation)|(terminated abnormally)|(bugcheck)|(appears corrupt)|(invalid request BLR)|(compile_request failed)|(consistency check)' )
 
+# Difference of firebird.log should NOT contain text which matches to problem_patterns:
 with open( f_diff_txt.name,'r') as f:
-    print( f.read() )
-f.close()
+    for line in f:
+        if line.strip() and problem_pattern.search(line):
+            print('UNEXPECTED MESSAGE IN FIREBIRD.LOG: ' + line.strip())
+
 
 ###############################
 # Cleanup.
