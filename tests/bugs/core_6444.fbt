@@ -844,7 +844,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     WireCrypt                                          Required                                                         Required                                                         <true>       firebird.conf                                                    
     WireCryptPlugin                                    Arc4                                                             ChaCha64, ChaCha, Arc4                                           <true>       firebird.conf                                                    
 
-    Records affected: 70
+    Records affected: 71
     Records affected: 0
   """,
  'expected_stderr': 
