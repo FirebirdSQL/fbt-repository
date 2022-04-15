@@ -1,41 +1,54 @@
 {
 'id': 'bugs.core_1885',
-'qmid': 'bugs.core_1885-250',
+'qmid': '',
 'tracker_id': 'CORE-1885',
 'title': 'CREATE COLLATION connection lost under Posix',
-'description': 'CREATE COLLATION connection lost under Posix when using LOCALE option',
-'min_versions': None,
-'versions': [
-{
- 'firebird_version': '2.5.0',
- 'platform': 'All',
- 'test_type': 'ISQL',
- 'test_script':
+'description':
   """
-    CREATE COLLATION UNICODE_ENUS_CI_25X FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+    Issuing 'CREATE COLLATION' forced FB to crash on Posix when using LOCALE option
+
+    15.04.2022
+    NOTE about FB 3.x: this test always raises exception on Windows but, in contrary, always passes on POSIX.
+    Originally this test was created only to ensure that FB does not crash, but outcome (pass/fail) not matters.
+    It was decided to make this test act the same on both operating systems, and the simplest way for that is
+    do run CREATE COLLATION within EXCEUTE BLOCK and suppress any exception that can occurs there
+    See discussion with Alex, 15.04.2022 17:58.
+
   """,
- 'expected_stderr':
-  """
-    Statement failed, SQLSTATE = 42000
-    unsuccessful metadata update
-    -Invalid collation attributes
-  """
-},
+'min_versions': '3.0.0',
+'versions': [
 {
  'firebird_version': '3.0',
  'platform': 'All',
  'test_type': 'ISQL',
  'test_script':
   """
-    -- Attribute 'LOCALE=en_US' is defined for charset = ISO8859_1 rather that for UTF8, see intl/fbintl.conf
-    CREATE COLLATION UNICODE_ENUS_CI_3X FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US';
+    -- Following EB:
+    -- must complete normally (w/o any exception) on LINUX;
+    -- must raise exception on Windows but it was decided to SUPPRESS such exception if its gdscode = 335544351 and sqlstate =  'HY000'
+    -- (any other kind of exception will not be suppressed and we will able to see its details).
+    set list on;
+    set term ^;
+    execute block returns(outcome_msg varchar(100), raised_gds int, raised_sqlstate char(5)) as
+    begin
+        execute statement q'{CREATE COLLATION UNICODE_ENUS_CI_3X FOR UTF8 FROM UNICODE CASE INSENSITIVE 'LOCALE=en_US'}';
+        when any do
+        begin
+            raised_gds = gdscode;
+            raised_sqlstate = sqlstate;
+            if ( not( raised_gds = 335544351 and raised_sqlstate = 'HY000' ) ) then
+            begin
+                outcome_msg = 'Unexpected gdscode and/or sqlstate:';
+                suspend;
+            end
+        end
+    end
+    ^
+    set term ^;
+    commit;
   """,
  'expected_stderr':
   """
-    Statement failed, SQLSTATE = HY000
-    unsuccessful metadata update
-    -CREATE COLLATION UNICODE_ENUS_CI_3X failed
-    -Invalid collation attributes
   """
 },
 {
