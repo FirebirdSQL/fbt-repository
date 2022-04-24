@@ -89,9 +89,8 @@
     RDB$BASE_COLLATION_NAME         UNICODE
 
     SPECIFIC_ATTR_BLOB_ID           1d:1e7
-    COLL-VERSION=xx;LOCALE=en_US
+    COLL-VERSION=<attr>
     RDB$CHARACTER_SET_NAME          UTF8
-
     RDB$BYTES_PER_CHARACTER         4
 
     Records affected: 1
@@ -99,10 +98,9 @@
  'expected_stderr':
   """
   """,
-  'substitutions': [
-    ('SPECIFIC_ATTR_BLOB_ID.*', ''),
-    ('COLL-VERSION=\d+\.\d+\.\d+\.\d+','COLL-VERSION=xx'),
-    ('COLL-VERSION=\d+\.\d+','COLL-VERSION=xx')
+  'substitutions': [    
+     ('SPECIFIC_ATTR_BLOB_ID.*', 'SPECIFIC_ATTR_BLOB_ID')
+    ,('COLL-VERSION=\d+.\d+(;ICU-VERSION=\d+.\d+)?.*', 'COLL-VERSION=<attr>')
   ]
 
 }
