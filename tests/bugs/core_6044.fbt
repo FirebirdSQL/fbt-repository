@@ -66,7 +66,10 @@
  'expected_stderr': 
   """
   """,
-  'substitutions': [('current value.*', 'current value')]
+  'substitutions': [
+	  ('current value.*', 'current value')
+	 ,('COLL-VERSION=\d+.\d+(;ICU-VERSION=\d+.\d+)?.*', '<attr>')
+  ]
 }
 ]
 }
