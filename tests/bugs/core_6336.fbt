@@ -61,7 +61,13 @@
         ... and so on for all other collations defined for charset ISO8859_1 ...
     ========
 
-    Checked on 4.0.0.2114 SS. Time of execution: 73.668s.
+    24.04.2022: added substitutions because FB 5.x now issues 'ICU-VERSION=NN.N'
+    beside COLL-VERSION, e.g.:
+        - COLL_SPEC                       COLL-VERSION=153.88;...
+        + COLL_SPEC                       COLL-VERSION=153.88;ICU-VERSION=63.1;...
+
+    Checked on 4.0.0.2750 : 71.339s.
+    Checked on 5.0.0.487  : 69.349s.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -7495,7 +7501,8 @@ cleanup( ( f_sql_cmd, f_sql_log, f_sql_err ) )
   """,
  'expected_stderr':
   """
-  """
+  """,
+  'substitutions':[('COLL-VERSION=\d+.\d+(;ICU-VERSION=\d+.\d+)?.*', '<attr>')]
 }
 ]
 }
