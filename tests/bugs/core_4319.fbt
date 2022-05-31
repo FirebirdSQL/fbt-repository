@@ -11,12 +11,23 @@
    Than we make async start of trace session using FBTRACEMGR utility and after small pause (~1 sec)
    run ISQL with attempt to make connect to non-existent alias.
 
-   Confirmed crash on WI-T3.0.0.30566 (Alpha 1). Note: utility fbsvcmgr can not start when trace config 
+   Confirmed crash on WI-T3.0.0.30566 (Alpha 1). Note: utility fbsvcmgr can not start when trace config
    contains connection_id: standard Windows crash report appears with such data:
    ...
-   AppName: fbsvcmgr.exe	 AppVer: 3.0.0.30566	 ModName: msvcr100.dll
-   ModVer: 10.0.30319.1	 Offset: 0008ae6e
+   AppName: fbsvcmgr.exe         AppVer: 3.0.0.30566     ModName: msvcr100.dll
+   ModVer: 10.0.30319.1  Offset: 0008ae6e
    ...
+
+   31.05.2022
+   Builds since ~17.05.2022 have been changed: call of p_trace.terminate() led to forced closing  of network connection to service manager.
+   This, in turn, led to raising 'connection shutdown' in STDERR which did appear in the final log.
+   Because of this, one need to change actions how trace session must be stopped:
+       1) we have to found its ID (using action_trace_list),
+       2) send request to stop using this 'trc_id' and 
+       3) MOST IMPORTANT: call wait() method of subprocess package // https://docs.python.org/3/library/subprocess.html#subprocess.Popen.wait
+   Only this can ensure that trace session will be terminated correctly and STDERR will remain empty.
+   Discussed with dimitr, letters since 30.05.2022 13:52.
+   Checked on: 5.0.0.501; 4.0.2.2770; 3.0.10.33597 (all - SS and CS).
  """,
 'min_versions': '2.5.3',
 'versions': [
@@ -45,11 +56,11 @@ db_conn.close()
 
 def flush_and_close(file_handle):
     # https://docs.python.org/2/library/os.html#os.fsync
-    # If you're starting with a Python file object f, 
-    # first do f.flush(), and 
+    # If you're starting with a Python file object f,
+    # first do f.flush(), and
     # then do os.fsync(f.fileno()), to ensure that all internal buffers associated with f are written to disk.
     global os
-    
+
     file_handle.flush()
     os.fsync(file_handle.fileno())
 
@@ -72,7 +83,7 @@ txt25 = '''# Trace config, format for 2.5. Generated auto, do not edit!
 <database %[\\\\\\\\/]bugs.core_4319.fdb>
   enabled true
   log_errors true
-  time_threshold 0 
+  time_threshold 0
   connection_id 1234
   log_connections true
 </database>
@@ -124,13 +135,45 @@ p_isql = subprocess.call([ context['isql_path'], dsn, "-i", f_sqltxt.name ],
                            stdout=f_sqllog, stderr=subprocess.STDOUT)
 flush_and_close( f_sqllog )
 
-# Terminate child process of launched trace session:
+# ####################################################
+# G E T  A C T I V E   T R A C E   S E S S I O N   I D
+# ####################################################
+# Save active trace session info into file for further parsing it and obtain session_id back (for stop):
 
-time.sleep(1)
+f_trclst = open( os.path.join(context['temp_directory'],'tmp_trace_4319.lst'), 'w')
+subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_list'], stdout=f_trclst, stderr=subprocess.STDOUT)
+flush_and_close( f_trclst )
 
-p_trace.terminate()
+trcssn=0
+with open( f_trclst.name,'r') as f:
+    for line in f:
+        i=1
+        if 'Session ID' in line:
+            for word in line.split():
+                if i==3:
+                    trcssn=word
+                i=i+1
+            break
+
+
+# Result: `trcssn` is ID of active trace session. Now we have to terminate it:
+
+# ####################################################
+# S E N D   R E Q U E S T    T R A C E   T O   S T O P
+# ####################################################
+if trcssn>0:
+    fn_nul = open(os.devnull, 'w')
+    subprocess.call([context['fbsvcmgr_path'], 'localhost:service_mgr', 'action_trace_stop','trc_id', trcssn], stdout=fn_nul)
+    fn_nul.close()
+    p_trace.wait()
+else:
+    print('Trace session was finished forcedly: could not find its trc_id.')
+    p_trace.kill()
+
 flush_and_close( f_trclog )
 
+# Check content of logs:
+########################
 with open( f_trclog.name,'r') as f:
     for line in f:
         print(line.upper())
@@ -143,15 +186,15 @@ with open( f_sqllog.name,'r') as f:
 # CLEANUP
 ##########
 time.sleep(1)
-cleanup( [i.name for i in (f_sqltxt, f_sqllog, f_trccfg, f_trclog)] )
+cleanup( [i.name for i in (f_sqltxt, f_sqllog, f_trccfg, f_trclog, f_trclst)] )
 
   """,
- 'expected_stdout': 
+ 'expected_stdout':
   """
     TRACE SESSION ID STARTED
     STATEMENT FAILED, SQLSTATE = 08001
   """,
- 'expected_stderr': 
+ 'expected_stderr':
   """
   """,
   'substitutions':[('TRACE SESSION ID.*','TRACE SESSION ID')]
