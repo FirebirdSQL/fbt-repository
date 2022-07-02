@@ -12,6 +12,13 @@
     03-mar-2021.
     Added substitution for zero value ('F02') as result of evaluating exp(-745.1332192):
     on Windows number of digits in decimal representation more than on Linux for 1.
+
+    02-JUL-2022
+    Removed 'exp(-745.13***)' from here, it is irrelevant task. 
+    Moreover, result of this evaluation depends on CPU that is used on current box, and also it can differ on FB 3.x vs 4.x.
+
+    Checked on 4.0.0.2796, 5.0.0.565
+
  """,
 'min_versions': '3.0',
 'versions': [
@@ -39,11 +46,10 @@ sql_cmd=\
 '''
     connect 'localhost:%(this_fdb)s' user '%(user_name)s' password '%(user_password)s';
     create domain dm_dp double precision;
-    create table ext_table external file '%(tmp_file)s' (f01 dm_dp, f02 dm_dp, f03 dm_dp);
+    create table ext_table external file '%(tmp_file)s' (f01 dm_dp);
     commit;
-    insert into ext_table (f01, f02, f03) values( exp(-745.1332191), exp(-745.1332192), exp(709.78271289338404) );
+    insert into ext_table (f01) values( pi() ); -- first 18 digits are: 3.141592653589793238
     commit;
-    -- connect 'localhost:%(this_fdb)s' user '%(user_name)s' password '%(user_password)s';
     set list on;
     set count on;
     select * from ext_table;
@@ -63,15 +69,12 @@ os.remove( tmp_file )
   """,
  'expected_stdout':
   """
-    F01 4.940656458412465e-324
-    F02 0.0000000000000000
-    F03 1.797693134862273e+308
+    F01                             3.141592653589793
     Records affected: 1
   """,
  'expected_stderr':
   """
-  """,
-  'substitutions':[ ('[ \t]+', ' '), ('0.0000000000000000', '0.000000000000000') ]
+  """
 }
 ]
 }
