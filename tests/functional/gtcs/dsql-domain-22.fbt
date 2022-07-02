@@ -33,8 +33,14 @@
     Domain CHECK constraint *can* be changed so that existing data will not satisfy new expression.
     Only NOT NULL is verified against data that were inserted in the table.
 
-    Checked on 4.0.0.2425 (Windows), 4.0.0.2422 (Linux)
-    
+    02.07.2022
+    Removed 'exp(-745.13***)' from check expression in DDL of domain 'dom22_08' (double precision).
+    It was used in order to get results of comparison double precision values with value that seemed to be minimal distinguish from zero.
+    But this is another task, irrelevant to this test. Furtermore, result of this comparison depends on CPU that is used on current box,
+    and also it can differ on FB 3.x vs 4.x.
+
+    Checked on 4.0.0.2796, 5.0.0.565
+       
  """,
 'min_versions': '4.0',
 'versions': [
@@ -128,8 +134,7 @@ sql_init=\
     create domain dom22_06 as numeric(2,2)     default -327.68      check (value < 0);
     create domain dom22_07 as decimal(6,2)     default -999.99      check (value < 0);
 
-    -- exp(-745.1332192) is max. double precision value that will be NOT distinguish from zero:
-    create domain dom22_08 as double precision default 0 check (value is null or value is not distinct from exp(-745.1332192));
+    create domain dom22_08 as double precision default 0 check (value is null or value = 0);
 
     -----------------------------
 
@@ -296,14 +301,16 @@ sql_init=\
 
     ------------------------------------------------
 
-    recreate table test(x_dp dom22_08); -- default 0 check (value is not distinct from exp(-745.1332192))
+    recreate table test(x_dp dom22_08); -- check (value is null or value = 0);
 
     insert into test default values returning x_dp;
     insert into test values(null);
     commit;
 
-    alter domain dom22_08 set not null;
-    alter domain dom22_08 drop constraint add constraint check(value is not distinct from exp(-745.1332191) ); -- minimal DP value that can be distinguished from zero
+    alter domain dom22_08 set not null; -- must fail with SQLSTATE = 22006 / -Cannot make field X_DP of table TEST NOT NULL because there are NULLs present
+
+    alter domain dom22_08 drop constraint add constraint check(value = -1);
+    alter domain dom22_08 drop constraint add constraint check(value = 1);
     commit;
 
     insert into test default values returning x_dp; -- must fail with SQLSTATE = 23000 / validation error ... value "0.0000000000000000"
@@ -656,7 +663,7 @@ runProgram( 'isql', ['-q', '-i', f_run_sql.name] )
     DM_FCHRLEN                      <null>
     DM_FNULL                        <null>
     DM_FVALID                       2:201
-    check (value is null or value is not distinct from exp(-745.1332192))
+    check (value is null or value = 0)
     DM_FDEFAULT                     2:203
     default 0
     DM_NAME                         DOM22_09
@@ -1121,6 +1128,7 @@ runProgram( 'isql', ['-q', '-i', f_run_sql.name] )
      ,('0.0000000000000000', '0.000000000000000')
      ,('X_DATE                          20.*', 'X_DATE 20')
      ,('validation error for column "TEST"."X_DATE", value .*', 'validation error for column "TEST"."X_DATE"')
+     ,('is not distinct from exp.*', 'is not distinct from exp')
   ]
 }
 ]
