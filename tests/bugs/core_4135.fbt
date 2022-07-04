@@ -46,6 +46,13 @@
 
    04-JUL-2020.
    Reduced PLANNED_ATTACH_CNT from 30 to 5 because 4.0 Classic remains fail.
+	
+   04-JUL-2022
+   Changed settings because test machine IO became significantly faster which affected on test outcome, speciallyt on SS.
+   Reduced WAIT_BEFORE_RUN_1ST_ATT from 5 to 2 because all ISQLs can establish attachment too fast
+   (test became fail since 5.0.0.550, only SS, with outcome '0 attachments could be established') 
+   Increased num of records to be swept: from 10000 to 15000 (see RECORDS_TO_ADD)
+   
  """,
 'min_versions': '3.0',
 'versions': [
@@ -105,7 +112,7 @@ def cleanup( f_names_list ):
 ########################
 
 # How many rows must be inserted to the test table:
-RECORDS_TO_ADD = 10000
+RECORDS_TO_ADD = 15000
 
 # Length of indexed fields.
 # NB, 11.06.2020: sweep can make its work very fast
@@ -123,7 +130,7 @@ WAIT_FOR_ALL_ATT_DONE = 10
 
 # How many seconds we allow SWEEP to work alone,
 # i.e. before 1st ISQL make its attachment:
-WAIT_BEFORE_RUN_1ST_ATT = 5
+WAIT_BEFORE_RUN_1ST_ATT = 2
 
 #####################
 
