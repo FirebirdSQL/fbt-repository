@@ -60,6 +60,14 @@
     built-in context variable context['isc4_path'].
     Checked on 5.0.0.47  (Linux, Windows).
 
+    04-JUL-2022.
+    1. Parameter 'IPv6Only' must NOT be changed because on some hosts IPv^ can be disabled and connection
+       to dedicated FB instance will be unavaliable (we will get SQLSTATE = 08006).
+    2. ALL code for check FB 5.x on *Windows* was replaced with trivial query to rdb$config with 'SET PLANONLY'.
+       Reason: FB hangs when its *second* instance (being launched as 'firebird -a') has the same major number
+       as already launched (i.e. tested by fbtest). Trouble related to file %ProgramData%\firebird\fbNN_user_mapping:
+       we can NOT work with second instance (even can not get its version) until this file exists.
+       Discussed with Vlad and Alex, letters since 29-jun-2022 12:30.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -175,7 +183,7 @@ cfg_params_to_change= {
    ,'ExtConnPoolSize' : '123'
    ,'FileSystemCacheThreshold' : '8589934591G'
    ,'IpcName' : 'fb4x_tmp_c6444'
-   ,'IPv6V6Only' : '1'
+   # !!! 04-JUL-2022 DO NOT !!!,'IPv6V6Only' : '1'
    ,'InlineSortThreshold' : '8k'
    ,'LockHashSlots' : '33333' # will be also specified in databases.conf; effective value must be from databases.conf, NOT from here!
    ,'LockMemSize' : '17m'     # will be also specified in databases.conf; effective value must be from databases.conf, NOT from here!
@@ -401,7 +409,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     FileSystemCacheThreshold                           9223372035781033984                                              65536                                                            <true>       firebird.conf                                                    
     GCPolicy                                           combined                                                         combined                                                         <false>      <null>                                                           
     GuardianOption                                     1                                                                1                                                                <false>      <null>                                                           
-    IPv6V6Only                                         true                                                             false                                                            <true>       firebird.conf                                                    
+    IPv6V6Only                                         false                                                            false                                                            <false>      <null>
     InlineSortThreshold                                8192                                                             1000                                                             <true>       firebird.conf
     IpcName                                            fb4x_tmp_c6444                                                   FirebirdIPI                                                      <true>       firebird.conf                                                    
     KeyHolderPlugin                                    [empty]                                                          [empty]                                                          <false>      <null>                                                           
@@ -572,7 +580,7 @@ cfg_params_to_change= {
    ,'ExtConnPoolSize' : '123'
    ,'FileSystemCacheThreshold' : '8589934591G'
    ,'IpcName' : 'fb4x_tmp_c6444'
-   ,'IPv6V6Only' : '1'
+   # !!! 04-JUL-2022 DO NOT !!!,'IPv6V6Only' : '1'
    ,'InlineSortThreshold' : '8k'
    ,'LockHashSlots' : '33333' # will be also specified in databases.conf; effective value must be from databases.conf, NOT from here!
    ,'LockMemSize' : '17m'     # will be also specified in databases.conf; effective value must be from databases.conf, NOT from here!
@@ -973,7 +981,7 @@ cfg_params_to_change= {
    ,'ExtConnPoolSize' : '123'
    ,'FileSystemCacheThreshold' : '8589934591G'
    ,'IpcName' : 'fb4x_tmp_c6444'
-   ,'IPv6V6Only' : '1'
+   # !!! 04-JUL-2022 DO NOT !!!,'IPv6V6Only' : '1'
    ,'InlineSortThreshold' : '8k'
    ,'LockHashSlots' : '33333' # will be also specified in databases.conf; effective value must be from databases.conf, NOT from here!
    ,'LockMemSize' : '17m'     # will be also specified in databases.conf; effective value must be from databases.conf, NOT from here!
@@ -1202,7 +1210,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     FileSystemCacheThreshold                           9223372035781033984                                              65536                                                            <true>       firebird.conf                                                    
     GCPolicy                                           combined                                                         combined                                                         <false>      <null>                                                           
     GuardianOption                                     1                                                                1                                                                <false>      <null>                                                           
-    IPv6V6Only                                         true                                                             false                                                            <true>       firebird.conf                                                    
+    IPv6V6Only                                         false                                                            false                                                            <false>      <null>
     InlineSortThreshold                                8192                                                             1000                                                             <true>       firebird.conf
     IpcName                                            fb4x_tmp_c6444                                                   FIREBIRD                                                         <true>       firebird.conf                                                    
     KeyHolderPlugin                                    [empty]                                                          [empty]                                                          <false>      <null>                                                           
