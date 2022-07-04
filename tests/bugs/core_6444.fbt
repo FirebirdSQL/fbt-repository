@@ -1277,6 +1277,27 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
   """,
  'expected_stdout': 
   """
+    INPUT message field count: 0
+    PLAN (G NATURAL)
+    OUTPUT message field count: 6
+    01: sqltype: 496 LONG scale: 0 subtype: 0 len: 4
+    :  name: RDB$CONFIG_ID  alias: RDB$CONFIG_ID
+    : table: RDB$CONFIG  owner: SYSDBA
+    02: sqltype: 448 VARYING scale: 0 subtype: 0 len: 63 charset: 2 ASCII
+    :  name: RDB$CONFIG_NAME  alias: RDB$CONFIG_NAME
+    : table: RDB$CONFIG  owner: SYSDBA
+    03: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 1020 charset: 4 UTF8
+    :  name: RDB$CONFIG_VALUE  alias: RDB$CONFIG_VALUE
+    : table: RDB$CONFIG  owner: SYSDBA
+    04: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 1020 charset: 4 UTF8
+    :  name: RDB$CONFIG_DEFAULT  alias: RDB$CONFIG_DEFAULT
+    : table: RDB$CONFIG  owner: SYSDBA
+    05: sqltype: 32764 BOOLEAN scale: 0 subtype: 0 len: 1
+    :  name: RDB$CONFIG_IS_SET  alias: RDB$CONFIG_IS_SET
+    : table: RDB$CONFIG  owner: SYSDBA
+    06: sqltype: 448 VARYING Nullable scale: 0 subtype: 0 len: 1020 charset: 4 UTF8
+    :  name: RDB$CONFIG_SOURCE  alias: RDB$CONFIG_SOURCE
+    : table: RDB$CONFIG  owner: SYSDBA
   """,
  'expected_stderr': 
   """
