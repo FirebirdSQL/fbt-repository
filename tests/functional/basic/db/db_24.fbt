@@ -38643,6 +38643,28 @@ RDB$GENERATOR_NAME              <null>
 RDB$IDENTITY_TYPE               <null>
 
 RDB$FIELD_NAME                  SEC$DESCRIPTION                                                                                                                                                                                                                                             
+RDB$RELATION_NAME               SEC$GLOBAL_AUTH_MAPPING                                                                                                                                                                                                                                     
+RDB$FIELD_SOURCE                RDB$DESCRIPTION                                                                                                                                                                                                                                             
+RDB$QUERY_NAME                  <null>
+RDB$BASE_FIELD                  <null>
+RDB$EDIT_STRING                 <null>
+RDB$FIELD_POSITION              8
+RDB$QUERY_HEADER                <null>
+RDB$UPDATE_FLAG                 0
+RDB$FIELD_ID                    8
+RDB$VIEW_CONTEXT                <null>
+RDB$DESCRIPTION                 <null>
+RDB$DEFAULT_VALUE               <null>
+RDB$SYSTEM_FLAG                 1
+RDB$SECURITY_CLASS              <null>
+RDB$COMPLEX_NAME                <null>
+RDB$NULL_FLAG                   <null>
+RDB$DEFAULT_SOURCE              <null>
+RDB$COLLATION_ID                <null>
+RDB$GENERATOR_NAME              <null>
+RDB$IDENTITY_TYPE               <null>
+
+RDB$FIELD_NAME                  SEC$DESCRIPTION                                                                                                                                                                                                                                             
 RDB$RELATION_NAME               SEC$USERS                                                                                                                                                                                                                                                   
 RDB$FIELD_SOURCE                RDB$DESCRIPTION                                                                                                                                                                                                                                             
 RDB$QUERY_NAME                  <null>
@@ -39083,7 +39105,7 @@ RDB$GENERATOR_NAME              <null>
 RDB$IDENTITY_TYPE               <null>
 
 
-Records affected: 507
+Records affected: 508
   """,
   'substitutions': [
       ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
