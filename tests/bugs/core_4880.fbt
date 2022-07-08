@@ -57,6 +57,11 @@
         4.0.1.2672 : 49.663s
         3.0.8.33533 : 52.483s
     Switching from SS to CS has no effect: elapsed time remains almost the same.
+
+    08-JUL-2022.
+    Increased thresholds of ratios (COMMIT_TIME / COMPILE_TIME) because of gh-7222 (dependencies of packaged functions
+    were not being collected and stored). Discussed with FB team, letters since 02-JUL-2022.
+
   """,
 'min_versions': '3.0.0',
 'versions': [
@@ -117,9 +122,9 @@ N_LIMIT = 1100
 ###   T H R E S H O L D S   ###
 ###############################
 if os.name == 'nt':
-    MAX_TIME_RATIOS_COMMIT_TO_COMPILE = {'packaged' : 0.55, 'standalone' : 1.50}
+    MAX_TIME_RATIOS_COMMIT_TO_COMPILE = {'packaged' : 0.85, 'standalone' : 1.50} # before 08.07.2022: packaged=0.55; standalone=1.50
 else:
-    MAX_TIME_RATIOS_COMMIT_TO_COMPILE = {'packaged' : 0.55, 'standalone' : 0.50}
+    MAX_TIME_RATIOS_COMMIT_TO_COMPILE = {'packaged' : 0.85, 'standalone' : 0.80} # before 08.07.2022: packaged=0.55; standalone=0.50
 
 
 func_headers_ddl = ''.join( [ '\\n  function fn_%d returns int;' % i for i in range(N_LIMIT) ] )
@@ -185,10 +190,10 @@ actual_time_ratios_commit2compile = { 'packaged' : median(commit_2_compile_ratio
 msg_prefix = 'Time ratio between COMMIT and COMPILE '
 for ftype in ('packaged', 'standalone'):
     msg = msg_prefix + 'for ' + ftype + ' PSQL objects: '
-    if actual_time_ratios_commit2compile[ ftype ] < MAX_TIME_RATIOS_COMMIT_TO_COMPILE[ ftype ]:
+    if actual_time_ratios_commit2compile[ ftype ] <= MAX_TIME_RATIOS_COMMIT_TO_COMPILE[ ftype ]:
         print( msg + 'acceptable')
     else:
-        print( msg + 'UNACCEPTABLE: greater than threshold = ', MAX_TIME_RATIOS_COMMIT_TO_COMPILE[ ftype ])
+        print( msg + 'UNACCEPTABLE: %9.2f - greater than threshold = %9.2f' % (actual_time_ratios_commit2compile[ ftype ], MAX_TIME_RATIOS_COMMIT_TO_COMPILE[ ftype ]) )
         print( 'Check result of %d measures:' % N_MEASURES )
         lst = commit_2_compile_ratio_for_package if ftype == 'packaged' else commit_2_compile_ratio_for_standal
         for i,p in enumerate(lst):
