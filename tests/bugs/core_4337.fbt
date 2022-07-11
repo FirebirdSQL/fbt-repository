@@ -307,7 +307,7 @@ else:
 
 # CLEANUP:
 ##########
-#cleanup( [i.name for i in (f_gfix_killer_log,) ] )  
+cleanup( [i.name for i in (f_gfix_killer_log,) ] )  
 
   """,
  'expected_stdout':
