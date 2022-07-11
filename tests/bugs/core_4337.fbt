@@ -90,7 +90,8 @@ import psutil
 
 FLD_WIDTH=700
 ADD_ROWS=20000
-MAX_SECONDS_TO_WAIT=600
+MAX_ITER_TRY_2_KILL=10
+DELAY_BEFORE_1ST_KILL=1
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -227,17 +228,23 @@ p_gfix = subprocess.Popen( [ context['gfix_path'], dsn, "-sweep"],
                   stdout = fn_nul,
                   stderr = subprocess.STDOUT
                 )
-time.sleep(3)
+
+time.sleep(DELAY_BEFORE_1ST_KILL)
+
+f_gfix_killer_log = open( os.path.join(context['temp_directory'],'tmp_4337_gfix_killer.log'), 'w')
+
+p_gfix.poll()
+if p_gfix.returncode is None:
+    pass
+else:
+    write_and_flush(f_gfix_killer_log, 'GFIX process %d already finished with retcode=%d. TRY TO REDUCE DELAY_BEFORE_1ST_KILL=%d' % (p_gfix.pid, p_gfix.returncode, DELAY_BEFORE_1ST_KILL) )
 
 # Start _LOOP_ with attempts to delete from mon$attachments record for process p_gfix
 # We have to REPEAT these actions that until PROCESS p_gfix will disappear.
 # We should not "trust" the absence of records in mon$attachments because gfix will
 # do RE-CONNECT after several seconds (with getting another mon$attachment_id).
 
-f_gfix_killer_log = open( os.path.join(context['temp_directory'],'tmp_4337_gfix_killer.log'), 'w')
-for i in range(0,MAX_SECONDS_TO_WAIT):
-    #cur_gfix_killer.execute(ps)
-    #mon_pid, mon_att = cur_gfix_killer.fetchone()
+for i in range(0,MAX_ITER_TRY_2_KILL):
 
     mon_pid, mon_att = None, None
     for r in cur_gfix_killer.execute(ps):
@@ -252,12 +259,12 @@ for i in range(0,MAX_SECONDS_TO_WAIT):
     p_gfix.poll()
     if p_gfix.returncode is None:
         # A None value indicates that the process has not terminated yet.
-        if i < MAX_SECONDS_TO_WAIT-1:
+        if i < MAX_ITER_TRY_2_KILL-1:
             write_and_flush(f_gfix_killer_log, 'End of iter %d. GFIX process %d is alive. We take delay and then continue loop.' % (i, p_gfix.pid) )
             time.sleep(1)
             continue
         else:
-            write_and_flush(f_gfix_killer_log, 'End of iter %d. GFIX process %d is alive for %d seconds. We forcedly terminate it.' % (i, p_gfix.pid, MAX_SECONDS_TO_WAIT) )
+            write_and_flush(f_gfix_killer_log, 'End of iter %d. GFIX process %d is alive for %d iterations. We forcedly terminate it.' % (i, p_gfix.pid, MAX_ITER_TRY_2_KILL) )
             p_gfix.terminate()
             break
     else:
@@ -290,12 +297,17 @@ if len(gfix_active_map) == 1:
 else:
     msg += 'UNEXPECTED %d' % len(gfix_active_map)
     print(msg)
-    for k,v in sorted(gfix_active_map.items()):
-        print('PID: %s, attachment_id: %s, line: %s' % (str(k[0]),str(k[1]),v))
+    if len(gfix_active_map) > 0:
+        for k,v in sorted(gfix_active_map.items()):
+            print('PID: %s, attachment_id: %s, line: %s' % (str(k[0]),str(k[1]),v))
+    else:
+        print('Check lines of %s:' % f_gfix_killer_log.name)
+        for p in log_lines:
+            print(p)
 
 # CLEANUP:
 ##########
-cleanup( [i.name for i in (f_gfix_killer_log,) ] )  
+#cleanup( [i.name for i in (f_gfix_killer_log,) ] )  
 
   """,
  'expected_stdout':
