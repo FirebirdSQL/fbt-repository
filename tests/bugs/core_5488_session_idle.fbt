@@ -11,24 +11,30 @@
       Both statements are trivial: select <literal> from rdb$database.
 
    This delay is done by isql 'SHELL' command and its form depens on OS:
-   * shell ping 127.0.0.1 -- for Windows
-   * shell sleep -- for Linux.
+     * shell ping 127.0.0.1 -- for Windows
+     * shell sleep -- for Linux.
    
    Before .sql we launch trace with logging events for parsing them at final stage of test.
 
    When this .sql script is launched and falls into delay, session timeout must be triggered
    and second statement should raise exception.
    We redirect ISQL output to separate logs and expect that:
-   * log of STDOUT contains all except result of 2nd statement (which must fail);
-   * log of STDERR contains exception SQLSTATE = 08003 / connection shutdown / -Idle timeout expired
+     * log of STDOUT contains all except result of 2nd statement (which must fail);
+     * log of STDERR contains exception SQLSTATE = 08003 / connection shutdown / -Idle timeout expired
 
    Trace log should contain only following events:
-   attach to DB, start Tx, first statement finish, rollback Tx and detach DB.
+     * attach to DB
+     * start Tx
+     * finish of 'SET TRANSACTION' statement // it appeared in 5.0.0.391, 08-feb-2022
+     * finish of 'set session idle timeout 1 second' statement
+     * finish of 'select 1 as point_1 from rdb$database' statement
+     * rollback Tx
+     * detach DB.
 
    ::: NB:::
    No events related to SECOND statement should be in the trace log.
 
-   Checked on WI-4.0.0.550 -- works fine.
+   Checked on 4.0.2.2798, 5.0.0.582.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -250,6 +256,7 @@ cleanup( (f_trc_cfg, f_trc_lst, f_trc_log, f_trc_err, f_sql_cmd, f_isql_log, f_i
   """
     TRCLOG: ATTACH_DATABASE
     TRCLOG: START_TRANSACTION
+    TRCLOG: EXECUTE_STATEMENT_FINISH
     TRCLOG: EXECUTE_STATEMENT_FINISH
     TRCLOG: set session idle timeout second
     TRCLOG: EXECUTE_STATEMENT_FINISH
