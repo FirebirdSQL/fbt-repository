@@ -8,6 +8,7 @@
    Checked on 4.0.0.477
    18.08.2020: replaced expected_stdout, checked on 4.0.0.2164.
    31.08.2021: added substitution for ignore difference in BLR offset values.
+   11.07.2022: replaced expected stderr section, discussed with Adriano, letters since 08-jul-2022.
  """,
 'min_versions': '4.0',
 'versions': [
@@ -45,10 +46,9 @@
     from rdb$generators
     where rdb$system_flag = 6;
 
-    -- Should issue
-    -- Statement failed, SQLSTATE = 42000
-    -- invalid request BLR at offset 47
-    -- -generator RDB$nnn is not defined
+    -- Should issue the same as if we do RECONNECT here!
+    -- (SQLSTATE = 23000 / validation error ... value "*** null ***")
+    -- See letter from Adriano, 09-jul-2022 04:19.
     insert into test1 default values returning id as test1_id;
 
   """,
@@ -60,14 +60,11 @@
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = 42000
-    invalid request BLR at offset 47
-    -generator RDB is not defined
-  """,
-  'substitutions':[
-      ('RDB\$[\d]+', 'RDB'),
-      ('.*at offset [\d]+', 'at offset')
-   ]
+    Statement failed, SQLSTATE = 23000
+    validation error for column "TEST1"."ID", value "*** null ***"
+  """
 }
+
+
 ]
 }
