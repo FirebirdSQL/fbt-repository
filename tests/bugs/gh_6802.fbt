@@ -94,11 +94,13 @@
   """,
  'expected_stdout': 
   """
-    RAISED_GDS_02 335544336
-    WAITING_TIME_02 Acceptable.
+    WAITING_TIME_02                 Acceptable.
   """,
  'expected_stderr': 
   """
+    Statement failed, SQLSTATE = HY008
+    operation was cancelled
+    -Attachment level timeout expired.
   """,
  'substitutions': [('[ \t]+',' ')]
 }
