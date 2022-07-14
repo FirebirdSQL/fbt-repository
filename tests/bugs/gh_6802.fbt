@@ -50,42 +50,7 @@
     set term ;^
     commit;
 
-    -- ####################### 
-    -- ###  c a s e   N 1  ###
-    -- ####################### 
-    -- Initial state:
-    --    * statement_timeout > deadlocktimeout (which is supposed to be default, i.e. 10 seconds)
-    --    * Tx lock resolution = WAIT
-    -- Expected result:
-    --    * gdscode = 335544336 must be issued on console.
-    --    * waiting for 10 sec (= actual value of 'DeadLockTimeout' parameter);
-
-    SET STATEMENT TIMEOUT 13 second;
-    commit;
-
-    set transaction read write read committed record_version;
-
-    delete from gt;
-    set term ^;
-    execute block returns(raised_gds_01 int) as
-    begin
-        rdb$set_context('USER_SESSION','DTS_BEG', cast('now' as timestamp));
-        begin
-            in autonomous transaction
-            do update gt set f01=-1;
-        when any do
-            begin
-                raised_gds_01 = gdscode;
-            end
-        end
-        suspend;
-    end
-    ^
-    set term ;^
-
-    select was_waiting_acceptable as waiting_time_01 from sp_test_waiting_time( (select rdb$config_value from rdb$config where upper(rdb$config_name) = upper('DeadlockTimeout')) );
-    rollback;
-
+    -- set echo on;
 
     -- ####################### 
     -- ###  c a s e   N 2  ###
@@ -126,107 +91,14 @@
     set term ;^
     select was_waiting_acceptable as waiting_time_02 from sp_test_waiting_time( cast(rdb$get_context('SYSTEM', 'STATEMENT_TIMEOUT') as int) / 1000 );
     rollback;
-
-
-    -- ####################### 
-    -- ###  c a s e   N 3  ###
-    -- ####################### 
-    -- Initial state:
-    --    * statement_timeout > 0 (no matter greater or less than deadlocktimeout);
-    --    * Tx lock resolution = LOCK_TIMEOUT <N> and this value GREATER than statement_timeout
-    -- Expected result:
-    --    * non-supressed exception "SQLSTATE = HY008 / operation was cancelled / -Attachment level timeout expired."
-    --      ::: NOTE ::: EXCEPTION 'operation was cancelled' (isc_cancelled, gds = 335544794) can not be supressed in when-block!
-    --      See letter from Vlad, 15.05.2021 19:42.
-    --    * waiting for value that is specified in STATEMENT TIMEOUT (with probable addition 1 second)
-
-    SET STATEMENT TIMEOUT 4 second;
-    commit;
-
-    set transaction read write read committed record_version lock timeout 9;
-
-    delete from gt;
-    set term ^;
-    execute block returns(raised_gds_03 int) as
-    begin
-        rdb$set_context('USER_SESSION','DTS_BEG', cast('now' as timestamp));
-        begin
-            in autonomous transaction
-            do update gt set f01=-1;
-
-        when any do
-            begin
-                raised_gds_03 = gdscode;
-            end
-        end
-
-        suspend;
-    end
-    ^
-    set term ;^
-    select was_waiting_acceptable as waiting_time_03 from sp_test_waiting_time( cast(rdb$get_context('SYSTEM', 'STATEMENT_TIMEOUT') as int) / 1000 );
-    rollback;
-
-
-    -- ####################### 
-    -- ###  c a s e   N 3  ###
-    -- ####################### 
-    -- Initial state:
-    --    * statement_timeout  > 0 (no matter greater or less than deadlocktimeout);
-    --    * Tx lock resolution = LOCK_TIMEOUT <N> and this value LESS than statement_timeout
-    -- Expected result:
-    --    * gdscode = 335544336 must be issued on console.
-    --    * waiting for value that is specified in LOCK TIMEOUT clause (with probable addition 1 second)
-
-    SET STATEMENT TIMEOUT 9 second;
-    commit;
-
-    set transaction read write read committed record_version lock timeout 3;
-
-    delete from gt;
-    set term ^;
-    execute block returns(raised_gds_04 int) as
-    begin
-        rdb$set_context('USER_SESSION','DTS_BEG', cast('now' as timestamp));
-        begin
-            in autonomous transaction
-            do update gt set f01=-1;
-
-        when any do
-            begin
-                raised_gds_04 = gdscode;
-            end
-        end
-
-        suspend;
-    end
-    ^
-    set term ;^
-    select was_waiting_acceptable as waiting_time_04 from sp_test_waiting_time( rdb$get_context('SYSTEM', 'LOCK_TIMEOUT') );
-    rollback;
-
   """,
  'expected_stdout': 
   """
-    RAISED_GDS_01                   335544336
-    WAITING_TIME_01                 Acceptable.
-
-    WAITING_TIME_02                 Acceptable.
-
-    WAITING_TIME_03                 Acceptable.
-
-    RAISED_GDS_04                   335544336
-    WAITING_TIME_04                 Acceptable.
+    RAISED_GDS_02 335544336
+    WAITING_TIME_02 Acceptable.
   """,
  'expected_stderr': 
   """
-    Statement failed, SQLSTATE = HY008
-    operation was cancelled
-    -Attachment level timeout expired.
-
-    Statement failed, SQLSTATE = HY008
-    operation was cancelled
-    -Attachment level timeout expired.
   """,
  'substitutions': [('[ \t]+',' ')]
 }
