@@ -16,6 +16,17 @@
     Note: name for encryption plugin differs on Windows vs Linux:
        PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else '"fbSampleDbCrypt"'
 
+    NB-1 (13-feb-2022).
+    In case of usage IBSurgeon encryption plugin, one need to put file 'libcrypto-1_1-x64.dll':
+        * in 'plugins\' subdir - if snapshot is newer than ~13-feb-2022;
+        * in %FB_HOME% othersiwe
+
+    NB-2 (16-jul-2022).
+    One need to use REMOTE connection (i.e. using  'localhost:' in connection string) when make query to mon$database.
+    There is unidentified bug in FDB driver(?) which causes Python(!) to crash if embedded connection is used.
+    Found on Windows-10 only; problem never occured on Windows Server 2008 R2 and Windows 8.1.
+    Problem can somehow relates to attempt to work with unloaded .dll (see letter from Vlad, 16.07.2022 17:16).
+
     Confirmed bug on 5.0.0.219 (Windows), 5.0.0.236 (Linux).
     Checked on 5.0.0.240 (Windows; SS/Cs), 5.0.0.241 (Linux; SS/CS).
  """,
@@ -118,7 +129,11 @@ runProgram('gfix',[tmpfdb,'-w','sync'])
 PLUGIN_NAME = 'dbcrypt' if os.name == 'nt' else ( '"fbSampleDbCrypt"' if engine >= 4.0 else '"DbCrypt_example"')
 
 customTPB = ( [ fdb.isc_tpb_read_committed, fdb.isc_tpb_rec_version, fdb.isc_tpb_nowait ] )
-con = fdb.connect( dsn = tmpfdb, isolation_level = customTPB )
+
+# SINCE 16.07.2022. Python crash can occur in case of embedded connection.
+con = fdb.connect( dsn = 'localhost:' + tmpfdb, isolation_level = customTPB )
+# >>> BEFORE 16.07.2022 >>> con = fdb.connect( dsn = tmpfdb, isolation_level = customTPB )
+
 cur = con.cursor()
 
 ##############################################
