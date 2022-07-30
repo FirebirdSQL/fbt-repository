@@ -132,6 +132,7 @@ def cleanup( f_names_list ):
 #--------------------------------------------
 
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
+f_worker_sql, f_worker_log, f_worker_err = None, None, None
 
 for target_object_type in('table', 'view'):
 
@@ -147,6 +148,15 @@ for target_object_type in('table', 'view'):
     
     flush_and_close(f_init_log)
     flush_and_close(f_init_err)
+
+    if os.path.getsize(f_init_err.name):
+        # ::: NOTE ::: We have to immediately quit if any error raised in prepare phase.
+        # See also letter from dimitr, 01-feb-2022 14:46
+        with open(f_init_err.name,'r') as g:
+            for line in g:
+                if line.strip():
+                    print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+        break
 
     sql_addi='''
         set term ^;
@@ -314,11 +324,6 @@ for target_object_type in('table', 'view'):
 
     # CHECK RESULTS
     ###############
-    with open(f_init_err.name,'r') as f:
-        for line in f:
-            if line:
-                print( 'target_object_type: %(target_object_type)s, checked_DML = %(checked_DML)s, UNEXPECTED STDERR for initial SQL: %(line)s'  % locals() )
-   
     for f in (f_worker_log, f_worker_err):
         with open(f.name,'r') as g:
             for line in g:

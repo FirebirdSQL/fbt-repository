@@ -168,6 +168,7 @@ def cleanup( f_names_list ):
 #--------------------------------------------
 
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
+f_worker_sql, f_worker_log, f_worker_err = None, None, None
 
 for checked_mode in('table', 'view'):
 
@@ -175,6 +176,15 @@ for checked_mode in('table', 'view'):
 
     f_init_log=open( os.path.join(context['temp_directory'],'read-consist-sttm-restart-DDL.log'), 'w')
     f_init_err=open( ''.join( ( os.path.splitext(f_init_log.name)[0], '.err') ), 'w')
+
+    if os.path.getsize(f_init_err.name):
+        # ::: NOTE ::: We have to immediately quit if any error raised in prepare phase.
+        # See also letter from dimitr, 01-feb-2022 14:46
+        with open(f_init_err.name,'r') as g:
+            for line in g:
+                if line.strip():
+                    print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+        break
 
     # RECREATION OF ALL DB OBJECTS:
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -315,11 +325,11 @@ for checked_mode in('table', 'view'):
             if line.strip():
                 print('checked_mode: %(checked_mode)s, STDLOG: %(line)s' % locals())
 
-    for f in (f_init_err, f_worker_err):
-        with open(f.name,'r') as g:
-            for line in g:
-                if line.strip():
-                    print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+    with open(f_worker_err.name,'r') as g:
+        for line in g:
+            if line.strip():
+                print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+
 
 #<for checked mode in(...)
 

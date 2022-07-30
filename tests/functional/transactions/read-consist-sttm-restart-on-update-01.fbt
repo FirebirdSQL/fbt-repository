@@ -172,6 +172,7 @@ def cleanup( f_names_list ):
 #--------------------------------------------
 
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
+f_worker_sql, f_worker_log, f_worker_err = None, None, None
 
 for checked_mode in('table', 'view'):
 
@@ -185,6 +186,15 @@ for checked_mode in('table', 'view'):
     subprocess.call( [context['isql_path'], dsn, '-q', '-i', sql_init_ddl], stdout=f_init_log, stderr=f_init_err )
     flush_and_close(f_init_log)
     flush_and_close(f_init_err)
+
+    if os.path.getsize(f_init_err.name):
+        # ::: NOTE ::: We have to immediately quit if any error raised in prepare phase.
+        # See also letter from dimitr, 01-feb-2022 14:46
+        with open(f_init_err.name,'r') as g:
+            for line in g:
+                if line.strip():
+                    print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+        break
 
     # add rows with ID = 1, 2, ..., 5:
     sql_addi='''
@@ -325,11 +335,10 @@ for checked_mode in('table', 'view'):
             if line.strip():
                 print('checked_mode: %(checked_mode)s, STDLOG: %(line)s' % locals())
 
-    for f in (f_init_err, f_worker_err):
-        with open(f.name,'r') as g:
-            for line in g:
-                if line.strip():
-                    print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
+    with open(f_worker_err.name,'r') as g:
+        for line in g:
+            if line.strip():
+                print( 'checked_mode: ', checked_mode, ' UNEXPECTED STDERR IN ' + g.name + ':', line)
 
 #<for checked mode in(...)
 

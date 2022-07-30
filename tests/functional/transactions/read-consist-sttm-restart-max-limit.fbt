@@ -119,6 +119,8 @@ def cleanup( f_names_list ):
 #--------------------------------------------
 
 sql_init_ddl = os.path.join(context['files_location'],'read-consist-sttm-restart-DDL.sql')
+f_worker_sql, f_worker_log, f_worker_err = None, None, None
+abend_flag = 0
 
 for target_object_type in('table', 'view'):
 
@@ -141,7 +143,6 @@ for target_object_type in('table', 'view'):
             worker_dml = 'set term ^; execute block as declare c int; begin for select id from %(target_obj)s where id<=2 order by id desc with lock into c do begin end end^ set term ;^' % locals()
 
         for main_iter in (0,1):
-        #for main_iter in (1,):
 
             ###################################################################################
             ###  H O W    M A N Y    R E S T A R T S    W E    W A N T    T O    C H E C K  ###
@@ -158,6 +159,16 @@ for target_object_type in('table', 'view'):
             
             flush_and_close(f_init_log)
             flush_and_close(f_init_err)
+
+            if os.path.getsize(f_init_err.name):
+                # ::: NOTE ::: We have to immediately quit if any error raised in prepare phase.
+                # See also letter from dimitr, 01-feb-2022 14:46
+                with open(f_init_err.name,'r') as g:
+                    for line in g:
+                        if line.strip():
+                            print( 'target_object_type: %(target_object_type)s, checked_DML = %(checked_DML)s, iter = %(main_iter)s, UNEXPECTED STDERR for initial SQL: %(line)s'  % locals() )
+                abend_flag = 1
+                break
 
             sql_addi='''
                 set term ^;
@@ -284,12 +295,7 @@ for target_object_type in('table', 'view'):
             ###############
 
             print( 'target_object_type: %(target_object_type)s, checked_DML = %(checked_DML)s, iter = %(main_iter)s, restarts number to be tested: %(ROWS_TO_ADD)s' % locals() )
-
-            with open(f_init_err.name,'r') as f:
-                for line in f:
-                    if line:
-                        print( 'target_object_type: %(target_object_type)s, checked_DML = %(checked_DML)s, iter = %(main_iter)s, UNEXPECTED STDERR for initial SQL: %(line)s'  % locals() )
-           
+          
             for f in (f_worker_log, f_worker_err):
                 with open(f.name,'r') as g:
                     for line in g:
@@ -299,8 +305,13 @@ for target_object_type in('table', 'view'):
 
 
         #< for main_iter in (0,1)
+        if abend_flag:
+            break
     # < for checked_DML in ('upd', 'mer', 'del', 'lok')
+    if abend_flag:
+        break
 # < for target_object_type in ('table', 'view')
+
 # Cleanup.
 ##########
 time.sleep(1)
