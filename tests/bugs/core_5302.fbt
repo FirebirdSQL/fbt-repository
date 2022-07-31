@@ -105,12 +105,16 @@ def median(lst):
 ###   S E T T I N G S   ###
 ###########################
 # Number of PSQL calls:
-N_MEASURES = 30
+#
+N_MEASURES = 21
 
-# How many iterations must be done in each of stored procedures when they work:
-N_COUNT_PER_MEASURE = 10000
+# How many iterations must be done in each of stored procedures when they work.
+# DO NOT set this value less then 20'000, otherwise ratios will be unreal.
+#
+N_COUNT_PER_MEASURE = 50000
 
 # Maximal value for MEDIAN of ratios between CPU user time when comparison was made.
+# Results of 25.07.2022: 3.0.8.33535: ~12;  4.0.1.2692: ~9.5; 5.0.0.591: ~13
 #
 INSERTS_TIME_MAX_RATIO = 20
 #############################
