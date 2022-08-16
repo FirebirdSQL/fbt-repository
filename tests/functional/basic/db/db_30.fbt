@@ -4499,7 +4499,6 @@
   """,
  'expected_stdout': 
   """
-
     RDB$FIELD_NAME                  RDB$DBKEY_LENGTH                                                                                                                                                                                                                                            
 
     RDB$FIELD_NAME                  RDB$DEFAULT_CLASS                                                                                                                                                                                                                                           
@@ -6129,6 +6128,12 @@
     RDB$SYSTEM_FLAG                 1
 
     RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
+    RDB$TYPE                        27
+    RDB$TYPE_NAME                   PROFILE_ANY_ATTACHMENT                                                                                                                                                                                                                                      
+    RDB$DESCRIPTION                 <null>
+    RDB$SYSTEM_FLAG                 1
+
+    RDB$FIELD_NAME                  RDB$SYSTEM_PRIVILEGES                                                                                                                                                                                                                                       
     RDB$TYPE                        2
     RDB$TYPE_NAME                   READ_RAW_PAGES                                                                                                                                                                                                                                              
     RDB$DESCRIPTION                 <null>
@@ -6297,7 +6302,7 @@
     RDB$SYSTEM_FLAG                 1
 
 
-    Records affected: 293
+    Records affected: 294
 
     Are ordered columns unique ?    1
 
