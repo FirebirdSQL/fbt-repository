@@ -72,7 +72,7 @@
 'min_versions': '4.0',
 'versions': [
 
-# +=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=   L I N U X  +=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+=-+
+# ---------------------------------------------------- Linux, firebird 4.x -------------------------------------------------
 
 {
  'firebird_version': '4.0',
@@ -440,7 +440,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     ServerMode                                         SuperClassic                                                     Super                                                            <true>       firebird.conf                                                    
     SnapshotsMemSize                                   103809024                                                        65536                                                            <true>       databases.conf                                                   
     StatementTimeout                                   999                                                              0                                                                <true>       databases.conf                                                   
-    TcpLoopbackFastPath                                false                                                            true                                                             <true>       firebird.conf                                                    
+    TcpLoopbackFastPath                                false                                                            false                                                            <true>       firebird.conf                                                    
     TcpNoNagle                                         false                                                            true                                                             <true>       firebird.conf                                                    
     TcpRemoteBufferSize                                5555                                                             8192                                                             <true>       firebird.conf                                                    
     TempBlockSize                                      5242880                                                          1048576                                                          <true>       firebird.conf                                                   
@@ -839,7 +839,7 @@ f_list=( f_sql_log, f_sql_err, f_sql_cmd )
     ServerMode                                         SuperClassic                                                     Super                                                            <true>       firebird.conf                                                    
     SnapshotsMemSize                                   103809024                                                        65536                                                            <true>       databases.conf                                                   
     StatementTimeout                                   999                                                              0                                                                <true>       databases.conf                                                   
-    TcpLoopbackFastPath                                false                                                            true                                                             <true>       firebird.conf                                                    
+    TcpLoopbackFastPath                                false                                                            false                                                            <true>       firebird.conf                                                    
     TcpNoNagle                                         false                                                            true                                                             <true>       firebird.conf                                                    
     TcpRemoteBufferSize                                5555                                                             8192                                                             <true>       firebird.conf                                                    
     TempBlockSize                                      5242880                                                          1048576                                                          <true>       firebird.conf                                                   
@@ -1241,7 +1241,7 @@ cleanup( ( f_sql_log, f_sql_err, f_sql_cmd, fdb_test ) )
     ServerMode                                         SuperClassic                                                     Super                                                            <true>       firebird.conf                                                    
     SnapshotsMemSize                                   103809024                                                        65536                                                            <true>       databases.conf                                                   
     StatementTimeout                                   999                                                              0                                                                <true>       databases.conf                                                   
-    TcpLoopbackFastPath                                false                                                            true                                                             <true>       firebird.conf                                                    
+    TcpLoopbackFastPath                                false                                                            false                                                            <true>       firebird.conf                                                    
     TcpNoNagle                                         false                                                            true                                                             <true>       firebird.conf                                                    
     TcpRemoteBufferSize                                5555                                                             8192                                                             <true>       firebird.conf                                                    
     TempBlockSize                                      5242880                                                          1048576                                                          <true>       firebird.conf                                                   
