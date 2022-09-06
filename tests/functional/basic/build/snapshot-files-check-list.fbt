@@ -820,11 +820,21 @@ set(
     ]
 )
 
+if os.name == 'nt':
+    # since 5.0.0.706 (05-sep-2022): security5.fdb now is created via ISQL,
+    # its name on Windows will be transformed to UPPERCASE.
+    # We have to compare files using case-insensitive manner:
+    check_set = set([s.lower() for s in check_set])
+
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(FB_HOME) for f in filenames ]
 actual_set=set()
 for r in sorted(result):
     if not os.path.relpath(r, FB_HOME).lower().startswith('doc'):
-        fname = r[len(FB_HOME):].replace('\\\\', '/')
+        
+        fname = r[len(FB_HOME):].replace('\\\\', '/').lower()
+        if os.name == 'nt':
+            fname = fname.lower()
+
         if fname in check_set:
             actual_set.add( fname )
         else:
