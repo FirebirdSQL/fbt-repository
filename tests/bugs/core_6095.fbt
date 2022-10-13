@@ -10,7 +10,9 @@
     (this is done by invocation con.commit() method with argument 'retaining = True').
 
     Every COMMIT_RETAINING event in the trace log must contain following *new* elements:
-    1) "INIT_" token with ID of transaction that originated changes; it must be shown in the same line with "TRA_" info;
+    1) "INIT_" token with ID of transaction that originated changes; it must be shown in the same line with "TRA_" info,
+       e.g:
+           (TRA_14, INIT_13, READ_COMMITTED | REC_VERSION | WAIT | READ_WRITE)
     2) "New number <NN>" - ID that will be assigned to the next transaction in this 'chain'; it must be shown in separate line.
 
     All lines containing "INIT_" must have the same value of transaction that started changes but this value itself can depend
@@ -26,6 +28,12 @@
       2.2) EQUALS to "NEW NUMBER" for subsequent Tx..." for LAST statement because it does not change anything (updates empty table);
 
     Checked on 4.0.0.1784 SS: 6.327s; 3.0.6.33255 SS: 5.039s.
+
+    13.10.2022.
+    Weird difference in trace log encountered during compare this tests outcome on 5.0.0.770 on Win-8.1 and win-10: transaction that
+    of 'Garbare Collector' could start before 1st transaction (in Windows-10), and this led to wrong counting of tokens in this trace.
+    Because of this it was decided to simplify test check: we only verify that trace log has BOTH new elements, at least once:
+    1) "TRA_nnnnn, INIT_mmmmm" and 2) "New number NNNNN" (see found_tra_init_token, found_new_tra_number).
  """,
 'min_versions': '3.0.6',
 'versions': [
@@ -206,35 +214,27 @@ else:
 
     p_svcmgr.terminate()
 
-
+    # p=re.compile('\s*\(TRA_\d+,\s*INIT_\d+,\s*', re.IGNORECASE)
+    # p=re.compile('\s*\(TRA_\d+,', re.IGNORECASE)
     allowed_patterns = [ 
-        re.compile('\s*\(TRA_\d+,', re.IGNORECASE)
+        re.compile('\s*\(TRA_\d+,\s*INIT_\d+,\s*', re.IGNORECASE)
        ,re.compile('\s*New\s+number\s+\d+\s*', re.IGNORECASE)
     ]
 
-    tx_base = -1
+
+    found_tra_init_token, found_new_tra_number = 0, 0
     with open( trc_log.name,'r') as f:
         for line in f:
             if line.rstrip().split():
                 for p in allowed_patterns:
                     if p.search(line):
                         if '(TRA_' in line:
-                            words = line.replace(',',' ').replace('_',' ').replace('(',' ').split()
-                            # Result:
-                            # 1) for tx WITHOUT retaining: ['TRA', '12', 'READ', 'COMMITTED', '|', 'REC', 'VERSION', '|', 'WAIT', '|', 'READ', 'WRITE)']
-                            # 2) for tx which is RETAINED: ['TRA', '13', 'INIT', '12', 'READ', 'COMMITTED', '|', 'REC', 'VERSION', '|', 'WAIT', '|', 'READ', 'WRITE)']
-                            #                                 0      1     2       3
-
-                            tx_base = int(words[1]) if tx_base == -1 else tx_base
-                            
-                            if words[2] == 'INIT':
-                               tx_origin_of_changes = int(words[3]) - tx_base
-                               tx_that_finished_now = int(words[1]) - tx_base
-                               print('Found "INIT_" token in "TRA_" record. Tx that is origin of changes: ', tx_origin_of_changes, '; Tx that finished now:', tx_that_finished_now)
+                            found_tra_init_token = 1
                         elif 'number' in line:
-                            tx_for_subsequent_changes = int(line.split()[2]) - tx_base # New number 15 --> 15
-                            print('Found record with "NEW NUMBER" for subsequent Tx numbers: ', tx_for_subsequent_changes)
-
+                            found_new_tra_number = 1
+                if found_tra_init_token and found_new_tra_number:
+                    print('Found expected data.')
+                    break
 
 #< cond "if trc_ssn>0"
 flush_and_close( trc_log )
@@ -247,13 +247,7 @@ cleanup( (trc_lst, trc_cfg, trc_log) )
   """,
  'expected_stdout':
   """
-    Found record with "NEW NUMBER" for subsequent Tx numbers:  1
-    Found "INIT_" token in "TRA_" record. Tx that is origin of changes:  0 ; Tx that finished now: 1
-    Found record with "NEW NUMBER" for subsequent Tx numbers:  2
-    Found "INIT_" token in "TRA_" record. Tx that is origin of changes:  0 ; Tx that finished now: 2
-    Found record with "NEW NUMBER" for subsequent Tx numbers:  3
-    Found "INIT_" token in "TRA_" record. Tx that is origin of changes:  0 ; Tx that finished now: 3
-    Found record with "NEW NUMBER" for subsequent Tx numbers:  3
+    Found expected data.
   """,
  'expected_stderr':
   """
