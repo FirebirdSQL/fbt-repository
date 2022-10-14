@@ -124,6 +124,9 @@
     );
     -- Difference of indexed reads that is reported by MON$ tables:
     -- on 2.5 = {5, 5}, on 3.0 = {5, 3} ==> ratio 3.00 should be always enough.
+
+    select mon$forced_writes as "mon_forced_writes" from mon$database;
+
   """,
  'expected_stdout': 
   """
@@ -132,6 +135,7 @@
     PLAN (T ORDER TEST_F1_F2 INDEX (TEST_F1_F2))
     F1                              17
     RESULT                          PERFORMANCE IS THE SAME.
+    mon_forced_writes               0
   """,
  'expected_stderr':
   """
