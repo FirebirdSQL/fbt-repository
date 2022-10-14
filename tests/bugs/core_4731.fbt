@@ -54,7 +54,7 @@
     
     13.10.2022.
     Separated code for FB 5.x because it allows now statement 'delete from RDB$BACKUP_HISTORY t rows 1 returning t.rdb$db_key;'
-    (since 5.0.0.766)
+    (since 5.0.0.766; 4.0.3.2853 - 2022-10-01)
 
  """,
 'min_versions': '3.0',
@@ -288,10 +288,10 @@ cleanup( [ i.name for i in (f_pre_sql,f_pre_log,f_pre_err,f_sql_run,f_run_log,f_
   """
 }
 
-,# --------------------------------------------- FB 5.x -------------------------------------
+,# --------------------------------------------- FB 4.x -------------------------------------
 
 {
- 'firebird_version': '5.0',
+ 'firebird_version': '4.0',
  'platform': 'All',
  'test_type': 'Python',
  'init_script': 
