@@ -37,6 +37,7 @@ import os
 import sys
 import subprocess
 import time
+import shutil
 
 db_file=db_conn.database_name
 db_conn.close()
@@ -111,7 +112,7 @@ for iter in range(0,2):
         quit;
     ''' % dict(globals(), **locals())
 
-    f_run_sql = open( os.path.join(context['temp_directory'],'tmp_run_6411.sql'), 'w')
+    f_run_sql = open( os.path.join(context['temp_directory'],'tmp_run_6411_%(iter)s.sql' % locals()), 'w')
     f_run_sql.write(sql_expr)
     f_run_sql.close()
 
@@ -132,7 +133,7 @@ for iter in range(0,2):
 # Cleanup.
 ##########
 time.sleep(1)
-cleanup( (f_run_sql, f_run_log) )
+#cleanup( (f_run_sql, f_run_log) )
 
   """,
  'expected_stdout':
