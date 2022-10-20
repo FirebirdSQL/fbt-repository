@@ -142,9 +142,17 @@ with open(f_log.name) as f:
             # Remove trailing whitespaces and newline character:
             if line.upper().rstrip() == plan_expected_1 or line.upper().rstrip() == plan_expected_2:
                 if line.upper().rstrip() == plan_expected_1:
-                    print( 'Actual plan plan coincides with the expected.' )
+                    print( 'Actual plan plan matches to expected.' )
             else:
-                print( 'Actual plan: '+line+' - differs from expected: '+plan_expected)
+                msg = \
+                '''
+                    Actual plaN:
+                    %(line)s
+                    -- differs from expected:
+                    %(plan_expected_1)s
+                    %(plan_expected_2)s
+                ''' % locals()
+                print(msg)
         else:
             print(line )
 
@@ -156,7 +164,7 @@ os.remove(f_sql.name)
   """,
  'expected_stdout': 
   """
-    Actual plan plan coincides with the expected.
+    Actual plan plan matches to expected.
 
     RELATIONNAME                    <null>
     RELATIONID                      <null>
