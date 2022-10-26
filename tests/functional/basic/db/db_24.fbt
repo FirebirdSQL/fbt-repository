@@ -31514,6 +31514,50 @@ RDB$COLLATION_ID                <null>
 RDB$GENERATOR_NAME              <null>
 RDB$IDENTITY_TYPE               <null>
 
+RDB$FIELD_NAME                  RDB$CONDITION_BLR                                                                                                                                                                                                                                           
+RDB$RELATION_NAME               RDB$INDICES                                                                                                                                                                                                                                                 
+RDB$FIELD_SOURCE                RDB$VALUE                                                                                                                                                                                                                                                   
+RDB$QUERY_NAME                  <null>
+RDB$BASE_FIELD                  <null>
+RDB$EDIT_STRING                 <null>
+RDB$FIELD_POSITION              13
+RDB$QUERY_HEADER                <null>
+RDB$UPDATE_FLAG                 1
+RDB$FIELD_ID                    13
+RDB$VIEW_CONTEXT                <null>
+RDB$DESCRIPTION                 <null>
+RDB$DEFAULT_VALUE               <null>
+RDB$SYSTEM_FLAG                 1
+RDB$SECURITY_CLASS              <null>
+RDB$COMPLEX_NAME                <null>
+RDB$NULL_FLAG                   <null>
+RDB$DEFAULT_SOURCE              <null>
+RDB$COLLATION_ID                <null>
+RDB$GENERATOR_NAME              <null>
+RDB$IDENTITY_TYPE               <null>
+
+RDB$FIELD_NAME                  RDB$CONDITION_SOURCE                                                                                                                                                                                                                                        
+RDB$RELATION_NAME               RDB$INDICES                                                                                                                                                                                                                                                 
+RDB$FIELD_SOURCE                RDB$SOURCE                                                                                                                                                                                                                                                  
+RDB$QUERY_NAME                  <null>
+RDB$BASE_FIELD                  <null>
+RDB$EDIT_STRING                 <null>
+RDB$FIELD_POSITION              14
+RDB$QUERY_HEADER                <null>
+RDB$UPDATE_FLAG                 1
+RDB$FIELD_ID                    14
+RDB$VIEW_CONTEXT                <null>
+RDB$DESCRIPTION                 <null>
+RDB$DEFAULT_VALUE               <null>
+RDB$SYSTEM_FLAG                 1
+RDB$SECURITY_CLASS              <null>
+RDB$COMPLEX_NAME                <null>
+RDB$NULL_FLAG                   <null>
+RDB$DEFAULT_SOURCE              <null>
+RDB$COLLATION_ID                <null>
+RDB$GENERATOR_NAME              <null>
+RDB$IDENTITY_TYPE               <null>
+
 RDB$FIELD_NAME                  RDB$CONFIG_DEFAULT                                                                                                                                                                                                                                          
 RDB$RELATION_NAME               RDB$CONFIG                                                                                                                                                                                                                                                  
 RDB$FIELD_SOURCE                RDB$CONFIG_VALUE                                                                                                                                                                                                                                            
@@ -39105,7 +39149,7 @@ RDB$GENERATOR_NAME              <null>
 RDB$IDENTITY_TYPE               <null>
 
 
-Records affected: 508
+Records affected: 510
   """,
   'substitutions': [
       ('RDB\$SECURITY_CLASS[ ]+SQL\$.*','')
