@@ -3588,7 +3588,6 @@ RDB$RELATION_TYPE               3
   """,
  'expected_stdout': 
   """
-
 RDB$FIELD_NAME                  RDB$DBKEY_LENGTH
 
 RDB$FIELD_NAME                  RDB$DEFAULT_CLASS
@@ -4196,7 +4195,7 @@ RDB$RELATION_NAME               RDB$INDICES
 RDB$SYSTEM_FLAG                 1
 RDB$DBKEY_LENGTH                8
 RDB$FORMAT                      0
-RDB$FIELD_ID                    13
+RDB$FIELD_ID                    15
 RDB$FLAGS                       <null>
 RDB$RELATION_TYPE               0
 RDB$OWNER_NAME                  SYSDBA
@@ -4232,6 +4231,10 @@ BLOB_ID_RUNTIME                 6:1e6
         	    name: RDB$EXPRESSION_SOURCE
         	Field id: 12
         	    name: RDB$STATISTICS
+        	Field id: 13
+        	    name: RDB$CONDITION_BLR
+        	Field id: 14
+        	    name: RDB$CONDITION_SOURCE
         	    trigger_name: RDB$TRIGGER_20
         	    trigger_name: RDB$TRIGGER_19
 
@@ -4793,6 +4796,7 @@ BLOB_ID_EXT_DESCR               <null>
 
 
 Records affected: 56
+
   """,
   'substitutions': [
      ('BLOB_ID_VIEW_BLR.*',  'BLOB_ID_VIEW_BLR')
