@@ -494,6 +494,10 @@
     RDB$KEYWORD_RESERVED            <true>
     RDB$KEYWORD_NAME                LOCK
     RDB$KEYWORD_RESERVED            <false>
+
+    RDB$KEYWORD_NAME                LOCKED
+    RDB$KEYWORD_RESERVED            <false>
+
     RDB$KEYWORD_NAME                LOG
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                LOG10
@@ -1008,7 +1012,8 @@
     RDB$KEYWORD_RESERVED            <false>
     RDB$KEYWORD_NAME                ZONE
     RDB$KEYWORD_RESERVED            <false>
-    Records affected: 493
+
+    Records affected: 494
   """,
  'expected_stderr': 
   """
