@@ -2,4 +2,3 @@ bugs.core_2966
 bugs.core_0858
 bugs.core_2582
 functional.replication.oltp-emul-ddl
-bugs.core_6509
