@@ -8,6 +8,7 @@
     Confirmed crash on 4.0.0.2377 (Windows and Linux)
     Checked on 4.0.0.2384 - all OK, get STDERR: "unable to allocate memory from operating system"
     NB: currently acceptable value for '-buffers' is limited from 50 to 2147483646.
+    ... dummy change 25.11.2022 ... remove this later
  """,
 'min_versions': '4.0.0',
 'versions': [
