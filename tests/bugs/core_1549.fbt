@@ -7,51 +7,8 @@
 'min_versions': None,
 'versions': [
 {
- 'firebird_version': '2.0.4',
- 'platform': 'All',
- 'init_script': 
-  """
-create table TEST(ID integer not null);
-alter table test add constraint PK_TEST primary key (ID);
-create generator GEN_TEST;
-commit work;
-
-insert into TEST(id) values (gen_id(GEN_TEST, 1));
-insert into TEST(id) values (gen_id(GEN_TEST, 1));
-commit work;
-
-insert into TEST (id) select gen_id(GEN_TEST, 1) from TEST where gen_id(GEN_TEST, 0) < 2000;
-commit work;
-""",
- 'test_type': 'ISQL',
- 'test_script': 
-  """
-SET STATS ON;
-select 1 AS CONSTANT
-from TEST T1 join TEST T2 on T2.ID >= T1.ID
-where not exists (select * from TEST T where T.ID = T1.ID - 1)
-  and not exists (select * from TEST T where T.ID = T2.ID + 1);
-""",
- 'expected_stdout': """
-    CONSTANT
-============
-           1
-
-
-
-
-
-
-
-
-Fetches = 28217
-""",
- 'substitutions': [('Current*.*',''),('Delta*.*',''),('Max*.*',''),('Elapsed*.*',''),('Buffers*.*',''),('Reads*.*',''),('Write*.*',''),('Cpu*.*',''),('28[0-9][0-9][0-9]','28000')]
-},
-{
  'firebird_version': '3.0',
  'platform': 'All',
- 'page_size': '4096',
  'test_type': 'ISQL',
  'test_script': 
   """
@@ -148,5 +105,109 @@ Fetches = 28217
                         -> Index "T_ID" Range Scan (lower bound: 1/1)
   """
 }
+
+, #-------------------------- 5.x, since 5.0.0.905 -----------------------
+
+{
+ 'firebird_version': '5.0',
+ 'platform': 'All',
+ 'test_type': 'ISQL',
+ 'test_script': 
+  """
+    recreate table t(id int);
+    commit;
+    insert into t select row_number()over() from rdb$types a, (select 1 i from rdb$types rows 4) b rows 1000;
+    commit;
+    create index t_id on t(id);
+    commit;
+    
+    -- Query-1:
+    set list on;
+    select '' as "EXISTS with ref. to 1st stream:" from rdb$database;
+
+    set planonly;
+    set explain on;
+
+    select a.id a_id, b.id b_id
+    from t a join t b on b.id >= a.id
+    where
+      not exists (select * from t x where x.id = a.id - 1)
+      and
+      not exists (select * from t z where z.id = b.id + 1);
+
+    set planonly;
+    set plan off;
+    set explain off;
+   
+    select '' as "Two sep. DT and EXISTS inside:" from rdb$database;
+
+    set planonly;
+    set explain on;
+    -- Query-2
+    -- (serves as "etalone" -- how it should be in query-1):
+    select a.id a_id, b.id b_id
+    from (
+        select t1.id
+        from t t1
+        where
+            not exists (select * from t x where x.id = t1.id - 1)
+    ) a
+    join
+    (
+        select t2.id
+        from t t2
+        where
+            not exists (select * from t x where x.id = t2.id + 1)
+    ) b
+    on b.id >= a.id;
+  """,
+ 'expected_stdout': 
+  """
+    EXISTS with ref. to 1st stream: 
+
+    Sub-query
+        -> Filter
+            -> Table "T" as "X" Access By ID
+                -> Bitmap
+                    -> Index "T_ID" Range Scan (full match)
+    Sub-query
+        -> Filter
+            -> Table "T" as "Z" Access By ID
+                -> Bitmap
+                    -> Index "T_ID" Range Scan (full match)
+    Select Expression
+        -> Nested Loop Join (inner)
+            -> Filter
+                -> Table "T" as "A" Full Scan
+            -> Filter
+                -> Table "T" as "B" Access By ID
+                    -> Bitmap
+                        -> Index "T_ID" Range Scan (lower bound: 1/1)
+
+
+
+    Two sep. DT and EXISTS inside:  
+
+    Sub-query
+        -> Filter
+            -> Table "T" as "B X" Access By ID
+                -> Bitmap
+                    -> Index "T_ID" Range Scan (full match)
+    Sub-query
+        -> Filter
+            -> Table "T" as "A X" Access By ID
+                -> Bitmap
+                    -> Index "T_ID" Range Scan (full match)
+    Select Expression
+        -> Nested Loop Join (inner)
+            -> Filter
+                -> Table "T" as "A T1" Full Scan
+            -> Filter
+                -> Table "T" as "B T2" Access By ID
+                    -> Bitmap
+                        -> Index "T_ID" Range Scan (lower bound: 1/1)
+  """
+}
+
 ]
 }
