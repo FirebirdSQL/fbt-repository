@@ -129,7 +129,9 @@
     PLAN (T INDEX ())
     NATURAL_READS                   20000
     INDEXED_READS                   59999
-  """
+  """,
+  # subst is needed since 5.0.0.905:
+  'substitutions': [('-- line(:)? \d+, col(umn)?(:)? \d+', '')]
 }
 ]
 }
