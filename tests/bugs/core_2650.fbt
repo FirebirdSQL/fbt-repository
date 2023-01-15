@@ -687,7 +687,7 @@
             -> Sort (record length: 28, key length: 8)
                 -> Table "TEST" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Filter
             -> Sort (record length: 1036, key length: 8)
                 -> Filter
@@ -696,7 +696,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A04" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Filter
             -> Refetch
                 -> Sort (record length: 28, key length: 8)
@@ -732,7 +732,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A07" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Filter
             -> Sort (record length: 1036, key length: 8)
                 -> Filter
@@ -741,7 +741,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A08" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Filter
             -> Refetch
                 -> Sort (record length: 28, key length: 8)
@@ -751,7 +751,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A09" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Filter
             -> Sort (record length: 1036, key length: 8)
                 -> Filter
@@ -760,7 +760,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A10" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Filter
             -> Refetch
                 -> Sort (record length: 28, key length: 8)
@@ -770,7 +770,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A11" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Refetch
             -> Sort (record length: 28, key length: 8)
                 -> Filter
@@ -779,7 +779,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A12" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Sort (record length: 28, key length: 8)
             -> Filter
                 -> Table "TEST" as "X13" Full Scan
@@ -787,7 +787,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A13" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Refetch
             -> Sort (record length: 36, key length: 12)
                 -> Filter
@@ -796,7 +796,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A14" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Sort (record length: 36, key length: 16)
             -> Filter
                 -> Table "TEST" as "X15" Full Scan
@@ -804,7 +804,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A15" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Refetch
             -> Sort (record length: 36, key length: 16)
                 -> Filter
@@ -813,7 +813,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A16" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Refetch
             -> Sort (record length: 28, key length: 8)
                 -> Filter
@@ -822,7 +822,7 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A17" Full Scan
 
-    Select Expression
+    Sub-query (invariant)
         -> Sort (record length: 28, key length: 8)
             -> Filter
                 -> Table "TEST" as "X18" Full Scan
@@ -830,12 +830,12 @@
         -> Filter (preliminary)
             -> Table "TEST" as "A18" Full Scan
 
-    Select Expression
+    Sub-query
         -> Refetch
             -> Sort (record length: 28, key length: 8)
                 -> Filter
                     -> Table "TEST" as "R X" Full Scan
-    Select Expression
+    Sub-query
         -> Refetch
             -> Sort (record length: 28, key length: 8)
                 -> Filter
