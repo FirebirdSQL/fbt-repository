@@ -535,7 +535,9 @@ Collations:
     SEC$GLOBAL_AUTH_MAPPING
     SEC$USERS
     SEC$USER_ATTRIBUTES
-
+    Package: RDB$BLOB_UTIL
+    CANCEL_BLOB
+    CLOSE_HANDLE
     Package: RDB$PROFILER
     CANCEL_SESSION
     DISCARD
@@ -547,9 +549,9 @@ Collations:
     Package: RDB$TIME_ZONE_UTIL
     TRANSITIONS
     Packages:
+    RDB$BLOB_UTIL
     RDB$PROFILER
     RDB$TIME_ZONE_UTIL
-
     Collations:
     ASCII
     BIG_5
