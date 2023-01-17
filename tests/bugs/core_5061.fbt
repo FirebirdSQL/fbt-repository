@@ -75,6 +75,7 @@ sql_text='''\
       select rx.i+1 from r4 rx
       where rx.i+1 <= 2
     )
+    /*
     ,rn as (
       select row_number() over() i 
       from rdb$database r full join rdb$database r2 on r2.rdb$relation_id=r.rdb$relation_id 
@@ -83,12 +84,14 @@ sql_text='''\
       order by r.rdb$relation_id 
       rows 1 to 1
     )
+    -- */
     select 
         char_length(mon$explained_plan)
-       ,(select count(*) from r4)
-       ,(select count(*) from rn)
-       --,(select count(*) from rn)
+       ,( select count(*) from (select i from r4) )
     from mon$statements
+
+    union all select 1,row_number()over() from rdb$database where exists(select 1, row_number()over() from rdb$database group by 1 having True rows 1)
+    union all select 1,row_number()over() from rdb$database where exists(select 1, row_number()over() from rdb$database group by 1 having True rows 1)
     ;
 '''
 
