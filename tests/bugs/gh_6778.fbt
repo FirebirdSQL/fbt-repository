@@ -134,12 +134,15 @@
   """,
  'expected_stdout': 
   """
+    -- line 4, column 9
     PLAN JOIN (C A1 NATURAL, C A2 INDEX (IA2))
+    -- line 4, column 9
     PLAN JOIN (C A2 NATURAL, C A1 INDEX (IA1))
   """,
  'expected_stderr': 
   """
-  """
+  """,
+  'substitutions': [('-- line(:)? \d+, col(umn)?(:)? \d+', '-- line, column')]
 }
 ]
 }
