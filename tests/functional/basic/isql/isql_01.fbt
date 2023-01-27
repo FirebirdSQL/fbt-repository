@@ -98,6 +98,7 @@ Transaction -.*""",'')]
  'test_script': 
   """
     -- Separate for FB 4.0 since 22.01.2020
+    -- Added "Replica mode: NONE", 4.0.3.2894, 27-jan-2022
     show database;
   """,
  'expected_stdout': 
@@ -118,6 +119,7 @@ Transaction -.*""",'')]
     Database not encrypted
     Wire crypt plugin:
     Creation date: Sep 10, 2021 14:43:52
+    Replica mode: NONE
     Protocol version = 17
     Default Character set: NONE
   """,
