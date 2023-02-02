@@ -25,7 +25,7 @@
 import os
 import sys
 import subprocess
-from fdb import services
+from fdb import services,DatabaseError
 
 os.environ["ISC_USER"] = user_name
 os.environ["ISC_PASSWORD"] = user_password
@@ -122,11 +122,19 @@ flush_and_close( f_apply_ddl_log )
 #--------------------------------
 
 cur = db_conn.cursor()
+
+ext_pool_active = True
+try:
+    cur.execute("select cast(rdb$get_context('SYSTEM', 'EXT_CONN_POOL_SIZE') as int) from rdb$database")
+    ext_pool_active = cur.fetchone()[0] > 0
+except DatabaseError as e:
+    ext_pool_active = False
+
 cur.execute( "insert into persons values (1, 'One', 'some_address', 'some_blob_info')" )
 db_conn.commit()
 db_conn.close()
 
-if fb_major >= 4.0:
+if ext_pool_active:
     runProgram( 'isql', ['-q', dsn], 'ALTER EXTERNAL CONNECTIONS POOL CLEAR ALL;' )
 
 runProgram( 'isql', ['-q', 'localhost:%(fdb_repl)s' % locals()], 'set list on; set count on; select id,name,address,info as info_blob_id from persons;rollback; drop database;' )
