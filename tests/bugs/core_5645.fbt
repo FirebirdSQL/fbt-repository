@@ -14,7 +14,7 @@
         3.0.6.33236 CS: 2.563s.
         3.0.5.33221 SC: 3.812s.
 
-    02.02.2023: we have to define presense of External Connections Pool using try/except block
+    02.02.2023. We have to define presense of External Connections Pool using try/except block
     rather than major FB version (HQbird 3.x also has this feature, as FB 4.x+).
     See usage of 'ext_pool_active' variable.
 """,
