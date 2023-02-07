@@ -19,6 +19,11 @@
     If code will skip exception then this will mean FAIL of test.
     
     Confirmed on: 3.0.0.32484, 4.0.0.142 - retcode was ZERO (and this was wrong); since 4.0.0.145 - all fine, retcode=2.
+
+    07-feb-2023. Adjusted tail of restore log: added messages:
+        gbak: ERROR:Database is not online due to failure to activate one or more indices.
+        gbak: ERROR:    Run gfix -online to bring database online without active indices.
+   (actual since 5.0.0.932; will be soon also for FB 3.x and 4.x - see letter from Alex, 07.02.2023 11:53).
  """,
 'min_versions': '2.5.6',
 'versions': [
@@ -133,12 +138,15 @@ with open( f_restore.name,'r') as f:
 ##########
 time.sleep(1)
 cleanup( (f_backup, f_restore, tmpbkp, tmpres) )
+
   """,
  'expected_stdout': 
   """
     Restore finished with error code: 2
     RESTORE LOG: gbak: ERROR:attempt to store duplicate value (visible to active transactions) in unique index "TEST_1_UNQ"
     RESTORE LOG: gbak: ERROR:    Problematic key value is (<expression> = 1)
+    RESTORE LOG: gbak: ERROR:Database is not online due to failure to activate one or more indices.
+    RESTORE LOG: gbak: ERROR:    Run gfix -online to bring database online without active indices.
   """,
  'expected_stderr': 
   """
